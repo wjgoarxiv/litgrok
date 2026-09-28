@@ -48,13 +48,13 @@ function allDirectories(directoryPath) {
   return directories;
 }
 
-test('describes @litfamily/litgrok 1.0.9 without runtime dependencies', () => {
+test('describes @litfamily/litgrok 1.0.10 without runtime dependencies', () => {
   const packagePath = join(PRODUCT_ROOT, 'package.json');
   assert.ok(isFile(packagePath), `missing ${relative(PRODUCT_ROOT, packagePath)}`);
 
   const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
   assert.equal(packageJson.name, '@litfamily/litgrok');
-  assert.equal(packageJson.version, '1.0.9');
+  assert.equal(packageJson.version, '1.0.10');
 
   for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
     assert.deepEqual(packageJson[field] ?? {}, {}, `${field} must be empty`);
@@ -122,7 +122,9 @@ test('records a valid public source commit without treating SOURCE_REV as a ref'
 
   const readme = readFileSync(readmePath, 'utf8');
   const version = JSON.parse(readFileSync(join(PRODUCT_ROOT, 'package.json'), 'utf8')).version;
-  assert.ok(readme.includes(`https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${version}/docs/reference.md`));
+  assert.ok(readme.includes('](./docs/reference.md)'), 'the GitHub README links the reference in the repository');
+  const npmReadme = readFileSync(join(PRODUCT_ROOT, 'docs/npm/README.md'), 'utf8');
+  assert.ok(npmReadme.includes(`https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${version}/docs/reference.md`), 'the npm README links the packaged reference');
   const reference = readFileSync(join(PRODUCT_ROOT, 'docs/reference.md'), 'utf8');
   assert.match(reference, /github\.com\/xai-org\/grok-build\/tree\/[0-9a-f]{40}/i);
   assert.match(reference, /SOURCE_REV/);

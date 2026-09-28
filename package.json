@@ -1,6 +1,6 @@
 {
   "name": "@litfamily/litgrok",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Grok Build skills, project rules, and hooks installer.",
   "type": "module",
   "bin": {
@@ -9,9 +9,12 @@
   },
   "scripts": {
     "prepublishOnly": "node scripts/prepublish-test-gate.mjs",
+    "prepack": "node scripts/readme-for-npm.mjs apply",
+    "postpack": "node scripts/readme-for-npm.mjs restore",
     "test": "node --test test/*.test.mjs",
     "probe:browser-drive": "node .grok/skills/browser-drive/scripts/capability-probe.mjs",
-    "check:version": "node tools/check-version-lockstep.mjs"
+    "check:version": "node tools/check-version-lockstep.mjs",
+    "check:npm-readme": "node scripts/readme-for-npm.mjs check"
   },
   "files": [
     "plugin.json",
@@ -48,7 +51,9 @@
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
     "SUPPORT.md",
-    "docs/privacy.md"
+    "docs/privacy.md",
+    "!**/__pycache__/**",
+    "!**/*.pyc"
   ],
   "publishConfig": {
     "access": "public"

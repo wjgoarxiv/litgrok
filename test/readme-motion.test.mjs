@@ -9,43 +9,97 @@ import test from 'node:test';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const ASSETS = 'docs/assets/readme';
-const COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.9/docs/assets/cover-motion.webp';
+const COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/cover-motion.webp';
 const COVER_FALLBACK = COVER;
-const MOTION_STILL = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.9/docs/assets/cover-motion-still.webp';
-const STATIC_COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.9/docs/assets/cover.webp';
+const MOTION_STILL = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/cover-motion-still.webp';
+const STATIC_COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/cover.webp';
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 const sha = (path) => createHash('sha256').update(readFileSync(join(ROOT, path))).digest('hex');
 const displayRows = [...JSON.parse(read('test/fixtures/lit-mark/ignition-b.json')).banner.map((row) => row.text.trimEnd()), '', 'grok'];
 
-test('README resources follow the motion-cover decoration and retain exact copyable rows and native links', () => {
-  for (const [name, reference, install] of [
-    ['README.md', 'docs/reference.md', '#install-in-30-seconds'],
-    ['README_ko-KR.md', 'docs/reference_ko-KR.md', '#30초-설치'],
-  ]) {
+const GITHUB_PAGES = [
+  ['README.md', 'docs/reference.md', '#install-in-30-seconds'],
+  ['README_ko-KR.md', 'docs/reference_ko-KR.md', '#30초-설치'],
+];
+const NPM_PAGES = [
+  ['docs/npm/README.md', 'docs/reference.md', '#install-in-30-seconds', 'https://github.com/wjgoarxiv/litgrok#readme'],
+  ['docs/npm/README_ko-KR.md', 'docs/reference_ko-KR.md', '#30초-설치', 'https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md'],
+];
+const slug = (heading) => heading.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/gu, '-');
+
+function assertMotionCover(name, text, cover, still) {
+  assert.ok(text.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="${still}" />`), `${name}: reduced-motion still`);
+  assert.ok(text.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="${cover}" />`), `${name}: motion source`);
+  assert.ok(text.includes(`<img src="${cover}" width="100%"`), `${name}: img fallback keeps the motion cover`);
+  assert.ok(text.indexOf(cover) < text.indexOf("<h1 align=\"center\">LitGrok"), `${name}: cover leads the README`);
+  assert.ok(!text.includes('docs/assets/cover.webp"'), `${name}: the motion robot cover replaces the static robot cover`);
+  assert.equal([...text.matchAll(/width="100%"/gu)].length, 1, `${name}: the motion cover is the only full-width image`);
+  assert.doesNotMatch(text, /View the static (?:family )?cover|정지 (?:패밀리 )?표지 보기/u, `${name}: no hidden static-cover link remains`);
+  assert.doesNotMatch(text, /unpublished local candidate|아직 공개되지 않은 로컬 후보/u);
+  assert.match(text, /npm exec --yes --package @litfamily\/litgrok@latest -- litgrok install/u);
+  assert.doesNotMatch(text, /ignition-film\.mp4|ignition-poster\.png|ignition-readme\.gif/u);
+  assert.doesNotMatch(text, /README visual draft|<video\b|https?:\/\/img\.shields\.io/u);
+}
+
+test('GitHub READMEs lead with the motion cover from repository-relative assets and keep the exact copyable rows', () => {
+  for (const [name, reference, install] of GITHUB_PAGES) {
     const text = read(name);
-    assert.ok(text.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="${MOTION_STILL}" />`));
-    assert.ok(text.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="${COVER}" />`));
-    assert.ok(text.includes(`<img src="${COVER_FALLBACK}" width="100%"`), `${name}: npm-safe img fallback keeps the motion cover`);
-    assert.ok(text.indexOf(COVER) < text.indexOf("<h1 align=\"center\">LitGrok"), `${name}: cover leads the README`);
-    assert.ok(!text.includes(STATIC_COVER), `${name}: the motion robot cover replaces the static robot cover`);
-    assert.equal([...text.matchAll(/width="100%"/gu)].length, 1, `${name}: the motion cover is the only full-width image`);
-    assert.doesNotMatch(text, /View the static (?:family )?cover|정지 (?:패밀리 )?표지 보기/u, `${name}: no hidden static-cover link remains`);
-    assert.match(text, /<p align="center"><img src="https:\/\/cdn\.jsdelivr\.net\/npm\/@litfamily\/litgrok@1\.0\.9\/docs\/assets\/readme\/ascii-readme\.svg" width="480" alt="[^"]+" \/><\/p>/u);
+    assertMotionCover(name, text, './docs/assets/cover-motion.webp', './docs/assets/cover-motion-still.webp');
+    assert.match(text, /<p align="center"><img src="\.\/docs\/assets\/readme\/ascii-readme\.svg" width="480" alt="[^"]+" \/><\/p>/u);
     const blocks = [...text.matchAll(/<details>\n<summary>[^\n]+<\/summary>\n\n```text\n([\s\S]*?)\n```\n\n<\/details>/gu)];
     assert.equal(blocks.length, 1);
     assert.equal(blocks[0][1], displayRows.join('\n'));
-    assert.doesNotMatch(text, /unpublished local candidate|아직 공개되지 않은 로컬 후보/u);
-    assert.match(text, /npm exec --yes --package @litfamily\/litgrok@latest -- litgrok install/u);
-    const packageVersion = JSON.parse(read('package.json')).version;
-    const packageUrl = `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageVersion}/`;
+    assert.ok(text.includes(`href="./${reference}"`));
+    assert.ok(text.includes(`href="${install}"`));
+    assert.ok(text.includes('href="./LICENSE"'));
+    assert.doesNotMatch(text, /cdn\.jsdelivr\.net/u, `${name}: GitHub renders repository files directly, before any release exists`);
+    for (const icon of ['book-open', 'play', 'shield-check']) {
+      assert.ok(text.includes(`src="./docs/assets/readme/lucide-${icon}.svg"`));
+    }
+  }
+});
+
+test('GitHub README relative links and in-page anchors resolve inside the repository', () => {
+  for (const [name] of GITHUB_PAGES) {
+    const text = read(name);
+    const anchors = new Set([...text.matchAll(/^#{1,6} (.+)$/gmu)].map((match) => slug(match[1])));
+    const targets = [
+      ...[...text.matchAll(/(?:src|srcset|href)="([^"]+)"/gu)].map((match) => match[1]),
+      ...[...text.matchAll(/\]\(([^)\s]+)\)/gu)].map((match) => match[1]),
+    ];
+    assert.ok(targets.some((target) => target.startsWith('./')), `${name}: expected repository-relative targets`);
+    for (const target of targets) {
+      if (/^https?:\/\//u.test(target)) continue;
+      if (target.startsWith('#')) {
+        assert.ok(anchors.has(decodeURIComponent(target.slice(1))), `${name}: no heading for ${target}`);
+        continue;
+      }
+      assert.ok(target.startsWith('./'), `${name}: relative target must start with ./: ${target}`);
+      const [path, fragment] = decodeURIComponent(target.slice(2)).split('#');
+      assert.ok(existsSync(join(ROOT, path)), `${name}: ${path} must exist in the repository`);
+      if (fragment && path.endsWith('.md')) {
+        const headings = new Set([...read(path).matchAll(/^#{1,6} (.+)$/gmu)].map((match) => slug(match[1])));
+        assert.ok(headings.has(fragment), `${name}: ${path} has no heading for #${fragment}`);
+      }
+    }
+  }
+});
+
+test('npm READMEs lead with the pinned motion cover and send readers to the full GitHub guide', () => {
+  const packageVersion = JSON.parse(read('package.json')).version;
+  const packageUrl = `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageVersion}/`;
+  for (const [name, reference, install, guide] of NPM_PAGES) {
+    const text = read(name);
+    assertMotionCover(name, text, COVER_FALLBACK, MOTION_STILL);
+    assert.ok(!text.includes(STATIC_COVER), `${name}: the motion robot cover replaces the static robot cover`);
     assert.ok(text.includes(`href="${packageUrl}${reference}"`));
     assert.ok(text.includes(`href="${install}"`));
     assert.ok(text.includes(`href="${packageUrl}LICENSE"`));
-    assert.doesNotMatch(text, /(?:src|srcset|href)="\.{1,2}\/|\]\(\.{1,2}\//u, `${name}: npm-rendered README must not contain relative file URLs`);
-    assert.doesNotMatch(text, /ignition-film\.mp4|ignition-poster\.png|ignition-readme\.gif/u);
-    assert.doesNotMatch(text, /README visual draft|<video\b|https?:\/\/img\.shields\.io/u);
+    assert.ok(text.includes(`](${guide})`), `${name}: links the full guide on GitHub`);
+    assert.doesNotMatch(text, /(?:src|srcset|href)="\.{0,2}\/|\]\(\.{0,2}\//u, `${name}: npm-rendered README must not contain relative file URLs`);
+    assert.doesNotMatch(text, /<details>\n<summary>[^\n]+<\/summary>\n\n```text\n/u, `${name}: the copyable ASCII block lives only on the GitHub pages the generator maintains`);
     for (const icon of ['book-open', 'play', 'shield-check']) {
-      assert.ok(text.includes(`src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.9/docs/assets/readme/lucide-${icon}.svg"`));
+      assert.ok(text.includes(`src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/readme/lucide-${icon}.svg"`));
     }
   }
 });
@@ -53,7 +107,7 @@ test('README resources follow the motion-cover decoration and retain exact copya
 test('npm README media and local file links use current-version URLs shipped in the package', () => {
   const packageJson = JSON.parse(read('package.json'));
   const packageUrl = `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageJson.version}/`;
-  for (const name of ['README.md', 'README_ko-KR.md']) {
+  for (const [name] of NPM_PAGES) {
     const text = read(name);
     const mediaUrls = [...text.matchAll(/(?:src|srcset)="([^"]+)"/gu)].map((match) => match[1]);
     for (const match of text.matchAll(/!\[[^\]]*\]\(([^)]+)\)/gu)) mediaUrls.push(match[1]);
@@ -121,12 +175,12 @@ test('README artwork retains approved bytes, notices and static release metadata
   ];
   for (const path of landing) assert.equal(packageJson.files.includes(path), true, `${path} must ship for npmjs artwork`);
   assert.ok(!packageJson.files.includes('docs/assets/cover.svg'), 'vector fallback stays outside the package allowlist');
-  assert.ok(!packageJson.files.some((path) => path === 'docs' || path === 'docs/assets' || /[*?]/u.test(path)), 'broad docs globs stay out of the package allowlist');
+  assert.ok(!packageJson.files.some((path) => !path.startsWith('!') && (path === 'docs' || path === 'docs/assets' || /[*?]/u.test(path))), 'broad docs globs stay out of the package allowlist');
 });
 
 test('README skill tables give every packaged skill one shipped 240 px snapshot in both languages', () => {
   const packageJson = JSON.parse(read('package.json'));
-  const base = `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageJson.version}/docs/assets/skills/`;
+  const base = './docs/assets/skills/';
   const skills = readdirSync(join(ROOT, '.grok/skills'), { withFileTypes: true })
     .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
   assert.ok(packageJson.files.includes('docs/assets/skills'), 'skill snapshots ship so npmjs can render them');
@@ -138,8 +192,8 @@ test('README skill tables give every packaged skill one shipped 240 px snapshot 
     assert.ok(bytes.length <= 81_920, `${id} snapshot exceeds 80 KiB`);
   }
   for (const [name, heading, anchor, next, intro, motion] of [
-    ['README.md', '## Skills at a glance', '#skills-at-a-glance', '## Command and hook table', `All ${skills.length} skills, one row each.`, 'The cover is brand motion made with the LitFamily motion skill'],
-    ['README_ko-KR.md', '## 스킬 한눈에 보기', '#스킬-한눈에-보기', '## 명령과 hook 표', `skill ${skills.length}개를 한 줄씩 정리했습니다.`, '커버의 모션은 LitFamily 모션 skill로 만든 브랜드 연출'],
+    ['README.md', '## Skills at a glance', '#skills-at-a-glance', '## The routes you will use most', `All ${skills.length} skills, one row each.`, 'The cover is brand motion made with the LitFamily motion skill'],
+    ['README_ko-KR.md', '## 스킬 한눈에 보기', '#스킬-한눈에-보기', '## 자주 쓰는 명령', `스킬 ${skills.length}개를 한 줄씩 정리했습니다.`, '커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출'],
   ]) {
     const text = read(name);
     assert.equal(text.split('\n').filter((line) => line === heading).length, 1, `${name}: one skills section`);
@@ -155,6 +209,15 @@ test('README skill tables give every packaged skill one shipped 240 px snapshot 
     assert.deepEqual(rows.map((match) => match[2]).sort(), skills, `${name}: one row per packaged skill`);
     for (const [, src, id] of rows) assert.equal(src, `${base}${id}.webp`, `${name}: ${id} snapshot URL`);
     assert.equal([...text.matchAll(/docs\/assets\/skills\//gu)].length, skills.length, `${name}: snapshots appear only in the skills table`);
+  }
+  for (const [name, gallery, motion] of [
+    ['docs/npm/README.md', 'https://github.com/wjgoarxiv/litgrok#skills-at-a-glance', 'The cover is brand motion made with the LitFamily motion skill'],
+    ['docs/npm/README_ko-KR.md', 'https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md#스킬-한눈에-보기', '커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출'],
+  ]) {
+    const text = read(name);
+    assert.ok(text.includes(`](${gallery})`), `${name}: the npm card links the gallery on GitHub`);
+    assert.equal([...text.matchAll(/docs\/assets\/skills\//gu)].length, 0, `${name}: the gallery stays on GitHub`);
+    assert.ok(text.includes(motion), `${name}: the cover note names the motion skill`);
   }
 });
 

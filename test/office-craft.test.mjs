@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,18 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const require = createRequire(import.meta.url);
 const python = require('../.grok/skills/lit-pptx/scripts/deps.cjs').python();
 const scripts = join(root, '.grok/skills/lit-pptx/scripts');
-function run(code) { const r=spawnSync(python,['-c',code],{cwd:root,encoding:'utf8'}); assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout); }
+const startedAt = Date.now();
+const childEnv = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' };
+function bytecodeWrittenSince(since) {
+  const written = [];
+  for (const skill of ['lit-pptx', 'lit-docx']) {
+    const cache = join(root, '.grok/skills', skill, 'scripts', '__pycache__');
+    if (!existsSync(cache)) continue;
+    for (const name of readdirSync(cache)) if (statSync(join(cache, name)).mtimeMs >= since) written.push(`${skill}/scripts/__pycache__/${name}`);
+  }
+  return written;
+}
+function run(code) { const r=spawnSync(python,['-c',code],{cwd:root,env:childEnv,encoding:'utf8'}); assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout); }
 
 test('PPTX craft gate finds accent overload and explicit left numeric cells', () => {
   const result=run(`import sys,json\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import PP_ALIGN\nfrom craft_extras import assess\np=Presentation();s=p.slides.add_slide(p.slide_layouts[6])\nfor n,h in enumerate(['D6336C','2F9E44','1971C2']):\n q=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,100000+n*1000000,100000,600000,600000);q.fill.solid();q.fill.fore_color.rgb=RGBColor.from_string(h)\nt=s.shapes.add_table(3,1,100000,1200000,1000000,1000000).table\nfor i,v in enumerate(['Year','120','130']):t.cell(i,0).text=v\nfor i in (1,2):t.cell(i,0).text_frame.paragraphs[0].alignment=PP_ALIGN.LEFT\nprint(json.dumps(assess(p)))`);
@@ -20,7 +31,7 @@ test('PPTX craft gate finds accent overload and explicit left numeric cells', ()
 });
 
 test('PPTX craft subset covers all nine OF-1xx signals and accepts a clean slide', () => {
-  const generated=spawnSync(python,[join(root,'test/fixtures/office-craft/check_pptx.py'),scripts],{cwd:root,encoding:'utf8'});
+  const generated=spawnSync(python,[join(root,'test/fixtures/office-craft/check_pptx.py'),scripts],{cwd:root,env:childEnv,encoding:'utf8'});
   assert.equal(generated.status,0,generated.stderr);
   const generatedFindings=JSON.parse(generated.stdout).findings;
   const rules=new Set(generatedFindings.map((f)=>f.rule));
@@ -52,10 +63,14 @@ test('DOCX public audit reports numeric alignment through the packaged launcher'
   const scratch=mkdtempSync(join(tmpdir(),'litgrok-docx-craft-'));
   try {
     const doc=join(scratch,'sample.docx');
-    const build=spawnSync(python,['-c',`from docx import Document\nfrom docx.enum.text import WD_ALIGN_PARAGRAPH\nimport sys\nd=Document();t=d.add_table(rows=3,cols=1)\nfor i,v in enumerate(['Year','120','130']):t.cell(i,0).text=v\nfor i in (1,2):t.cell(i,0).paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.LEFT\nd.save(sys.argv[1])`,doc],{encoding:'utf8'});
+    const build=spawnSync(python,['-c',`from docx import Document\nfrom docx.enum.text import WD_ALIGN_PARAGRAPH\nimport sys\nd=Document();t=d.add_table(rows=3,cols=1)\nfor i,v in enumerate(['Year','120','130']):t.cell(i,0).text=v\nfor i in (1,2):t.cell(i,0).paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.LEFT\nd.save(sys.argv[1])`,doc],{env:childEnv,encoding:'utf8'});
     assert.equal(build.status,0,build.stderr);
-    const lint=spawnSync(process.execPath,[join(root,'.grok/skills/lit-docx/scripts/run.mjs'),'slop_lint.py','--publisher','korean-generic','--audit-output',doc,'--report',join(scratch,'lint.md')],{cwd:root,encoding:'utf8'});
+    const lint=spawnSync(process.execPath,[join(root,'.grok/skills/lit-docx/scripts/run.mjs'),'slop_lint.py','--publisher','korean-generic','--audit-output',doc,'--report',join(scratch,'lint.md')],{cwd:root,env:childEnv,encoding:'utf8'});
     assert.equal(lint.status,1,lint.stderr);
     assert.match(lint.stdout,/OF-302/);
   } finally { rmSync(scratch,{recursive:true,force:true}); }
+});
+
+test('the office script children write no Python bytecode into the packaged skill folders', () => {
+  assert.deepEqual(bytecodeWrittenSince(startedAt - 1000), []);
 });

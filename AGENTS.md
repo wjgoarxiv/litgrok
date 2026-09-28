@@ -58,6 +58,9 @@ the complete `.grok` payload, and the curated `docs/assets/` entries declared in
 `package.json`'s `files[]`. Every image and local file link in an npm-rendered
 README must use an absolute, current-version jsDelivr URL for a file included in
 that package; keep repository-relative artwork only in GitHub-only documents.
+The root READMEs are those GitHub pages. The npm-rendered READMEs are
+`docs/npm/README.md` and `docs/npm/README_ko-KR.md`; `scripts/readme-for-npm.mjs`
+swaps them in at `prepack` and restores the GitHub pages at `postpack`.
 It must exclude all other `docs/assets/` entries,
 release-only checklists, tests, `generate_cover.py`, and this agent-only `AGENTS.md`.
 A passing installer test does not prove a live Grok Build route.

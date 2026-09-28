@@ -328,7 +328,7 @@ test('every CLI launched through a symlinked directory prints real output, never
     const installer = run('linked-bin/litgrok.mjs', ['motion-runtime', '--help']);
     assert.equal(installer.status, 0);
     assert.match(installer.stdout, /Usage: litgrok-ai motion-runtime/);
-    const beat = spawnSync('python3', [join(dir, 'linked-scripts/beat_grid.py')], { encoding: 'utf8' });
+    const beat = spawnSync('python3', [join(dir, 'linked-scripts/beat_grid.py')], { env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, encoding: 'utf8' });
     if (!beat.error) { assert.equal(beat.status, 2); assert.match(beat.stderr, /usage: beat_grid\.py/); }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

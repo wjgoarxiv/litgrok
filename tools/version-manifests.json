@@ -17,14 +17,26 @@
     {
       "path": "README.md",
       "kind": "pinned",
-      "occurrences": 77,
-      "why": "The npm-rendered landing page pins its package file links and artwork URLs to the current package release."
+      "occurrences": 2,
+      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release."
     },
     {
       "path": "README_ko-KR.md",
       "kind": "pinned",
-      "occurrences": 76,
-      "why": "The npm-rendered landing page pins its package file links and artwork URLs to the current package release."
+      "occurrences": 2,
+      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release."
+    },
+    {
+      "path": "docs/npm/README.md",
+      "kind": "pinned",
+      "occurrences": 20,
+      "why": "The npm page, swapped in as README.md at pack time, pins its package file links and artwork URLs to the current package release."
+    },
+    {
+      "path": "docs/npm/README_ko-KR.md",
+      "kind": "pinned",
+      "occurrences": 20,
+      "why": "The npm page, swapped in as README_ko-KR.md at pack time, pins its package file links and artwork URLs to the current package release."
     },
     {
       "path": "package.json",
@@ -59,8 +71,8 @@
     {
       "path": "test/readme-motion.test.mjs",
       "kind": "pinned",
-      "occurrences": 5,
-      "why": "The README decoration contract pins jsDelivr cover, ASCII mark and icon URLs to the current package version."
+      "occurrences": 4,
+      "why": "The npm README decoration contract pins jsDelivr cover and icon URLs to the current package version; the GitHub pages use repository-relative paths."
     },
     {
       "path": "test/skills-and-rules.test.mjs",
@@ -87,11 +99,6 @@
       "version": "1.0.0",
       "occurrences": 3,
       "why": "The backend guide contains three independent OpenAPI example versions, not LitGrok release metadata. Preserve those examples and the unrelated standard-openapi dependency version."
-    },
-    {
-      "path": ".grok/skills/readme-studio/templates/remotion/package-lock.json",
-      "occurrences": 1,
-      "why": "The pinned @types/estree package version happens to coincide with the current LitGrok release; it is an unrelated npm package version, not a release pin. Re-check this entry every release since the coincidence is version-dependent."
     }
   ]
 }

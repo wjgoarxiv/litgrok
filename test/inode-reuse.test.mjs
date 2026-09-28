@@ -101,6 +101,7 @@ for (const [name, script] of [['autoconference', CONFERENCE_SCRIPT], ['autoresea
   test(`${name} rejects a same-inode child-directory replacement during open`, () => {
     const result = spawnSync('python3', ['-c', PYTHON_RACE_HARNESS, script], {
       cwd: PRODUCT_ROOT,
+      env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
       encoding: 'utf8',
     });
     assert.equal(result.status, 0, result.stderr || result.error?.message);
@@ -110,7 +111,7 @@ for (const [name, script] of [['autoconference', CONFERENCE_SCRIPT], ['autoresea
 }
 
 function runPython(script, args) {
-  return spawnSync('python3', [script, ...args], { cwd: PRODUCT_ROOT, encoding: 'utf8' });
+  return spawnSync('python3', [script, ...args], { cwd: PRODUCT_ROOT, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, encoding: 'utf8' });
 }
 
 test('authorized autoconference output rotation remains accepted', () => {

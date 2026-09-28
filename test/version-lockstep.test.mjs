@@ -76,15 +76,15 @@ test("the version lockstep guard accepts the committed repository", () => {
 });
 
 test("a drifted literal pin fails and names its file", () => withVersionFixture((root) => {
-  const target = join(root, "README.md");
+  const target = join(root, "docs", "npm", "README.md");
   const original = readFileSync(target, "utf8");
-  assert.ok(original.includes(VERSION), "fixture precondition: README.md pins the release");
+  assert.ok(original.includes(VERSION), "fixture precondition: the npm README pins the release");
   try {
     writeFileSync(target, original.replace(VERSION, "0.0.0"), "utf8");
-    assert.equal(readFileSync(join(PRODUCT_ROOT, "README.md"), "utf8"), original, "the live README must remain unchanged while the fixture is drifted");
+    assert.equal(readFileSync(join(PRODUCT_ROOT, "docs", "npm", "README.md"), "utf8"), original, "the live npm README must remain unchanged while the fixture is drifted");
     const result = runGuard(root);
     assert.notEqual(result.status, 0, "guard must reject a drifted literal pin");
-    assert.match(`${result.stdout}\n${result.stderr}`, /README\.md/u);
+    assert.match(`${result.stdout}\n${result.stderr}`, /docs[\\/]npm[\\/]README\.md/u);
   } finally {
     writeFileSync(target, original, "utf8");
   }

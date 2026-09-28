@@ -16,4 +16,5 @@ HANDOFF.md
 .litgrok/
 .grok/.litgrok-install-manifest.json
 evidence/
+.readme-for-npm/
 plans/

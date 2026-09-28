@@ -205,9 +205,14 @@ test('usage errors stay frame-free', async () => {
 
 test('both landing pages retain linked frame and host-owned model documentation', () => {
   const version = JSON.parse(readFileSync(join(PRODUCT_ROOT, 'package.json'), 'utf8')).version;
-  for (const [readmeName, referencePath] of [['README.md', 'docs/reference.md'], ['README_ko-KR.md', 'docs/reference_ko-KR.md']]) {
+  for (const [readmeName, referencePath, prefix] of [
+    ['README.md', 'docs/reference.md', './'],
+    ['README_ko-KR.md', 'docs/reference_ko-KR.md', './'],
+    ['docs/npm/README.md', 'docs/reference.md', `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${version}/`],
+    ['docs/npm/README_ko-KR.md', 'docs/reference_ko-KR.md', `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${version}/`],
+  ]) {
     const landing = readFileSync(join(PRODUCT_ROOT, readmeName), 'utf8');
-    assert.ok(landing.includes(`https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${version}/${referencePath}`));
+    assert.ok(landing.includes(`${prefix}${referencePath}`), `${readmeName} links ${referencePath}`);
     const reference = readFileSync(join(PRODUCT_ROOT, referencePath), 'utf8');
     assert.match(reference, /Model selection: host-owned/);
     assert.match(reference, /MODEL ROUTE/);

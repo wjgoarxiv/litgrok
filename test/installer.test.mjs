@@ -104,7 +104,7 @@ test('publishes executable litgrok-ai and litgrok installer aliases', () => {
     'litgrok-ai': 'bin/litgrok.mjs',
     litgrok: 'bin/litgrok.mjs',
   });
-  assert.equal(packageJson.version, '1.0.9');
+  assert.equal(packageJson.version, '1.0.10');
 
   const executable = statSync(join(PRODUCT_ROOT, 'bin', 'litgrok.mjs'));
   assert.ok(executable.isFile(), 'bin/litgrok.mjs must be a regular file');
@@ -745,7 +745,10 @@ test('dry-pack preserves runtime and bilingual references while excluding brand 
   }
   assert.deepEqual(
     paths.filter((path) => path.startsWith('.grok/')).sort(),
-    regularFilesBelow(join(PRODUCT_ROOT, '.grok')).map((path) => `.grok/${path}`).sort(),
+    regularFilesBelow(join(PRODUCT_ROOT, '.grok'))
+      .filter((path) => !/(^|\/)__pycache__\/|\.pyc$/u.test(path))
+      .map((path) => `.grok/${path}`)
+      .sort(),
     'dry-pack must contain the complete .grok tree',
   );
   assert.equal(paths.some((path) => path.startsWith('test/')), false, 'tests must stay out of the package');
@@ -797,6 +800,26 @@ test('dry-pack preserves runtime and bilingual references while excluding brand 
   }
 });
 
+test('dry-pack leaves Python bytecode out of the packaged skill scripts', () => {
+  const root = mkdtempSync(join(tmpdir(), 'litgrok-pack-bytecode-'));
+  try {
+    const { files } = JSON.parse(readFileSync(join(PRODUCT_ROOT, 'package.json'), 'utf8'));
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'litgrok-pack-bytecode', version: '0.0.0', files }));
+    const scripts = join(root, '.grok', 'skills', 'lit-pptx', 'scripts');
+    mkdirSync(join(scripts, '__pycache__'), { recursive: true });
+    writeFileSync(join(scripts, 'qa_deck.py'), 'pass\n');
+    writeFileSync(join(scripts, '__pycache__', 'qa_deck.cpython-312.pyc'), 'bytecode');
+    writeFileSync(join(scripts, 'stray.pyc'), 'bytecode');
+    const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: root, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    const paths = JSON.parse(result.stdout)[0].files.map((entry) => entry.path);
+    assert.ok(paths.includes('.grok/skills/lit-pptx/scripts/qa_deck.py'), 'the script source must still pack');
+    assert.deepEqual(paths.filter((path) => /(^|\/)__pycache__\/|\.pyc$/u.test(path)), [], 'bytecode must stay out of the package');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('both packed npx aliases execute the non-mutating install path', () => {
   const temporaryRoot = mkdtempSync(join(tmpdir(), 'litgrok-packed-npx-'));
   const home = join(temporaryRoot, 'home');
@@ -835,22 +858,25 @@ test('landing docs link the repository cover and retain the complete lifecycle i
   assert.match(packageJson.description, /installer/i);
   assert.ok(!packageJson.files.includes('cover.png'), 'the heavy cover must not be enrolled in npm');
 
-  for (const readmeName of ['README.md', 'README_ko-KR.md']) {
+  const npmPrefix = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/';
+  for (const [readmeName, prefix] of [['README.md', './'], ['README_ko-KR.md', './'], ['docs/npm/README.md', npmPrefix], ['docs/npm/README_ko-KR.md', npmPrefix]]) {
     const landing = readFileSync(join(PRODUCT_ROOT, readmeName), 'utf8');
-    const referencePath = readmeName === 'README.md' ? 'docs/reference.md' : 'docs/reference_ko-KR.md';
-    const assets = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.9/docs/assets';
+    const english = readmeName.endsWith('README.md');
+    const referencePath = english ? 'docs/reference.md' : 'docs/reference_ko-KR.md';
+    const assets = `${prefix}docs/assets`;
     assert.ok(landing.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="${assets}/cover-motion-still.webp" />`));
     assert.ok(landing.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="${assets}/cover-motion.webp" />`));
     assert.ok(landing.includes(`${assets}/cover-motion.webp" width="100%"`));
     const heroAlt = landing.match(/<img src="[^"]+cover-motion\.webp" width="100%" alt="([^"]+)" \/>/u)?.[1] ?? '';
-    if (readmeName === 'README.md') {
+    if (english) {
       assert.equal(heroAlt, 'LitFamily motion cover: five armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up.');
     } else {
       assert.match(heroAlt, /^LitFamily 모션 커버: .*LitGrok 로봇.*KEEP THE WORK LIT\./u);
     }
     assert.ok(!landing.includes(`${assets}/cover.webp"`), `${readmeName} shows the robot cover once, as the motion cover`);
     assert.equal([...landing.matchAll(/width="100%"/gu)].length, 1, `${readmeName} leads with one full-width picture`);
-    assert.ok(landing.includes(`https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageJson.version}/${referencePath}`), 'the detailed reference must use its packaged npm-safe URL');
+    const referenceUrl = prefix === './' ? `./${referencePath}` : `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageJson.version}/${referencePath}`;
+    assert.ok(landing.includes(referenceUrl), `${readmeName}: the detailed reference must use its repository-relative (GitHub) or packaged npm-safe URL`);
     const readme = `${landing}\n${readFileSync(join(PRODUCT_ROOT, referencePath), 'utf8')}`;
     assert.match(readme, /npm exec --yes --package @litfamily\/litgrok@latest -- litgrok install/);
     assert.match(readme, /npm exec --yes --package @litfamily\/litgrok@latest -- litgrok install --dry-run/);
@@ -859,13 +885,13 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.match(readme, /grok inspect/);
     assert.match(readme, /\/skills/);
     assert.match(readme, /does not|하지 않습니다/);
-    assert.match(readme, /1\.0\.9/);
+    assert.match(readme, /1\.0\.10/);
     assert.doesNotMatch(readme, /skill-observer|skill-loop|Skill learning loop/i);
     assert.match(readme, /37/);
     assert.match(readme, /\.grok\/rules\/00-litgrok\.md/);
     assert.match(readme, /SessionStart/);
     assert.match(readme, /PreToolUse/);
-    assert.match(readme, /eleven hook registrations|hook 등록 열한 개/);
+    assert.match(readme, /eleven hook registrations|(?:hook|훅) 등록 열한 개/);
     assert.match(readme, /\/hooks[^\n]*(?:eleven|열한)[^\n]*hook/i);
     assert.match(readme, /UserPromptSubmit/);
     assert.match(readme, /PostToolUseFailure/);
@@ -875,7 +901,7 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.match(readme, /fail-open/i);
     assert.match(readme, /\/hooks-trust/);
     assert.match(readme, /trusted_folders\.toml/);
-    if (readmeName === 'README.md') {
+    if (english) {
       assert.match(readme, /Git project root/i);
       assert.match(readme, /plain folder[^\n]*(?:skills|rules)[^\n]*hooks remain/i);
       assert.match(readme, /git init/);
@@ -888,7 +914,7 @@ test('landing docs link the repository cover and retain the complete lifecycle i
       assert.match(readme, /git init/);
       assert.match(readme, /grok --trust inspect --json/);
       assert.match(readme, /Grok Build 1\.0\.23/);
-      assert.match(readme, /Installer[^\n]*(?:git init|trust)[^\n]*(?:않|안)/);
+      assert.match(readme, /(?:Installer|설치 프로그램)[^\n]*(?:git init|trust)[^\n]*(?:않|안)/);
     }
     assert.match(readme, /plugin manifest/i);
     assert.match(readme, /LSP server/i);
@@ -940,23 +966,25 @@ test('landing readmes pin their skill count to the packaged directory listing', 
   const marketplaceSkills = JSON.parse(readFileSync(join(PRODUCT_ROOT, '.grok-plugin', 'plugin.json'), 'utf8')).skills;
   assert.equal(skillCount, marketplaceSkills.length, 'the measured packaged skill directory count must match the current catalog');
 
-  const english = readFileSync(join(PRODUCT_ROOT, 'README.md'), 'utf8');
-  const englishSummary = english.match(/It ships (\d+) skills/);
   const englishReference = readFileSync(join(PRODUCT_ROOT, 'docs/reference.md'), 'utf8');
   const englishList = englishReference.match(/^- (\d+) Grok-native skill documents/m);
-  assert.ok(englishSummary, 'README.md must state its shipped skill count');
   assert.ok(englishList, 'the linked reference must state its skill-document count');
-  assert.equal(Number(englishSummary[1]), skillCount, 'README.md summary must match .grok/skills');
   assert.equal(Number(englishList[1]), skillCount, 'the reference list must match .grok/skills');
+  for (const name of ['README.md', 'docs/npm/README.md']) {
+    const englishSummary = readFileSync(join(PRODUCT_ROOT, name), 'utf8').match(/It ships (\d+) skills/);
+    assert.ok(englishSummary, `${name} must state its shipped skill count`);
+    assert.equal(Number(englishSummary[1]), skillCount, `${name} summary must match .grok/skills`);
+  }
 
-  const korean = readFileSync(join(PRODUCT_ROOT, 'README_ko-KR.md'), 'utf8');
-  const koreanList = korean.match(/skill\s+(\d+)개/);
-  assert.ok(koreanList, 'README_ko-KR.md must state its skill count');
-  assert.equal(Number(koreanList[1]), skillCount, 'README_ko-KR.md must match .grok/skills');
+  for (const name of ['README_ko-KR.md', 'docs/npm/README_ko-KR.md']) {
+    const koreanList = readFileSync(join(PRODUCT_ROOT, name), 'utf8').match(/스킬\s+(\d+)개/);
+    assert.ok(koreanList, `${name} must state its skill count`);
+    assert.equal(Number(koreanList[1]), skillCount, `${name} must match .grok/skills`);
+  }
 });
 
 test('landing readmes list the shipped research route', () => {
-  for (const name of ['README.md', 'README_ko-KR.md']) {
+  for (const name of ['README.md', 'README_ko-KR.md', 'docs/npm/README.md', 'docs/npm/README_ko-KR.md']) {
     const text = readFileSync(join(PRODUCT_ROOT, name), 'utf8');
     assert.match(text, /\|\s*`\/litresearch`\s*\|/u, `${name} must list /litresearch in the first route table`);
     assert.doesNotMatch(text, /not shipped|포함되어 있지 않습니다|litresearch가 없습니다/u, `${name} must not claim research is absent`);

@@ -7,7 +7,7 @@ Engine
   The page shaders carry simplex noise by Ashima Arts and Stefan Gustavson (MIT).
 
 Engine dependencies (installed by `litgrok-ai motion-runtime install`, not shipped here)
-  opentype.js 1.3.4 (MIT), ws 8.18.3 (MIT), string.prototype.codepointat 0.2.1 (MIT),
+  opentype.js 1.3.4 (MIT), ws 8.22.0 (MIT), string.prototype.codepointat 0.2.1 (MIT),
   tiny-inflate 1.0.3 (MIT); licence texts install with each package in the motion cache.
   Tier 2 only: librosa and the packages pinned in requirements-audio.txt, installed with
   `--audio`; each package's licence installs with it in the audio venv.

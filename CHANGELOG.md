@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.0.10 — 2026-09-29
+
+- lit-typographic-motion: the motion runtime now pins `ws` 8.22.0, which fixes a memory-exhaustion denial of service and an uninitialized-memory disclosure in 8.18.3. Run `litgrok-ai motion-runtime install` again after upgrading.
+- The npm package no longer picks up Python bytecode (`__pycache__`, `.pyc`) left in the lit-pptx and lit-docx script folders.
+- The READMEs are rewritten in plainer language, and GitHub and npmjs now get different pages: the full guide with the skills gallery stays on GitHub, and npmjs shows a shorter install-first page from `docs/npm/`, swapped in when the package is packed.
+
 ## 1.0.9 — 2026-09-28
 
 - lit-pptx: the second rich render style id is now `green`.

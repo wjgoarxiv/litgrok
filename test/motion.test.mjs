@@ -344,3 +344,15 @@ test('no Wave 1 premise or mandate string survives on any shipped surface', () =
     for (const pattern of WAVE1_PREMISE) assert.doesNotMatch(body, pattern, `${file} still carries ${pattern}`);
   }
 });
+
+test('the engine pins ws at a release with the published DoS and memory-disclosure fixes, and the lockfile and notices agree', () => {
+  const pinned = JSON.parse(read('.grok/skills/lit-typographic-motion/package.json')).dependencies.ws;
+  assert.match(pinned, /^\d+\.\d+\.\d+$/, 'ws is pinned to an exact version');
+  const [major, minor] = pinned.split('.').map(Number);
+  assert.ok(major > 8 || (major === 8 && minor >= 21), `ws ${pinned} predates the 8.21.0 fix`);
+  const lock = JSON.parse(read('.grok/skills/lit-typographic-motion/package-lock.json'));
+  assert.equal(lock.packages[''].dependencies.ws, pinned);
+  assert.equal(lock.packages['node_modules/ws'].version, pinned);
+  assert.equal(lock.packages['node_modules/ws'].resolved, `https://registry.npmjs.org/ws/-/ws-${pinned}.tgz`);
+  assert.match(read('.grok/skills/lit-typographic-motion/THIRD_PARTY_NOTICES'), new RegExp(`ws ${pinned.replaceAll('.', '\\.')} \\(MIT\\)`));
+});
