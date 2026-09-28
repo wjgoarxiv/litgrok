@@ -1,0 +1,12 @@
+{
+  "name": "litgrok-readme-hyperframes-template",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "dependencies": {
+    "hyperframes": "0.8.51"
+  },
+  "scripts": {
+    "render": "hyperframes render"
+  }
+}

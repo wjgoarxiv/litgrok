@@ -1,0 +1,10 @@
+{
+  "name": "litgrok-readme-typography-template",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "dependencies": {
+    "fontkit": "2.0.4"
+  },
+  "scripts": {}
+}

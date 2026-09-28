@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^(Edit|edit|Write|write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "post-tool-use.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

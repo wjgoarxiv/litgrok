@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test and payload gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check syntax and canonical corpus
+        run: |
+          node --check bin/litgrok.mjs
+          node --check test/skills-and-rules.test.mjs
+          node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
+
+      - name: Check version lockstep
+        run: npm run check:version
+
+      # LitGrok declares no dependencies and ships no lockfile, so there is no
+      # install step. Adding one would only hide that fact.
+      - name: Run tests
+        shell: bash --noprofile --norc -e -o pipefail {0}
+        run: npm test 2>&1 | tee "$RUNNER_TEMP/test-report.log"
+
+      # The payload gates inside the suite run their own `npm pack --dry-run`.
+      # This step proves the package packs at all, independently of them.
+      - name: Pack dry run
+        run: npm pack --dry-run --json > "$RUNNER_TEMP/pack-report.json"
+
+      - name: No release-command guard
+        run: |
+          set -euo pipefail
+          terms=(
+            "npm publi""sh"
+            "NPM_""TOKEN"
+            "NODE_AUTH_""TOKEN"
+            "git pu""sh"
+            "git ta""g"
+            "--access publi""c"
+          )
+          found=0
+          for term in "${terms[@]}"; do
+            if grep -R -n -F --exclude-dir=.git -- "$term" .github package.json tools test; then
+              found=1
+            fi
+          done
+          if [ "$found" -ne 0 ]; then
+            echo "release-command guard failed" >&2
+            exit 1
+          fi
+          echo "release-command guard passed"
+
+      - name: Retain validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: litgrok-validation
+          path: |
+            ${{ runner.temp }}/test-report.log
+            ${{ runner.temp }}/pack-report.json
+          retention-days: 7
+          if-no-files-found: ignore

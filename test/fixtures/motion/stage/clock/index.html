@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#101418;font-family:Archivo,Pretendard;color:#f4f1ea}
+#dot{position:absolute;left:0;top:500px;width:80px;height:80px;border-radius:50%;background:#2bb3a3}
+#spin{position:absolute;left:1400px;top:300px;width:200px;height:200px;background:#f2b134;animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#clock{position:absolute;left:200px;top:200px;font-size:64px;font-weight:700}</style></head>
+<body><div id="dot"></div><div id="spin"></div><div id="clock"></div>
+<script>
+const COPY = { a: '시계만 움직인다' };
+const dot = document.getElementById('dot'), clock = document.getElementById('clock');
+let ticks = 0; setInterval(() => { ticks += 1; }, 100);
+function loop(ts) { dot.style.transform = `translateX(${(ts / 1000) * 300}px)`; requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 4, render(t) {
+  clock.textContent = `${COPY.a} ${Date.now() % 100000} ${performance.now().toFixed(1)} ${ticks} ${Math.random().toFixed(6)}`;
+}});
+</script></body></html>

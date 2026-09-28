@@ -1,0 +1,138 @@
+{
+  "schema_version": "litgrok.autoconference-corpus/v1",
+  "source": {
+    "kind": "reviewed-local-companion-corpus",
+    "reviewed_on": "2026-08-30",
+    "selection": "25 companion files retained; SKILL.md is a Grok-native adapter"
+  },
+  "file_count": 25,
+  "byte_count": 55733,
+  "aggregate_sha256": "2560ff5e352d5049abec5ab2c80c235dda8bb92213a610bd06d9042591529478",
+  "files": [
+    {
+      "path": "assets/conference_template.md",
+      "size": 2917,
+      "sha256": "c1b0a1bbfb52080384e9bf6d725a91d2165a2105a4f055820660a607c913c7e7"
+    },
+    {
+      "path": "assets/report_template.md",
+      "size": 1506,
+      "sha256": "e0cc4b388e4c2bc0fd68d032d48aaeffae50395ed8c98a3a3cd6461285396366"
+    },
+    {
+      "path": "assets/synthesis_template.md",
+      "size": 1118,
+      "sha256": "16ffba65a6f612b0552a2ec9698951832a7cb3b141214cbbb23501c0b81d0a7c"
+    },
+    {
+      "path": "references/agent-prompts.md",
+      "size": 1737,
+      "sha256": "dcbff9d0f7418203cc1fd74d55088dd3447dfe7d2ca9497089920c7358ef894f"
+    },
+    {
+      "path": "references/conference-protocol.md",
+      "size": 1492,
+      "sha256": "52a85c9a1a713013acd05036553eabe8bb9e9837d91f117be455d7fcfc08a788"
+    },
+    {
+      "path": "references/core-principles.md",
+      "size": 804,
+      "sha256": "0c862b86077f754236c9ada474704d7a4fa647ff967ad977de25a092e0836991"
+    },
+    {
+      "path": "references/family-contract.md",
+      "size": 1698,
+      "sha256": "cc9c1296228cb7dc49266778fe35268a5bb1f61ac68f91e22e8b2d2ffcb848d7"
+    },
+    {
+      "path": "references/modes/analyze.md",
+      "size": 628,
+      "sha256": "d7c15cd2f3f4ff42fc6f4ca68cb52ce3789d00182fcfe9078cd12974013b010e"
+    },
+    {
+      "path": "references/modes/core.md",
+      "size": 1594,
+      "sha256": "acf7e765931e5d9972d487e979c7dcaae08e60e39c5a12353c2d5fe0fcd9e259"
+    },
+    {
+      "path": "references/modes/core/convergence-guide.md",
+      "size": 2317,
+      "sha256": "515c36d78029d545e3c3f427335f2a7a6615102a76198bb13ee7c098fca3c312"
+    },
+    {
+      "path": "references/modes/core/crash-recovery.md",
+      "size": 663,
+      "sha256": "f067327ed13e6d2783c3b07e22b2adf9233cf00b4dfeb5995571921f854af08a"
+    },
+    {
+      "path": "references/modes/debate.md",
+      "size": 628,
+      "sha256": "6a4b0e713df22db0707aa8c62dfdc75b7a78b9755926c757ee5ca656475a088c"
+    },
+    {
+      "path": "references/modes/plan.md",
+      "size": 682,
+      "sha256": "772a17995add897af92803de2a10fcfa353c9d578c17b73b04fe189494a782e4"
+    },
+    {
+      "path": "references/modes/resume.md",
+      "size": 669,
+      "sha256": "971fdcd30990b083b472e88deb241ca8ebf653906119271e7e4290d24a09ce24"
+    },
+    {
+      "path": "references/modes/ship.md",
+      "size": 617,
+      "sha256": "74e4061f1a960c7dd7b6092acfb55178cfbaa2c429168f60dc22ef19fa38de27"
+    },
+    {
+      "path": "references/modes/survey.md",
+      "size": 658,
+      "sha256": "93866084c2abe5d7a1c6ef7251e5594e03044545ddda5e80c1ca42ef450769d0"
+    },
+    {
+      "path": "references/results-logging.md",
+      "size": 836,
+      "sha256": "829714f30af623aa78a4ebc9e13a0ba7135b2c876af3443e1c1274af8857fe96"
+    },
+    {
+      "path": "references/visualization-guide.md",
+      "size": 637,
+      "sha256": "4f7e705735b948038193c5a9c111e2db85672f5d97bb1c570aad217843868331"
+    },
+    {
+      "path": "scripts/init_conference.py",
+      "size": 21865,
+      "sha256": "58aaaa91d3f31bdacfccac4c3a736efb62cb89563f7d37281be0e49f84651187"
+    },
+    {
+      "path": "templates/code-performance.md",
+      "size": 2285,
+      "sha256": "a90d1425477d9aec002778ba695299cfabb593ccd3dbab82ed0d76038e17a4d5"
+    },
+    {
+      "path": "templates/debate-mode.md",
+      "size": 1851,
+      "sha256": "9c74435dc7eb2e2d24d32b0a80381aadc62890f4674d916022ce6ef220aab966"
+    },
+    {
+      "path": "templates/prompt-optimization.md",
+      "size": 2069,
+      "sha256": "8d78c233529533bb742986769941347eebc460fdb2a2dac63952e65883398e10"
+    },
+    {
+      "path": "templates/quick-conference.md",
+      "size": 1364,
+      "sha256": "35e92ccc202ed659ce30f1820fb53e7b6081f4bb01e7f3b3a301c014b9956d03"
+    },
+    {
+      "path": "templates/research-synthesis.md",
+      "size": 2375,
+      "sha256": "7dd182898b572826a614a1cd0239cd1a07d95b0c6cf022c79a5e842a4246ce81"
+    },
+    {
+      "path": "templates/survey-mode.md",
+      "size": 2723,
+      "sha256": "5862cebaf4458b0c411df900f739b0493f2c9583217caf4eff051206e87a10e5"
+    }
+  ]
+}

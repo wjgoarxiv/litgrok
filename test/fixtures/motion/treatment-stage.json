@@ -1,0 +1,35 @@
+{
+  "request": "비가 어떻게 만들어지는지 보여주는 영상 만들어줘 lit",
+  "genre": "explainer",
+  "path": "stage",
+  "pathReason": "The film has to draw clouds, droplets and the water cycle, not only words.",
+  "idea": "A single droplet rides the whole water cycle, from a warm sea to a cloud and back down as rain.",
+  "audience": "Middle-school science viewers",
+  "channel": "Classroom projector with sound on",
+  "format": "16:9",
+  "formatReason": "A classroom projector is landscape.",
+  "durationSec": 24,
+  "beats": [
+    { "t0": 0, "t1": 4, "purpose": "question", "onScreen": "a still sea under a low sun, one droplet blinking", "motion": "slow push-in on the droplet", "sound": "pad enters" },
+    { "t0": 4, "t1": 10, "purpose": "step: evaporation", "onScreen": "the droplet lifts off the sea as heat lines rise", "motion": "droplet floats up on a path, heat lines draw on", "sound": "rise into the lift" },
+    { "t0": 10, "t1": 15, "purpose": "step: condensation", "onScreen": "droplets gather into a swelling cloud", "motion": "cloud morphs from small puffs to one mass", "sound": "hit on the cut" },
+    { "t0": 15, "t1": 20, "purpose": "result: rain", "onScreen": "the cloud darkens and releases a sheet of rain", "motion": "rain lines stagger down, match cut to the sea", "sound": "pulse doubles" },
+    { "t0": 20, "t1": 24, "purpose": "recap", "onScreen": "the full cycle diagram with the droplet back home", "motion": "diagram arrows draw around the loop", "sound": "closing cadence" }
+  ],
+  "subject": { "name": "Droplet Dot", "source": "invented", "specifics": ["a water droplet that travels the full cycle", "drawn for young science viewers", "it swells as it condenses"] },
+  "visualDevices": [
+    { "kind": "illustration", "role": "subject", "beats": [0, 1, 2, 3, 4] },
+    { "kind": "diagram", "role": "support", "beats": [1, 2, 4] },
+    { "kind": "gradient", "role": "texture", "beats": [0, 4] }
+  ],
+  "typePlan": { "faces": ["Pretendard", "Archivo"], "hierarchy": "one headline per beat, small labels on the diagram", "maxWordsOnScreen": 6 },
+  "palette": [
+    { "hex": "#0B1F33", "role": "deep sky ground" },
+    { "hex": "#7FD1FF", "role": "water and droplet" },
+    { "hex": "#FFD166", "role": "sun warmth" }
+  ],
+  "sound": { "mode": "generated", "plan": "soft pulse with a rise into the lift and a hit on each cut", "palette": "glass" },
+  "copy": { "source": "invented", "lines": ["물방울 하나의 여행", "햇볕이 데우면 떠오른다", "차가운 하늘에서 뭉친다", "무거워지면 떨어진다", "그리고 다시 바다로"] },
+  "inventions": ["Droplet Dot", "all five copy lines"],
+  "ambition": "Match cuts that carry the droplet through every stage, with the diagram drawing itself in time with the pulse."
+}

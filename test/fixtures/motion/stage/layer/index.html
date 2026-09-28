@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#f3dfc3;font-family:Pretendard,Archivo}
+.label{position:absolute;width:180px;text-align:center;font-size:40px;font-weight:700;color:#1b2a41;opacity:0}
+#disc{position:absolute;left:1500px;top:600px;width:160px;height:160px;border-radius:50%;background:#f2a93b}</style></head>
+<body><div id="disc"></div><div class="label" id="a" style="left:1080px;top:370px"></div><div class="label" id="b" style="left:1300px;top:370px"></div><div class="label" id="c" style="left:1510px;top:370px"></div>
+<script>
+const COPY = { a: '해', b: '막대', c: '그림자' };
+for (const k of Object.keys(COPY)) { document.getElementById(k).textContent = COPY[k]; LitStage.text(document.getElementById(k)); }
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 4, render(t) {
+  ['a', 'b', 'c'].forEach((k, i) => {
+    const p = LitStage.ease.outBack(LitStage.at(t, [1 + i * 0.4, 1.4 + i * 0.4]));
+    const el = document.getElementById(k);
+    el.style.opacity = Math.min(1, LitStage.at(t, [1 + i * 0.4, 1.3 + i * 0.4]));
+    el.style.transform = `translateY(${(1 - Math.min(1, p)) * 16}px)`;
+  });
+  document.getElementById('disc').style.transform = `translateX(${Math.sin(t * 2) * 40}px)`;
+}});
+</script></body></html>

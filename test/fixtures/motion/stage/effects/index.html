@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#0b1f33;font-family:Archivo,Pretendard;color:#f4f1ea}
+.blob{position:absolute;width:300px;height:300px;border-radius:40%}
+#b1{left:100px;top:100px;background:#e4572e;filter:blur(18px)}
+#b2{left:300px;top:200px;background:#2bb3a3;mix-blend-mode:screen;box-shadow:0 30px 60px rgba(0,0,0,.6)}
+#glass{position:absolute;left:180px;top:160px;width:420px;height:240px;backdrop-filter:blur(12px) saturate(1.4);background:rgba(255,255,255,.08)}
+canvas{position:absolute}</style></head>
+<body><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div id="glass"></div>
+<svg width="600" height="400" style="position:absolute;left:1200px;top:80px"><defs><filter id="g"><feGaussianBlur stdDeviation="8"/></filter></defs><circle id="c" cx="300" cy="200" r="120" fill="#f2b134" filter="url(#g)"/></svg>
+<canvas id="c2" width="600" height="400" style="left:100px;top:600px"></canvas>
+<canvas id="gl" width="600" height="400" style="left:1200px;top:600px"></canvas>
+<script>
+const c2 = document.getElementById('c2').getContext('2d');
+const gl = document.getElementById('gl').getContext('webgl');
+const vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'); gl.compileShader(vs);
+const fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, 'precision mediump float;uniform float t;void main(){vec2 u=gl_FragCoord.xy/vec2(600.,400.);gl_FragColor=vec4(.5+.5*sin(u.x*9.+t),.5+.5*cos(u.y*7.-t),.6,1.);}'); gl.compileShader(fs);
+const prog = gl.createProgram(); gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const ut = gl.getUniformLocation(prog, 't');
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 4, render(t) {
+  document.getElementById('b1').style.transform = `translateX(${t * 120}px)`;
+  document.getElementById('b2').style.transform = `rotate(${t * 40}deg)`;
+  document.getElementById('c').setAttribute('r', String(80 + 40 * Math.sin(t * 2)));
+  c2.clearRect(0, 0, 600, 400); c2.shadowBlur = 24; c2.shadowColor = '#2bb3a3'; c2.fillStyle = '#f4f1ea';
+  c2.beginPath(); c2.arc(300 + Math.sin(t * 2) * 150, 200, 70, 0, Math.PI * 2); c2.fill();
+  gl.uniform1f(ut, t); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}});
+</script></body></html>

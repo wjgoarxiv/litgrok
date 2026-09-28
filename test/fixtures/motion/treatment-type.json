@@ -1,0 +1,28 @@
+{
+  "request": "\"오늘의 걸음이 내일의 길이 된다\" 이 문장으로 키네틱 타이포 영상 만들어줘 lit",
+  "genre": "type-led",
+  "path": "type",
+  "pathReason": "The user supplied one sentence and asked for kinetic type; the words are the film.",
+  "idea": "Each phrase lands like a footstep on a quiet beat and the last word opens the frame.",
+  "audience": "Anyone scrolling past a quote at night",
+  "channel": "Social feed with sound on",
+  "format": "16:9",
+  "formatReason": "The feed plays landscape video full width.",
+  "durationSec": 8,
+  "beats": [
+    { "t0": 0, "t1": 4, "purpose": "first breath", "onScreen": "the first phrase", "motion": "word by word, weight on the first word", "sound": "pulse enters" },
+    { "t0": 4, "t1": 8, "purpose": "second breath and pause", "onScreen": "the second phrase", "motion": "slower reveal, hold on the last word", "sound": "closing cadence" }
+  ],
+  "subject": { "name": "오늘의 걸음", "source": "user", "specifics": [] },
+  "visualDevices": [ { "kind": "shape", "role": "support", "beats": [0, 1] } ],
+  "typePlan": { "faces": ["Pretendard"], "hierarchy": "one phrase at a time, the last word heaviest", "maxWordsOnScreen": 3 },
+  "palette": [
+    { "hex": "#111111", "role": "ground" },
+    { "hex": "#F4F1EA", "role": "type" },
+    { "hex": "#2BB3A3", "role": "accent rule" }
+  ],
+  "sound": { "mode": "generated", "plan": "a slow pulse with a cadence at the close", "palette": "felt" },
+  "copy": { "source": "user", "lines": ["오늘의 걸음이", "내일의 길이 된다"] },
+  "inventions": [],
+  "ambition": "Let the pauses carry the meaning: two breaths, one emphasis, and an ending that holds long enough to read."
+}

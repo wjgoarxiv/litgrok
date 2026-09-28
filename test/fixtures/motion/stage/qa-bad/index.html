@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#202020;font-family:Archivo,Pretendard}
+#shape{position:absolute;left:1300px;top:600px;width:300px;height:300px;background:#2bb3a3}
+p{position:absolute;margin:0;font-size:40px;font-weight:400;color:#f4f1ea}
+#low{left:300px;top:200px;color:#2e2e2e}#off{left:10px;top:500px}#short{left:300px;top:800px;opacity:0}#meta{left:900px;top:200px;font-size:36px}
+canvas{position:absolute;left:1200px;top:100px}</style></head>
+<body><div id="shape"></div><p id="low"></p><p id="off"></p><p id="short"></p><p id="meta">beat 02 treatment</p><canvas id="c" width="500" height="200"></canvas><script>
+const COPY = { low: '어두운 글씨 한 줄', off: '가장자리에 붙은 줄', short: '잠깐 보이는 줄' };
+for (const k of Object.keys(COPY)) document.getElementById(k).textContent = COPY[k];
+const ctx = document.getElementById('c').getContext('2d');
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 6, render(t) {
+  document.getElementById('short').style.opacity = t > 2 && t < 2.3 ? 1 : 0;
+  ctx.clearRect(0, 0, 500, 200); ctx.fillStyle = '#fff'; ctx.font = '40px Archivo'; ctx.fillText('canvas words', 20, 100);
+}});
+</script></body></html>

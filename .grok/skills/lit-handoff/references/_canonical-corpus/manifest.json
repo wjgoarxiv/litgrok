@@ -1,0 +1,17 @@
+{
+  "schema_version": "litgrok.lit-handoff-corpus/v1",
+  "source": {
+    "kind": "reviewed-local-handoff-closure",
+    "reviewed_on": "2026-08-30",
+    "selection": "template, example, evaluation cases, and source pointer retained; the skill entrypoint is a Grok-native adapter"
+  },
+  "file_count": 4,
+  "byte_count": 23331,
+  "aggregate_sha256": "ed7db6f48d68dbc9a41ad69a282e384c7aaba00db578dcd75a06336e896663cb",
+  "files": [
+    {"path": "evals/evals.json", "size": 11531, "sha256": "0a70f0d149e59641100c7dcf8b9f2f1c0ceae57b98518e165f08088f2c2484da"},
+    {"path": "examples/HANDOFF-example-generic-auth-refactor.md", "size": 5138, "sha256": "43c767e573ac8c8900832d2b7a92ee1e83fd2d3d794fe2c82ecef87e5737f2a3"},
+    {"path": "references/source-pointer.md", "size": 1462, "sha256": "63f34756fa299ef07c6ea25a78883fc1d1feb576f722f5271a770bf3259448d6"},
+    {"path": "templates/HANDOFF.md", "size": 5200, "sha256": "2a795a06e7bb81a57e6675ae70ed26db0dbfdb792c01f0a60f96f02cbef49fbd"}
+  ]
+}

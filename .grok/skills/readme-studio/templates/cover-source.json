@@ -1,0 +1,27 @@
+{
+  "title": "Research Notes",
+  "subtitle": "연구를 기록하는 작은 공간",
+  "label": "LOCAL / RESEARCH",
+  "background": {
+    "kind": "supplied-or-native-generated",
+    "path": "background.png",
+    "sha256": "record-after-inspection",
+    "provenance": "record source and permission"
+  },
+  "fonts": [],
+  "engine": "choose-before-render",
+  "effects": {
+    "variant": "restrained",
+    "blur": 16,
+    "midBlur": 5,
+    "grain": 0.035,
+    "glow": 0.18,
+    "rimLight": 0.42
+  },
+  "render": {
+    "fps": 60,
+    "frames": 300,
+    "seconds": 5
+  },
+  "outputs": []
+}

@@ -1,0 +1,7 @@
+<!doctype html><html><head><meta charset="utf-8"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;background:#111}#v{position:absolute;inset:200px}</style></head>
+<body><div id="v"></div><script>
+const bytes = new Uint8Array(3); crypto.getRandomValues(bytes);
+document.getElementById('v').style.background = `rgb(${bytes[0]},${bytes[1]},${bytes[2]})`;
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 4 });
+</script></body></html>

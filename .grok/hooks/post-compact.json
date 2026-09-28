@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "post-compact.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

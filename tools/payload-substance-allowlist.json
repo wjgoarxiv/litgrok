@@ -1,0 +1,33 @@
+{
+  "schema": "litfamily.payload-substance/v1",
+  "parityDivergences": {
+    "visual-qa": {
+      "date": "2026-08-30",
+      "reason": "The Grok visual review surface intentionally ships a focused capture, contract, verdict, and evidence-manifest closure; its host has no bundled binary visual runtime, so the larger sibling script suites are not portable substance and this reduced scope is explicitly reviewed."
+    },
+    "wikify": {
+      "date": "2026-08-30",
+      "reason": "The Grok wikify adapter intentionally ships its two focused protocol references instead of the larger sibling command corpus; those references fully define the documented page and provenance contract, and the reduced closure is reviewed as a product-specific scope decision."
+    },
+    "lit-humanizer": {
+      "date": "2026-09-05",
+      "reason": "The Grok port keeps the self-contained editing procedure while adding detector rules, Korean metrics, Office extraction, references, examples, and harness integration. Its closure is measured from the local product rather than padded to match sibling layouts."
+    }
+  },
+  "skills": {
+    "lit-burnoff-file": "A bounded single-file detection, edit, and verification procedure is the entire promised capability.",
+    "comment-checker": "The document defines comment checks and the documented host hook locations; no hidden corpus is needed.",
+    "deep-interview": "Question order, ambiguity and readiness gates, plan handoff, and approval boundaries form a complete workflow.",
+    "lit-commit": "State inventory, isolation, diff and staging, remote boundaries, conflict handling, and receipts fully bind the procedure.",
+    "lit-crucible": "Bounded exploration lanes, contradiction tests, synthesis, and plan handoff are complete instructions without a missing artifact.",
+    "lit-init": "Instruction-surface discovery, placement, conflict analysis, mutation gating, and verification are fully specified.",
+    "lit-recap": "Read-only reconstruction from session history and current files, evidence precedence, and stale-state handling are complete.",
+    "litgoal": "The narrowed document shapes a checkable objective and hands the user an exact native goal line; no runtime is claimed.",
+    "litgrok": "It documents the actual package, installer, hooks, skills, rules, and supported boundaries; explanation is the capability.",
+    "litwork": "The narrowed document records intent and surfaces host-backed session evidence without claiming an unshipped execution runtime.",
+    "refactor": "Worktree choice, intake, characterization, structural moves, safety, verification, and cleanup are complete bounded instructions.",
+    "lit-burnoff": "Test locking, cleanup categories, meaning preservation, batch discipline, and completion evidence are fully specified.",
+    "start-work": "Approved-plan loading, native validation helpers, authority and lifecycle gates, evidence, and cleanup are complete in the skill.",
+    "structural-search": "The honest host search fallback, intent gating, bounded probing, review, and evidence contract are complete."
+  }
+}

@@ -1,0 +1,42 @@
+lit-typographic-motion — third-party notices
+
+Engine
+  Portions of the engine are adapted from mexicat/pdoom-video
+  (https://github.com/mexicat/pdoom-video), commit ca251e3dddda422b364385eb484b5a3593a0990d,
+  MIT licence, Copyright (c) 2026 Giacomo Magnanini. The full notice is in NOTICE.
+  The page shaders carry simplex noise by Ashima Arts and Stefan Gustavson (MIT).
+
+Engine dependencies (installed by `litgrok-ai motion-runtime install`, not shipped here)
+  opentype.js 1.3.4 (MIT), ws 8.18.3 (MIT), string.prototype.codepointat 0.2.1 (MIT),
+  tiny-inflate 1.0.3 (MIT); licence texts install with each package in the motion cache.
+  Tier 2 only: librosa and the packages pinned in requirements-audio.txt, installed with
+  `--audio`; each package's licence installs with it in the audio venv.
+
+Fonts shipped in this skill (paths relative to this directory)
+  Archivo (9 static instances, instanced from Archivo[wdth,wght].ttf)
+      OFL 1.1: fonts/Archivo-OFL.txt
+  VT323
+      OFL 1.1: fonts/VT323-OFL.txt
+  Silkscreen (Regular, Bold)
+      OFL 1.1: fonts/Silkscreen-OFL.txt
+  EMSAllure, EMSFelix, EMSOsmotron, EMSReadability, EMSTech (single-stroke SVG fonts)
+      OFL 1.1: fonts/stroke/OFL-1.1.txt
+      credits: fonts/stroke/CREDITS
+
+Fonts reused from the lit-pptx skill (not duplicated)
+  PretendardGOV (Regular, Bold)
+      OFL 1.1: ../lit-pptx/pretendard-font/OFL.txt
+
+Fonts fetched by `litgrok-ai motion-runtime install` into the motion cache
+(`${XDG_CACHE_HOME:-~/.cache}/litgrok/motion-runtime/<lock digest>/fonts/`), each kept only after
+its sha256 and its licence file's sha256 match the pins in fonts/pins.json
+  Galmuri9
+      OFL 1.1: Galmuri-OFL.md
+  MesloLGS NF
+      Apache-2.0 notice: MesloLGS-NF-License.txt
+      Apache-2.0 text: Apache-2.0.txt
+      Bitstream Vera and Arev notices: DejaVu-LICENSE
+  Pretendard (Regular; fetched only when the lit-pptx pair is absent)
+      OFL 1.1: Pretendard-LICENSE
+
+Credit line: Typographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit `ca251e3`.

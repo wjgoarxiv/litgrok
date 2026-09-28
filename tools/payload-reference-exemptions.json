@@ -1,0 +1,17 @@
+{
+  "schema": "litfamily.payload-references/v1",
+  "surfaces": [
+    {
+      "prefix": "~/.grok/",
+      "reason": "The user-level Grok directory is host-managed configuration, hooks, trust state, and generated skills outside the npm payload."
+    },
+    {
+      "prefix": ".grok/config.toml",
+      "reason": "Project Grok configuration is supplied by the consuming workspace and is not an installed skill resource."
+    },
+    {
+      "prefix": ".handoff/",
+      "reason": "The consuming project's handoff file is host workspace state, not a template shipped by this skill package."
+    }
+  ]
+}

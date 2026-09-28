@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;background:#000}
+#box{position:absolute;left:0;top:0;width:400px;height:400px;background:rgb(0,0,0);transition:background-color 1s linear}
+#box.on{background:rgb(255,255,255)}</style></head>
+<body><div id="box"></div><script>
+setTimeout(() => document.getElementById('box').classList.add('on'), 2000);
+LitStage.define({ width: 1920, height: 1080, fps: 60, duration: 4 });
+</script></body></html>

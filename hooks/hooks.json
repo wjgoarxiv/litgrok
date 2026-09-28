@@ -1,0 +1,137 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/session-start.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/user-prompt-submit.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Edit|edit|Write|write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/deliverable-hedge-guard.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(Edit|edit|Write|write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/post-tool-use.mjs\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "^(Bash|bash|Edit|edit|Write|write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/deliverable-hedge-guard.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/post-tool-use-failure.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/stop.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/stop-failure.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/subagent-start.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/subagent-stop.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/pre-compact.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$GROK_PLUGIN_ROOT/.grok/hooks/post-compact.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "subagent-stop.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

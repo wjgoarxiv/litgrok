@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#0f1720;font-family:Archivo,Pretendard;color:#f4f1ea}
+#shape{position:absolute;left:1200px;top:300px;width:360px;height:360px;border-radius:50%;background:#e4572e}
+.line{position:absolute;left:200px;top:420px;margin:0;font-size:84px;font-weight:700;opacity:0}</style></head>
+<body><div id="shape"></div><h1 class="line" id="a"></h1><h1 class="line" id="b"></h1><script>
+const COPY = { a: '둥근 해가 천천히 뜬다', b: '다시 저녁이 온다' };
+const a = document.getElementById('a'), b = document.getElementById('b'); a.textContent = COPY.a; b.textContent = COPY.b;
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 6, render(t) {
+  document.getElementById('shape').style.transform = `translateY(${Math.sin(t) * 60}px)`;
+  a.style.opacity = t < 3 ? 1 : 0; b.style.opacity = t >= 3 ? 1 : 0;
+}});
+</script></body></html>

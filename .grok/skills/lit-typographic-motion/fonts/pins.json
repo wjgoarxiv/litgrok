@@ -1,0 +1,371 @@
+{
+  "schema": "litgrok.motion-font-pins/v1",
+  "note": "Every font the engine may draw with. bundled = shipped in this skill; reused = the product lit-pptx pair checked against LitGrok's own hashes; fetched = pinned URL + sha256, fetched only by litgrok-ai motion-runtime install.",
+  "fonts": {
+    "archivo-75-400": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w75-wt400.ttf",
+      "sha256": "bd81c6f3e95f3629c78dbe0337b5f32e462e2c4e7f9ab29ca6dd1d4db8c50ec0",
+      "bytes": 120844,
+      "weight": 400,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-75-700": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w75-wt700.ttf",
+      "sha256": "9d1249bdf9dde5cb5a877016de9ebfd71d30ec6a0d5f1c08939bf342005dacae",
+      "bytes": 120888,
+      "weight": 700,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-75-900": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w75-wt900.ttf",
+      "sha256": "17a855543ad53762310fc48e51376627523f3f1dacb8ef6fb925b616c83fc342",
+      "bytes": 120588,
+      "weight": 900,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-100-400": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w100-wt400.ttf",
+      "sha256": "a84ecd3bae75c2c8a78e665e3569b24795d18c2843c5cdab61b32c900653b850",
+      "bytes": 121520,
+      "weight": 400,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-100-700": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w100-wt700.ttf",
+      "sha256": "564a1ef8b9d90eecc5abfcaebf1261c9ff18f9d136e9d3d08a2cd151eeeb1511",
+      "bytes": 121440,
+      "weight": 700,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-100-900": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w100-wt900.ttf",
+      "sha256": "e7a4e198fd60488c38a3b26d6a5dd078d5f04d02d04c59016f6f76b19e488515",
+      "bytes": 120740,
+      "weight": 900,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-125-400": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w125-wt400.ttf",
+      "sha256": "f6459ac9bcb29580f41bb35b385c01b35a09bfe6ac363777236af3e504d5ff00",
+      "bytes": 121600,
+      "weight": 400,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-125-700": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w125-wt700.ttf",
+      "sha256": "9c5fc86a5c7f4b7f324eac8cf559543f3778208ace02b7550dc07392a54c6cff",
+      "bytes": 121628,
+      "weight": 700,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "archivo-125-900": {
+      "source": "bundled",
+      "file": "fonts/Archivo-w125-wt900.ttf",
+      "sha256": "8ff8f3cf15c7aab8cf5a9ee974da59a2caaf035dff9a76ae067cfc0953327585",
+      "bytes": 121220,
+      "weight": 900,
+      "family": "Archivo",
+      "licence": [
+        {
+          "file": "fonts/Archivo-OFL.txt",
+          "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+        }
+      ],
+      "origin": "development-time fontTools instance of pdoom-video@ca251e3 app/public/fonts/src/Archivo[wdth,wght].ttf (sha256 0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053)"
+    },
+    "vt323": {
+      "source": "bundled",
+      "file": "fonts/VT323-Regular.ttf",
+      "sha256": "cf4de751ada78ceac033dbe16a687742939995b77bc2a052ae17a4957958594d",
+      "bytes": 153116,
+      "weight": 400,
+      "family": "VT323",
+      "licence": [
+        {
+          "file": "fonts/VT323-OFL.txt",
+          "sha256": "27d9af34210253e7ca1251fbace86c6f65b40031d6ce1a75493a1b2093631298"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/vt323/VT323-Regular.ttf"
+    },
+    "silkscreen-400": {
+      "source": "bundled",
+      "file": "fonts/Silkscreen-Regular.ttf",
+      "sha256": "c845473330b94c2079ce9af01c51ac8ba2d99c24f4d14c039843bbb8e642ebd8",
+      "bytes": 32220,
+      "weight": 400,
+      "family": "Silkscreen",
+      "licence": [
+        {
+          "file": "fonts/Silkscreen-OFL.txt",
+          "sha256": "86c5e9c9382cdcc5948704fdfe60f2aa164a719746931219a42736ecd9cefbd3"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/silkscreen/Silkscreen-Regular.ttf"
+    },
+    "silkscreen-700": {
+      "source": "bundled",
+      "file": "fonts/Silkscreen-Bold.ttf",
+      "sha256": "768476aa712d4f5c3e18d3bce80f980a8bd3f72b7094d22ec5e768df3acfed61",
+      "bytes": 30632,
+      "weight": 700,
+      "family": "Silkscreen",
+      "licence": [
+        {
+          "file": "fonts/Silkscreen-OFL.txt",
+          "sha256": "86c5e9c9382cdcc5948704fdfe60f2aa164a719746931219a42736ecd9cefbd3"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/silkscreen/Silkscreen-Bold.ttf"
+    },
+    "ems-allure": {
+      "source": "bundled",
+      "kind": "stroke",
+      "connected": true,
+      "file": "fonts/stroke/EMSAllure.svg",
+      "sha256": "55ed2de9c602229f32dd2784aae704023a5594eb8d208131f2552fae330a2a67",
+      "bytes": 57469,
+      "weight": 400,
+      "family": "EMSAllure",
+      "licence": [
+        {
+          "file": "fonts/stroke/OFL-1.1.txt"
+        },
+        {
+          "file": "fonts/stroke/CREDITS"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/mexicat/pdoom-video/ca251e3dddda422b364385eb484b5a3593a0990d/app/public/fonts/stroke/EMSAllure.svg"
+    },
+    "ems-felix": {
+      "source": "bundled",
+      "kind": "stroke",
+      "connected": false,
+      "file": "fonts/stroke/EMSFelix.svg",
+      "sha256": "e7b2463c6cb2a2cbef59db9b1f9f5a20a0ecd9158eeb8f01f2015c9e5be7dca4",
+      "bytes": 48819,
+      "weight": 400,
+      "family": "EMSFelix",
+      "licence": [
+        {
+          "file": "fonts/stroke/OFL-1.1.txt"
+        },
+        {
+          "file": "fonts/stroke/CREDITS"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/mexicat/pdoom-video/ca251e3dddda422b364385eb484b5a3593a0990d/app/public/fonts/stroke/EMSFelix.svg"
+    },
+    "ems-osmotron": {
+      "source": "bundled",
+      "kind": "stroke",
+      "connected": false,
+      "file": "fonts/stroke/EMSOsmotron.svg",
+      "sha256": "158b0f247a005ca5b6b8556f85684ad10cbb04c41ebbd394b9090c8ea2f16c52",
+      "bytes": 30158,
+      "weight": 400,
+      "family": "EMSOsmotron",
+      "licence": [
+        {
+          "file": "fonts/stroke/OFL-1.1.txt"
+        },
+        {
+          "file": "fonts/stroke/CREDITS"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/mexicat/pdoom-video/ca251e3dddda422b364385eb484b5a3593a0990d/app/public/fonts/stroke/EMSOsmotron.svg"
+    },
+    "ems-readability": {
+      "source": "bundled",
+      "kind": "stroke",
+      "connected": false,
+      "file": "fonts/stroke/EMSReadability.svg",
+      "sha256": "eebece4f2a47b9d3a8f40cab2b0f689ca60902997abd5c81064ef0d2a3a05522",
+      "bytes": 41926,
+      "weight": 400,
+      "family": "EMSReadability",
+      "licence": [
+        {
+          "file": "fonts/stroke/OFL-1.1.txt"
+        },
+        {
+          "file": "fonts/stroke/CREDITS"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/mexicat/pdoom-video/ca251e3dddda422b364385eb484b5a3593a0990d/app/public/fonts/stroke/EMSReadability.svg"
+    },
+    "ems-tech": {
+      "source": "bundled",
+      "kind": "stroke",
+      "connected": false,
+      "file": "fonts/stroke/EMSTech.svg",
+      "sha256": "7b5a420d4e16285213e7e2b1d187d086835c2dd7a7f64c5b8057434f082fc46f",
+      "bytes": 40777,
+      "weight": 400,
+      "family": "EMSTech",
+      "licence": [
+        {
+          "file": "fonts/stroke/OFL-1.1.txt"
+        },
+        {
+          "file": "fonts/stroke/CREDITS"
+        }
+      ],
+      "origin": "https://raw.githubusercontent.com/mexicat/pdoom-video/ca251e3dddda422b364385eb484b5a3593a0990d/app/public/fonts/stroke/EMSTech.svg"
+    },
+    "hangul-400": {
+      "source": "reused",
+      "file": "../lit-pptx/pretendard-font/public/static/PretendardGOV-Regular.otf",
+      "sha256": "9be9fe010498fd14f02f3302d2401818622993248b0aa37e5bf950852099899c",
+      "weight": 400,
+      "family": "PretendardGOV",
+      "licence": [
+        {
+          "file": "../lit-pptx/pretendard-font/OFL.txt",
+          "sha256": "3b8ac478fa32708ecd929cd7eae8cc32aba1710ca8ec95386d0db9db89ce57dd"
+        }
+      ],
+      "fallback": "pretendard-fallback-400"
+    },
+    "hangul-700": {
+      "source": "reused",
+      "file": "../lit-pptx/pretendard-font/public/static/PretendardGOV-Bold.otf",
+      "sha256": "c9883780c663676a417f465e2f1da027d3dca8469a31a6af08698dbe58d76668",
+      "weight": 700,
+      "family": "PretendardGOV",
+      "licence": [
+        {
+          "file": "../lit-pptx/pretendard-font/OFL.txt",
+          "sha256": "3b8ac478fa32708ecd929cd7eae8cc32aba1710ca8ec95386d0db9db89ce57dd"
+        }
+      ],
+      "fallback": "pretendard-fallback-400"
+    },
+    "galmuri9": {
+      "source": "fetched",
+      "file": "Galmuri9.ttf",
+      "url": "https://raw.githubusercontent.com/quiple/galmuri/v2.40.4/dist/Galmuri9.ttf",
+      "sha256": "5cb68052ee0a15571747e91c20f145e24b51bb459c6cd58226fafee78d9c0b16",
+      "bytes": 4649144,
+      "weight": 400,
+      "family": "Galmuri9",
+      "licence": [
+        {
+          "file": "Galmuri-OFL.md",
+          "url": "https://raw.githubusercontent.com/quiple/galmuri/v2.40.4/ofl.md",
+          "sha256": "9a9e5a342c430c3fcf01a408b680f4405d5bf4ac659c931be35f8a1b27ea69c9"
+        }
+      ]
+    },
+    "meslo": {
+      "source": "fetched",
+      "file": "MesloLGS-NF-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/romkatv/powerlevel10k-media/145eb9fbc2f42ee408dacd9b22d8e6e0e553f83d/MesloLGS%20NF%20Regular.ttf",
+      "sha256": "d97946186e97f8d7c0139e8983abf40a1d2d086924f2c5dbf1c29bd8f2c6e57d",
+      "bytes": 2594368,
+      "weight": 400,
+      "family": "MesloLGS NF",
+      "licence": [
+        {
+          "file": "MesloLGS-NF-License.txt",
+          "url": "https://raw.githubusercontent.com/romkatv/powerlevel10k-media/145eb9fbc2f42ee408dacd9b22d8e6e0e553f83d/MesloLGS%20NF%20License.txt",
+          "sha256": "0eb25f1a4e86320ceae5f650cb75e628117c3f575bc2e332bb13cd08c3be438e"
+        },
+        {
+          "file": "Apache-2.0.txt",
+          "url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "file": "DejaVu-LICENSE",
+          "url": "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/version_2_37/LICENSE",
+          "sha256": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+        }
+      ]
+    },
+    "pretendard-fallback-400": {
+      "source": "fetched",
+      "onlyWhenMissing": [
+        "hangul-400",
+        "hangul-700"
+      ],
+      "file": "Pretendard-Regular.otf",
+      "url": "https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf",
+      "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+      "bytes": 1574352,
+      "weight": 400,
+      "family": "Pretendard",
+      "licence": [
+        {
+          "file": "Pretendard-LICENSE",
+          "url": "https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9/LICENSE",
+          "sha256": "d31ddd9f2bed32fd7e302a205cf2380ba0de6529152d239ef99cfb6f261bfc04"
+        }
+      ]
+    }
+  }
+}

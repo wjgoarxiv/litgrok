@@ -1,0 +1,148 @@
+{
+  "schema_version": "litgrok.autoresearch-corpus/v1",
+  "source": {
+    "kind": "reviewed-local-companion-corpus",
+    "reviewed_on": "2026-08-30",
+    "selection": "27 companion files retained; SKILL.md is a Grok-native adapter"
+  },
+  "file_count": 27,
+  "byte_count": 38805,
+  "aggregate_sha256": "0296ca6e52fb7cb68a37f3e17f148248146955ad9624e37e449e60b56eeeb1d3",
+  "files": [
+    {
+      "path": "assets/report_template.md",
+      "size": 1627,
+      "sha256": "b6b7607488736f24d3bacea8f3ec8563da40ff782cc1d85c064ab53b2488a4f9"
+    },
+    {
+      "path": "assets/research_template.md",
+      "size": 1374,
+      "sha256": "726d175cd2db92dfe58a738117d9c6cc88211e519d3be8fb7cb05b66ba34c050"
+    },
+    {
+      "path": "assets/results_template.tsv",
+      "size": 124,
+      "sha256": "bcbdc938723f2cd8a4160000621d003a9b04c8e0aa6f67be8a64a572af7f58cc"
+    },
+    {
+      "path": "references/core-principles.md",
+      "size": 866,
+      "sha256": "122f32b1235b0f52a984db8f73de7fdc93ecb0735af383ef8b158a082de5c580"
+    },
+    {
+      "path": "references/family-contract.md",
+      "size": 2247,
+      "sha256": "3bc544c2eb7bfb2fc5a514d8cb1083e427a99095076c282bace9ea9de4cffc53"
+    },
+    {
+      "path": "references/modes/core.md",
+      "size": 1290,
+      "sha256": "d9593023a7bca50d459d5de7d6950f0d2585420e3d350d2a9f519bd3bfa44c49"
+    },
+    {
+      "path": "references/modes/core/evaluator-contract.md",
+      "size": 680,
+      "sha256": "c012322fc40114d2b77b885725f5c314a695f55f0376bba67eed77eceb4b1112"
+    },
+    {
+      "path": "references/modes/core/stuck-detection.md",
+      "size": 640,
+      "sha256": "9e38964cadf2c65facf1dc7a2c1fab42e32b0813a882b47afc9551f72743f6a1"
+    },
+    {
+      "path": "references/modes/debug.md",
+      "size": 627,
+      "sha256": "2eef3e7ad9810753191e708a0addfe870ed686e9aa28017da29f4c68da526c8f"
+    },
+    {
+      "path": "references/modes/debug/investigation-techniques.md",
+      "size": 633,
+      "sha256": "6c2b5369ba1718b3d9f8e394d4fef18943d270748623723f3e5b7b157408f980"
+    },
+    {
+      "path": "references/modes/fix.md",
+      "size": 631,
+      "sha256": "0c5d68629a040bab2ea71e9f14fd31fa5bec78578579f5aae7a0c47f082ec5bd"
+    },
+    {
+      "path": "references/modes/learn.md",
+      "size": 575,
+      "sha256": "b318a849c48b2aed18a1b2aa19a1ff28a17862c762504a86caea0ba2fef5b5d5"
+    },
+    {
+      "path": "references/modes/plan.md",
+      "size": 835,
+      "sha256": "081d722a75577390e946a48d70bcf8df33b7fcda109d3cbde848c466e0ea6ff0"
+    },
+    {
+      "path": "references/modes/predict.md",
+      "size": 638,
+      "sha256": "67f0e4cb00273056108fa0c90a9a0d165cbb3436c52923e403cc57106d1a2b4b"
+    },
+    {
+      "path": "references/modes/predict/persona-templates.md",
+      "size": 620,
+      "sha256": "65d6403334aef81b4b313b2979ab8040c7733163d61666aafb76780e624619a9"
+    },
+    {
+      "path": "references/modes/reason.md",
+      "size": 577,
+      "sha256": "4f4ad8b5746b2101ed76a6c412bfdc8da3bc13f3fce864b5271956078ea07984"
+    },
+    {
+      "path": "references/modes/scenario.md",
+      "size": 621,
+      "sha256": "0dfb67fda9e4b91d28994d907104ae28ca7709f2f9407c25ea6363a910e24b6b"
+    },
+    {
+      "path": "references/modes/scenario/dimensions.md",
+      "size": 592,
+      "sha256": "e3b9d17be5a1a6876d1af99278ad7822a9a242ca7746eafd70bf88619935044e"
+    },
+    {
+      "path": "references/modes/security.md",
+      "size": 651,
+      "sha256": "bd7a1e60b36bcdbcc1236018cc82e55727b7f95589e0a5f2a5eb6f2cfc453121"
+    },
+    {
+      "path": "references/modes/security/owasp-checklist.md",
+      "size": 569,
+      "sha256": "8fddf3bb4b7d35dc3f1c65db73791519d853da369d2c403d6d7c40e468d01031"
+    },
+    {
+      "path": "references/modes/security/stride-model.md",
+      "size": 599,
+      "sha256": "cd34176f3bfabe40b2cbe52d9b4ff7433a73473374a30cb5eb798a23bed2bc28"
+    },
+    {
+      "path": "references/modes/ship.md",
+      "size": 627,
+      "sha256": "6baa5d3812e71b46ec78c1e96891c54d4ced0b76cba127a4b0c2254aba31ba81"
+    },
+    {
+      "path": "references/modes/ship/type-checklists.md",
+      "size": 732,
+      "sha256": "6bea500594cad1e23bdeee2df34f6dd079d02b279773b20f914d313cabd630b3"
+    },
+    {
+      "path": "references/results-logging.md",
+      "size": 825,
+      "sha256": "4671c19df6d389b42091f2f117fd90726cb32f3082b44dbc9a895dc3625b9832"
+    },
+    {
+      "path": "references/visualization-guide.md",
+      "size": 1620,
+      "sha256": "2ca249d74b30b41e7660c8b7ba91a59b0c33a1e74fc18b2ec2f867441a6e4b27"
+    },
+    {
+      "path": "scripts/init_research.py",
+      "size": 14161,
+      "sha256": "b675ea22abf0794e32dbbf59b95248f20878bbf3d071fa10d37b5a004a7f880c"
+    },
+    {
+      "path": "scripts/style_presets.py",
+      "size": 3824,
+      "sha256": "b1c7d495016b0737b622684f4381f87990dfaae77934b3acae44e19742ebdfd5"
+    }
+  ]
+}

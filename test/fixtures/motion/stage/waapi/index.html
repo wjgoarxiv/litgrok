@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;background:#000}
+.b{position:absolute;top:0;width:200px;height:200px;background:#fff}#a{left:0;opacity:0}#b{left:600px;top:400px}</style></head>
+<body><div class="b" id="a"></div><div class="b" id="b"></div><script>
+const a = document.getElementById('a'), b = document.getElementById('b');
+a.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, fill: 'forwards' }).finished.then(() => {
+  b.animate([{ transform: 'translateX(0px)' }, { transform: 'translateX(800px)' }], { duration: 1000, fill: 'forwards', easing: 'linear' });
+});
+LitStage.define({ width: 1920, height: 1080, fps: 60, duration: 4 });
+</script></body></html>

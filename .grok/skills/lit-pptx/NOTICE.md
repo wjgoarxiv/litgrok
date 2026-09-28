@@ -1,0 +1,1 @@
+The presentation compiler, template definitions, learn-template workflow, font embedding, QA gate, agents and specs were authored by wjgoarxiv. This LitGrok port adapts their entry points and guidance to Grok Build. PretendardGOV Regular and Bold subset fonts are licensed under the bundled OFL text.

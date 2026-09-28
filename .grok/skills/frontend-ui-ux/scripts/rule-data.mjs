@@ -1,0 +1,56 @@
+// Shared values for the local browser probe and its static fallback.
+export const MATRIX = Object.freeze([
+  { label: '320', width: 320, height: 760, scheme: 'light' },
+  { label: '390', width: 390, height: 844, scheme: 'light' },
+  { label: '768', width: 768, height: 900, scheme: 'light' },
+  { label: '1440', width: 1440, height: 900, scheme: 'light' },
+  { label: '390-dark', width: 390, height: 844, scheme: 'dark' },
+  { label: '390-reduced-motion', width: 390, height: 844, scheme: 'light', reducedMotion: true },
+  { label: '1440-zoom200', width: 720, height: 450, scheme: 'light', zoom: 200 },
+]);
+
+export const LIMITS = Object.freeze({ nodes: 3000, text: 4000, findingsPerRule: 30, settleMs: 1200, viewportMs: 20000, totalMs: 180000 });
+
+export const RULES = Object.freeze({
+  'RS-002': { maxDarkLuminance: 0.35, severity: 'MEDIUM' },
+  'RS-003': { maxMotionMs: 250, severity: 'HIGH' },
+  'RS-004': { severity: 'HIGH' },
+  'RS-006': { overflowPx: 8, severity: 'HIGH' },
+  'RS-007': { clipPx: 0, offscreenPx: 8, overlapRatio: 0.45, clipped: 'HIGH', overlap: 'MEDIUM' },
+  'RS-008': { inputPx: 16, severity: 'MEDIUM' },
+  'CF-101': { preferredMinCh: 60, preferredMaxCh: 75, longLineCh: 90, cjkLongLineCh: 60, severity: 'MEDIUM' },
+  'CF-102': { min: 1.2, max: 1.35, displayMin: 1.05, displayPx: 40, severity: 'MEDIUM' },
+  'CF-103': { latinMin: 1.4, cjkMin: 1.5, latinTarget: 1.5, cjkTarget: 1.6, severity: 'MEDIUM' },
+  'CF-104': { rows: 3, min: 1.4, severity: 'MEDIUM' },
+  'CF-107': { severity: 'LOW' },
+  'CF-109': { smallPx: 18, smallWeight: 400, lightWeight: 300, displayPx: 28, severity: 'MEDIUM' },
+  'CF-201': { bodyRatio: 4.5, largeRatio: 3, largePx: 24, boldPx: 18.5, boldWeight: 700, bodySeverity: 'HIGH', largeSeverity: 'MEDIUM' },
+  'CF-205': { minAreaPx: 24, minSaturation: 0.12, hueDegrees: 15, allowedClusters: 1, severity: 'MEDIUM' },
+  'CF-401': { radiusTolerancePx: 2, maxPaddingPx: 24, severity: 'LOW' },
+  'CF-404': { maxOffsetPx: 2, minBlurPx: 16, minSaturation: 0.4, severity: 'LOW' },
+  'CF-503': { minScale: 0.95, declaredSeverity: 'LOW', runningSeverity: 'MEDIUM' },
+  'CF-507': { allowed: ['transform', 'opacity', 'filter'], restSeverity: 'MEDIUM', propertySeverity: 'LOW' },
+  'CF-701': { floorPx: 24, touchPx: 44, severity: 'HIGH', touchSecondarySeverity: 'MEDIUM' },
+  'CF-703': { floorPx: 44, severity: 'HIGH' },
+  'CF-806': { severity: 'MEDIUM' },
+  'SLOP-008': { hueMin: 260, hueMax: 310, minChannelSpread: 50, severity: 'MEDIUM' },
+  'SLOP-009': { severity: 'MEDIUM' },
+  'SLOP-010': { recurrence: 2, severity: 'MEDIUM' },
+  'SLOP-020': { maxUppercaseChars: 40, severity: 'LOW' },
+  'SLOP-023': { severity: 'LOW' },
+  'SLOP-026': { properties: ['width', 'height', 'padding', 'margin', 'top', 'left'], severity: 'MEDIUM' },
+  'SLOP-029': { severity: 'MEDIUM' },
+  'SLOP-036': { phrases: ['streamline your','empower your','supercharge your','unleash your','unleash the power','leverage the power','built for the modern','trusted by leading','trusted by the world','best-in-class','industry-leading','world-class','enterprise-grade','next-generation','cutting-edge','transform your business','revolutionize','game-changer','game changing','mission-critical','best of breed','future-proof','future proof','seamless experience','seamlessly integrate','drive engagement','drive growth','drive results','harness the power'], severity: 'MEDIUM' },
+  'SLOP-037': { names: ['Acme', 'Nexus', 'Flowbit', 'Quantumly', 'NovaCore'], severity: 'MEDIUM' },
+  'SLOP-038': { names: ['Jane Doe', 'John Doe'], severity: 'MEDIUM' },
+  'SLOP-039': { occurrences: 3, severity: 'LOW' },
+  'SLOP-040': { occurrences: 1, severity: 'MEDIUM', carveoutSeverity: 'LOW' },
+  'SLOP-053': { severity: 'LOW' },
+  'SLOP-057': { severity: 'HIGH' },
+  'SLOP-058': { primarySeverity: 'HIGH', secondarySeverity: 'MEDIUM' },
+  'SLOP-059': { severity: 'HIGH' },
+  'SLOP-060': { severity: 'LOW' },
+  'SLOP-061': { severity: 'LOW' },
+});
+
+export const RENDERED_RULES = Object.freeze(Object.keys(RULES));

@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#14213d;font-family:Archivo,Pretendard;color:#f4f1ea}
+h1{position:absolute;left:120px;top:1500px;margin:0;font-size:80px;font-weight:700}</style></head>
+<body><svg width="1080" height="1920" style="position:absolute;inset:0"><path id="p" d="M200 400 L880 400 L880 1200 L200 1200 Z" fill="#fca311"/></svg><h1 id="h"></h1>
+<script>
+const COPY = { line: '세로로 서는 모양' };
+document.getElementById('h').textContent = COPY.line; LitStage.text(document.getElementById('h'));
+const shape = LitStage.morph('M200 400 L880 400 L880 1200 L200 1200 Z', 'M540 300 L940 900 L540 1500 L140 900 Z');
+LitStage.define({ width: 1080, height: 1920, fps: 30, duration: 4, render(t) {
+  document.getElementById('p').setAttribute('d', shape(LitStage.ease.inOutCubic(LitStage.at(t, [0.5, 3]))));
+}});
+</script></body></html>

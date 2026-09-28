@@ -1,0 +1,15 @@
+{
+  "name": "litgrok",
+  "version": "1.0.9",
+  "description": "Grok Build skills, project rules, and bounded lifecycle hooks for evidence-first lit work.",
+  "author": {
+    "name": "LitGrok contributors"
+  },
+  "homepage": "https://github.com/wjgoarxiv/litgrok",
+  "repository": "https://github.com/wjgoarxiv/litgrok",
+  "license": "MIT",
+  "keywords": ["grok-build", "skills", "hooks", "workflow", "evidence"],
+  "skills": "./.grok/skills",
+  "agents": "./.grok/agents",
+  "hooks": "./hooks/hooks.json"
+}

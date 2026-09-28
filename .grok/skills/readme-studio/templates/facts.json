@@ -1,0 +1,13 @@
+{
+  "schema": "litgrok.readme-facts/v1",
+  "claims": [
+    {
+      "id": "package-name",
+      "text": "Replace with verified package name",
+      "sources": [
+        "package.json"
+      ]
+    }
+  ],
+  "badges": []
+}

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "post-tool-use-failure.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

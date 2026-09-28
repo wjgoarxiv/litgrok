@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "stop-failure.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

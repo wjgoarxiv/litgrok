@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pre-compact.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

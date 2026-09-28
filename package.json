@@ -1,0 +1,62 @@
+{
+  "name": "@litfamily/litgrok",
+  "version": "1.0.9",
+  "description": "Grok Build skills, project rules, and hooks installer.",
+  "type": "module",
+  "bin": {
+    "litgrok-ai": "bin/litgrok.mjs",
+    "litgrok": "bin/litgrok.mjs"
+  },
+  "scripts": {
+    "prepublishOnly": "node scripts/prepublish-test-gate.mjs",
+    "test": "node --test test/*.test.mjs",
+    "probe:browser-drive": "node .grok/skills/browser-drive/scripts/capability-probe.mjs",
+    "check:version": "node tools/check-version-lockstep.mjs"
+  },
+  "files": [
+    "plugin.json",
+    ".grok-plugin/plugin.json",
+    ".grok/skills",
+    ".grok/vendor",
+    ".grok/agents",
+    ".grok/rules",
+    ".grok/hooks",
+    "hooks",
+    "bin",
+    "README.md",
+    "README_ko-KR.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs/reference.md",
+    "docs/reference_ko-KR.md",
+    "docs/assets/cover.webp",
+    "docs/assets/cover-motion.webp",
+    "docs/assets/cover-motion-still.webp",
+    "docs/assets/litgrok-wordmark.svg",
+    "docs/assets/litgrok-clay-icon.png",
+    "docs/assets/litgrok-ignition-1600.webp",
+    "docs/assets/litgrok-continuity-1600.webp",
+    "docs/assets/readme/ascii-readme.svg",
+    "docs/assets/readme/lucide-book-open.svg",
+    "docs/assets/readme/lucide-play.svg",
+    "docs/assets/readme/lucide-shield-check.svg",
+    "docs/assets/readme/Lucide-LICENSE.txt",
+    "docs/assets/readme/badge-version.svg",
+    "docs/assets/readme/badge-license.svg",
+    "docs/assets/skills",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "SUPPORT.md",
+    "docs/privacy.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "author": "LitGrok contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wjgoarxiv/litgrok.git"
+  }
+}

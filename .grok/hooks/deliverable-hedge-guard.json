@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Edit|edit|Write|write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deliverable-hedge-guard.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(Bash|bash|Edit|edit|Write|write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deliverable-hedge-guard.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

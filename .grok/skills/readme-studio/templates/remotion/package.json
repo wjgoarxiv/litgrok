@@ -1,0 +1,16 @@
+{
+  "name": "litgrok-readme-remotion-template",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "dependencies": {
+    "remotion": "4.0.526",
+    "@remotion/cli": "4.0.526",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "scripts": {
+    "render": "remotion render",
+    "still": "remotion still"
+  }
+}

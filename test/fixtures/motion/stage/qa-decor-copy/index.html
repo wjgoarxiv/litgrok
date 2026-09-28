@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/lit/fonts.css"><script src="/lit/stage-kit.js"></script>
+<style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#101820;font-family:Archivo,Pretendard}
+#sign{position:absolute;left:500px;top:400px;font-size:80px;font-weight:700;color:#f4f1ea}#box{position:absolute;left:1300px;top:500px;width:200px;height:200px;background:#e4572e}</style></head>
+<body><div id="box"></div><span id="sign"></span><script>
+const COPY = { sign: '작은 병 하나' };
+document.getElementById('sign').textContent = COPY.sign;
+LitStage.text(document.getElementById('sign'), { decor: true });
+LitStage.define({ width: 1920, height: 1080, fps: 30, duration: 6 });
+</script></body></html>

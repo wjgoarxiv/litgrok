@@ -1,0 +1,212 @@
+{
+  "schema_id": "litfamily.design-contract/v1beta2",
+  "contract_id": "contract:operations-dashboard",
+  "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "intent": {
+    "audiences": [
+      "Operators who recover failed work"
+    ],
+    "tasks": [
+      "Find a failed job and retry it without leaving the keyboard"
+    ],
+    "qualities": [
+      "Recoverable",
+      "Legible under density"
+    ],
+    "constraints": [
+      "Reuse repository-native primitives and reversible test data"
+    ],
+    "non_goals": [
+      "Brand redesign"
+    ]
+  },
+  "direction": {
+    "name": "Calm operations surface",
+    "principles": [
+      "State is legible before it is decorated.",
+      "Every failure names the action that recovers it.",
+      "Density never removes keyboard access."
+    ],
+    "token_strategy": "reuse",
+    "voice": "Direct and operational"
+  },
+  "inventory": {
+    "routes": [
+      {
+        "id": "route:dashboard",
+        "path": "/dashboard",
+        "primary": true,
+        "auth_required": false
+      },
+      {
+        "id": "route:job-detail",
+        "path": "/jobs/:id",
+        "primary": false,
+        "auth_required": true
+      }
+    ],
+    "regions": [
+      {
+        "id": "region:queue",
+        "route_id": "route:dashboard",
+        "purpose": "Failed work queue"
+      },
+      {
+        "id": "region:job-summary",
+        "route_id": "route:job-detail",
+        "purpose": "Single job summary"
+      }
+    ],
+    "components": [
+      {
+        "id": "component:retry-button",
+        "region_id": "region:queue",
+        "role": "button"
+      }
+    ],
+    "interactions": [
+      {
+        "id": "interaction:retry-failed-job",
+        "route_id": "route:dashboard",
+        "critical": true,
+        "input_modes": [
+          "keyboard",
+          "pointer"
+        ]
+      }
+    ],
+    "states": [
+      {
+        "id": "state:dashboard-error",
+        "route_id": "route:dashboard",
+        "kind": "error"
+      },
+      {
+        "id": "state:dashboard-ready",
+        "route_id": "route:dashboard",
+        "kind": "ready"
+      }
+    ],
+    "viewports": [
+      {
+        "id": "viewport:compact",
+        "category": "compact",
+        "width_px": 320,
+        "height_px": 640
+      },
+      {
+        "id": "viewport:expanded",
+        "category": "expanded",
+        "width_px": 1440,
+        "height_px": 900
+      }
+    ],
+    "references": [
+      {
+        "id": "reference:request",
+        "kind": "user-provided",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provenance": "user request transcript"
+      }
+    ],
+    "authenticated_surfaces": [
+      {
+        "route_id": "route:job-detail",
+        "safe_test_account": true
+      }
+    ]
+  },
+  "accessibility": {
+    "target": "WCAG 2.2 AA",
+    "keyboard": true,
+    "screen_reader": true,
+    "reduced_motion": true,
+    "forced_colors": true,
+    "zoom_percent": 200
+  },
+  "localization": {
+    "locales": [
+      "ko-KR",
+      "en-US"
+    ],
+    "text_expansion_percent": 30,
+    "cjk_line_break_review": true,
+    "font_fallback_review": true,
+    "ime_review": true,
+    "rtl_review": false
+  },
+  "performance": {
+    "lcp_ms": 2500,
+    "cls": 0.05,
+    "inp_ms": 200,
+    "initial_js_kb": 180,
+    "initial_css_kb": 40
+  },
+  "evidence_policy": {
+    "independent_review_required": true,
+    "required_channels": [
+      "tests",
+      "keyboard",
+      "accessibility-tree"
+    ],
+    "cleanup_required": true
+  },
+  "omissions": [],
+  "accepted_exceptions": [],
+  "lane": "brownfield",
+  "tokens": [
+    {
+      "id": "token:color-critical",
+      "category": "color",
+      "value": "#B3261E",
+      "usage": "Failure text and retry affordance"
+    }
+  ],
+  "component_behaviors": [
+    {
+      "component_id": "component:retry-button",
+      "state_ids": [
+        "state:dashboard-error"
+      ],
+      "interaction_ids": [
+        "interaction:retry-failed-job"
+      ],
+      "keyboard_behavior": "Enter activates retry"
+    }
+  ],
+  "responsive_transformations": [
+    {
+      "route_id": "route:dashboard",
+      "viewport_id": "viewport:compact",
+      "behavior": "Rows stack on compact screens"
+    }
+  ],
+  "motion": {
+    "policy": "functional",
+    "reduced_motion_behavior": "Cross-fade becomes instant",
+    "transitions": [
+      {
+        "id": "transition:retry-press",
+        "interaction_id": "interaction:retry-failed-job",
+        "duration_ms": 120,
+        "easing": "ease-out"
+      }
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "id": "criterion:retry-keyboard",
+      "observable": "A failed job is retried using the keyboard",
+      "verification": "keyboard",
+      "required": true,
+      "inventory_ids": [
+        "interaction:retry-failed-job"
+      ]
+    }
+  ],
+  "taste": {
+    "variance": 7,
+    "motion": 3,
+    "density": 10
+  }
+}
