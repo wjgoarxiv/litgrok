@@ -58,7 +58,7 @@ Make something useful in Grok Build. Leave the checked result and the next step 
 
 Grok Build runs the session and chooses the model. LitGrok adds a way of working on top of it: plan the change, build it, check it, and write down where you stopped.
 
-It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. The installer copies the complete payload into your project.
+It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. The installer copies all of it into your project.
 
 ## Install in 30 seconds
 
@@ -79,26 +79,26 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ### An optional status row
 
-Grok can show a persistent LitGrok status row. It is optional, and you can only turn it on at user level:
+LitGrok can also keep a status row on screen in Grok: which LitGrok skill your last prompt started, the model, and how much of the context is used. It lives in your user settings, so you switch it on with a user install:
 
 ```bash
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line
 ```
 
-This adds `[ui.status_line]` to `~/.grok/config.toml`, refreshing every two seconds. If that file already exists, LitGrok backs it up before changing it, and it leaves an existing `ui.status_line` alone. Later, `uninstall --user` removes only the LitGrok-managed value, and only if you have not changed it.
+This adds a `[ui.status_line]` entry to `~/.grok/config.toml` that refreshes every two seconds. LitGrok backs the file up before changing it, and if you already have a status line of your own, it leaves the file alone. Uninstalling with `--user` later removes only what LitGrok added, and only if you haven't edited it since.
 
-Grok reads this setting from user or administrator configuration, not from project or plugin configuration ([status-line docs](https://docs.x.ai/build/features/status-line), [settings reference](https://docs.x.ai/build/settings/reference)).
+Grok reads this setting only from user or administrator configuration, never from a project or a plugin, which is why a project install can't turn it on ([status-line docs](https://docs.x.ai/build/features/status-line), [settings reference](https://docs.x.ai/build/settings/reference)).
 
 <details>
 <summary>What the row shows</summary>
 
-Two example rows: `🔥 LIT IGNITED · lit-plan 🔥 │ grok-4 │ ctx 42%` and `LIT · grok │ grok-4 │ ctx 42%`.
+While a LitGrok skill is active the row reads like `🔥 LIT IGNITED · lit-plan 🔥 │ grok-4 │ ctx 42%`; the rest of the time it reads like `LIT · grok │ grok-4 │ ctx 42%`.
 
-The label follows your prompt. The first visible match among `lit-scientific-visualization`, `lit-handoff`, `autoconference`, `autoresearch`, `lit-plan`, and `litwork` sets the discipline. Bare `lit` counts as `litwork`, and anything inside inline or fenced Markdown code is ignored.
+The label comes from your latest prompt. LitGrok looks for the first of these names that appears in it: `lit-scientific-visualization`, `lit-handoff`, `autoconference`, `autoresearch`, `lit-plan` or `litwork`. A bare `lit` shows as `litwork`. Names inside inline or fenced code don't count, so pasting a snippet won't change the row.
 
-With color on, the active `LIT IGNITED · <discipline>` label is bold, with a per-character truecolor gradient `#FF6337 → #FF2D95 → #00E5FF`. The flames and the model/context segment stay unstyled. `NO_COLOR` (including an empty value) or `LITGROK_HUD_COLOR=0` keeps the row plain. Truecolor, bold and emoji rendering in the status row were confirmed on Grok Build 1.0.13.
+With color on, the active `LIT IGNITED · <discipline>` label is bold and shaded letter by letter from orange-red through pink to cyan (`#FF6337 → #FF2D95 → #00E5FF`). The flames and the model and context parts stay plain. For a row with no color at all, set `NO_COLOR` (an empty value works too) or `LITGROK_HUD_COLOR=0` in Grok's environment. Truecolor, bold and emoji all displayed correctly in the status row on Grok Build 1.0.13.
 
-The row is a status command, not another hook registration. LitGrok still ships eleven hook registrations.
+The row runs as a status command, so the hook count stays at eleven.
 
 </details>
 
@@ -110,11 +110,17 @@ To see every destination before anything is written, add `--dry-run`:
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run
 ```
 
-The installer checks that it owns a file before it upgrades or removes it. If a destination file was modified, belongs to something else, or looks unsafe, it refuses rather than overwrite it.
+Before it upgrades or removes a file, the installer checks that the file is one it put there. If you edited the file, it belongs to something else, or the path looks unsafe (a symlink, say), the installer stops before writing anything and names the file it refused.
 
-Some runs never write, even with `--yes`: whenever `CI` or `NO_COLOR` is set (even to an empty value), and with `--no-color` or `--dry-run`. A non-interactive run without `--yes` is also only a preview. With `--yes`, it proceeds without a TTY as long as none of the above apply.
+Some runs only preview. The installer lists what it would do, prints `no files written`, and stops. That happens in these cases, even if you pass `--yes`:
 
-To remove LitGrok, uninstall with the same scope you installed with. Add `--user` only to remove an installation made with `--user`.
+- `--dry-run`: you asked to see the plan first.
+- `--no-color`, or `NO_COLOR` in the environment, even with an empty value. Unset it when you mean to install.
+- `CI` in the environment. A CI job always gets a preview.
+
+Without `--yes`, a run that has no terminal attached, such as a script or a pipe, is a preview too. Add `--yes` when a script should really install; it then works without a terminal, as long as none of the cases above apply.
+
+To remove LitGrok, uninstall the way you installed it: plain for a project install, with `--user` for a user install.
 
 ```bash
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall
@@ -127,15 +133,15 @@ If you installed from a local package, remove it with the same package in the sa
 npm exec --yes --package "$LITGROK_PACK" -- litgrok uninstall
 ```
 
-A user-level uninstall backs up `~/.grok/config.toml` before removing the unchanged LitGrok-managed status-line keys. Your other settings and a status line you edited stay as they are. To update, run `install` again.
+A user uninstall backs up `~/.grok/config.toml`, then takes out only the status-line keys LitGrok wrote and you left unchanged. Your other settings stay as they are. To update LitGrok, run `install` again.
 
-The installer does not grant hook trust, create a Git root, write login state or API keys, or choose a model. If the host errors, the hedge guard lets the action through (it is fail-open). A passing package test also does not prove live Grok behavior, so check `/hooks` and `grok inspect --json` from the repository root in your own session. [Host boundaries and verification](./docs/reference.md#verify).
+A few things stay with you. Trusting hooks, creating the Git root, signing in and choosing a model all happen in Grok Build, and the installer leaves them, and your API keys, untouched. One hook, the hedge guard, stops vague hedging wording before it is written into a deliverable; if the host has an error, it steps aside and lets the write through (it is fail-open). The package tests check the files we ship. To see what your own session loaded, open it from the repository root and check `/hooks` and `grok inspect --json`. [Host boundaries and verification](./docs/reference.md#verify).
 
 ## Quick start
 
-Open or restart Grok Build at the Git root of the project where you installed LitGrok. Hooks only run once you trust them: review and trust the project hooks with `/hooks-trust`, or, on the observed Grok Build 1.0.23 host, use `grok --trust inspect --json`. A plain folder can still load skills and rules, but its hooks stay unavailable. LitGrok does not create a Git root or change trust for you.
+Open (or restart) Grok Build from the Git root of the project where you installed LitGrok. Grok runs project hooks only after you trust them, so review them in `/hooks-trust` and trust them there. On Grok Build 1.0.23, `grok --trust inspect --json` did the same from the command line. If the folder isn't a Git repository yet, run `git init` yourself first; in a plain folder the skills and rules load, but the hooks stay off.
 
-Then check `/skills` for the installed catalog and `/hooks` for the hook registrations.
+`/skills` then lists the installed skills, and `/hooks` lists the hook registrations.
 
 Start with something small that needs no external service and no existing test suite. Send this in Grok Build:
 
@@ -143,7 +149,7 @@ Start with something small that needs no external service and no existing test s
 /litwork Build a to-do list in one index.html with no external dependencies. Implement add, complete, and delete. Leave the checks performed and the next step. Do not open a browser automatically; give me the steps to check it myself.
 ```
 
-Open the generated `index.html` yourself and try adding, completing, and deleting an item. A file that exists is not yet a feature that works, so leave any check you did not run marked unverified, and report real errors back to the session.
+Then open `index.html` yourself and add, complete and delete an item. That click-through is the real test. Anything you didn't get to try stays marked unverified, and if something breaks, paste the actual error back into the session.
 
 ### Carry the spark into the next session
 
@@ -159,11 +165,11 @@ For a larger change, start with `/lit-plan`, read the plan it saves, then run `/
 
 In the next session, give Grok Build the path it returned and ask it to read the handoff and check the current files before continuing. The handoff goes to `.handoff/HANDOFF.md` in a new Git project, or to `HANDOFF.md` in a folder without Git. If a root handoff already exists, it is reused. [Where handoffs go](./.grok/skills/lit-handoff/SKILL.md).
 
-**Keeping the spark means leaving work another session can pick up.** The skills guide these steps inside your session. LitGrok does not schedule background work or keep going after the session ends.
+All of this happens inside your session, with the skills guiding each step, and LitGrok runs nothing in the background. When the session ends, the work waits there until you, or the next session, pick it up from the handoff.
 
 ## Skills at a glance
 
-All 38 skills, one row each. Each route is the one its skill documents; `/skills` shows what your Grok Build session actually loaded. Renamed skills keep their old name as an alias for one release ([rename compatibility](./docs/reference.md#skill-rename-compatibility)), but old slash routes are not guaranteed.
+All 38 skills, one row each. The routes are the ones each skill documents, and `/skills` shows what your Grok Build session actually loaded. A renamed skill still answers to its old name for one release ([rename compatibility](./docs/reference.md#skill-rename-compatibility)); an old slash route may not carry over.
 
 <table>
 <tr><th>What it looks like</th><th>Skill</th><th>What you get</th></tr>
@@ -361,7 +367,7 @@ All 38 skills, one row each. Each route is the one its skill documents; `/skills
 
 ## The routes you will use most
 
-Grok Build runs the model. LitGrok leaves skills, rules, and checked next steps in the project, and these routes are how you reach them day to day. They are static guidance, not proof of live host behavior.
+Day to day, most work goes through these six. Each one hands Grok Build a skill's instructions; your session shows what the model actually does with them.
 
 | Type this | What happens |
 | --- | --- |
@@ -374,11 +380,11 @@ Grok Build runs the model. LitGrok leaves skills, rules, and checked next steps 
 
 ### Project hooks
 
-The eleven hook registrations are declared in [`hooks/hooks.json`](./hooks/hooks.json). They need a trusted Git root and `/hooks-trust`; a plain folder may load skills and rules without any hooks.
+The eleven hook registrations live in [`hooks/hooks.json`](./hooks/hooks.json). They show the LitGrok mark when a session starts, keep the status row current, check deliverable wording before it is written, and log the order of events. Like any project hook, they run only in a trusted Git root (see [Quick start](#quick-start)).
 
 ## How it works
 
-The installer puts files in the project's `.grok/` folder. `/litwork` gives the current session a checklist to follow; Grok Build still owns execution and model selection. These are the main connections:
+Everything LitGrok adds lives in the project's `.grok/` folder. When you run `/litwork`, the current session gets a checklist to follow; Grok Build still runs it and picks the model. Here is how the pieces connect:
 
 ```mermaid
 flowchart TD
@@ -394,33 +400,35 @@ flowchart TD
     N -.->|User supplies the path| G
 ```
 
-Once trusted, the hooks record the order of events in `.grok/litgrok/session-ledger/`. Judge success from the artifact and its checks. Having a record does not resume work automatically: in the next session, you supply the handoff path.
+Once trusted, the hooks log the order of events in `.grok/litgrok/session-ledger/`. To continue in a new session, give it the handoff path.
 
 [Checklist and hook boundaries](./.grok/skills/litwork/SKILL.md) · [Handoff destinations](./.grok/skills/lit-handoff/SKILL.md) · [Install details](./docs/reference.md#install)
 
 ### The first line of an activated reply
 
-The five activation contracts ask the model to start each activated response with exactly one line, before any other content. For `/litwork`, that line is:
+Several LitGrok skills, `/litwork` among them, ask the model to open an activated reply with one line before anything else. For `/litwork` it looks like this:
 
 🔥 **LIT IGNITED · litwork** 🔥
 
-This is advisory prompt guidance. It does not verify that the host displays the line.
+If you see it, the work has started. The line is a request to the model, so check the result itself before you trust it.
 
 ## Pages, slides, documents and prose
 
-Use `/frontend-ui-ux <surface and outcome>` to build and inspect an interface you are authorized to change. With a clear brief it goes straight to working code; when something material is ambiguous, it asks a focused question. Review-only and plan-only requests stay read-only.
+Use `/frontend-ui-ux <surface and outcome>` to build and inspect an interface you are allowed to change. With a clear brief it goes straight to working code; when something important is unclear, it asks one focused question first. If you only ask for a review or a plan, it changes no files.
 
-Use the `/lit-diagram-drawer` skill for conceptual and technical diagrams. Its exact slash route is a candidate until a Grok Build session confirms it, so use `/skills` to find it. Ordinary interfaces belong to `/frontend-ui-ux`, and plots of measured data belong to `/lit-scientific-visualization`.
+For concept and technical diagrams, use the `lit-diagram-drawer` skill. Its slash route, `/lit-diagram-drawer`, hasn't been confirmed in a live Grok Build session yet, so find it through `/skills`. Ordinary interfaces go to `/frontend-ui-ux`, and plots of measured data go to `/lit-scientific-visualization`.
 
-For slides, use `lit-pptx`; for reports and Word documents, use `lit-docx`. With bare `lit`, the project rule asks Grok Build to pick one or both from the wording of your request. Decks default to AZURE-PRO with Pretendard, and a Korean document defaults to korean-generic. The package includes the engines, templates, QA scripts, and pinned first-use cache installers. Slides need Node.js 20.9+; the DOCX workflow and the base installer work separately. The skill pages list the commands and the optional render tools. Which skill Grok Build picks is host guidance until you see it in a Grok session.
+For slides, use `lit-pptx`; for reports and Word documents, use `lit-docx`. If you type a bare `lit` and describe what you want, the project rule asks Grok Build to choose one or both from your wording, and your session shows which one it picked. Decks start from the AZURE-PRO template with the Pretendard font, and Korean documents use the korean-generic style.
 
-Use `/readme-studio <repository and outcome>` for a source-checked README, outlined Pretendard/Meslo typography, and portable cover and motion recipes. Check `/skills` after installation. Native image generation depends on the tools your Grok session exposes; when it reports `IMAGE_GENERATION_UNAVAILABLE`, you can supply a background image path explicitly. Fonts and renderers are prerequisites you set up per task, and a local result is separate from live host and GitHub/npm acceptance. [README Studio](./.grok/skills/readme-studio/SKILL.md).
+Both skills bring their engines, templates and QA scripts with them. The first time you use one, it installs its pinned dependencies into its own cache. Slides need Node.js 20.9 or newer; Word documents and the base installer don't depend on that. Each skill page lists its commands and the optional render tools.
 
-Use `lit-humanizer` for longer edits or a Korean deep review. A pre-write guard also checks newly added reader-facing prose: a clear block-tier match must be revised before saving, while warning-tier matches stay advisory. Created DOCX and PPTX files are checked after the tool runs, and PDFs are checked with `pdftotext` when it is available. If the extractor is missing, the output is left unchanged and the guard says what it could not inspect.
+`/readme-studio <repository and outcome>` writes a README whose claims are checked against the repository, with outlined Pretendard or Meslo lettering and cover and motion recipes you can take elsewhere. It shows up in `/skills` after installation. Pictures depend on whether your Grok session offers image generation; if it reports `IMAGE_GENERATION_UNAVAILABLE`, give it a background image path instead. You set up fonts and renderers for each task. A local render is the first look; check the finished page again where it will live, on GitHub or npm. [README Studio](./.grok/skills/readme-studio/SKILL.md).
+
+Use `lit-humanizer` for longer edits or a careful Korean review. Separately, a guard reads new text before Grok writes it into a reader-facing file. Clear problems have to be rewritten before the file is saved; milder ones come back as suggestions. Word and PowerPoint files are read right after they are created, and PDFs too when `pdftotext` is installed. If it can't read a file, it leaves the file as it is and tells you what it skipped.
 
 ### Browser automation
 
-Check it with `npm run probe:browser-drive`. LitGrok names [agent-browser](https://github.com/vercel-labs/agent-browser) as its CLI engine but never installs it for you. If the probe reports it missing, install it yourself with `npm install -g agent-browser`, followed by `agent-browser install`.
+The `browser-drive` skill drives pages through [agent-browser](https://github.com/vercel-labs/agent-browser), a command-line browser engine that LitGrok doesn't install for you. Check for it with `npm run probe:browser-drive`. If the probe says it's missing, run `npm install -g agent-browser` and then `agent-browser install`.
 
 ### Scientific figures
 
@@ -430,19 +438,19 @@ The scientific visualization corpus is packaged at `.grok/vendor/scientific-visu
 
 ### Hooks do not show up
 
-Project hooks need a trusted Git project root in Grok Build. A plain folder can still load the installed skills and rules while hooks remain unavailable.
+Grok Build runs project hooks only from a trusted Git project root. In a plain folder, the installed skills and rules still load, and the hooks stay off.
 
-For a new disposable project, run `git init` yourself before trusting it. For an existing repository, open Grok Build from its actual root. The installer never runs `git init` or changes trust.
+For a new practice project, run `git init` yourself, then trust it. For an existing repository, open Grok Build from its real root. The installer never runs `git init` or changes trust.
 
-On the observed Grok Build 1.0.23 host, `grok --trust inspect --json` accepted the trust-and-inspect route even though `grok --help` did not list `--trust`. Treat that as version-specific behavior.
+On Grok Build 1.0.23, `grok --trust inspect --json` trusted and inspected the project in one step, even though `grok --help` doesn't list `--trust`. Other versions may behave differently.
 
 ### The installer only previews
 
-If `CI` or `NO_COLOR` is set, even to an empty value, installation is a no-write preview. So is `--no-color`. A non-interactive run without `--yes` is also a preview; with `--yes`, installation proceeds without a TTY as long as none of the above apply. Check that the installer reports actual writes before you continue.
+Read the installer's output. If it says `no files written`, the same line names the reason: `DRY RUN`, `NO COLOR` or `NON-INTERACTIVE`. The cases behind each one are listed under [Safety and uninstall](#safety-and-uninstall); fix that one, run again, and wait for real writes before you continue.
 
 ### The status row is missing
 
-The row is optional and comes from user or administrator configuration. Grok does not read this setting from project or plugin configuration. See the [status-line reference](https://docs.x.ai/build/features/status-line).
+Grok reads the row from user or administrator configuration, not from a project or plugin, so add it with a user install: `install --user --status-line`. See the [status-line reference](https://docs.x.ai/build/features/status-line).
 
 For host limits and current verification steps, see the [operational reference](./docs/reference.md#verify).
 
@@ -458,6 +466,6 @@ To contribute, start with a small issue or pull request. The [contributing guide
 
 ### LITFAMILY
 
-The motion cover at the top shows five armored robots representing the products. Each works independently in its own host; they do not need to be installed together or connected to one another.
+The five armored robots on the cover stand for the five LitFamily products. Each one works on its own in its own host: install just the one you use, and it needs none of the others.
 
-The cover is brand motion made with the LitFamily motion skill, not a recording of a Grok task execution. The retained `docs/assets/cover.svg` is the editable vector artwork, and readers who prefer reduced motion see a still frame of the motion cover.
+The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it. The editable vector version is `docs/assets/cover.svg`, and if your system asks for reduced motion, you see a still frame instead.

@@ -14,7 +14,7 @@ Grok Build에서 작은 결과물을 만들고, 확인한 내용과 다음 할 �
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-LitGrok은 Grok Build 위에 일하는 방식을 얹습니다. 계획하고, 만들고, 확인하고, 다음 세션이 읽을 인수인계 문서를 남기는 방식입니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다.
+LitGrok은 Grok Build 위에서 계획하고, 만들고, 확인하고, 다음 세션이 읽을 인수인계 문서를 남기는 흐름을 더합니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다.
 
 ## 30초 설치
 
@@ -35,13 +35,13 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 처음 입력해 볼 것
 
-프로젝트의 Git 루트에서 Grok Build를 열거나 다시 시작하고, `/hooks-trust`에서 훅을 살펴본 뒤 신뢰하세요. 관찰된 Grok Build 1.0.23에서는 `grok --trust inspect --json`도 쓸 수 있습니다. 일반 폴더에서도 스킬과 규칙은 불러오지만 훅은 잡히지 않을 수 있습니다. 그다음 이렇게 보내 보세요.
+프로젝트의 Git 루트에서 Grok Build를 열거나 다시 시작합니다. Grok은 신뢰한 프로젝트 훅만 실행하니, `/hooks-trust`에서 훅을 살펴보고 신뢰해 주세요. Grok Build 1.0.23에서는 `grok --trust inspect --json`으로도 같은 일을 할 수 있었습니다. Git이 없는 일반 폴더에서는 스킬과 규칙은 불러와도 훅은 잡히지 않을 수 있습니다. 그다음 이렇게 보내 보세요.
 
 ```text
 /litwork 외부 의존성 없이 index.html 하나로 할 일 목록을 만들어줘. 추가·완료·삭제 동작을 구현하고, 확인한 내용과 다음 할 일을 남겨줘. 브라우저를 자동으로 열지 말고 내가 확인할 순서를 알려줘.
 ```
 
-만들어진 `index.html`을 직접 열어 항목을 추가하고, 완료로 표시하고, 지워 보세요. 돌려 보지 못한 검사는 미확인으로 남겨 두세요.
+그다음 `index.html`을 직접 열어 항목을 추가하고, 완료로 표시하고, 지워 보세요. 이렇게 직접 눌러 보는 것이 진짜 확인이고, 해 보지 못한 검사는 미확인으로 남겨 둡니다.
 
 ## 다음 세션으로 이어 가기
 
@@ -51,7 +51,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 /lit-handoff 지금까지 만든 것, 확인한 것, 남은 일을 기록하고 저장 경로를 알려줘.
 ```
 
-다음 세션에서는 돌려받은 경로를 Grok Build에 알려 주고, 그 문서를 읽은 뒤 현재 파일 상태부터 확인하라고 요청하세요. 인수인계 문서가 있다고 작업이 저절로 이어지지는 않습니다.
+다음 세션에서는 돌려받은 경로를 Grok Build에 알려 주고, 그 문서를 읽은 뒤 현재 파일 상태부터 확인하고 이어 가라고 요청하세요.
 
 ## 자주 쓰는 명령
 
@@ -70,13 +70,21 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 설치하면 달라지는 것
 
-설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/hooks/hooks.json)에 있는 훅 등록 열한 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. LitGrok이 백그라운드 작업을 예약하거나 세션이 끝난 뒤에 일을 이어 가지는 않습니다.
+설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/hooks/hooks.json)에 있는 훅 등록 열한 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
 
-원하면 `install --user --status-line`으로 사용자 범위에 상태 행을 켤 수 있습니다. `~/.grok/config.toml`에 `[ui.status_line]`을 추가하며, 파일이 이미 있으면 먼저 백업합니다.
+지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다.
 
 ## 안전과 제거
 
-설치 프로그램은 파일을 업데이트하거나 지우기 전에 자기가 설치한 파일인지 확인하고, 사용자가 고친 파일이나 다른 곳에서 온 파일, 안전하지 않은 경로는 덮어쓰지 않습니다. `CI`, `NO_COLOR`(값이 비어 있어도), `--no-color`, `--dry-run`은 `--yes`를 붙여도 파일을 쓰지 않는 미리보기입니다. `--yes` 없이 비대화형으로 실행해도 미리보기로 끝납니다.
+설치 프로그램은 파일을 업데이트하거나 지우기 전에 자기가 설치한 파일인지 확인합니다. 직접 고친 파일이나 다른 도구가 둔 파일, 안전하지 않은 경로가 하나라도 있으면 아무 파일도 쓰기 전에 멈추고 그 파일을 알려 줍니다.
+
+어떤 때는 미리보기만 하고 끝납니다. 무엇을 할지 보여 준 뒤 `no files written`을 출력하고 멈추는데, `--yes`를 붙여도 다음 경우에는 그렇습니다.
+
+- `--dry-run`: 먼저 계획만 보겠다고 한 경우
+- `--no-color`를 붙였거나 환경에 `NO_COLOR`가 있는 경우(빈 값도 포함). 실제로 설치하려면 이 변수를 지우세요.
+- 환경에 `CI`가 있는 경우. CI 작업은 늘 미리보기로 끝납니다.
+
+`--yes` 없이 스크립트처럼 터미널이 연결되지 않은 곳에서 실행해도 미리보기입니다.
 
 설치할 때와 같은 범위로 제거하세요.
 
@@ -85,13 +93,13 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 ```
 
-설치 프로그램은 `git init`을 실행하거나 훅을 대신 신뢰하지 않고, 로그인 상태나 API 키를 쓰지 않으며, 모델도 고르지 않습니다. 패키지 테스트가 통과했다고 실제 Grok에서도 그렇게 동작한다는 뜻은 아닙니다. 저장소 루트에서 직접 연 세션으로 `/hooks`와 `grok inspect --json`을 확인하세요.
+설치 프로그램은 `git init`을 실행하거나 훅을 대신 신뢰하지 않고, 로그인이나 모델 선택도 하지 않습니다. 이런 일과 API 키는 Grok Build에서 직접 다룹니다. 패키지 테스트는 배포하는 파일을 검사합니다. 지금 세션이 실제로 무엇을 불러왔는지는 저장소 루트에서 Grok Build를 열고 `/hooks`와 `grok inspect --json`으로 확인하세요.
 
 ## 잘 안 될 때
 
-- **훅이 보이지 않을 때:** 훅은 신뢰한 Git 프로젝트 루트가 있어야 잡힙니다. 새 프로젝트라면 신뢰하기 전에 직접 `git init`을 실행하고, 기존 저장소라면 실제 루트에서 Grok Build를 여세요.
-- **파일이 쓰이지 않았을 때:** 위의 미리보기 조건 가운데 하나에 걸린 것입니다. 설치 메시지에서 파일이 실제로 쓰였는지 확인하세요.
-- **상태 행이 보이지 않을 때:** 상태 행은 사용자나 관리자 설정에서 옵니다. Grok은 프로젝트나 플러그인 설정에서는 이 값을 읽지 않습니다.
+- **훅이 보이지 않을 때:** Grok은 신뢰한 Git 프로젝트 루트에서만 훅을 실행합니다. 새 프로젝트라면 신뢰하기 전에 직접 `git init`을 실행하고, 기존 저장소라면 실제 루트에서 Grok Build를 여세요.
+- **파일이 쓰이지 않았을 때:** 출력에 `no files written`과 함께 `DRY RUN`, `NO COLOR`, `NON-INTERACTIVE` 가운데 이유가 나옵니다. 위 목록에서 해당하는 경우를 고치고 다시 설치하세요.
+- **상태 행이 보이지 않을 때:** Grok은 상태 행을 프로젝트나 플러그인 설정이 아닌 사용자나 관리자 설정에서 읽으므로 `install --user --status-line`으로 켜야 합니다.
 
 ---
 
@@ -99,4 +107,4 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 
 [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/LICENSE)
 
-커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출이며, 실제 Grok 작업 실행을 녹화한 영상이 아닙니다.
+커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다.

@@ -35,13 +35,13 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## The first thing to type
 
-Open or restart Grok Build at the project's Git root, then review and trust its hooks with `/hooks-trust` (on the observed Grok Build 1.0.23 host, `grok --trust inspect --json` also works). A plain folder still loads skills and rules, but its hooks stay unavailable. Then send:
+Open (or restart) Grok Build from the project's Git root. Grok runs project hooks only after you trust them, so review and trust them in `/hooks-trust`; on Grok Build 1.0.23, `grok --trust inspect --json` did the same. In a plain folder without Git, the skills and rules load but the hooks stay off. Then send:
 
 ```text
 /litwork Build a to-do list in one index.html with no external dependencies. Implement add, complete, and delete. Leave the checks performed and the next step. Do not open a browser automatically; give me the steps to check it myself.
 ```
 
-Open `index.html` yourself and try adding, completing, and deleting an item. Leave any check you did not run marked unverified.
+Then open `index.html` yourself and add, complete and delete an item. That click-through is the real test; anything you didn't try stays marked unverified.
 
 ## Carry the work into the next session
 
@@ -51,7 +51,7 @@ For a larger change, start with `/lit-plan`, read the plan it saves, then run `/
 /lit-handoff Record what we built, what we checked, and what remains. Tell me where you saved the handoff.
 ```
 
-Next time, give Grok Build the path it returned and ask it to read the handoff and check the current files before continuing. A handoff does not resume anything on its own.
+Next time, give Grok Build the path it returned and ask it to read the handoff and check the current files before it continues.
 
 ## Routes people use
 
@@ -70,13 +70,21 @@ Beyond code, `lit-pptx` makes slide decks, `lit-docx` makes reports and Word doc
 
 ## What changes after install
 
-The installer copies the skills, agents, project rule, and hooks into `.grok/`. The eleven hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/hooks/hooks.json) run only in a trusted Git root, and they record the order of events in `.grok/litgrok/session-ledger/`. LitGrok does not schedule background work or keep going after the session ends.
+The installer copies the skills, agents, project rule, and hooks into `.grok/`. The eleven hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
 
-An optional status row is available at user level with `install --user --status-line`. It adds `[ui.status_line]` to `~/.grok/config.toml` and backs up an existing file first.
+If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first.
 
 ## Safety and uninstall
 
-The installer checks that it owns a file before it upgrades or removes it, and refuses to overwrite modified, foreign, or unsafe files. `CI`, `NO_COLOR` (even empty), `--no-color`, and `--dry-run` are no-write previews, even with `--yes`. A non-interactive run without `--yes` is a preview too.
+Before it upgrades or removes a file, the installer checks that the file is one it put there. If any file was edited, belongs to something else or looks unsafe, it stops before writing anything and names that file.
+
+Some runs only preview: the installer lists what it would do, prints `no files written`, and stops, even with `--yes`. That happens with:
+
+- `--dry-run`, when you want to see the plan first;
+- `--no-color`, or `NO_COLOR` in the environment, even empty (unset it when you mean to install);
+- `CI` in the environment, so CI jobs always get a preview.
+
+Without `--yes`, a run with no terminal attached, such as a script, is a preview too.
 
 Uninstall with the same scope you installed with:
 
@@ -85,13 +93,13 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 ```
 
-The installer never runs `git init`, grants hook trust, writes login state or API keys, or chooses a model. A passing package test does not prove live Grok behavior; check `/hooks` and `grok inspect --json` from the repository root in your own session.
+The installer never runs `git init`, trusts hooks, signs in or picks a model for you; those steps, and your API keys, stay with you in Grok Build. The package tests check the files we ship. To see what your own session loaded, open it from the repository root and check `/hooks` and `grok inspect --json`.
 
 ## If something does not work
 
-- **No hooks:** hooks need a trusted Git project root. For a new project, run `git init` yourself before trusting it; for an existing one, open Grok Build from its actual root.
-- **Nothing was written:** one of the preview conditions above applied. Check that the installer reports actual writes.
-- **No status row:** the row comes from user or administrator configuration. Grok does not read it from project or plugin configuration.
+- **No hooks:** Grok runs hooks only from a trusted Git project root. For a new project, run `git init` yourself, then trust it; for an existing one, open Grok Build from its real root.
+- **Nothing was written:** the output says `no files written` and names the reason (`DRY RUN`, `NO COLOR` or `NON-INTERACTIVE`). Fix that case from the list above and run the install again.
+- **No status row:** Grok reads the row from user or administrator configuration, not from a project or plugin, so add it with `install --user --status-line`.
 
 ---
 
@@ -99,4 +107,4 @@ The installer never runs `git init`, grants hook trust, writes login state or AP
 
 [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/reference.md) · [Changelog](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/CHANGELOG.md) · [Privacy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/docs/privacy.md) · [MIT license](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.10/LICENSE)
 
-The cover is brand motion made with the LitFamily motion skill, not a recording of a Grok task execution.
+The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it.
