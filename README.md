@@ -167,6 +167,14 @@ In the next session, give Grok Build the path it returned and ask it to read the
 
 All of this happens inside your session, with the skills guiding each step, and LitGrok runs nothing in the background. When the session ends, the work waits there until you, or the next session, pick it up from the handoff.
 
+## Watch it in motion
+
+Here is one working session in about twenty seconds. You type a goal, the session lights up, four routes carry the work from plan to handoff, and a fresh terminal picks up the file you left behind.
+
+<p align="center"><a href="./docs/assets/promo/promo.mp4"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" /><img src="./docs/assets/promo/promo-preview.webp" width="880" alt="LitGrok promo film. The block LIT mark ignites beside the name LitGrok for Grok Build. A terminal takes a litwork prompt and shows the LIT IGNITED line while a checklist ticks off. A four-step rail lights Plan, Build, Verify and Hand off, each with its route. A status row switches from LIT to LIT IGNITED. A handoff file passes from one terminal to a fresh one. The film ends on Keep the work lit. with the install command." /></picture></a></p>
+
+The film is animated artwork made with LitGrok's own film skill. The terminals show strings LitGrok really prints, such as the activation line, the routes and the status row, and the flames are drawn shapes. No Grok session was recorded for it. With reduced motion switched on you see a still frame. [Watch the MP4](./docs/assets/promo/promo.mp4) to hear its generated music bed.
+
 ## Skills at a glance
 
 All 38 skills, one row each. The routes are the ones each skill documents, and `/skills` shows what your Grok Build session actually loaded. A renamed skill still answers to its old name for one release ([rename compatibility](./docs/reference.md#skill-rename-compatibility)); an old slash route may not carry over.

@@ -1,0 +1,590 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/stage-kit.js"></script>
+<script src="mark.js"></script>
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #080D14; }
+  canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .probe { position: absolute; left: -4000px; top: 0; font-size: 20px; }
+</style>
+<body>
+<!-- These hidden spans make the browser fetch every face the canvas draws with. -->
+<span class="probe" style="font-family:'Archivo';font-weight:900">Aa</span>
+<span class="probe" style="font-family:'Archivo';font-weight:700">Aa</span>
+<span class="probe" style="font-family:'Archivo';font-weight:400">Aa</span>
+<span class="probe" style="font-family:'Meslo';font-weight:400">Aa</span>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+const COPY = {
+  kicker: "For Grok Build",
+  h1: "Say what you want built.",
+  h2: "A route for every step.",
+  nodes: ["Plan", "Build", "Verify", "Hand off"],
+  descs: ["Writes the plan and its checks", "Runs the plan you approved", "Reviews the change and its evidence", "Carries the next step forward"],
+  h3: "Glance down. See what is lit.",
+  sub3: "Optional status row: skill, model, context.",
+  h4: "Leave the next step with the project.",
+  sub4: "The next session reads it and continues.",
+  tag: "Keep the work lit."
+};
+// What the terminals print in the film: strings taken from the README and the hooks.
+const TERM = {
+  prompt1: "❯ /litwork Make a to-do list in one page",
+  act1: "LIT IGNITED · litwork",
+  checks: ["add", "complete", "delete"],
+  routes: ["❯ /lit-plan <objective>", "❯ /start-work <approved-plan>", "❯ /review-work <target>", "❯ /lit-handoff"],
+  idle: "LIT · grok │ grok-4 │ ctx 42%",
+  active: "LIT IGNITED · lit-plan",
+  model: " │ grok-4 │ ctx ",
+  left1: "❯ /lit-handoff", left2: "saved .handoff/HANDOFF.md",
+  docTitle: ".handoff/HANDOFF.md", docHeads: ["Built", "Checked", "Remains"],
+  right1: "❯ read the handoff,", right2: "  check the files, continue.",
+  cmd: "npm exec --yes --package @litfamily/litgrok@latest -- litgrok install"
+};
+
+const L = LitStage, E = L.ease, kf = L.kf;
+const W = 1920, H = 1080;
+const ORANGE = [255, 99, 55], LIME = [215, 247, 91], CREAM = [242, 239, 223], HOT = [255, 243, 214];
+const CREAM_S = '#F2EFDF', MONO_S = '#E4E1D2', OR = '#FF6337';
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const P = (t, t0, d, e) => E[e || 'outCubic'](clamp((t - t0) / d, 0, 1));
+const rgba = (c, a) => 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ',' + a.toFixed(3) + ')';
+const mixc = (a, b, p) => [lerp(a[0], b[0], p), lerp(a[1], b[1], p), lerp(a[2], b[2], p)];
+const g = document.getElementById('c').getContext('2d', { willReadFrequently: true });
+
+/* ---------- drawing helpers ---------- */
+function font(size, fam, weight) { g.font = weight + ' ' + size + 'px ' + fam + ', sans-serif'; }
+function adv(str, size, fam, weight, ls) {
+  font(size, fam, weight); g.letterSpacing = (ls || 0) + 'px';
+  const w = g.measureText(str).width; g.letterSpacing = '0px'; return w;
+}
+/* Baseline of a line whose box starts at `top` and is `lh` tall, the way a browser centres the content area. */
+function baseline(top, lh, size, fam, weight) {
+  font(size, fam, weight);
+  const m = g.measureText('Hg');
+  return top + (lh - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2 + m.fontBoundingBoxAscent;
+}
+/* Draw one run of text; o = { size, fam, weight, color, alpha, ls, clip:[x,y,w,h] }. Returns its advance. */
+function txt(str, x, base, o) {
+  g.save();
+  if (o.clip) { g.beginPath(); g.rect(o.clip[0], o.clip[1], o.clip[2], o.clip[3]); g.clip(); }
+  font(o.size, o.fam, o.weight);
+  g.letterSpacing = (o.ls || 0) + 'px';
+  g.textBaseline = 'alphabetic';
+  g.globalAlpha = o.alpha === undefined ? 1 : o.alpha;
+  g.fillStyle = o.color || CREAM_S;
+  g.fillText(str, x, base);
+  const w = g.measureText(str).width;
+  g.restore();
+  return w;
+}
+function rr(x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.arcTo(x + w, y, x + w, y + r, r);
+  g.lineTo(x + w, y + h - r); g.arcTo(x + w, y + h, x + w - r, y + h, r);
+  g.lineTo(x + r, y + h); g.arcTo(x, y + h, x, y + h - r, r);
+  g.lineTo(x, y + r); g.arcTo(x, y, x + r, y, r); g.closePath();
+}
+const reg = (content, x, y, w, h, decor) => L.text({ content: content, x: x, y: y, w: w, h: h, decor: !!decor });
+
+const FLAME_OUT = new Path2D('M12 1C13 6 19 9 19 17C19 22.5 15.9 27 12 27C8.1 27 5 22.5 5 17C5 13.5 6.6 11.4 8 9.6C8.6 12 9.8 13 11 13.4C10.4 9 10.8 4.6 12 1Z');
+const FLAME_IN = new Path2D('M12 15C13.5 17 15.2 18.6 15.2 21C15.2 23.4 13.8 25 12 25C10.2 25 8.8 23.4 8.8 21C8.8 18.8 10.5 17.8 12 15Z');
+/* A drawn flame: left edge x, bottom edge yBottom, height h. */
+function flame(x, yBottom, h, alpha) {
+  const s = h / 28;
+  g.save(); g.globalAlpha = alpha; g.translate(x, yBottom - h); g.scale(s, s);
+  g.fillStyle = OR; g.fill(FLAME_OUT);
+  g.fillStyle = 'rgba(242,239,223,.92)'; g.fill(FLAME_IN);
+  g.restore();
+}
+/* The status-row gradient exactly as the hook computes it: orange, pink, cyan, letter by letter. */
+const STOPS = [[255, 99, 55], [255, 45, 149], [0, 229, 255]];
+function gradAt(pos) {
+  const s = pos <= 0.5 ? 0 : 1, f = pos <= 0.5 ? pos * 2 : (pos - 0.5) * 2;
+  return STOPS[s].map(function (v, i) { return Math.round(v + (STOPS[s + 1][i] - v) * f); });
+}
+function paint(text, x, base, size, alpha) {
+  const chars = Array.from(text), a = adv('M', size, 'Meslo', 400);
+  chars.forEach(function (ch, i) {
+    if (ch !== ' ') txt(ch, x + i * a, base, { size: size, fam: 'Meslo', weight: 400, color: 'rgb(' + gradAt(chars.length === 1 ? 0 : i / (chars.length - 1)).join(',') + ')', alpha: alpha });
+  });
+}
+
+/* ---------- mark ---------- */
+const QUAD = { '█': [0, 1, 2, 3], '▀': [0, 1], '▄': [2, 3], '▌': [0, 2], '▐': [1, 3], '▖': [2], '▗': [3], '▘': [0], '▝': [1], '▙': [0, 2, 3], '▛': [0, 1, 2], '▜': [0, 1, 3], '▟': [1, 2, 3], '▚': [0, 3], '▞': [1, 2] };
+const BASE = { O: ORANGE, L: LIME, I: CREAM };
+const CELLS = [];
+MARK_ROWS.forEach(function (row, r) {
+  Array.from(row).forEach(function (ch, c) {
+    const q = QUAD[ch]; if (!q) return;
+    const key = MARK_KEYS[r][c], base = BASE[key] || CREAM;
+    const d = 0.5 * (c / 43) + 0.5 * ((19 - r) / 19);
+    q.forEach(function (bit) { CELLS.push({ x: c * 18 + (bit & 1 ? 9 : 0), y: r * 36 + (bit & 2 ? 18 : 0), d: d, base: base }); });
+  });
+});
+const off = document.createElement('canvas'); off.width = 792; off.height = 720;
+const octx = off.getContext('2d', { willReadFrequently: true });
+function drawMark(t, t0, dur, s, x, y, alpha, glowAmt) {
+  const f = lerp(-0.22, 1.28, E.inOutSine(clamp((t - t0) / dur, 0, 1)));
+  const cx = x + 396 * s, cy = y + 360 * s;
+  if (glowAmt > 0.001) {
+    const gr = g.createRadialGradient(cx, cy, 10, cx, cy, 620 * s + 260);
+    gr.addColorStop(0, 'rgba(255,99,55,' + (0.30 * glowAmt * alpha).toFixed(3) + ')');
+    gr.addColorStop(0.55, 'rgba(255,99,55,' + (0.09 * glowAmt * alpha).toFixed(3) + ')');
+    gr.addColorStop(1, 'rgba(255,99,55,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  }
+  octx.clearRect(0, 0, 792, 720);
+  for (let i = 0; i < CELLS.length; i++) {
+    const c = CELLS[i];
+    const k = clamp((f - c.d) / 0.2, 0, 1);
+    const hot = k > 0 && k < 1 ? Math.sin(k * Math.PI) : 0;
+    octx.fillStyle = rgba(mixc(c.base, HOT, hot * 0.8), 0.17 + 0.83 * E.outCubic(k));
+    octx.fillRect(c.x, c.y, 9, 18);
+  }
+  g.save();
+  g.globalAlpha = alpha;
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(off, x, y, 792 * s, 720 * s);
+  g.restore();
+}
+
+/* ---------- embers ---------- */
+const rnd = L.rand(2024);
+const EMBERS = Array.from({ length: 46 }, function () {
+  return { x: rnd() * W, y0: rnd() * (H + 200), v: 22 + rnd() * 46, r: 1.4 + rnd() * 2.6, ph: rnd() * 6.28, fr: 0.8 + rnd() * 1.4, c: rnd() < 0.18 ? LIME : ORANGE, sw: 8 + rnd() * 22, a: 0.22 + rnd() * 0.36 };
+});
+function drawEmbers(t, amt) {
+  for (let i = 0; i < EMBERS.length; i++) {
+    const e = EMBERS[i];
+    const y = ((e.y0 - e.v * t) % (H + 200) + (H + 200)) % (H + 200) - 100;
+    const x = e.x + Math.sin(t * 0.7 + e.ph) * e.sw;
+    const a = e.a * amt * (0.6 + 0.4 * Math.sin(t * e.fr + e.ph)) * clamp(1 - Math.abs(y - 540) / 640, 0.15, 1);
+    g.fillStyle = rgba(e.c, a);
+    g.beginPath(); g.arc(x, y, e.r, 0, 6.2832); g.fill();
+  }
+}
+
+/* ---------- sparks ---------- */
+function drawSpark(x, y, r, a) {
+  if (a <= 0.005) return;
+  const gr = g.createRadialGradient(x, y, 0, x, y, r * 4.2);
+  gr.addColorStop(0, 'rgba(255,243,214,' + a.toFixed(3) + ')');
+  gr.addColorStop(0.18, 'rgba(255,140,80,' + (a * 0.85).toFixed(3) + ')');
+  gr.addColorStop(1, 'rgba(255,99,55,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(x, y, r * 4.2, 0, 6.2832); g.fill();
+}
+function trail(posAt, t, a, r) {
+  for (let i = 10; i >= 1; i--) { const p = posAt(t - i * 0.022); drawSpark(p[0], p[1], r * (1 - i / 12), a * (1 - i / 11) * 0.5); }
+  const p = posAt(t); drawSpark(p[0], p[1], r, a);
+}
+const bez = (p0, p1, p2, p3, u) => { const v = 1 - u; return v * v * v * p0 + 3 * v * v * u * p1 + 3 * v * u * u * p2 + u * u * u * p3; };
+
+/* ---------- typing with a caret ---------- */
+function typedText(str, t, t0, cps, caretAlways) {
+  const n = clamp(Math.floor((t - t0) * cps), 0, str.length);
+  const done = n >= str.length;
+  const blink = Math.floor(t * 2) % 2 === 0;
+  return { shown: str.slice(0, n), caret: t >= t0 && (!done || caretAlways) && (!done || blink) };
+}
+function caretAt(x, base, size, alpha) {
+  g.save(); g.globalAlpha = alpha; g.fillStyle = CREAM_S; g.fillRect(x + 1, base - size * 0.82, size * 0.6, size * 1.08); g.restore();
+}
+
+/* ---------- timeline constants ---------- */
+const NX = [300, 740, 1180, 1620], NY = 424;
+const NODE_T = [8.2, 8.95, 9.7, 10.45];
+const railX = function (t) { return kf(t, [[8.2, 300], [8.95, 740, 'inOutCubic'], [9.7, 1180, 'inOutCubic'], [10.45, 1620, 'inOutCubic']]); };
+const sparkR = function (t) { const u = E.inOutCubic(clamp((t - 17.95) / 0.55, 0, 1)); return [bez(1110, 1180, 1220, 1290, u), bez(540, 480, 480, 540, u)]; };
+const sparkL = function (t) { const u = E.inOutCubic(clamp((t - 16.55) / 0.5, 0, 1)); return [bez(630, 700, 740, 810, u), bez(540, 480, 480, 540, u)]; };
+const CONV = [431, 409];
+
+function winGeom(t) {
+  return kf(t, [
+    [3.5, [110, 400, 1040, 560, 0]],
+    [4.35, [110, 250, 1040, 560, 1], 'outCubic'],
+    [7.5, [110, 250, 1040, 560, 1]],
+    [8.4, [110, 792, 1700, 150, 1], 'inOutCubic'],
+    [12.5, [110, 792, 1700, 150, 1]],
+    [13.4, [190, 462, 1540, 236, 1], 'inOutCubic'],
+    [15.5, [190, 462, 1540, 236, 1]],
+    [16.3, [110, 380, 520, 330, 1], 'inOutCubic'],
+    [19.5, [110, 380, 520, 330, 1]],
+    [20.05, [CONV[0], CONV[1], 0, 0, 0], 'inCubic']
+  ]);
+}
+function winRGeom(t) {
+  return kf(t, [
+    [16.0, [1290, 380, 520, 330, 0]],
+    [16.7, [1290, 380, 520, 330, 0.55], 'outCubic'],
+    [19.5, [1290, 380, 520, 330, 1]],
+    [20.05, [CONV[0], CONV[1], 0, 0, 0], 'inCubic']
+  ]);
+}
+
+/* A terminal window: soft shadows, a gradient body and a border that warms with `lit`. */
+function drawWin(gm, lit, dots) {
+  const x = gm[0], y = gm[1], w = gm[2], h = gm[3], o = gm[4];
+  if (o <= 0.004 || w < 2 || h < 2) return;
+  g.save();
+  g.globalAlpha = o;
+  const body = g.createLinearGradient(0, y, 0, y + h);
+  body.addColorStop(0, '#101825'); body.addColorStop(1, '#0B111B');
+  rr(x, y, w, h, 18);
+  g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 80; g.shadowOffsetY = 30; g.fillStyle = body; g.fill();
+  g.shadowColor = rgba(ORANGE, 0.16 * lit); g.shadowBlur = 60 * lit; g.shadowOffsetY = 0; g.fill();
+  g.shadowColor = 'transparent'; g.shadowBlur = 0;
+  g.fillStyle = body; g.fill();
+  rr(x + 1, y + 1, w - 2, h - 2, 17);
+  g.lineWidth = 2; g.strokeStyle = rgba(mixc(CREAM, ORANGE, lit * 0.85), 0.2 + 0.5 * lit); g.stroke();
+  if (dots > 0.004) {
+    const cols = ['rgba(255,99,55,.9)', 'rgba(215,247,91,.8)', 'rgba(242,239,223,.5)'];
+    g.globalAlpha = o * dots;
+    for (let i = 0; i < 3; i++) { g.fillStyle = cols[i]; g.beginPath(); g.arc(x + 33 + i * 26, y + 29, 7, 0, 6.2832); g.fill(); }
+  }
+  g.restore();
+}
+
+/* Kinetic lines: each line rises through its own mask. */
+function maskLine(runs, x, top, size, weight, dy) {
+  const lh = size * 1.06;
+  g.save();
+  g.beginPath(); g.rect(x - 20, top, 2400, lh + size * 0.12); g.clip();
+  const base = baseline(top, lh, size, 'Archivo', weight) + dy;
+  let cx = x;
+  runs.forEach(function (r) { cx += txt(r[0], cx, base, { size: size, fam: 'Archivo', weight: weight, color: r[1] || CREAM_S }); });
+  g.restore();
+}
+function lineWidth(runs, size, weight) { return runs.reduce(function (s, r) { return s + adv(r[0], size, 'Archivo', weight); }, 0); }
+
+/* Multi-line text centred on cx inside a box of maxW. */
+function wrapCentered(str, cx, top, size, weight, maxW, alpha) {
+  const words = str.split(' '), lines = []; let cur = '';
+  words.forEach(function (wd) {
+    const test = cur ? cur + ' ' + wd : wd;
+    if (adv(test, size, 'Archivo', weight) > maxW && cur) { lines.push(cur); cur = wd; } else cur = test;
+  });
+  lines.push(cur);
+  const lh = size * 1.22;
+  lines.forEach(function (ln, i) {
+    const w = adv(ln, size, 'Archivo', weight);
+    txt(ln, cx - w / 2, baseline(top + i * lh, lh, size, 'Archivo', weight), { size: size, fam: 'Archivo', weight: weight, color: CREAM_S, alpha: alpha });
+  });
+  return { lines: lines.length, h: lines.length * lh };
+}
+
+/* Stroke a path up to a fraction p using a dash. */
+function strokePartial(path, len, p, color, width, alpha) {
+  if (p <= 0.001) return;
+  g.save(); g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = width; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.setLineDash([len * p, len * 2]); g.stroke(path); g.restore();
+}
+function bezLen(p) { let l = 0, px = p[0][0], py = p[0][1]; for (let i = 1; i <= 64; i++) { const u = i / 64; const x = bez(p[0][0], p[1][0], p[2][0], p[3][0], u), y = bez(p[0][1], p[1][1], p[2][1], p[3][1], u); l += Math.hypot(x - px, y - py); px = x; py = y; } return l; }
+const ARC_R = new Path2D('M1110 540C1180 480 1220 480 1290 540');
+const ARC_R_LEN = bezLen([[1110, 540], [1180, 480], [1220, 480], [1290, 540]]);
+const ARC_L = new Path2D('M630 540C700 480 740 480 810 540');
+const RAIL = new Path2D('M300 ' + NY + 'H1620');
+const ICONS = ['M-11 -8H11 M-11 0H11 M-11 8H3', 'M-5 -11L-15 0L-5 11 M5 -11L15 0L5 11', 'M-12 1L-4 10L13 -9', 'M-13 0H10 M3 -9L12 0L3 9'].map(function (d) { return new Path2D(d); });
+
+/* ---------- render ---------- */
+function render(t) {
+  /* background: ground, a soft ellipse of light, a dot grid, embers */
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#080D14'; g.fillRect(0, 0, W, H);
+  g.save(); g.translate(960, 497); g.scale(1, 0.63);
+  const bg = g.createRadialGradient(0, 0, 0, 0, 0, 1300);
+  bg.addColorStop(0, '#101A29'); bg.addColorStop(0.55, '#0A111C'); bg.addColorStop(1, 'rgba(8,13,20,0)');
+  g.fillStyle = bg; g.fillRect(-1300, -2000, 2600, 4000); g.restore();
+  g.fillStyle = 'rgba(242,239,223,.075)';
+  for (let yy = 30; yy < H; yy += 60) for (let xx = 30; xx < W; xx += 60) { g.beginPath(); g.arc(xx, yy, 1.5, 0, 6.2832); g.fill(); }
+  drawEmbers(t, t < 3.5 ? 1 : t < 19.5 ? 0.42 : 1);
+
+  /* mark: lockup, corner bug, final */
+  const flyP = E.inOutQuart(clamp((t - 3.5) / 0.9, 0, 1));
+  if (t < 19.3) {
+    const s = lerp(0.62, 0.115, flyP), x = lerp(250, 100, flyP), y = lerp(317, 66, flyP);
+    const glow = t < 3.5 ? P(t, 0.3, 1.4, 'outCubic') : lerp(1, 0.25, flyP);
+    drawMark(t, 0.2, 1.5, s, x, y, 1 - P(t, 19.0, 0.3, 'inQuad'), glow * (t > 3.5 ? 0.5 : 1));
+  }
+  if (t >= 19.5) drawMark(t, 19.85, 0.75, 0.56, 210, 208, P(t, 19.85, 0.15), P(t, 19.9, 0.7, 'outCubic') * 0.95);
+
+  /* frame brackets */
+  g.save(); g.globalAlpha = P(t, 0.2, 0.8); g.strokeStyle = 'rgba(242,239,223,.26)'; g.lineWidth = 2;
+  [[44, 44, 1, 1], [1876, 44, -1, 1], [44, 1036, 1, -1], [1876, 1036, -1, -1]].forEach(function (c) {
+    g.beginPath(); g.moveTo(c[0] + c[2] * 54, c[1]); g.lineTo(c[0], c[1]); g.lineTo(c[0], c[1] + c[3] * 54); g.stroke();
+  });
+  g.restore();
+
+  /* ===== beats 0-1: wordmark and kicker ===== */
+  if (t < 3.8) {
+    const S = 214, letters = Array.from('LitGrok'), lhm = S * 1.06, top = 384;
+    const bl = baseline(top, lhm, S, 'Archivo', 900);
+    let cx = 832;
+    letters.forEach(function (ch, i) {
+      const w = adv(ch, S, 'Archivo', 900);
+      const up = 1 - P(t, 1.25 + i * 0.07, 0.65, 'outQuart');
+      const out = P(t, 3.3 + i * 0.03, 0.4, 'inCubic');
+      txt(ch, cx, bl + Math.round((up - out) * 268), { size: S, fam: 'Archivo', weight: 900, color: i < 3 ? OR : CREAM_S, clip: [cx - 8, top, w + 16, lhm + S * 0.12] });
+      cx += w;
+    });
+    if (t > 2.45 && t < 3.3) reg('LitGrok', 832, top + 20, cx - 832, S * 0.95, false);
+    const kp = P(t, 1.95, 0.6, 'outCubic'), ka = kp * (1 - P(t, 3.3, 0.45, 'inCubic'));
+    if (ka > 0.004) {
+      const kb = 660 + (1 - kp) * 14;
+      const kw = txt('FOR GROK BUILD', 838, kb, { size: 44, fam: 'Archivo', weight: 700, color: CREAM_S, alpha: ka * 0.86, ls: 10.56 });
+      if (ka > 0.96) reg(COPY.kicker, 838, kb - 34, kw, 44, false);
+    }
+  }
+
+  /* ===== window and cards ===== */
+  const gm = winGeom(t);
+  const lit1 = t < 8.4 ? 1 : t < 12.5 ? 0.55 : t < 15.5 ? 0.8 : t < 17.7 ? 1 : lerp(1, 0.1, P(t, 17.7, 0.4));
+  const titleO = t < 3.9 ? 0 : t < 7.5 ? P(t, 4.0, 0.3) : t < 8 ? 1 - P(t, 7.5, 0.4) : t < 15.9 ? 0 : t < 19.5 ? P(t, 16.2, 0.4) : 0;
+  drawWin(gm, lit1, titleO);
+  const gr = winRGeom(t);
+  drawWin(gr, P(t, 18.4, 0.5), t < 16.6 ? 0 : t < 19.5 ? P(t, 16.7, 0.4) : 0);
+
+  /* ===== beat 2: say it ===== */
+  if (t >= 4.2 && t < 7.7) {
+    const inO = P(t, 4.3, 0.2) * (1 - P(t, 7.3, 0.3, 'inQuad'));
+    const tp = typedText(TERM.prompt1, t, 4.45, 46, false);
+    const pb = baseline(334, 44, 34, 'Meslo', 400);
+    const pw = txt(tp.shown, 160, pb, { size: 34, fam: 'Meslo', weight: 400, color: MONO_S, alpha: inO });
+    if (tp.caret) caretAt(160 + pw, pb, 34, inO);
+    if (tp.shown) reg(tp.shown, 160, 334, Math.max(pw, 30), 44, true);
+    const aw = P(t, 5.55, 0.5, 'outQuart');
+    if (aw > 0.005) {
+      const a2 = inO * aw, ab = baseline(418, 56, 44, 'Meslo', 400);
+      const fw = 42 * 24 / 28, sp = adv('M', 44, 'Meslo', 400), labelW = Array.from(TERM.act1).length * sp;
+      g.save(); g.beginPath(); g.rect(150, 400, (fw * 2 + sp * 2 + labelW + 20) * aw, 80); g.clip();
+      flame(160, ab + 7, 42, a2);
+      paint(TERM.act1, 160 + fw + sp, ab, 44, a2);
+      flame(160 + fw + sp + labelW + sp, ab + 7, 42, a2);
+      g.restore();
+      if (aw > 0.98 && inO > 0.98) reg(TERM.act1, 160 + fw + sp, 418, labelW, 56, true);
+    }
+    for (let i = 0; i < 3; i++) {
+      const on = P(t, 5.85 + i * 0.18, 0.25), tick = P(t, 6.3 + i * 0.24, 0.25, 'inOutSine');
+      if (on <= 0.004) continue;
+      const by = 548 + i * 78;
+      g.save(); g.globalAlpha = on * inO;
+      rr(162, by, 42, 42, 8); g.lineWidth = 2.5;
+      g.strokeStyle = tick > 0.02 ? 'rgba(215,247,91,' + (0.5 + 0.5 * tick).toFixed(2) + ')' : 'rgba(242,239,223,.5)'; g.stroke();
+      g.restore();
+      if (tick > 0.01) strokePartial(new Path2D('M170 ' + (by + 22) + 'L179 ' + (by + 31) + 'L194 ' + (by + 10)), 38.6, tick, '#D7F75B', 4.5, on * inO);
+      const lb = baseline(by - 1, 44, 36, 'Meslo', 400);
+      const lw = txt(TERM.checks[i], 228, lb, { size: 36, fam: 'Meslo', weight: 400, color: MONO_S, alpha: on * inO });
+      if (on > 0.98 && inO > 0.98) reg(TERM.checks[i], 228, by - 1, lw, 44, true);
+    }
+    const S = 108, lhh = S * 1.06;
+    const rows = [[['Say what ', CREAM_S]], [['you want ', CREAM_S]], [['built.', OR]]];
+    let settled = true;
+    rows.forEach(function (runs, i) {
+      const up = 1 - P(t, 4.1 + i * 0.12, 0.75, 'outQuart'), out = P(t, 7.2 + i * 0.05, 0.4, 'inCubic');
+      if (up > 0.001 || out > 0.001) settled = false;
+      maskLine(runs, 1236, 386 + i * lhh, S, 900, Math.round((up - out) * 135));
+    });
+    if (settled) reg(COPY.h1, 1236, 398, 560, lhh * 3 - 12, false);
+  }
+
+  /* ===== beat 3: rail ===== */
+  if (t >= 7.7 && t < 12.9) {
+    const inH = P(t, 7.8, 0.75, 'outQuart'), outH = P(t, 12.25, 0.4, 'inCubic'), S = 98;
+    maskLine([['A ', CREAM_S], ['route', OR], [' for every step.', CREAM_S]], 110, 172, S, 900, Math.round(((1 - inH) + outH) * 122));
+    if (inH > 0.999 && outH < 0.001) reg(COPY.h2, 110, 182, lineWidth([[COPY.h2]], S, 900), S, false);
+
+    const railO = P(t, 7.9, 0.4) * (1 - P(t, 12.4, 0.3, 'inQuad'));
+    const prog = clamp((railX(t) - 300) / 1320, 0, 1);
+    g.save(); g.globalAlpha = railO; g.strokeStyle = 'rgba(242,239,223,.2)'; g.lineWidth = 4; g.lineCap = 'round'; g.stroke(RAIL); g.restore();
+    if (t >= 8.2) strokePartial(RAIL, 1320, prog, OR, 6, railO);
+    for (let i = 0; i < 4; i++) {
+      const since = t - NODE_T[i];
+      const on = since >= 0 ? P(t, NODE_T[i], 0.25) : 0;
+      const pop = since >= 0 && since < 0.45 ? Math.sin((since / 0.45) * Math.PI) * (1 - since / 0.45 * 0.4) : 0;
+      g.save(); g.globalAlpha = railO;
+      const rp = clamp(since / 0.7, 0, 1);
+      if (since >= 0 && since < 0.7) { g.strokeStyle = 'rgba(255,99,55,' + (0.65 * (1 - rp)).toFixed(3) + ')'; g.lineWidth = 3; g.beginPath(); g.arc(NX[i], NY, 34 + 46 * E.outCubic(rp), 0, 6.2832); g.stroke(); }
+      g.beginPath(); g.arc(NX[i], NY, 34 * (1 + 0.3 * pop), 0, 6.2832);
+      g.fillStyle = rgba(mixc([11, 17, 27], ORANGE, on), 1); g.fill();
+      g.lineWidth = 4; g.strokeStyle = rgba(mixc(CREAM, ORANGE, on), 0.34 + 0.66 * on); g.stroke();
+      g.translate(NX[i], NY); g.lineWidth = 4.5; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.strokeStyle = rgba(mixc(CREAM, [8, 13, 20], on), 0.5 + 0.5 * on); g.stroke(ICONS[i]);
+      g.restore();
+      const lp = P(t, 7.9 + i * 0.09, 0.5, 'outCubic'), fade = 1 - P(t, 12.42, 0.16, 'inQuad');
+      const la = lp * (0.34 + 0.66 * on) * fade;
+      if (la > 0.004) {
+        const w = adv(COPY.nodes[i], 78, 'Archivo', 900), ltop = NY + 58 + (1 - lp) * 20;
+        txt(COPY.nodes[i], NX[i] - w / 2, baseline(ltop, 78, 78, 'Archivo', 900), { size: 78, fam: 'Archivo', weight: 900, color: CREAM_S, alpha: la });
+        if (la > 0.96) reg(COPY.nodes[i], NX[i] - w / 2, ltop + 6, w, 68, false);
+      }
+      const dp = P(t, NODE_T[i] + 0.04, 0.3, 'outCubic');
+      if (dp * fade > 0.004) {
+        const dtop = NY + 170 + (1 - dp) * 16;
+        const res = wrapCentered(COPY.descs[i], NX[i], dtop, 38, 400, 420, dp * fade * 0.8);
+        if (dp * fade * 0.8 > 0.75) reg(COPY.descs[i], NX[i] - 210, dtop + 4, 420, res.h - 8, false);
+      }
+    }
+    let ri = -1;
+    for (let i = 0; i < 4; i++) if (t >= NODE_T[i] - 0.28) ri = i;
+    const barO = P(t, 8.0, 0.3) * (1 - P(t, 12.3, 0.25, 'inQuad'));
+    if (ri >= 0 && barO > 0.004) {
+      const tp = typedText(TERM.routes[ri], t, NODE_T[ri] - 0.28, 46, true);
+      const bb = baseline(843, 48, 38, 'Meslo', 400);
+      const bw = txt(tp.shown, 158, bb, { size: 38, fam: 'Meslo', weight: 400, color: MONO_S, alpha: barO });
+      if (tp.caret) caretAt(158 + bw, bb, 38, barO);
+      if (tp.shown) reg(tp.shown, 158, 843, Math.max(bw, 30), 48, true);
+    }
+    if (t >= 8.1 && t < 11.3) trail(function (tt) { return [railX(tt), NY]; }, t, P(t, 8.1, 0.1) * (1 - P(t, 10.45, 0.5, 'inQuad')), 15);
+  }
+
+  /* ===== beat 4: status row ===== */
+  if (t >= 12.7 && t < 15.9) {
+    const inH = P(t, 12.75, 0.75, 'outQuart'), outH = P(t, 15.25, 0.4, 'inCubic'), S = 92;
+    maskLine([['Glance down. See what is ', CREAM_S], ['lit.', OR]], 190, 238, S, 900, Math.round(((1 - inH) + outH) * 115));
+    if (inH > 0.999 && outH < 0.001) reg(COPY.h3, 190, 250, lineWidth([[COPY.h3]], S, 900), S * 0.96, false);
+    const rowIn = P(t, 13.35, 0.4) * (1 - P(t, 15.3, 0.25, 'inQuad'));
+    const flip = E.inOutCubic(clamp((t - 14.0) / 0.4, 0, 1));
+    const FS = 46, cw = adv('M', FS, 'Meslo', 400), fw = 44 * 24 / 28, sp = cw;
+    const labelW = Array.from(TERM.active).length * cw;
+    const ctxVal = t < 14.7 ? 42 : t < 15.15 ? 47 : 53;
+    const tail = TERM.model + ctxVal + '%';
+    const rowW = fw + sp + labelW + sp + fw + adv(TERM.model + '53%', FS, 'Meslo', 400);
+    const rowX = 190 + (1540 - rowW) / 2, rowY = 462 + (236 - 64) / 2, rb = baseline(rowY, 64, FS, 'Meslo', 400);
+    if (rowIn > 0.004) {
+      if (flip < 0.999) {
+        const iw = adv(TERM.idle, FS, 'Meslo', 400);
+        txt(TERM.idle, rowX, rb, { size: FS, fam: 'Meslo', weight: 400, color: OR, alpha: rowIn * (1 - flip), clip: [rowX - 6, rb - 60, iw * (1 - flip) + 6, 90] });
+        if (rowIn * (1 - flip) > 0.96) reg(TERM.idle, rowX, rowY, iw, 64, true);
+      }
+      if (flip > 0.001) {
+        const a3 = rowIn * flip;
+        g.save(); g.beginPath(); g.rect(rowX - 8, rb - 70, (rowW + 16) * flip, 110); g.clip();
+        flame(rowX, rb + 7, 44, a3);
+        paint(TERM.active, rowX + fw + sp, rb, FS, a3);
+        flame(rowX + fw + sp + labelW + sp, rb + 7, 44, a3);
+        txt(tail, rowX + fw + sp + labelW + sp + fw, rb, { size: FS, fam: 'Meslo', weight: 400, color: MONO_S, alpha: a3 });
+        g.restore();
+        if (a3 > 0.96) reg(TERM.active + tail, rowX, rowY, rowW, 64, true);
+      }
+    }
+    const sp3 = P(t, 13.0, 0.35) * (1 - P(t, 15.35, 0.25, 'inQuad'));
+    if (sp3 > 0.004) {
+      const sw = adv(COPY.sub3, 46, 'Archivo', 400);
+      txt(COPY.sub3, 960 - sw / 2, baseline(774, 56, 46, 'Archivo', 400), { size: 46, fam: 'Archivo', weight: 400, color: CREAM_S, alpha: sp3 * 0.78 });
+      if (sp3 * 0.78 > 0.74) reg(COPY.sub3, 960 - sw / 2, 780, sw, 48, false);
+    }
+    if (t >= 14.0 && t < 14.7) {
+      const u = (t - 14.0) / 0.7;
+      for (let i = 0; i < 16; i++) {
+        const ang = i / 16 * 6.2832 + 0.3, sp2 = 90 + (i % 4) * 46;
+        drawSpark(rowX + 330 + Math.cos(ang) * sp2 * E.outCubic(u) * 1.2, rowY + 32 + Math.sin(ang) * sp2 * E.outCubic(u) * 0.7, 5 * (1 - u), 0.8 * (1 - u));
+      }
+    }
+  }
+
+  /* ===== beat 5: handoff ===== */
+  if (t >= 15.6 && t < 19.7) {
+    const S = 88;
+    const l1 = [['Leave the next step', CREAM_S]], l2 = [['with the ', CREAM_S], ['project.', OR]];
+    let settled = true;
+    [l1, l2].forEach(function (runs, i) {
+      const up = 1 - P(t, 15.75 + i * 0.12, 0.75, 'outQuart'), out = P(t, 19.1 + i * 0.05, 0.35, 'inCubic');
+      if (up > 0.001 || out > 0.001) settled = false;
+      maskLine(runs, 960 - lineWidth(runs, S, 900) / 2, 78 + i * S * 1.06, S, 900, Math.round((up - out) * 110));
+    });
+    if (settled) reg(COPY.h4, 960 - lineWidth(l1, S, 900) / 2, 90, lineWidth(l1, S, 900), S * 2.04 - 12, false);
+    const sp = P(t, 16.5, 0.35, 'outCubic') * (1 - P(t, 19.15, 0.3, 'inQuad'));
+    if (sp > 0.004) {
+      const sw = adv(COPY.sub4, 46, 'Archivo', 400);
+      txt(COPY.sub4, 960 - sw / 2, baseline(824, 56, 46, 'Archivo', 400), { size: 46, fam: 'Archivo', weight: 400, color: CREAM_S, alpha: sp * 0.8 });
+      if (sp * 0.8 > 0.74) reg(COPY.sub4, 960 - sw / 2, 830, sw, 48, false);
+    }
+
+    const cardIn = P(t, 16.3, 0.4) * (1 - P(t, 19.35, 0.25, 'inQuad'));
+    const dimL = t < 17.7 ? 1 : lerp(1, 0.32, P(t, 17.7, 0.4));
+    if (cardIn * dimL > 0.004) {
+      const tp = typedText(TERM.left1, t, 16.5, 30, false);
+      const lb = baseline(464, 38, 28, 'Meslo', 400);
+      const lw = txt(tp.shown, 144, lb, { size: 28, fam: 'Meslo', weight: 400, color: MONO_S, alpha: cardIn * dimL });
+      if (tp.caret) caretAt(144 + lw, lb, 28, cardIn * dimL);
+      const a2 = cardIn * dimL * P(t, 17.05, 0.3);
+      if (a2 > 0.004) txt(TERM.left2, 144, baseline(518, 32, 22, 'Meslo', 400), { size: 22, fam: 'Meslo', weight: 400, color: 'rgb(215,247,91)', alpha: a2 * 0.95 });
+    }
+
+    const dIn = P(t, 16.55, 0.5, 'outCubic') * (1 - P(t, 19.3, 0.3, 'inQuad'));
+    if (dIn > 0.004) {
+      const dy = 300 + (1 - P(t, 16.55, 0.5, 'outCubic')) * 30;
+      g.save(); g.globalAlpha = dIn;
+      const body = g.createLinearGradient(0, dy, 0, dy + 440); body.addColorStop(0, '#141D2C'); body.addColorStop(1, '#0E1522');
+      rr(810, dy, 300, 440, 12); g.fillStyle = body; g.fill();
+      rr(811, dy + 1, 298, 438, 11); g.lineWidth = 2; g.strokeStyle = 'rgba(242,239,223,.34)'; g.stroke();
+      g.restore();
+      txt(TERM.docTitle, 832, baseline(dy + 20, 26, 20, 'Meslo', 400), { size: 20, fam: 'Meslo', weight: 400, color: 'rgba(242,239,223,.75)', alpha: dIn });
+      const hc = ['#F2EFDF', '#D7F75B', '#FF6337'], bars = [[210, 160], [190, 120], [200, 150]];
+      for (let i = 0; i < 3; i++) {
+        const ha = dIn * P(t, 16.85 + i * 0.28, 0.25);
+        if (ha > 0.004) txt(TERM.docHeads[i], 832, baseline(dy + 74 + i * 116, 32, 26, 'Meslo', 400), { size: 26, fam: 'Meslo', weight: 400, color: hc[i], alpha: ha });
+        bars[i].forEach(function (bw, j) {
+          const cp = P(t, 16.95 + i * 0.28 + j * 0.1 + 0.18, 0.3, 'outCubic');
+          if (cp <= 0.004) return;
+          g.save(); g.globalAlpha = dIn; g.fillStyle = 'rgba(242,239,223,.28)';
+          rr(832, dy + 74 + i * 116 + 42 + j * 24, Math.max(bw * cp, 10), 10, 5); g.fill(); g.restore();
+        });
+      }
+    }
+    const arcO = 1 - P(t, 19.3, 0.2, 'inQuad');
+    if (t >= 16.55) { g.save(); g.globalAlpha = P(t, 16.55, 0.25) * arcO; g.strokeStyle = OR; g.lineWidth = 4; g.lineCap = 'round'; g.setLineDash([2, 12]); g.stroke(ARC_L); g.restore(); }
+    if (t >= 17.4) { g.save(); g.globalAlpha = P(t, 17.4, 0.3) * arcO; g.strokeStyle = 'rgba(242,239,223,.22)'; g.lineWidth = 4; g.lineCap = 'round'; g.stroke(ARC_R); g.restore(); }
+    if (t >= 17.95) strokePartial(ARC_R, ARC_R_LEN, P(t, 17.95, 0.55, 'inOutCubic'), OR, 5, arcO);
+    if (t >= 16.5 && t < 17.15) trail(sparkL, t, P(t, 16.5, 0.08) * (1 - P(t, 17.0, 0.15, 'inQuad')), 11);
+    if (t >= 17.9 && t < 18.7) trail(sparkR, t, P(t, 17.9, 0.08) * (1 - P(t, 18.5, 0.2, 'inQuad')), 13);
+
+    const rA = gr[4] * (t < 18.4 ? 0 : 1) * (1 - P(t, 19.3, 0.25, 'inQuad'));
+    if (rA > 0.004) {
+      const tp = typedText(TERM.right1 + '\n' + TERM.right2, t, 18.5, 62, false);
+      const lines = tp.shown.split('\n'), rb0 = baseline(464, 36, 26, 'Meslo', 400);
+      let lastW = 0;
+      lines.forEach(function (ln, i) { lastW = txt(ln, 1324, rb0 + i * 36, { size: 26, fam: 'Meslo', weight: 400, color: MONO_S, alpha: rA }); });
+      if (tp.caret) caretAt(1324 + lastW, rb0 + (lines.length - 1) * 36, 26, rA);
+      if (tp.shown) reg(tp.shown.replace(/\n/g, ' '), 1324, 464, 470, 36 * lines.length, true);
+    }
+  }
+
+  /* ===== beat 6: resolve ===== */
+  if (t >= 19.5) {
+    const S = 196, lhh = S * 1.06;
+    const rows = [[['Keep the ', CREAM_S]], [['work ', CREAM_S], ['lit.', OR]]];
+    let settled = true;
+    rows.forEach(function (runs, i) {
+      const up = 1 - P(t, 19.95 + i * 0.12, 0.6, 'outQuart');
+      if (up > 0.001) settled = false;
+      if (t >= 19.9) maskLine(runs, 740, 216 + i * lhh, S, 900, Math.round(up * 245));
+    });
+    if (settled) reg(COPY.tag, 740, 236, 940, lhh * 2 - 20, false);
+    const cp = P(t, 20.25, 0.5, 'inOutCubic'), ca = P(t, 20.2, 0.25);
+    if (ca > 0.004) {
+      const cx0 = 210, cy0 = 766;
+      g.save(); g.globalAlpha = ca;
+      const body = g.createLinearGradient(0, cy0, 0, cy0 + 104); body.addColorStop(0, '#101825'); body.addColorStop(1, '#0B111B');
+      rr(cx0, cy0, 1500, 104, 18);
+      g.shadowColor = 'rgba(0,0,0,.4)'; g.shadowBlur = 60; g.shadowOffsetY = 24; g.fillStyle = body; g.fill();
+      g.shadowColor = 'rgba(255,99,55,.14)'; g.shadowBlur = 44; g.shadowOffsetY = 0; g.fill();
+      g.shadowColor = 'transparent'; g.shadowBlur = 0; g.fillStyle = body; g.fill();
+      rr(cx0 + 1, cy0 + 1, 1498, 102, 17); g.lineWidth = 2; g.strokeStyle = 'rgba(255,99,55,.55)'; g.stroke();
+      g.restore();
+      const cb = baseline(cy0 + 33, 38, 34, 'Meslo', 400), fullW = adv(TERM.cmd, 34, 'Meslo', 400);
+      txt(TERM.cmd, 250, cb, { size: 34, fam: 'Meslo', weight: 400, color: CREAM_S, alpha: ca, clip: [240, cy0 + 10, fullW * cp + 12, 80] });
+      if (cp > 0.02 && (cp < 1 || Math.floor(t * 2) % 2 === 0)) { g.save(); g.globalAlpha = ca; g.fillStyle = CREAM_S; g.fillRect(250 + fullW * cp + 4, cb - 34 * 0.82, 19, 34); g.restore(); }
+      if (cp > 0.999) reg(TERM.cmd, 250, cy0 + 33, fullW, 38, true);
+    }
+    if (t >= 19.6 && t < 20.5) {
+      const grow = P(t, 19.65, 0.35, 'outCubic'), fade = 1 - P(t, 20.05, 0.4, 'inQuad');
+      drawSpark(CONV[0], CONV[1], 10 + 26 * grow, grow * fade);
+    }
+  }
+}
+
+L.define({ width: 1920, height: 1080, fps: 60, duration: 22, render: render });
+</script>

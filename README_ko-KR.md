@@ -167,6 +167,14 @@ LitGrok을 설치한 프로젝트의 Git 루트에서 Grok Build를 열거나 �
 
 이 과정은 모두 지금 세션 안에서 스킬의 안내를 따라 진행되고, LitGrok이 백그라운드에서 따로 돌리는 작업은 없습니다. 세션이 끝나면 작업도 그 자리에서 멈추고, 다음 세션이 인수인계 문서를 받아 다시 이어 갑니다.
 
+## 움직임으로 보기
+
+작업 세션 하나를 20초 남짓으로 보여 줍니다. 목표를 입력하면 세션에 불이 붙고, 명령 네 개가 계획부터 인수인계까지 작업을 이끌고, 새 터미널이 앞 세션이 남긴 파일을 이어받습니다.
+
+<p align="center"><a href="./docs/assets/promo/promo.mp4"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" /><img src="./docs/assets/promo/promo-preview.webp" width="880" alt="LitGrok 홍보 영상. 블록 LIT 마크가 Grok Build용 LitGrok이라는 이름 옆에서 불붙는다. 터미널이 litwork 프롬프트를 받아 LIT IGNITED 줄을 띄우고 체크리스트가 하나씩 채워진다. 네 단계 레일에 Plan, Build, Verify, Hand off가 각자의 명령과 함께 켜진다. 상태 행이 LIT에서 LIT IGNITED로 바뀐다. 인수인계 파일이 한 터미널에서 새 터미널로 넘어간다. 영상은 설치 명령과 함께 Keep the work lit.으로 끝난다." /></picture></a></p>
+
+영상은 LitGrok의 모션 스킬로 만든 애니메이션입니다. 터미널에 나오는 글자는 LitGrok이 실제로 출력하는 문자열(활성화 줄, 명령, 상태 행)이고, 불꽃은 그려 넣은 도형입니다. 녹화한 Grok 세션은 들어 있지 않습니다. 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 보입니다. 자동으로 만든 배경 음악까지 들으려면 [MP4로 보기](./docs/assets/promo/promo.mp4)를 누르세요.
+
 ## 스킬 한눈에 보기
 
 스킬 38개를 한 줄씩 정리했습니다. 경로는 각 스킬 문서에 적힌 것이고, 지금 Grok Build 세션이 실제로 불러온 목록은 `/skills`에서 보입니다. 이름이 바뀐 스킬은 한 릴리스 동안 이전 이름을 별칭으로 유지합니다([이름 변경과 호환성](./docs/reference_ko-KR.md#skill-이름-변경과-호환성)). 예전 슬래시 경로는 동작하지 않을 수도 있습니다.

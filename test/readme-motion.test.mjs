@@ -221,6 +221,51 @@ test('README skill tables give every packaged skill one shipped 240 px snapshot 
   }
 });
 
+const PROMO = 'docs/assets/promo';
+
+test('the motion promo assets stay inside their size caps and out of the npm package', () => {
+  const packageJson = JSON.parse(read('package.json'));
+  const preview = readFileSync(join(ROOT, PROMO, 'promo-preview.webp'));
+  assert.ok(preview.length <= 2_621_440, 'promo preview must stay under 2.5 MiB');
+  for (const name of ['promo-preview.webp', 'promo-still.webp', 'promo-poster.webp']) {
+    const bytes = readFileSync(join(ROOT, PROMO, name));
+    assert.equal(bytes.subarray(0, 4).toString('ascii'), 'RIFF', name);
+    assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', name);
+  }
+  for (const name of ['promo-still.webp', 'promo-poster.webp']) {
+    assert.ok(readFileSync(join(ROOT, PROMO, name)).length <= 512 * 1024, `${name} must stay under 512 KiB`);
+  }
+  const film = readFileSync(join(ROOT, PROMO, 'promo.mp4'));
+  assert.ok(film.length <= 8 * 1024 * 1024, 'promo film must stay under 8 MiB');
+  assert.equal(film.subarray(4, 8).toString('ascii'), 'ftyp', 'promo.mp4 is an MP4 container');
+  const source = readdirSync(join(ROOT, PROMO, 'source'), { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile());
+  assert.deepEqual(source.map((entry) => entry.name).sort(), ['index.html', 'mark.js', 'treatment.json']);
+  const sourceBytes = source.reduce((total, entry) => total + readFileSync(join(entry.parentPath ?? entry.path, entry.name)).length, 0);
+  assert.ok(sourceBytes <= 64 * 1024, 'the editable film source stays small');
+  assert.ok(!packageJson.files.some((entry) => !entry.startsWith('!') && (entry === PROMO || entry.startsWith(`${PROMO}/`))), 'the promo lives on GitHub and stays out of the package');
+});
+
+test('GitHub READMEs place the promo after the quick start with a reduced-motion still first and the MP4 linked, and the npm cards leave it out', () => {
+  for (const [name, heading, before, after] of [
+    ['README.md', '## Watch it in motion', '## Quick start', '## Skills at a glance'],
+    ['README_ko-KR.md', '## 움직임으로 보기', '## 빠른 시작', '## 스킬 한눈에 보기'],
+  ]) {
+    const text = read(name);
+    const start = text.indexOf(`\n${heading}\n`);
+    assert.ok(text.indexOf(`\n${before}\n`) > 0 && text.indexOf(`\n${before}\n`) < start, `${name}: the promo follows the quick start`);
+    assert.ok(start > 0 && start < text.indexOf(`\n${after}\n`), `${name}: the promo precedes the skills table`);
+    const section = text.slice(start, text.indexOf(`\n${after}\n`));
+    assert.ok(section.indexOf('prefers-reduced-motion: reduce') < section.indexOf('prefers-reduced-motion: no-preference'), `${name}: reduced-motion still comes first`);
+    assert.ok(section.includes('<source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" />'), `${name}: still source`);
+    assert.ok(section.includes('<source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" />'), `${name}: preview source`);
+    assert.match(section, /<img src="\.\/docs\/assets\/promo\/promo-preview\.webp" width="880" alt="[^"]{60,}" \/>/u, `${name}: img fallback with a descriptive alt`);
+    assert.ok(section.includes('<a href="./docs/assets/promo/promo.mp4">') && section.includes('](./docs/assets/promo/promo.mp4)'), `${name}: the MP4 is linked twice`);
+    assert.equal([...text.matchAll(/<picture>/gu)].length, 2, `${name}: the cover and the promo are the only pictures`);
+    assert.equal([...text.matchAll(/width="100%"/gu)].length, 1, `${name}: the cover stays the only full-width image`);
+  }
+  for (const [name] of NPM_PAGES) assert.doesNotMatch(read(name), /docs\/assets\/promo|promo\.mp4/u, `${name}: the npm card does not embed the promo`);
+});
+
 function withGenerator(t) {
   const root = mkdtempSync(join(tmpdir(), 'litgrok-readme-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));

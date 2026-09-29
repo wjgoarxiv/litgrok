@@ -1,0 +1,221 @@
+{
+  "request": "Make a 15 to 25 second motion promo for LitGrok, the way a pro typography motion artist would cut a reel: what a person types, what appears on screen, and what they get.",
+  "genre": "motion-graphics",
+  "path": "stage",
+  "pathReason": "The film has to show a drawn terminal, a step rail, a status row and a handoff file, which is more than words can carry.",
+  "idea": "A session ignites, moves through four typed routes, and hands a lit document to the next terminal so nothing is lost when the window closes.",
+  "audience": "Developers who use Grok Build and are deciding whether to add a working method on top of it.",
+  "channel": "The GitHub README of the LitGrok repository, watched inline with the sound off, or opened as an MP4 with the sound on.",
+  "format": "16:9",
+  "formatReason": "A README hero sits in a wide column and the MP4 link opens on desktop players, so the master is 1920 by 1080.",
+  "durationSec": 22,
+  "beats": [
+    {
+      "t0": 0,
+      "t1": 2,
+      "purpose": "Opening motif: the LitGrok block mark ignites from a dim outline to its three brand colours.",
+      "onScreen": "The pinned block mark at left, dim at frame one, then a flame front sweeps it into orange, lime and cream while a warm glow and embers rise behind it.",
+      "motion": "Diagonal ignition front with a brief white-hot edge, glow swelling behind it, embers drifting up.",
+      "sound": "Soft pulse under a rising pad, then a hit on the moment the mark is fully lit."
+    },
+    {
+      "t0": 2,
+      "t1": 3.5,
+      "purpose": "Lockup: the name and the host it is made for.",
+      "onScreen": "LitGrok in heavy Archivo beside the mark, with For Grok Build under it.",
+      "motion": "Letters rise through a mask one after another, the kicker fades in, the mark holds its glow.",
+      "sound": "Pad holds, pulse continues, a small rise into the cut."
+    },
+    {
+      "t0": 3.5,
+      "t1": 7.5,
+      "purpose": "Set piece one: what a person types and what appears.",
+      "onScreen": "A terminal window with the prompt slash litwork build a to-do list, the LIT IGNITED activation line in the orange to cyan gradient with drawn flames, and a three-item checklist ticking off. The headline Say what you want built sits at right.",
+      "motion": "The mark shrinks into the top-left corner, the window springs up from below, the prompt types out, the activation line wipes in, the check marks draw on.",
+      "sound": "A hit on the cut, keys-like ticks on the typing, a bell on the activation line."
+    },
+    {
+      "t0": 7.5,
+      "t1": 12.5,
+      "purpose": "Set piece two: four typed routes, one per step.",
+      "onScreen": "A rail with four nodes named Plan, Build, Verify and Hand off, each with a one-line descriptor, while the terminal narrows to a prompt bar that types each route in turn.",
+      "motion": "The window morphs into a slim bar, a spark runs along the rail and lights each node, the headline A route for every step slides in through a mask.",
+      "sound": "A hit on the cut, a pulse accent as each node lights, a rise into the next cut."
+    },
+    {
+      "t0": 12.5,
+      "t1": 15.5,
+      "purpose": "Peak detail: the optional status row that shows which skill is lit.",
+      "onScreen": "One large row in the terminal: LIT, grok, the model and the context percentage, then it switches to LIT IGNITED with the skill name in the gradient, and the context number steps up.",
+      "motion": "The bar zooms into the row, the idle label flips to the active label with a spark, the number steps twice.",
+      "sound": "A hit on the cut, a bright accent on the flip, pad opens up."
+    },
+    {
+      "t0": 15.5,
+      "t1": 19.5,
+      "purpose": "Set piece three: the handoff that lets the next session continue.",
+      "onScreen": "Session one writes a HANDOFF file with Built, Checked and Remains, goes dark, and the file travels to a fresh terminal that reads it. The headline Leave the next step with the project sits above.",
+      "motion": "The row window shrinks to a left card, the document is written line by line, a spark carries it along an arc to the right card, which wakes and types the read line.",
+      "sound": "A hit on the cut, a rise as the file travels, a soft chord as the right window wakes."
+    },
+    {
+      "t0": 19.5,
+      "t1": 22,
+      "purpose": "Resolve: everything returns to the mark, the promise and the install line.",
+      "onScreen": "The mark lit again at left, Keep the work lit. in large type, and the install command in a slim terminal line below.",
+      "motion": "Both cards collapse to a spark that opens an iris into the mark, the tagline rises through a mask, the command types, then everything holds still.",
+      "sound": "A hit on the cut, then a closing cadence that rings out over the hold."
+    }
+  ],
+  "subject": {
+    "name": "LitGrok",
+    "source": "user",
+    "specifics": [
+      "Adds a plan, build, verify and hand-off way of working to Grok Build sessions through skills, a project rule and hooks that live in the project's .grok folder.",
+      "Each step is a typed route: slash lit-plan, slash start-work, slash review-work and slash lit-handoff, and an activated reply opens with the LIT IGNITED line.",
+      "An optional status row shows the skill that is lit, the model and the context used, and a handoff file lets the next session pick up the checked result and the next step."
+    ]
+  },
+  "visualDevices": [
+    {
+      "kind": "illustration",
+      "role": "subject",
+      "beats": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "kind": "shape",
+      "role": "subject",
+      "beats": [
+        0,
+        1,
+        6
+      ]
+    },
+    {
+      "kind": "diagram",
+      "role": "support",
+      "beats": [
+        3
+      ]
+    },
+    {
+      "kind": "path",
+      "role": "support",
+      "beats": [
+        3,
+        5
+      ]
+    },
+    {
+      "kind": "icon",
+      "role": "support",
+      "beats": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "kind": "mask",
+      "role": "support",
+      "beats": [
+        1,
+        3,
+        6
+      ]
+    },
+    {
+      "kind": "particles",
+      "role": "texture",
+      "beats": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "kind": "gradient",
+      "role": "texture",
+      "beats": [
+        0,
+        1,
+        4,
+        6
+      ]
+    }
+  ],
+  "typePlan": {
+    "faces": [
+      "Archivo",
+      "Meslo"
+    ],
+    "hierarchy": "Archivo 900 headlines in cream with one orange word first, Archivo 700 node names second, Archivo 400 descriptors third, Meslo for everything the terminal prints.",
+    "maxWordsOnScreen": 14
+  },
+  "palette": [
+    {
+      "hex": "#080D14",
+      "role": "Ground shared with the cover"
+    },
+    {
+      "hex": "#FF6337",
+      "role": "Ignition orange, the lit state"
+    },
+    {
+      "hex": "#D7F75B",
+      "role": "Lime, the checked state"
+    },
+    {
+      "hex": "#F2EFDF",
+      "role": "Cream, type and the mark body"
+    },
+    {
+      "hex": "#FF2D95",
+      "role": "Middle stop of the status-row gradient only"
+    },
+    {
+      "hex": "#00E5FF",
+      "role": "End stop of the status-row gradient only"
+    }
+  ],
+  "sound": {
+    "mode": "generated",
+    "plan": "A generated bed at 120 BPM in A minor: a low pad that swells with the ignition, a steady bell pulse under the terminal beats, accents on every cut, and a cadence that resolves home during the final hold.",
+    "palette": {
+      "timbre": "glass",
+      "key": "A minor",
+      "tempo": 120
+    }
+  },
+  "copy": {
+    "source": "invented",
+    "lines": [
+      "For Grok Build",
+      "Say what you want built.",
+      "A route for every step.",
+      "Writes the plan and its checks",
+      "Runs the plan you approved",
+      "Reviews the change and its evidence",
+      "Carries the next step forward",
+      "Glance down. See what is lit.",
+      "Optional status row: skill, model, context.",
+      "Leave the next step with the project.",
+      "The next session reads it and continues.",
+      "Keep the work lit."
+    ]
+  },
+  "inventions": [
+    "The copy lines, written from the README's own wording for the routes, the status row and the handoff.",
+    "The sample prompt, checklist words and file layout shown in the terminals are illustrations built from strings the README and hooks print; the drawn flames stand in for the flame emoji."
+  ],
+  "ambition": "Kinetic type with a clear three-level hierarchy, one continuous terminal object that morphs from window to bar to status row to two cards so every cut is a match cut, real ignition colours, and a final hold that lands on the mark and the promise."
+}
