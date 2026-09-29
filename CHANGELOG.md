@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.12 — 2026-09-30
+
+- The GitHub pages, in English and Korean, gained a short motion film under "Watch it in motion": one working session in about twenty seconds, from typing a goal to handing the work to a fresh terminal. It is animated artwork, and the film files stay on GitHub, outside the npm package.
+
 ## 1.0.11 — 2026-09-29
 
 - The READMEs and the npm install page, in English and Korean, are rewritten in plainer language, with the reason before each switch. The npm page stays a short install card that links to the full guide on GitHub.
