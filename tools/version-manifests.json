@@ -99,6 +99,11 @@
       "version": "1.0.0",
       "occurrences": 3,
       "why": "The backend guide contains three independent OpenAPI example versions, not LitGrok release metadata. Preserve those examples and the unrelated standard-openapi dependency version."
+    },
+    {
+      "path": ".grok/skills/lit-pptx/package-lock.json",
+      "occurrences": 1,
+      "why": "The pinned pako package version happens to coincide with the current LitGrok release; it is an unrelated npm package version, not a release pin. Re-check this entry every release since the coincidence is version-dependent."
     }
   ]
 }

@@ -77,7 +77,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 재현 가능한 설치는 버전을 고정합니다.
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@1.0.10 -- litgrok install
+npm exec --yes --package @litfamily/litgrok@1.0.11 -- litgrok install
 ```
 
 파일을 쓰지 않고 미리보기:

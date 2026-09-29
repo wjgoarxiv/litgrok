@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.11 — 2026-09-29
+
+- The READMEs and the npm install page, in English and Korean, are rewritten in plainer language, with the reason before each switch. The npm page stays a short install card that links to the full guide on GitHub.
+
 ## 1.0.10 — 2026-09-29
 
 - lit-typographic-motion: the motion runtime now pins `ws` 8.22.0, which fixes a memory-exhaustion denial of service and an uninitialized-memory disclosure in 8.18.3. Run `litgrok-ai motion-runtime install` again after upgrading.

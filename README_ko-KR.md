@@ -40,7 +40,7 @@ Grok Build에서 작은 결과물을 만들고, 확인한 내용과 다음 할 �
 [English](./README.md) · [설치](#30초-설치) · [빠른 시작](#빠른-시작) · [스킬](#스킬-한눈에-보기) · [상세 안내](./docs/reference_ko-KR.md)
 
 <p align="center">
-<a href="#30초-설치"><img src="./docs/assets/readme/badge-version.svg" alt="1.0.10" /></a>
+<a href="#30초-설치"><img src="./docs/assets/readme/badge-version.svg" alt="1.0.11" /></a>
 <a href="./LICENSE"><img src="./docs/assets/readme/badge-license.svg" alt="MIT 라이선스" /></a>
 </p>
 
@@ -68,7 +68,7 @@ Node.js와 Grok Build가 있으면 됩니다. 써 보고 싶은 프로젝트에�
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-파일은 `<project>/.grok/`에 들어갑니다. 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이고, 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.10`을 쓰세요. [설치·업데이트 상세 안내](./docs/reference_ko-KR.md#설치)
+파일은 `<project>/.grok/`에 들어갑니다. 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이고, 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.11`을 쓰세요. [설치·업데이트 상세 안내](./docs/reference_ko-KR.md#설치)
 
 로컬 패키지로 써 보려면 실제 절대 경로를 변수에 넣고 두 줄을 따로 실행하세요.
 
