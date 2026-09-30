@@ -424,6 +424,32 @@ Day to day, most work goes through these six. Each one hands Grok Build a skill'
 
 The eleven hook registrations live in [`hooks/hooks.json`](./hooks/hooks.json). They show the LitGrok mark when a session starts, keep the status row current, check deliverable wording before it is written, and log the order of events. Like any project hook, they run only in a trusted Git root (see [Quick start](#quick-start)).
 
+## Automatic handoff
+
+A long session eventually fills the context window, and Grok then compacts the conversation and drops detail. LitGrok can ask for a handoff before that happens: once the context reaches a percent you choose, the model writes one while it still remembers everything. The feature is off until you turn it on, and the percent is always yours. LitGrok has no built-in default.
+
+Turn it on from the project root and pick your own number:
+
+```bash
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
+```
+
+- `auto-handoff on <percent>` turns it on at that percent, a whole number from 1 to 99. Plain `auto-handoff on` brings back the percent you used last, and asks for one if you never chose.
+- `auto-handoff off` turns it off and remembers the percent for next time.
+- `auto-handoff status` shows whether it is on, where each setting came from, and any warning.
+- `LITGROK_AUTO_HANDOFF=1` turns it on for every session started from that environment, and `0` keeps it off there. `LITGROK_AUTO_HANDOFF_PERCENT=60` sets the percent and wins over the saved one. A percent outside 1 to 99 leaves the feature off, and `status` tells you why.
+
+The choice is saved in `.grok/litgrok/auto-handoff.json` in the project. Here is what happens once it is on, and which steps LitGrok does for you on Grok Build:
+
+| Step | On Grok Build |
+| --- | --- |
+| Reading how full the context is | Automatic, but only through the status row from [An optional status row](#an-optional-status-row). Grok gives hooks no other view of the percent, so without the row nothing happens. |
+| Asking for the handoff | Automatic. When a turn ends at or above your percent, the Stop hook keeps the model working and tells it to write the handoff with the `lit-handoff` procedure. It asks once per crossing, and the model still has to follow the request. |
+| Compacting | Yours to run. Grok lets no hook start a compaction, so the model ends with one plain line, "Handoff saved. Run /compact now." Grok also compacts by itself at 85 percent unless you changed that, so pick a percent below it. `status` warns when yours is not. |
+| Bringing the handoff back | A reminder. After the compaction, the next turn end asks the model to read the handoff this session saved. Grok discards what a prompt hook prints, so the reminder cannot arrive any sooner. LitGrok skips a handoff that is older than the request or that another session wrote. |
+
+After you compact and the context grows past your percent again, the cycle starts over. Like every project hook, this one runs only in a trusted Git root (`/hooks-trust`, see [Quick start](#quick-start)). The context figure lives in the temporary status-row folder described in the [reference](./docs/reference.md#persistent-status-line-opt-in), and each step is noted in the session ledger.
+
 ## How it works
 
 Everything LitGrok adds lives in the project's `.grok/` folder. When you run `/litwork`, the current session gets a checklist to follow; Grok Build still runs it and picks the model. Here is how the pieces connect:

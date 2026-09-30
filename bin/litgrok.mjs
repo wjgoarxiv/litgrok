@@ -197,7 +197,7 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/text-naturalization/SKILL.md': 'aa1ff8f68ab0bf71cb47818b536c4a2934da65adb413ee43ec5839b540b2df8e',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--dry-run] [--no-color] [--yes]\n       litgrok-ai motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--dry-run] [--no-color] [--yes]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok-ai motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -767,6 +767,10 @@ export async function run(args, context = {}) {
   if (args[0] === 'motion-runtime') {
     const { runMotionRuntime } = await import('../.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
     return runMotionRuntime(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr });
+  }
+  if (args[0] === 'auto-handoff') {
+    const { runAutoHandoff } = await import('../.grok/hooks/auto-handoff.mjs');
+    return runAutoHandoff(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr, cwd: context.cwd ?? process.cwd() });
   }
   const env = context.env ?? process.env;
   const stdin = context.stdin ?? process.stdin;

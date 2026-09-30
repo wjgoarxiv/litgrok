@@ -9,7 +9,10 @@ scripts. The `lit-pptx` and `lit-docx` scripts install pinned first-use dependen
 only into a LitGrok office cache. The `lit-typographic-motion` runtime installs only through the explicit
 `litgrok-ai motion-runtime install` pre-warm into `${XDG_CACHE_HOME:-~/.cache}/litgrok/motion-runtime`;
 its renders never install or fetch. The installer may copy or
-remove the packaged `.grok` tree only at documented project or user paths.
+remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
+command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
+user's request, and the opt-in status-line command keeps a per-session context record in the
+temporary HUD state root.
 The current tree contains 38 skills, one project rule, and eleven hook
 registrations with their commands. Project hooks must surface the
 `/hooks-trust` or `--trust` requirement. Do not add plugins, marketplaces, MCP,

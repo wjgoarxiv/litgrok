@@ -53,6 +53,8 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 다음 세션에서는 돌려받은 경로를 Grok Build에 알려 주고, 그 문서를 읽은 뒤 현재 파일 상태부터 확인하고 이어 가라고 요청하세요.
 
+긴 세션은 핸드오프를 스스로 쓰게 할 수 있습니다. `litgrok auto-handoff on <percent>`로 원하는 퍼센트를 직접 정해 자동 핸드오프를 켜면, 컨텍스트가 그 퍼센트에 닿을 때 LitGrok이 모델에게 핸드오프를 요청합니다. 켜기 전까지는 꺼져 있고, 컨텍스트 퍼센트는 선택 사항인 상태 행에서 읽습니다. [자동으로 되는 일과 직접 할 일](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md#자동-핸드오프)
+
 ## 자주 쓰는 명령
 
 | 이렇게 입력하면 | 일어나는 일 |

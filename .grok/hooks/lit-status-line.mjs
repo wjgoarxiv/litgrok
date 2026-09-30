@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-import { readHudRecordForCwd } from './litgrok-hud-state.mjs';
+import { isAbsolute } from 'node:path';
+import { resolveAutoHandoff } from './auto-handoff.mjs';
+import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
 
 const MAX_INPUT_BYTES = 64 * 1024;
 const GRADIENT_STOPS = [[255, 99, 55], [255, 45, 149], [0, 229, 255]];
@@ -96,7 +98,30 @@ function formatRow(discipline, model, context, color) {
   return color ? `\u001b[1m\u001b[38;2;255;99;55m${row}\u001b[0m` : row;
 }
 
+// Automatic handoff needs Grok's context percent, which only the status line receives. Nothing is
+// written unless the user turned the feature on and Grok reported a percent.
+function recordContextForHandoff(status) {
+  const sessionId = status?.session_id;
+  const percent = status?.context_window?.used_percentage;
+  if (typeof sessionId !== 'string' || sessionId === '' || typeof percent !== 'number' || !Number.isFinite(percent)) return;
+  if (typeof status.cwd !== 'string' || !isAbsolute(status.cwd)) return;
+  const dirs = [status.workspace?.repo_root, status.workspace?.current_dir, status.cwd];
+  if (!resolveAutoHandoff({ env: process.env, dirs }).active) return;
+  writeContextRecord({
+    env: process.env,
+    sessionId,
+    cwd: status.cwd,
+    usedPercentage: percent,
+    autoCompactThresholdPercent: status.context_window.auto_compact_threshold_percent,
+  });
+}
+
 const input = await readInput();
+try {
+  recordContextForHandoff(input);
+} catch {
+  // The row must always render; a failed record only means this refresh adds nothing for the handoff.
+}
 const cwd = typeof input?.cwd === 'string' ? input.cwd : '';
 let record = null;
 try {

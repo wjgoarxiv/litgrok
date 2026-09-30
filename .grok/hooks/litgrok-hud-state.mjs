@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -120,6 +120,75 @@ export function readHudRecordForCwd(cwd, env = process.env) {
     if (!status.isFile() || status.isSymbolicLink() || status.size > MAX_RECORD_BYTES) return null;
     const record = JSON.parse(readFileSync(path, 'utf8'));
     return validRecord(record, cwd) ? record : null;
+  } catch {
+    return null;
+  }
+}
+
+const CONTEXT_FRESH_MS = 10 * 60 * 1000;
+const CONTEXT_NEWEST_MS = 24 * 60 * 60 * 1000;
+
+function validContextRecord(record) {
+  return record !== null && typeof record === 'object' && !Array.isArray(record)
+    && typeof record.sessionId === 'string' && record.sessionId.length > 0 && record.sessionId.length <= 512
+    && typeof record.usedPercentage === 'number' && record.usedPercentage >= 0 && record.usedPercentage <= 100
+    && (record.autoCompactThresholdPercent === null
+      || (typeof record.autoCompactThresholdPercent === 'number' && record.autoCompactThresholdPercent >= 1 && record.autoCompactThresholdPercent <= 100))
+    && typeof record.at === 'string' && Number.isFinite(Date.parse(record.at));
+}
+
+function readContextFile(path) {
+  try {
+    const status = lstatSync(path);
+    if (!status.isFile() || status.isSymbolicLink() || status.size > MAX_RECORD_BYTES) return null;
+    const record = JSON.parse(readFileSync(path, 'utf8'));
+    return validContextRecord(record) ? record : null;
+  } catch {
+    return null;
+  }
+}
+
+// The status line is the only place Grok reports how full the context is. It keeps the latest figure
+// here, keyed by session id, because that id is the one thing the status line and the hooks both receive.
+export function writeContextRecord({ env = process.env, sessionId, cwd, usedPercentage, autoCompactThresholdPercent = null, now = new Date() }) {
+  if (typeof sessionId !== 'string' || sessionId.length === 0 || sessionId.length > 512) throw hudError('HUD_SESSION_ID_INVALID');
+  if (typeof cwd !== 'string' || !isAbsolute(cwd)) throw hudError('HUD_RECORD_PATH_INVALID');
+  const threshold = typeof autoCompactThresholdPercent === 'number' && autoCompactThresholdPercent >= 1 && autoCompactThresholdPercent <= 100
+    ? autoCompactThresholdPercent
+    : null;
+  const record = { sessionId, usedPercentage, autoCompactThresholdPercent: threshold, at: now.toISOString() };
+  if (!validContextRecord(record)) throw hudError('HUD_CONTEXT_INVALID');
+  writeRecord(stateRootPath(env, [cwd], true), keyFor('context', sessionId), record);
+}
+
+// Returns this session's record, or null when it is missing, belongs to another session or is older than ten minutes.
+export function readContextRecord(sessionId, env = process.env, now = new Date()) {
+  if (typeof sessionId !== 'string' || sessionId.length === 0 || sessionId.length > 512) return null;
+  try {
+    const root = stateRootPath(env, [], false);
+    if (!root) return null;
+    const record = readContextFile(join(root, keyFor('context', sessionId)));
+    if (!record || record.sessionId !== sessionId) return null;
+    const age = now.getTime() - Date.parse(record.at);
+    return age <= CONTEXT_FRESH_MS ? record : null;
+  } catch {
+    return null;
+  }
+}
+
+// Returns the most recent record of any session from the last day, used only to show Grok's own compaction point.
+export function readNewestContextRecord(env = process.env, now = new Date()) {
+  try {
+    const root = stateRootPath(env, [], false);
+    if (!root) return null;
+    let newest = null;
+    for (const name of readdirSync(root)) {
+      if (!/^context-[0-9a-f]{32}\.json$/u.test(name)) continue;
+      const record = readContextFile(join(root, name));
+      if (!record || now.getTime() - Date.parse(record.at) > CONTEXT_NEWEST_MS) continue;
+      if (newest === null || Date.parse(record.at) > Date.parse(newest.at)) newest = record;
+    }
+    return newest;
   } catch {
     return null;
   }

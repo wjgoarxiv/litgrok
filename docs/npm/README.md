@@ -53,6 +53,8 @@ For a larger change, start with `/lit-plan`, read the plan it saves, then run `/
 
 Next time, give Grok Build the path it returned and ask it to read the handoff and check the current files before it continues.
 
+Long sessions can write their own handoff. Turn on automatic handoff with `litgrok auto-handoff on <percent>`, choosing the percent yourself, and LitGrok asks the model for a handoff when the context reaches it. It stays off until you do, and it reads the context percent from the optional status row. [What runs by itself and what you run](https://github.com/wjgoarxiv/litgrok#automatic-handoff)
+
 ## Routes people use
 
 | Type this | What happens |
