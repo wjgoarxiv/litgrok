@@ -167,13 +167,47 @@ LitGrok을 설치한 프로젝트의 Git 루트에서 Grok Build를 열거나 �
 
 이 과정은 모두 지금 세션 안에서 스킬의 안내를 따라 진행되고, LitGrok이 백그라운드에서 따로 돌리는 작업은 없습니다. 세션이 끝나면 작업도 그 자리에서 멈추고, 다음 세션이 인수인계 문서를 받아 다시 이어 갑니다.
 
+### 화면에 나오는 모습
+
+아래 그림은 LitGrok이 터미널에 출력하는 내용입니다. 설치하기 전에 미리 볼 수 있도록 실었습니다. 그림마다 LitGrok의 설치 프로그램, SessionStart 훅, 프롬프트 훅, 상태 행 명령이 실제로 출력한 내용을 캡처했고, 빈 데모 프로젝트와 임시 홈 폴더에서 실행했습니다. 홈 폴더 경로만 `~`로 줄였습니다. 창 테두리는 글자 둘레에 그려 넣은 것이라 실제 터미널에서는 글꼴과 색이 다르게 보일 수 있습니다. 대부분의 그림은 페이지 테마를 따라 어두운 페이지에서는 어두운 창으로, 밝은 페이지에서는 밝은 창으로 보입니다. 굵은 글씨는 보통 굵기로 그렸고, 불꽃 이모지는 작은 벡터 아이콘으로 대신 그렸습니다. 그림 속 버전 번호, 파일 개수, 걸린 시간은 캡처한 실행의 값입니다.
+
+설치 프로그램은 LIT 마크와 패키지 버전을 먼저 보여 준 뒤, 파일이 들어갈 위치와 개수를 알려 줍니다. Scope는 파일이 들어갈 폴더입니다. 여기서는 데모 프로젝트의 `.grok` 폴더이고, `--user`를 붙이면 홈 폴더가 됩니다. Payload는 파일 개수이고, 모두 원본과 바이트가 같은 복사본입니다. MODEL ROUTE 카드는 모델을 계속 Grok Build가 고른다고 알려 줍니다. 그래서 설치 프로그램은 모델을 묻지 않고 모델 키도 쓰지 않습니다. 마크의 크림색 칸이 흰 창에서는 흐려지므로, 이 그림은 페이지 테마와 상관없이 어두운 창으로 보여 줍니다.
+
+<p align="center"><img src="./docs/assets/screens/install-plan-dark.webp" width="824" alt="zsh라는 제목의 터미널 창. 주황색·크림색·라임색 블록 글자로 그린 LitGrok 마크 옆에 패키지 버전이 있고, 그 아래에 Grok Build skills, project rules, and hooks 줄이 있습니다. 이어서 INSTALL 아래에 01 · Scope project scope → ~/demo/.grok (use --user for user scope)와 02 · Payload 1089 files · byte-identical copies only, 그리고 whole packaged .grok tree, byte-identical copies only가 나옵니다. 그다음 MODEL ROUTE 아래에 Model selection: host-owned와 Grok Build owns model and effort; the installer writes no model keys가 있습니다." /></p>
+
+*설치 프로그램에서 캡처*
+
+`--dry-run`을 붙이면 같은 계획 뒤에 DRY RUN — no files written 줄이 나오고, 이어서 복사할 파일이 한 줄에 하나씩 나옵니다. 그림은 1089줄 가운데 처음 세 줄까지만 보여 줍니다. [안전하게 설치하고 지우기](#안전하게-설치하고-지우기)에 적힌 다른 미리보기 경우도 같은 형태로 출력하며, no files written 줄에 그 이유가 적힙니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/install-dry-run-dark.webp" /><img src="./docs/assets/screens/install-dry-run-light.webp" width="932" alt="zsh라는 제목의 터미널 창. INSTALL 아래에 01 · Scope project scope → ~/demo/.grok (use --user for user scope)와 02 · Payload 1089 files · byte-identical copies only가 있고, MODEL ROUTE 아래에 Model selection: host-owned가 있습니다. 이어서 DRY RUN — no files written 줄과 세 줄이 나옵니다. would install ~/demo/.grok/agents/litgrok-executor.md, would install ~/demo/.grok/agents/litgrok-korean-prose-editor.md, would install ~/demo/.grok/agents/litgrok-korean-style-analyzer.md입니다." /></picture></p>
+
+*`--dry-run` 설치에서 캡처*
+
+실제 설치는 네 단계를 차례로 거치고 단계마다 걸린 시간을 적습니다. PAYLOAD는 파일 수를 세고, SAFETY는 설치 경로가 비어 있는지 확인하고, OWNERSHIP은 파일마다 디스크에 이미 있는 것과 견주고(새 프로젝트에는 아무것도 없어서 충돌이 없습니다), WRITE는 파일을 복사합니다. 이어지는 영수증은 Ready로 시작하고 사용자가 챙길 일을 알려 줍니다. 프로젝트 훅은 신뢰한 Git 루트에서만 돌기 때문에 `/hooks-trust`를 안내하고, 설치 프로그램이 `git init`을 실행하거나 신뢰 설정을 바꾸지 않는다고 적습니다. 마지막 두 줄은 영상 도구를 미리 받는 명령과 Grok Build를 다시 시작하라는 안내입니다. 가장 긴 줄은 터미널이 줄을 바꾸는 방식대로 100칸에서 접혀 있습니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/install-done-dark.webp" /><img src="./docs/assets/screens/install-done-light.webp" width="1004" alt="zsh라는 제목의 터미널 창. INSTALL STEPS 아래에 체크 표시가 붙은 네 줄이 있습니다. PAYLOAD · 1089 files discovered, SAFETY · install path clear, OWNERSHIP · 1089 missing · 0 already-current · 0 owned · 0 conflicts · 91 legacy missing · 0 legacy owned · 0 legacy conflicts, WRITE · 1089 written · 0 already-current · 0 owned입니다. 이어서 INSTALL RECEIPT: Status: Ready, Scope: project scope → ~/demo/.grok (use --user for user scope), Written vs already-current: 1089 written · 0 already-current, Model route: host-owned; the installer writes no model keys, Hooks: project hooks require trust from a Git project root, Trust: use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json, Installer never runs git init or changes trust, Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with litgrok-ai motion-runtime install, Next: restart Grok Build가 나옵니다." /></picture></p>
+
+*설치 프로그램에서 캡처*
+
+신뢰한 프로젝트에서 세션이 시작되면 SessionStart 훅이 LIT 마크와 페이로드가 있다는 한 줄을 출력합니다. 이 마크가 보이면 그 세션에서 훅이 로드된 것이고, 끝내 나타나지 않으면 [훅이 보이지 않을 때](#훅이-보이지-않을-때)부터 확인하세요. 이 훅은 일반 문자만 출력하므로 마크에 색이 없습니다. 색이 있는 마크는 위의 설치 프로그램 배너입니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/session-start-dark.webp" /><img src="./docs/assets/screens/session-start-light.webp" width="824" alt="grok라는 제목의 터미널 창. 일반 문자로 그린 LitGrok 블록 마크와 그 아래의 LitGrok payload present: skills, project rules, hooks, and the npx installer. 줄입니다." /></picture></p>
+
+*SessionStart 훅에서 캡처*
+
+선택 기능인 [상태 행](#상태-행-켜기-선택)은 Grok이 화면에 계속 띄워 두는 한 줄입니다. 프롬프트가 LitGrok 스킬을 부르기 전에는 LIT · grok, 모델, 사용한 컨텍스트가 보입니다. 프롬프트가 스킬을 시작하면(여기서는 `/litwork`) LIT IGNITED와 스킬 이름으로 바뀌고, 글자는 주황에서 분홍을 거쳐 청록으로 이어지는 그라데이션이 됩니다. 창에는 두 상태가 모두 들어 있습니다. 프롬프트 훅에 평범한 질문을 먼저 보내고 `/litwork` 프롬프트를 나중에 보낸 뒤, 그때마다 상태 행 명령이 답한 결과입니다. 모델 이름과 42%는 입력으로 넣은 예시 값입니다. 실제 값은 Grok이 넘겨주기 때문입니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/status-row-dark.webp" /><img src="./docs/assets/screens/status-row-light.webp" width="680" alt="grok라는 제목의 터미널 창. 상태 행 두 줄이 있습니다. 첫 줄은 주황색으로 LIT · grok │ grok-4 │ ctx 42%입니다. 둘째 줄은 [flame icon] LIT IGNITED · litwork [flame icon] │ grok-4 │ ctx 42%이고, 라벨은 주황에서 분홍을 거쳐 청록으로 물듭니다." /></picture></p>
+
+*프롬프트 훅과 상태 행 명령에서 캡처*
+
 ## 움직임으로 보기
 
-작업 세션 하나를 20초 남짓으로 보여 줍니다. 목표를 입력하면 세션에 불이 붙고, 명령 네 개가 계획부터 인수인계까지 작업을 이끌고, 새 터미널이 앞 세션이 남긴 파일을 이어받습니다.
+이 영상은 22초 동안 불씨 하나를 따라갑니다. LIT 마크의 연두색 점이 한 줄을 입력하면 마크에 불을 붙이고, 계획·구현·검증·인계를 차례로 지나 상태 행을 밝힌 뒤, 인수인계 카드에 실려 새 터미널로 넘어가서 다시 마크에 불을 붙입니다.
 
-<p align="center"><a href="./docs/assets/promo/promo.mp4"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" /><img src="./docs/assets/promo/promo-preview.webp" width="880" alt="LitGrok 홍보 영상. 블록 LIT 마크가 Grok Build용 LitGrok이라는 이름 옆에서 불붙는다. 터미널이 litwork 프롬프트를 받아 LIT IGNITED 줄을 띄우고 체크리스트가 하나씩 채워진다. 네 단계 레일에 Plan, Build, Verify, Hand off가 각자의 명령과 함께 켜진다. 상태 행이 LIT에서 LIT IGNITED로 바뀐다. 인수인계 파일이 한 터미널에서 새 터미널로 넘어간다. 영상은 설치 명령과 함께 Keep the work lit.으로 끝난다." /></picture></a></p>
+<p align="center"><a href="./docs/assets/promo/promo-ko.mp4"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-ko-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-ko-preview.webp" /><img src="./docs/assets/promo/promo-ko-preview.webp" width="880" alt="LitGrok 홍보 영상. 어둠 속에 숯색 블록 LIT 마크가 놓여 있고 연두색 점 하나만 빛납니다. litwork 명령 한 줄을 입력하면 마크에 불이 붙고 LIT IGNITED 줄이 나옵니다. 마크는 구석으로 작아지고, 그 점이 레일을 따라 계획, 구현, 검증, 인계라는 글자 위를 지나갑니다. 상태 행이 LIT에서 LIT IGNITED와 litwork로 바뀝니다. Built, Checked, Remains가 적힌 카드가 작업을 새 터미널로 넘기고, 새 터미널이 Pick up where we left off.를 입력합니다. 점은 돌아와 마크를 다시 밝히고, 옆에 Keep the work lit.와 Grok Build용, 설치 명령이 나옵니다." /></picture></a></p>
 
-영상은 LitGrok의 모션 스킬로 만든 애니메이션입니다. 터미널에 나오는 글자는 LitGrok이 실제로 출력하는 문자열(활성화 줄, 명령, 상태 행)이고, 불꽃은 그려 넣은 도형입니다. 녹화한 Grok 세션은 들어 있지 않습니다. 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 보입니다. 자동으로 만든 배경 음악까지 들으려면 [MP4로 보기](./docs/assets/promo/promo.mp4)를 누르세요.
+영상은 LitGrok의 모션 스킬로 만들고 글꼴은 Pretendard를 썼습니다. 터미널과 상태 행에 나오는 글자는 LitGrok이 실제로 출력하는 문자열입니다. 예시 프롬프트, 카드의 항목, 새 터미널의 문장은 보여 주기 위해 그린 것이고, 불꽃은 그려 넣은 도형입니다. 녹화한 Grok 세션은 들어 있지 않습니다. 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 보입니다. 자동으로 만든 배경 음악까지 들으려면 [MP4로 보기](./docs/assets/promo/promo-ko.mp4)를 누르세요.
 
 ## 스킬 한눈에 보기
 

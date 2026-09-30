@@ -167,13 +167,47 @@ In the next session, give Grok Build the path it returned and ask it to read the
 
 All of this happens inside your session, with the skills guiding each step, and LitGrok runs nothing in the background. When the session ends, the work waits there until you, or the next session, pick it up from the handoff.
 
+### What you will see on screen
+
+The pictures below show what LitGrok prints in your terminal, so you can see it before you install anything. Each one is output from LitGrok's own installer, SessionStart hook, prompt hook and status-line command, run on an empty demo project with a temporary home folder. Only the path of that home folder is shortened to `~`. The window frame is drawn around the text, and your own terminal will use its own fonts and colors. Most pictures follow your page theme, a dark window on a dark page and a light one on a light page. Bold text appears here in the regular weight, and the flame emoji is drawn as a small vector icon. The version number, the file count and the timings inside a picture belong to the run they were captured from.
+
+The installer opens with the LIT mark and the package version, then says where the files will go and how many there are. Scope names the folder (here the demo project's `.grok` folder; `--user` would pick your home folder) and Payload counts the files, which are byte-identical copies. The MODEL ROUTE card tells you Grok Build keeps choosing the model, so the installer asks no model question and writes no model keys. This picture stays dark on every page theme, because the cream cells of the mark would fade on a white window.
+
+<p align="center"><img src="./docs/assets/screens/install-plan-dark.webp" width="824" alt="Terminal window titled zsh. The LitGrok block mark in orange, cream and lime with the package version beside it, and under it the line Grok Build skills, project rules, and hooks. Below, INSTALL with 01 · Scope project scope → ~/demo/.grok (use --user for user scope) and 02 · Payload 1089 files · byte-identical copies only, then whole packaged .grok tree, byte-identical copies only. Then MODEL ROUTE with Model selection: host-owned and Grok Build owns model and effort; the installer writes no model keys." /></p>
+
+*Captured from the installer.*
+
+Add `--dry-run` and you get the same plan followed by the line DRY RUN — no files written, and then one line for every file the installer would copy. The picture stops after the first three of those 1089 lines. Every other preview case listed under [Safety and uninstall](#safety-and-uninstall) prints the same kind of output, and its no-files-written line names the reason.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/install-dry-run-dark.webp" /><img src="./docs/assets/screens/install-dry-run-light.webp" width="932" alt="Terminal window titled zsh. INSTALL with 01 · Scope project scope → ~/demo/.grok (use --user for user scope) and 02 · Payload 1089 files · byte-identical copies only, then MODEL ROUTE with Model selection: host-owned. Then DRY RUN — no files written, followed by three lines: would install ~/demo/.grok/agents/litgrok-executor.md, would install ~/demo/.grok/agents/litgrok-korean-prose-editor.md and would install ~/demo/.grok/agents/litgrok-korean-style-analyzer.md." /></picture></p>
+
+*Captured from the installer with `--dry-run`.*
+
+A real install works through four checks and times each one. PAYLOAD counts the files, SAFETY confirms the install path is clear, OWNERSHIP compares every file with what is already on disk (a fresh project has none, so nothing conflicts), and WRITE copies them. The receipt then reads Ready and lists what stays with you: project hooks need a trusted Git root, so it points to `/hooks-trust`, and it says the installer never runs `git init` or changes trust. The last two lines give the command that pre-warms the video tools and tell you to restart Grok Build. The longest lines wrap at 100 columns the way a terminal wraps them.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/install-done-dark.webp" /><img src="./docs/assets/screens/install-done-light.webp" width="1004" alt="Terminal window titled zsh. INSTALL STEPS with four checked lines: PAYLOAD · 1089 files discovered, SAFETY · install path clear, OWNERSHIP · 1089 missing · 0 already-current · 0 owned · 0 conflicts · 91 legacy missing · 0 legacy owned · 0 legacy conflicts, and WRITE · 1089 written · 0 already-current · 0 owned. Then INSTALL RECEIPT: Status: Ready; Scope: project scope → ~/demo/.grok (use --user for user scope); Written vs already-current: 1089 written · 0 already-current; Model route: host-owned; the installer writes no model keys; Hooks: project hooks require trust from a Git project root; Trust: use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json; Installer never runs git init or changes trust; Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with litgrok-ai motion-runtime install; Next: restart Grok Build." /></picture></p>
+
+*Captured from the installer.*
+
+When a session starts in a trusted project, the SessionStart hook prints the LIT mark and one line saying the payload is present. If you see it, the hooks are loaded in that session; if it never appears, start with [Hooks do not show up](#hooks-do-not-show-up). The hook writes plain characters, so this mark has no colors; the installer banner above is the colored one.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/session-start-dark.webp" /><img src="./docs/assets/screens/session-start-light.webp" width="824" alt="Terminal window titled grok. The LitGrok block mark drawn in plain characters, and under it the line LitGrok payload present: skills, project rules, hooks, and the npx installer." /></picture></p>
+
+*Captured from the SessionStart hook.*
+
+The optional [status row](#an-optional-status-row) is one line that Grok keeps on screen. Until a prompt names a LitGrok skill it reads LIT · grok, the model and the context used. Once a prompt starts one, here `/litwork`, it switches to LIT IGNITED with the skill name shaded from orange through pink to cyan. The window shows both states: the prompt hook was given an ordinary question first and a `/litwork` prompt second, and the status-line command answered each time. The model name and the 42% are sample values passed in as input, since Grok supplies the real ones.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/screens/status-row-dark.webp" /><img src="./docs/assets/screens/status-row-light.webp" width="680" alt="Terminal window titled grok. Two status rows. The first reads LIT · grok │ grok-4 │ ctx 42% in orange. The second reads [flame icon] LIT IGNITED · litwork [flame icon] │ grok-4 │ ctx 42% with the label shaded from orange through pink to cyan." /></picture></p>
+
+*Captured from the prompt hook and the status-line command.*
+
 ## Watch it in motion
 
-Here is one working session in about twenty seconds. You type a goal, the session lights up, four routes carry the work from plan to handoff, and a fresh terminal picks up the file you left behind.
+This film follows one spark for about twenty-two seconds. The lime dot on the LIT mark lights the mark when you type a line, hops through Plan, Build, Verify and Hand off, lights the status row, rides a handoff card into a fresh terminal and comes home to relight the mark.
 
-<p align="center"><a href="./docs/assets/promo/promo.mp4"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" /><img src="./docs/assets/promo/promo-preview.webp" width="880" alt="LitGrok promo film. The block LIT mark ignites beside the name LitGrok for Grok Build. A terminal takes a litwork prompt and shows the LIT IGNITED line while a checklist ticks off. A four-step rail lights Plan, Build, Verify and Hand off, each with its route. A status row switches from LIT to LIT IGNITED. A handoff file passes from one terminal to a fresh one. The film ends on Keep the work lit. with the install command." /></picture></a></p>
+<p align="center"><a href="./docs/assets/promo/promo.mp4"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" /><img src="./docs/assets/promo/promo-preview.webp" width="880" alt="LitGrok promo film. A charcoal block LIT mark sits in the dark with one glowing lime dot. A typed litwork line lights the mark and shows the LIT IGNITED line. The mark shrinks to the corner and its dot travels a rail across the words Plan, Build, Verify and Hand off. A status row switches from LIT to LIT IGNITED with litwork. A card with Built, Checked and Remains hands the work to a fresh terminal that types Pick up where we left off. The dot returns to relight the mark beside Keep the work lit., For Grok Build and the install command." /></picture></a></p>
 
-The film is animated artwork made with LitGrok's own film skill. The terminals show strings LitGrok really prints, such as the activation line, the routes and the status row, and the flames are drawn shapes. No Grok session was recorded for it. With reduced motion switched on you see a still frame. [Watch the MP4](./docs/assets/promo/promo.mp4) to hear its generated music bed.
+The film is animated artwork made with LitGrok's own film skill and set in Pretendard. The terminals and the status row show strings LitGrok really prints. The sample prompt, the card rows and the fresh terminal's line are illustrations, and the flames are drawn shapes. No Grok session was recorded for it. With reduced motion switched on you see a still frame. [Watch the MP4](./docs/assets/promo/promo.mp4) to hear its generated music bed.
 
 ## Skills at a glance
 

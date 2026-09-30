@@ -222,33 +222,90 @@ test('README skill tables give every packaged skill one shipped 240 px snapshot 
 });
 
 const PROMO = 'docs/assets/promo';
+const screensHeading = (name) => (name === 'README.md' ? '### What you will see on screen' : '### 화면에 나오는 모습');
+// The film is set in Pretendard; these are the approved bytes of the English and Korean versions.
+const PROMO_FILES = {
+  'promo.mp4': '1e44809c1d15ae395b20ec96b38158383a0f7d0363be35b4a52950bb8233b428',
+  'promo-preview.webp': '44f140b19808085765ccfb5be24ace4216198027b3a9f99f0da97ca8771c7a6e',
+  'promo-still.webp': 'c58bb9247d870d85e2468991e75f496060a058c7a02ebbc1bc95fb128814f77a',
+  'promo-poster.webp': 'c58bb9247d870d85e2468991e75f496060a058c7a02ebbc1bc95fb128814f77a',
+  'promo-ko.mp4': '3b878f85e554dfd7a25ffbef49898a2e92c011a90da31e2663565b9e6373a2f5',
+  'promo-ko-preview.webp': '09aac8f2c66afda06c8c2b6aaa2c586663563dcee0188a749309ee91dc1d6c74',
+  'promo-ko-still.webp': '58e98432f368884bf0cb89ad4b6c24a547b41180c38e827176711d2a46ecc377',
+  'promo-ko-poster.webp': '58e98432f368884bf0cb89ad4b6c24a547b41180c38e827176711d2a46ecc377',
+};
+const PRETENDARD_OFL = 'b04538c9abec39a3db75108cf0af0fd9c77032fe8aa2cf38345b4d250e98e38e';
 
 test('the motion promo assets stay inside their size caps and out of the npm package', () => {
   const packageJson = JSON.parse(read('package.json'));
-  const preview = readFileSync(join(ROOT, PROMO, 'promo-preview.webp'));
-  assert.ok(preview.length <= 2_621_440, 'promo preview must stay under 2.5 MiB');
-  for (const name of ['promo-preview.webp', 'promo-still.webp', 'promo-poster.webp']) {
-    const bytes = readFileSync(join(ROOT, PROMO, name));
-    assert.equal(bytes.subarray(0, 4).toString('ascii'), 'RIFF', name);
-    assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', name);
+  assert.deepEqual(readdirSync(join(ROOT, PROMO)).filter((name) => name !== 'source').sort(), Object.keys(PROMO_FILES).sort(), 'the English and Korean film files and nothing else');
+  for (const [name, hash] of Object.entries(PROMO_FILES)) assert.equal(sha(`${PROMO}/${name}`), hash, name);
+  for (const prefix of ['promo', 'promo-ko']) {
+    const preview = readFileSync(join(ROOT, PROMO, `${prefix}-preview.webp`));
+    assert.ok(preview.length <= 2_621_440, `${prefix} preview must stay under 2.5 MiB`);
+    for (const name of [`${prefix}-preview.webp`, `${prefix}-still.webp`, `${prefix}-poster.webp`]) {
+      const bytes = readFileSync(join(ROOT, PROMO, name));
+      assert.equal(bytes.subarray(0, 4).toString('ascii'), 'RIFF', name);
+      assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', name);
+    }
+    for (const name of [`${prefix}-still.webp`, `${prefix}-poster.webp`]) {
+      assert.ok(readFileSync(join(ROOT, PROMO, name)).length <= 512 * 1024, `${name} must stay under 512 KiB`);
+    }
+    const film = readFileSync(join(ROOT, PROMO, `${prefix}.mp4`));
+    assert.ok(film.length <= 8 * 1024 * 1024, `${prefix}.mp4 must stay under 8 MiB`);
+    assert.equal(film.subarray(4, 8).toString('ascii'), 'ftyp', `${prefix}.mp4 is an MP4 container`);
   }
-  for (const name of ['promo-still.webp', 'promo-poster.webp']) {
-    assert.ok(readFileSync(join(ROOT, PROMO, name)).length <= 512 * 1024, `${name} must stay under 512 KiB`);
-  }
-  const film = readFileSync(join(ROOT, PROMO, 'promo.mp4'));
-  assert.ok(film.length <= 8 * 1024 * 1024, 'promo film must stay under 8 MiB');
-  assert.equal(film.subarray(4, 8).toString('ascii'), 'ftyp', 'promo.mp4 is an MP4 container');
   const source = readdirSync(join(ROOT, PROMO, 'source'), { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile());
-  assert.deepEqual(source.map((entry) => entry.name).sort(), ['index.html', 'mark.js', 'treatment.json']);
+  assert.deepEqual(source.map((entry) => entry.name).sort(), ['Pretendard-OFL.txt', 'index.html', 'mark.js', 'treatment-ko.json', 'treatment.json']);
   const sourceBytes = source.reduce((total, entry) => total + readFileSync(join(entry.parentPath ?? entry.path, entry.name)).length, 0);
   assert.ok(sourceBytes <= 64 * 1024, 'the editable film source stays small');
+  assert.equal(sha(`${PROMO}/source/Pretendard-OFL.txt`), PRETENDARD_OFL, 'the Pretendard licence notice is the official text');
   assert.ok(!packageJson.files.some((entry) => !entry.startsWith('!') && (entry === PROMO || entry.startsWith(`${PROMO}/`))), 'the promo lives on GitHub and stays out of the package');
 });
 
+// Full-canvas frames in an animated WebP: a decoder rebuilds the picture from them, so a preview without
+// regular ones keeps traces of earlier frames on screen (ghosting) once the sub-frame updates pile up.
+function webpKeyframes(bytes) {
+  const canvasW = 1 + bytes.readUIntLE(24, 3);
+  const canvasH = 1 + bytes.readUIntLE(27, 3);
+  let frames = 0;
+  let keyframes = 0;
+  for (let at = 12; at + 8 <= bytes.length;) {
+    const size = bytes.readUInt32LE(at + 4);
+    if (bytes.subarray(at, at + 4).toString('ascii') === 'ANMF') {
+      frames += 1;
+      if (1 + bytes.readUIntLE(at + 14, 3) === canvasW && 1 + bytes.readUIntLE(at + 17, 3) === canvasH) keyframes += 1;
+    }
+    at += 8 + size + (size % 2);
+  }
+  return { frames, keyframes };
+}
+
+test('the animated previews carry regular full-canvas keyframes so a browser decodes them without ghosting', () => {
+  for (const prefix of ['promo', 'promo-ko']) {
+    const { frames, keyframes } = webpKeyframes(readFileSync(join(ROOT, PROMO, `${prefix}-preview.webp`)));
+    assert.ok(frames > 500, `${prefix} preview keeps its frames`);
+    assert.ok(keyframes >= 20, `${prefix} preview has ${keyframes} full-canvas frames for ${frames} frames`);
+  }
+});
+
+test('the film source sets its copy in Pretendard and keeps the Korean film on the same page', () => {
+  const page = read(`${PROMO}/source/index.html`);
+  assert.match(page, /font:700 [\d.]+px\/[\d.]+ "Pretendard"/u);
+  assert.doesNotMatch(page, /Archivo/u, 'no Latin display face other than Pretendard');
+  assert.doesNotMatch(page, /font-weight:\s*(?!400|700)\d+|font:\s*(?!400|700)\d{3} /u, 'only the 400 and 700 weights are requested');
+  for (const name of ['treatment.json', 'treatment-ko.json']) {
+    const treatment = JSON.parse(read(`${PROMO}/source/${name}`));
+    assert.deepEqual(treatment.typePlan.faces, ['Pretendard', 'MesloLGS NF'], `${name}: faces`);
+    assert.equal(treatment.durationSec, 22);
+  }
+  assert.match(page, /const LANG = "en";/u);
+});
+
 test('GitHub READMEs place the promo after the quick start with a reduced-motion still first and the MP4 linked, and the npm cards leave it out', () => {
-  for (const [name, heading, before, after] of [
-    ['README.md', '## Watch it in motion', '## Quick start', '## Skills at a glance'],
-    ['README_ko-KR.md', '## 움직임으로 보기', '## 빠른 시작', '## 스킬 한눈에 보기'],
+  for (const [name, heading, before, after, prefix] of [
+    ['README.md', '## Watch it in motion', '## Quick start', '## Skills at a glance', 'promo'],
+    ['README_ko-KR.md', '## 움직임으로 보기', '## 빠른 시작', '## 스킬 한눈에 보기', 'promo-ko'],
   ]) {
     const text = read(name);
     const start = text.indexOf(`\n${heading}\n`);
@@ -256,14 +313,15 @@ test('GitHub READMEs place the promo after the quick start with a reduced-motion
     assert.ok(start > 0 && start < text.indexOf(`\n${after}\n`), `${name}: the promo precedes the skills table`);
     const section = text.slice(start, text.indexOf(`\n${after}\n`));
     assert.ok(section.indexOf('prefers-reduced-motion: reduce') < section.indexOf('prefers-reduced-motion: no-preference'), `${name}: reduced-motion still comes first`);
-    assert.ok(section.includes('<source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/promo-still.webp" />'), `${name}: still source`);
-    assert.ok(section.includes('<source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/promo-preview.webp" />'), `${name}: preview source`);
-    assert.match(section, /<img src="\.\/docs\/assets\/promo\/promo-preview\.webp" width="880" alt="[^"]{60,}" \/>/u, `${name}: img fallback with a descriptive alt`);
-    assert.ok(section.includes('<a href="./docs/assets/promo/promo.mp4">') && section.includes('](./docs/assets/promo/promo.mp4)'), `${name}: the MP4 is linked twice`);
-    assert.equal([...text.matchAll(/<picture>/gu)].length, 2, `${name}: the cover and the promo are the only pictures`);
+    assert.ok(section.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/${prefix}-still.webp" />`), `${name}: still source`);
+    assert.ok(section.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/${prefix}-preview.webp" />`), `${name}: preview source`);
+    assert.match(section, new RegExp(`<img src="\\./docs/assets/promo/${prefix}-preview\\.webp" width="880" alt="[^"]{60,}" />`, 'u'), `${name}: img fallback with a descriptive alt`);
+    assert.ok(section.includes(`<a href="./docs/assets/promo/${prefix}.mp4">`) && section.includes(`](./docs/assets/promo/${prefix}.mp4)`), `${name}: the MP4 is linked twice`);
+    const screens = text.slice(text.indexOf(screensHeading(name)), start);
+    assert.equal([...text.matchAll(/<picture>/gu)].length - [...screens.matchAll(/<picture>/gu)].length, 2, `${name}: the cover and the promo are the only pictures outside the screen captures`);
     assert.equal([...text.matchAll(/width="100%"/gu)].length, 1, `${name}: the cover stays the only full-width image`);
   }
-  for (const [name] of NPM_PAGES) assert.doesNotMatch(read(name), /docs\/assets\/promo|promo\.mp4/u, `${name}: the npm card does not embed the promo`);
+  for (const [name] of NPM_PAGES) assert.doesNotMatch(read(name), /docs\/assets\/promo|promo(?:-ko)?\.mp4/u, `${name}: the npm card does not embed the promo`);
 });
 
 function withGenerator(t) {
