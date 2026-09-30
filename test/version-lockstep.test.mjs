@@ -94,7 +94,7 @@ test("a drifted literal pin fails and names its file", () => withVersionFixture(
 test("host versions that extend the release semver are not counted as pins", () => withVersionFixture((root) => {
   const target = join(root, "README.md");
   const original = readFileSync(target, "utf8");
-  writeFileSync(target, `${original}\nObserved Grok Build 1.0.13.\n`, "utf8");
+  writeFileSync(target, `${original}\nObserved Grok Build ${VERSION}.4.\n`, "utf8");
   const result = runGuard(root);
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
 }));

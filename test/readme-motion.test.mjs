@@ -9,10 +9,10 @@ import test from 'node:test';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const ASSETS = 'docs/assets/readme';
-const COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.12/docs/assets/cover-motion.webp';
+const COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover-motion.webp';
 const COVER_FALLBACK = COVER;
-const MOTION_STILL = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.12/docs/assets/cover-motion-still.webp';
-const STATIC_COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.12/docs/assets/cover.webp';
+const MOTION_STILL = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover-motion-still.webp';
+const STATIC_COVER = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover.webp';
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 const sha = (path) => createHash('sha256').update(readFileSync(join(ROOT, path))).digest('hex');
 const displayRows = [...JSON.parse(read('test/fixtures/lit-mark/ignition-b.json')).banner.map((row) => row.text.trimEnd()), '', 'grok'];
@@ -99,7 +99,7 @@ test('npm READMEs lead with the pinned motion cover and send readers to the full
     assert.doesNotMatch(text, /(?:src|srcset|href)="\.{0,2}\/|\]\(\.{0,2}\//u, `${name}: npm-rendered README must not contain relative file URLs`);
     assert.doesNotMatch(text, /<details>\n<summary>[^\n]+<\/summary>\n\n```text\n/u, `${name}: the copyable ASCII block lives only on the GitHub pages the generator maintains`);
     for (const icon of ['book-open', 'play', 'shield-check']) {
-      assert.ok(text.includes(`src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.12/docs/assets/readme/lucide-${icon}.svg"`));
+      assert.ok(text.includes(`src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/readme/lucide-${icon}.svg"`));
     }
   }
 });

@@ -17,14 +17,14 @@
     {
       "path": "README.md",
       "kind": "pinned",
-      "occurrences": 2,
-      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release."
+      "occurrences": 3,
+      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release. One occurrence is the Grok Build host version quoted in the trust note, which happens to equal the release; it is not a release pin. Re-check it every release."
     },
     {
       "path": "README_ko-KR.md",
       "kind": "pinned",
-      "occurrences": 2,
-      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release."
+      "occurrences": 4,
+      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release. One occurrence is the Grok Build host version quoted in the trust note, which happens to equal the release; it is not a release pin. Re-check it every release."
     },
     {
       "path": "docs/npm/README.md",
@@ -89,8 +89,8 @@
     {
       "path": "docs/reference_ko-KR.md",
       "kind": "pinned",
-      "occurrences": 1,
-      "why": "The operational reference keeps executable examples aligned with the package release."
+      "occurrences": 2,
+      "why": "The operational reference keeps executable examples aligned with the package release. One occurrence is the Grok Build host version quoted in the trust note, which happens to equal the release; it is not a release pin. Re-check it every release."
     }
   ],
   "incidentalMatches": [
@@ -99,6 +99,11 @@
       "version": "1.0.0",
       "occurrences": 3,
       "why": "The backend guide contains three independent OpenAPI example versions, not LitGrok release metadata. Preserve those examples and the unrelated standard-openapi dependency version."
+    },
+    {
+      "path": "bin/litgrok.mjs",
+      "occurrences": 3,
+      "why": "The installer trust notes name the Grok Build host version, which happens to coincide with the current LitGrok release; it is the host's version, not a release pin. Re-check this entry every release since the coincidence is version-dependent."
     }
   ]
 }

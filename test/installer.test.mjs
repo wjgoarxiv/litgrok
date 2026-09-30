@@ -104,7 +104,7 @@ test('publishes executable litgrok-ai and litgrok installer aliases', () => {
     'litgrok-ai': 'bin/litgrok.mjs',
     litgrok: 'bin/litgrok.mjs',
   });
-  assert.equal(packageJson.version, '1.0.12');
+  assert.equal(packageJson.version, '1.0.13');
 
   const executable = statSync(join(PRODUCT_ROOT, 'bin', 'litgrok.mjs'));
   assert.ok(executable.isFile(), 'bin/litgrok.mjs must be a regular file');
@@ -858,7 +858,7 @@ test('landing docs link the repository cover and retain the complete lifecycle i
   assert.match(packageJson.description, /installer/i);
   assert.ok(!packageJson.files.includes('cover.png'), 'the heavy cover must not be enrolled in npm');
 
-  const npmPrefix = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.12/';
+  const npmPrefix = 'https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/';
   for (const [readmeName, prefix] of [['README.md', './'], ['README_ko-KR.md', './'], ['docs/npm/README.md', npmPrefix], ['docs/npm/README_ko-KR.md', npmPrefix]]) {
     const landing = readFileSync(join(PRODUCT_ROOT, readmeName), 'utf8');
     const english = readmeName.endsWith('README.md');
@@ -885,7 +885,7 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.match(readme, /grok inspect/);
     assert.match(readme, /\/skills/);
     assert.match(readme, /does not|하지 않습니다/);
-    assert.match(readme, /1\.0\.12/);
+    assert.match(readme, /1\.0\.13/);
     assert.doesNotMatch(readme, /skill-observer|skill-loop|Skill learning loop/i);
     assert.match(readme, /37/);
     assert.match(readme, /\.grok\/rules\/00-litgrok\.md/);

@@ -27,7 +27,7 @@ test('declares the live Grok plugin components without unsupported surfaces', ()
   const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
 
   assert.equal(manifest.name, 'litgrok');
-  assert.equal(manifest.version, '1.0.12');
+  assert.equal(manifest.version, '1.0.13');
   assert.equal(typeof manifest.description, 'string');
   assert.equal(manifest.skills, './.grok/skills');
   assert.equal(manifest.agents, './.grok/agents');
@@ -78,7 +78,7 @@ test('publishes a marketplace scanner manifest for the custom payload directorie
   assert.equal(existsSync(MARKETPLACE_MANIFEST_PATH), true, 'marketplace scanner manifest must be present');
   const manifest = JSON.parse(readFileSync(MARKETPLACE_MANIFEST_PATH, 'utf8'));
   assert.equal(manifest.name, 'litgrok');
-  assert.equal(manifest.version, '1.0.12');
+  assert.equal(manifest.version, '1.0.13');
   const skillDirectories = readdirSync(join(PRODUCT_ROOT, '.grok', 'skills'), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => `./.grok/skills/${entry.name}`)

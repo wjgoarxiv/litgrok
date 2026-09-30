@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.0.13 — 2026-09-30
+
+- Automatic handoff, off until you turn it on. Run `litgrok auto-handoff on <percent>` with a percent you choose; LitGrok has no built-in number. When a turn ends at or above that percent, the model is asked once to write a handoff while it still remembers the session. `auto-handoff off` and `auto-handoff status` turn it off and show its state, and `LITGROK_AUTO_HANDOFF` and `LITGROK_AUTO_HANDOFF_PERCENT` set it from the environment.
+- On Grok Build the handoff is partly a reminder. Reading how full the context is needs the optional status row, and compacting stays yours: the model ends with "Handoff saved. Run /compact now." After the compaction, the next turn end asks the model to read the handoff this session saved. `status` warns when your percent is not below Grok's own compaction point.
+- The GitHub pages, in English and Korean, show terminal pictures of what LitGrok prints (install, dry run, session start and the status row) and a new motion film set in Pretendard, with a Korean version. The pictures and films stay on GitHub, outside the npm package.
+
 ## 1.0.12 — 2026-09-30
 
 - The GitHub pages, in English and Korean, gained a short motion film under "Watch it in motion": one working session in about twenty seconds, from typing a goal to handing the work to a fresh terminal. It is animated artwork, and the film files stay on GitHub, outside the npm package.

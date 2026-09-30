@@ -40,7 +40,7 @@ Make something useful in Grok Build. Leave the checked result and the next step 
 [한국어](./README_ko-KR.md) · [Install](#install-in-30-seconds) · [Quick start](#quick-start) · [Skills](#skills-at-a-glance) · [Reference](./docs/reference.md)
 
 <p align="center">
-<a href="#install-in-30-seconds"><img src="./docs/assets/readme/badge-version.svg" alt="1.0.12" /></a>
+<a href="#install-in-30-seconds"><img src="./docs/assets/readme/badge-version.svg" alt="1.0.13" /></a>
 <a href="./LICENSE"><img src="./docs/assets/readme/badge-license.svg" alt="MIT license" /></a>
 </p>
 
@@ -68,7 +68,7 @@ You need Node.js and Grok Build. Open an interactive terminal in the project you
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-The files land in `<project>/.grok/`. Add `--user` to install under `~/.grok/` instead, or use `--package @litfamily/litgrok@1.0.12` to pin this release. [Install and upgrade details](./docs/reference.md#install).
+The files land in `<project>/.grok/`. Add `--user` to install under `~/.grok/` instead, or use `--package @litfamily/litgrok@1.0.13` to pin this release. [Install and upgrade details](./docs/reference.md#install).
 
 Trying a local package instead? Put its real absolute path in a variable, then run these two lines separately:
 
