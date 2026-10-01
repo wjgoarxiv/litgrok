@@ -48,13 +48,13 @@ function allDirectories(directoryPath) {
   return directories;
 }
 
-test('describes @litfamily/litgrok 1.0.13 without runtime dependencies', () => {
+test('describes @litfamily/litgrok 1.0.14 without runtime dependencies', () => {
   const packagePath = join(PRODUCT_ROOT, 'package.json');
   assert.ok(isFile(packagePath), `missing ${relative(PRODUCT_ROOT, packagePath)}`);
 
   const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
   assert.equal(packageJson.name, '@litfamily/litgrok');
-  assert.equal(packageJson.version, '1.0.13');
+  assert.equal(packageJson.version, '1.0.14');
 
   for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
     assert.deepEqual(packageJson[field] ?? {}, {}, `${field} must be empty`);

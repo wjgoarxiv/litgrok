@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.14 — 2026-10-01
+
+- Automatic handoff now finds the handoff it asked for even when the model formats the marker line, for example as a bullet, in backticks or in bold. Before, some of these formats made the handoff look missing after the compaction. A handoff written by another session is still ignored.
+
 ## 1.0.13 — 2026-09-30
 
 - Automatic handoff, off until you turn it on. Run `litgrok auto-handoff on <percent>` with a percent you choose; LitGrok has no built-in number. When a turn ends at or above that percent, the model is asked once to write a handoff while it still remembers the session. `auto-handoff off` and `auto-handoff status` turn it off and show its state, and `LITGROK_AUTO_HANDOFF` and `LITGROK_AUTO_HANDOFF_PERCENT` set it from the environment.

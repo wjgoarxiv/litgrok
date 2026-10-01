@@ -1,18 +1,18 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: five armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: five armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
 Make something useful in Grok Build. Leave the checked result and the next step with your project.
 
-**[Full guide and skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/reference.md)
+**[Full guide and skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/reference.md)
 
 <p align="center">
-<a href="#install-in-30-seconds"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/readme/badge-version.svg" alt="1.0.13" /></a>
-<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/readme/badge-license.svg" alt="MIT license" /></a>
+<a href="#install-in-30-seconds"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/badge-version.svg" alt="1.0.14" /></a>
+<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/badge-license.svg" alt="MIT license" /></a>
 </p>
 
-<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
+<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
 LitGrok gives Grok Build a way of working: plan the change, build it, check it, and leave a handoff the next session can read. It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model.
 
@@ -24,7 +24,7 @@ You need Node.js and Grok Build. In an interactive terminal, from the project yo
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-The files land in `<project>/.grok/`. Add `--user` to install under `~/.grok/` instead, or use `--package @litfamily/litgrok@1.0.13` to pin this release. Add `--dry-run` to see every destination before anything is written.
+The files land in `<project>/.grok/`. Add `--user` to install under `~/.grok/` instead, or use `--package @litfamily/litgrok@1.0.14` to pin this release. Add `--dry-run` to see every destination before anything is written.
 
 Trying a local package instead? Put its real absolute path in a variable, then run these two lines separately:
 
@@ -72,7 +72,7 @@ Beyond code, `lit-pptx` makes slide decks, `lit-docx` makes reports and Word doc
 
 ## What changes after install
 
-The installer copies the skills, agents, project rule, and hooks into `.grok/`. The eleven hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
+The installer copies the skills, agents, project rule, and hooks into `.grok/`. The eleven hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
 
 If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first.
 
@@ -107,6 +107,6 @@ The installer never runs `git init`, trusts hooks, signs in or picks a model for
 
 **[Full guide, skills gallery and troubleshooting on GitHub →](https://github.com/wjgoarxiv/litgrok#readme)**
 
-[Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/reference.md) · [Changelog](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/CHANGELOG.md) · [Privacy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/docs/privacy.md) · [MIT license](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.13/LICENSE)
+[Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/reference.md) · [Changelog](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/CHANGELOG.md) · [Privacy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/privacy.md) · [MIT license](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/LICENSE)
 
 The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it.
