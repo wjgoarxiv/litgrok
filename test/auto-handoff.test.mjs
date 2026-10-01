@@ -371,6 +371,125 @@ test('the session marker is recognised inside a list item or a sentence', async 
   assert.equal(reloads(sb)[0].outcome, 'loaded');
 });
 
+async function reloadAfter(t, content, { offsetMs = 5000 } = {}) {
+  const sb = sandbox(t);
+  await armed(sb, 60);
+  statusLine(sb, { percent: 70 });
+  stop(sb);
+  const target = await writeHandoff(sb, { offsetMs });
+  writeFileSync(target, content);
+  const directive = directives(sb).at(-1);
+  const when = new Date(Date.parse(directive.recordedAt) + offsetMs);
+  utimesSync(target, when, when);
+  postCompact(sb);
+  const out = stop(sb).stdout;
+  return { sb, out, reload: out ? JSON.parse(out) : null };
+}
+
+const digestOf = (sessionId) => createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
+const LABEL = 'litgrok-auto-handoff';
+
+const DECORATIONS = {
+  'dash bullet': (h) => `- ${LABEL}: ${h}`,
+  'star bullet': (h) => `* ${LABEL}: ${h}`,
+  'plus bullet': (h) => `+ ${LABEL}: ${h}`,
+  'numbered item': (h) => `1. ${LABEL}: ${h}`,
+  'blockquote': (h) => `> ${LABEL}: ${h}`,
+  'bold label': (h) => `**${LABEL}:** ${h}`,
+  'bold label with the colon outside': (h) => `**${LABEL}**: ${h}`,
+  'bold value': (h) => `${LABEL}: **${h}**`,
+  'italic label': (h) => `*${LABEL}:* ${h}`,
+  'italic value': (h) => `${LABEL}: _${h}_`,
+  'underscore bold label': (h) => `__${LABEL}:__ ${h}`,
+  'backticked label': (h) => `\`${LABEL}\`: ${h}`,
+  'backticked value': (h) => `${LABEL}: \`${h}\``,
+  'backticked whole marker': (h) => `\`${LABEL}: ${h}\``,
+  'bullet, bold label and backticked value': (h) => `- **${LABEL}:** \`${h}\``,
+  'a leading label before the real marker': (h) => `Auto-handoff marker: ${LABEL}: ${h}`,
+  'a bullet, a leading label and a backticked marker': (h) => `- Auto-handoff marker: \`${LABEL}: ${h}\``,
+  'extra spaces': (h) => `-   ${LABEL}:     ${h}   `,
+  'HTML comment': (h) => `<!-- ${LABEL}: ${h} -->`,
+  'bullet and HTML comment': (h) => `- <!-- ${LABEL}: ${h} -->`,
+};
+
+for (const [name, decorate] of Object.entries(DECORATIONS)) {
+  test(`a marker line dressed up as ${name} is recognised`, async (t) => {
+    const { reload, sb } = await reloadAfter(t, `# Handoff\n\n## Context for Continuation\n${decorate(digestOf(SESSION))}\n`);
+    assert.equal(reload?.decision, 'block', 'the handoff must be found');
+    assert.equal(reloads(sb)[0].outcome, 'loaded');
+  });
+}
+
+test('the handoff shape that failed a live session is found', async (t) => {
+  const hash = (await marker()).split(': ')[1];
+  const body = [
+    '# HANDOFF: Finish full-content display for `ref/a.md`',
+    '',
+    '## What Was Done',
+    '',
+    '### Successful Approaches',
+    '',
+    '- Created [notes.md](../notes.md) with 5 bullets for each source, then read it back.',
+    `- Auto-handoff marker: \`litgrok-auto-handoff: ${hash}\``,
+    '',
+    '### Dead Ends',
+    '',
+    '- A direct `cat ref/a.md` response exceeded the tool output limit.',
+    '',
+  ].join('\n');
+  const { reload, sb } = await reloadAfter(t, body);
+  assert.equal(reload?.decision, 'block');
+  assert.equal(reloads(sb)[0].outcome, 'loaded');
+  assert.match(reload.reason, /Dead Ends/u);
+  assert.equal(reload.reason.includes(hash), false, 'the marker line stays out of the digest');
+});
+
+test('a decorated marker line never reaches the digest', async (t) => {
+  const hash = (await marker()).split(': ')[1];
+  const label = 'litgrok-auto-handoff';
+  const lines = [
+    `${label}: ${hash}`,
+    `**${label}:** ${hash}`,
+    `- ${label}: \`${hash}\``,
+    `> *${label}:* ${hash}`,
+    `<!-- ${label}: ${hash} -->`,
+  ];
+  const { reload } = await reloadAfter(t, `# Handoff\n\nFinish the demo page.\n\n${lines.join('\n')}\n\nAfter the markers.\n`);
+  assert.equal(reload?.decision, 'block');
+  assert.match(reload.reason, /Finish the demo page/u);
+  assert.match(reload.reason, /After the markers/u);
+  assert.equal(reload.reason.includes(hash), false, 'no marker line is echoed');
+});
+
+const own = digestOf(SESSION);
+const WIDENING = {
+  'another session, bullet and backticks': [`- **${LABEL}:** \`${digestOf('another-session')}\``, 'foreign', 5000],
+  'another session, bare': [`${LABEL}: ${digestOf('another-session')}`, 'foreign', 5000],
+  'this hash with one more hex character': [`- ${LABEL}: \`${own}a\``, 'foreign', 5000],
+  'this hash with one more digit, bold': [`**${LABEL}:** ${own}0`, 'foreign', 5000],
+  'this hash with one more hex character, bare': [`${LABEL}: ${own}a`, 'foreign', 5000],
+  'this hash with one more digit, in a bullet': [`- ${LABEL}: ${own}0`, 'foreign', 5000],
+  'this hash cut short': [`- ${LABEL}: ${own.slice(0, 31)}`, 'foreign', 5000],
+  'the hash without its label': [`- \`${own}\``, 'foreign', 5000],
+  'a different label': [`- other-marker: ${own}`, 'foreign', 5000],
+  'the right decorated marker but older than the trigger': [`- **${LABEL}:** \`${own}\``, 'stale', -60_000],
+};
+
+for (const [name, [line, reason, offsetMs]] of Object.entries(WIDENING)) {
+  test(`decorating never widens what counts as this session: ${name}`, async (t) => {
+    const { out, sb } = await reloadAfter(t, `# Handoff\n\n${line}\n`, { offsetMs });
+    assert.equal(out, '', 'nothing may be reloaded');
+    assert.equal(reloads(sb)[0].outcome, 'refused');
+    assert.equal(reloads(sb)[0].reason, reason);
+  });
+}
+
+test('a marker inside a fenced code block is accepted, as it was before', async (t) => {
+  const hash = (await marker()).split(': ')[1];
+  const { reload } = await reloadAfter(t, `# Handoff\n\n\`\`\`text\nlitgrok-auto-handoff: ${hash}\n\`\`\`\n`);
+  assert.equal(reload?.decision, 'block');
+});
+
 test('a stale, foreign or missing handoff is refused and consumed', async (t) => {
   const cases = [
     ['stale', { offsetMs: -60_000 }],

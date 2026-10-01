@@ -27,6 +27,19 @@ export function handoffMarker(sessionId) {
   return `litgrok-auto-handoff: ${createHash('sha256').update(sessionId).digest('hex').slice(0, 32)}`;
 }
 
+// The model often dresses the marker line up as a list item, quote, bold or backticked text, or an HTML
+// comment. A line carries the marker when, with that decoration stripped, it holds the label and this
+// session's exact digest, and no further hex digit follows the digest (a longer digest is another session).
+function lineCarriesMarker(line, marker) {
+  const [label, digest] = marker.split(': ');
+  const plain = line.replace(/<!--|-->/gu, ' ').replace(/[`*_]/gu, '');
+  return new RegExp(`${label}\\s*:\\s*${digest}(?![0-9a-f])`, 'u').test(plain);
+}
+
+function carriesMarker(text, marker) {
+  return text.split(/\r?\n/).some((line) => lineCarriesMarker(line, marker));
+}
+
 function ledgerRecords(ledgerFile, sessionId) {
   if (!existsSync(ledgerFile)) return [];
   const records = [];
@@ -59,7 +72,7 @@ function directiveReason(percent, usedPercentage, sessionId) {
 }
 
 function safeDigest(text, marker) {
-  const body = text.split(/\r?\n/).filter((line) => !line.includes(marker)).join('\n').replaceAll('```', "'''").trim();
+  const body = text.split(/\r?\n/).filter((line) => !lineCarriesMarker(line, marker)).join('\n').replaceAll('```', "'''").trim();
   if (body.length <= DIGEST_CHARACTERS) return body;
   const cut = body.slice(0, DIGEST_CHARACTERS);
   return `${cut.slice(0, Math.max(cut.lastIndexOf('\n'), 1))}\n[... shortened]`;
@@ -85,7 +98,7 @@ function findOwnHandoff(workspaceRoot, sessionId, directiveTime, now) {
       continue;
     }
     const text = readFileSync(path, 'utf8');
-    if (!text.includes(marker)) {
+    if (!carriesMarker(text, marker)) {
       sawForeign = true;
       continue;
     }
