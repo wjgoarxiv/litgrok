@@ -1,6 +1,6 @@
 {
   "name": "litgrok",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Grok Build skills, project rules, and bounded lifecycle hooks for evidence-first lit work.",
   "author": {
     "name": "LitGrok contributors"

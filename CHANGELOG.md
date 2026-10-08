@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.0.15 — 2026-10-08
+
+- `lit-pptx` now chooses how a deck should look before it builds anything. It reads who the deck is for, whether it is presented or sent ahead, and how much of it is tables, pictures or steps, then picks one of eight looks: a dense numbers review, a pitch with one idea per slide, a picture-led deck, a teaching deck, a research talk, a Korean briefing deck, an editorial layout or a dark keynote. The reply names the look, gives the reason in a sentence and mentions two others that would also suit; say one of their names to switch. The AZURE and BOILERPLATE templates still work when you ask for them by name.
+- `lit-docx` does the same for documents, with six restrained looks: report, brief, manual, proposal, memo and journal. All six share one quiet print page with ink headings and plain ruled tables, and they differ in structure: the first page, the summary, the heading numbers, the few components each allows and the running head. Naming a publisher profile (Elsevier, ACS, IEEE, Nature or korean-generic) still uses that profile.
+- New checks read every slide and page of the finished file and fail the build until the layout is fixed. They catch empty areas, a column much shorter than its neighbour, a heading stranded at the foot of a column or page, a short list split across pages and uneven columns on the last page. The document page checks need LibreOffice; without it, the reply says they did not run.
+- `lit-pptx` ships the official, unmodified Pretendard Regular and Bold files and embeds them in decks, and `lit-typographic-motion` uses the same pair.
+
 ## 1.0.14 — 2026-10-01
 
 - Automatic handoff now finds the handoff it asked for even when the model formats the marker line, for example as a bullet, in backticks or in bold. Before, some of these formats made the handoff look missing after the compaction. A handoff written by another session is still ignored.

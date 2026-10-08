@@ -1,6 +1,6 @@
 {
   "name": "@litfamily/litgrok",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Grok Build skills, project rules, and hooks installer.",
   "type": "module",
   "bin": {

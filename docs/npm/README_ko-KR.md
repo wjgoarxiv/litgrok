@@ -1,18 +1,18 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 다섯 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 다섯 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
 Grok Build에서 작은 결과물을 만들고, 확인한 내용과 다음 할 일을 프로젝트에 남기세요.
 
-**[GitHub에서 전체 안내와 스킬 갤러리 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/reference_ko-KR.md)
+**[GitHub에서 전체 안내와 스킬 갤러리 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/reference_ko-KR.md)
 
 <p align="center">
-<a href="#30초-설치"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/badge-version.svg" alt="1.0.14" /></a>
-<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/badge-license.svg" alt="MIT 라이선스" /></a>
+<a href="#30초-설치"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/readme/badge-version.svg" alt="1.0.15" /></a>
+<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/readme/badge-license.svg" alt="MIT 라이선스" /></a>
 </p>
 
-<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
+<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
 LitGrok은 Grok Build 위에서 계획하고, 만들고, 확인하고, 다음 세션이 읽을 인수인계 문서를 남기는 흐름을 더합니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다.
 
@@ -24,7 +24,7 @@ Node.js와 Grok Build가 있으면 됩니다. 써 보고 싶은 프로젝트에�
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-파일은 `<project>/.grok/`에 들어갑니다. `~/.grok/`에 설치하려면 `--user`를, 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.14`을 쓰세요. `--dry-run`을 붙이면 파일을 쓰기 전에 들어갈 경로를 모두 보여 줍니다.
+파일은 `<project>/.grok/`에 들어갑니다. `~/.grok/`에 설치하려면 `--user`를, 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.15`을 쓰세요. `--dry-run`을 붙이면 파일을 쓰기 전에 들어갈 경로를 모두 보여 줍니다.
 
 로컬 패키지로 써 보려면 실제 절대 경로를 변수에 넣고 두 줄을 따로 실행하세요.
 
@@ -72,7 +72,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 설치하면 달라지는 것
 
-설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/hooks/hooks.json)에 있는 훅 등록 열한 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
+설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/hooks/hooks.json)에 있는 훅 등록 열한 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
 
 지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다.
 
@@ -107,6 +107,6 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 
 **[GitHub에서 전체 안내, 스킬 갤러리, 문제 해결 보기 →](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)**
 
-[상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.14/LICENSE)
+[상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.15/LICENSE)
 
 커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다.
