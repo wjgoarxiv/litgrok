@@ -24,7 +24,7 @@ Fonts shipped in this skill (paths relative to this directory)
       credits: fonts/stroke/CREDITS
 
 Fonts reused from the lit-pptx skill (not duplicated)
-  PretendardGOV (Regular, Bold)
+  Pretendard (Regular, Bold)
       OFL 1.1: ../lit-pptx/pretendard-font/OFL.txt
 
 Fonts fetched by `litgrok-ai motion-runtime install` into the motion cache

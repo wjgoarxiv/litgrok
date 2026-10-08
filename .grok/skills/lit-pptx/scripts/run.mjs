@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const deps = require('./deps.cjs');
 const directory = dirname(fileURLToPath(import.meta.url));
 const [name, ...args] = process.argv.slice(2);
-const allowed = new Set(['qa_deck.py', 'validate_pptx.py', 'inventory.py', 'ooxml_integrity.py', 'embed_fonts.py', 'learn_template.py']);
+const allowed = new Set(['qa_deck.py', 'validate_pptx.py', 'inventory.py', 'ooxml_integrity.py', 'embed_fonts.py', 'learn_template.py', 'deck_output.py', 'craft_extras.py']);
 
 if (name === 'doctor') {
   console.log(`node: ${deps.supportsSlideNode() ? (deps.ready('node') ? 'ready' : 'first-use install needed') : 'Node.js 20.9+ required for slides'}`);
@@ -18,7 +18,8 @@ if (name === 'doctor') {
     console.log(`${executable}: ${result.status === 0 ? result.stdout.trim() : 'unavailable (optional)'}`);
   }
 } else if (allowed.has(name) && existsSync(join(directory, name))) {
-  const result = spawnSync(deps.python(), [join(directory, name), ...args], { stdio: 'inherit', env: process.env });
+  // The installed skill folder stays free of bytecode caches.
+  const result = spawnSync(deps.python(), [join(directory, name), ...args], { stdio: 'inherit', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
   process.exit(result.status ?? 1);
 } else {
   console.error('Usage: node run.mjs doctor | <packaged Python script> [arguments]');

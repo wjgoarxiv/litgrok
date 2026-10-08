@@ -14,8 +14,45 @@ LIMITS = {
     "accent_light_max": .93, "hue_band": 20, "latin_chars": 90,
     "cjk_chars": 38, "narrow_chars": 10, "group_ratio": 2,
     "symmetric_inset": .06, "radius_tolerance": .02,
-    "empty_high": .35, "empty_medium": .25,
+    "empty_high": .35, "empty_medium": .25, "rule": .03,
 }
+
+
+# Advance widths of the bundled Pretendard faces in em (the wider of Regular and Bold per class),
+# so a measure or a wrap estimate follows the face the deck is set in.
+EM = {"hangul": .87, "upper": .67, "lower": .54, "digit": .62, "space": .25, "punct": .41}
+# Slides that hold a statement rather than a body: their space is part of the design.
+DISPLAY_FAMILIES = re.compile(r"family@(?:cover|section|statement|quote|closing-statement)")
+DISPLAY_TITLES = {"title@statement", "title@cover", "title@section"}
+
+
+def text_em(text):
+    """Width of a run of text in em of the bundled face."""
+    total = 0.0
+    for c in text:
+        if "\uac00" <= c <= "\ud7af" or "\u3130" <= c <= "\u318f" or "\u4e00" <= c <= "\u9fff":
+            total += EM["hangul"]
+        elif c.isspace():
+            total += EM["space"]
+        elif c.isdigit():
+            total += EM["digit"]
+        elif c.isupper():
+            total += EM["upper"]
+        elif c.isalpha():
+            total += EM["lower"]
+        else:
+            total += EM["punct"]
+    return total
+
+
+def named_title(slide):
+    """The frame the deck engine names as the slide title (`title@<treatment>`), if any."""
+    return next((s for s in slide.shapes if s.name.startswith("title@") and getattr(s, "has_text_frame", False)), None)
+
+
+def display_slide(slide):
+    """A cover, section, statement or quote slide drawn by the deck engine."""
+    return any(DISPLAY_FAMILIES.match(s.name) or s.name in DISPLAY_TITLES for s in slide.shapes)
 
 
 def _box(shape):
@@ -76,6 +113,8 @@ def assess(prs):
             box = _box(shape)
             if box[2] * box[3] >= LIMITS["full_bleed"] * W * H:
                 continue
+            if shape.name.startswith("lit-notice") or min(box[2], box[3]) < LIMITS["rule"]:
+                continue
             hue = _hue(shape)
             if hue is not None and not any(min(abs(hue - old), 360 - abs(hue - old)) <= LIMITS["hue_band"] for old in hue_families):
                 hue_families.append(hue)
@@ -86,21 +125,29 @@ def assess(prs):
             add("OF-101", "HIGH" if count >= high else "MEDIUM", number, count, {"medium": medium, "high": high})
 
         text_shapes = [s for s in shapes if getattr(s, "has_text_frame", False) and s.text.strip()]
-        title = min(text_shapes, key=lambda s: _box(s)[1]) if text_shapes else None
+        title = named_title(slide) or (min(text_shapes, key=lambda s: _box(s)[1]) if text_shapes else None)
+        # A cover or section page the engine names is a display page: its preview lines keep their own measure
+        # (two lines an opened slide, within 70 % of the page), so the body measure does not apply there.
+        family = next((s.name.split("@", 1)[1] for s in shapes if s.name.startswith("family@")), "")
         for shape in text_shapes:
-            if shape is title:
+            if shape is title or re.match(r"(cover|section)(-|$)", family):
                 continue
             sizes = [r.font.size.pt for p in shape.text_frame.paragraphs for r in p.runs if r.font.size]
             pt = max(sizes) if sizes else 18
-            if not 10.5 < pt < 30:
+            # Body text only: captions and table notes at 11 pt run as wide as the visual they label.
+            if not 11 < pt < 30:
                 continue
             content = shape.text.strip()
-            capacity = max(1, shape.width / EMU * 72 / (pt * .55))
-            lines = max(content.count("\n") + 1, math.ceil(len(content) / capacity))
+            frame = max(1, shape.width / EMU * 72)
+            # Each paragraph or explicit break is a line of its own that may wrap again in the frame.
+            segments = [seg.strip() for seg in re.split(r"[\n\v]", content) if seg.strip()]
+            wrapped = [(seg, max(1, math.ceil(text_em(seg) * pt / frame))) for seg in segments]
+            lines = sum(n for _, n in wrapped)
             if lines < 2:
                 continue
-            cjk = sum("\uac00" <= c <= "\ud7af" for c in content) >= .5 * len(content)
-            measure = len(content) / lines
+            cjk = sum("\uac00" <= c <= "\ud7af" for c in content) >= .5 * len(content.replace(" ", ""))
+            # A Korean measure counts glyphs, so the spaces between 어절 are not counted.
+            measure = max(len(seg.replace(" ", "") if cjk else seg) / n for seg, n in wrapped)
             ceiling = LIMITS["cjk_chars"] if cjk else LIMITS["latin_chars"]
             if measure > ceiling:
                 add("OF-102", "HIGH", number, round(measure, 1), ceiling, "derived", shape.name)
@@ -161,20 +208,37 @@ def assess(prs):
                 if any(0x1F000 <= ord(c) <= 0x1FAFF or 0x2600 <= ord(c) <= 0x27BF for c in char):
                     add("OF-108", "HIGH", number, char, "no emoji bullet")
 
-        if not display and number > 1 and text_shapes:
+        if not display and not display_slide(slide) and number > 1 and text_shapes:
             title_bottom = _box(title)[1] + _box(title)[3] if title else H * .18
             top, bottom = title_bottom + .1, H - .55
-            region = sorted((_box(s)[1], _box(s)[1] + _box(s)[3]) for s in shapes if s is not title and (getattr(s, "has_table", False) or getattr(s, "has_text_frame", False) and s.text.strip()) and _box(s)[1] >= top and _box(s)[1] < bottom)
-            if region and bottom > top:
-                rows = []
-                for start, end in region:
-                    if rows and abs(start - rows[-1][0]) <= .08:
-                        rows[-1][1] = min(rows[-1][1], end)
-                    else:
-                        rows.append([start, end])
+
+            def content(s):
+                return (getattr(s, "has_table", False) or getattr(s, "has_chart", False) or s.shape_type == MSO_SHAPE_TYPE.PICTURE
+                        or getattr(s, "has_text_frame", False) and s.text.strip())
+
+            # A title on the body floor closes the page, so the body is the zone above it. A side title's body
+            # is the zone beside its rail from the title's top; what stands in the rail under it is the rail's.
+            rail = set()
+            named = title is not None and title.name.startswith("title@")
+            if named and _box(title)[1] > H * .5:
+                top, bottom = .5, _box(title)[1] - .1
+            elif named and _box(title)[0] <= W * .1 and _box(title)[2] <= W * .35:
+                edge = _box(title)[0] + _box(title)[2]
+                others = [s for s in shapes if s is not title and not s.name.startswith("lit-notice") and content(s) and _box(s)[1] < bottom]
+                under = [s for s in others if _box(s)[0] + _box(s)[2] <= edge + .05 and _box(s)[1] >= title_bottom - .05]
+                if any(_box(s)[0] >= edge - .05 for s in others) and all(s in under or _box(s)[0] >= edge - .05 for s in others):
+                    top, rail = _box(title)[1], {id(s) for s in under}
+
+            # The empty band is a height at which nothing on the slide holds content: blocks are clipped to
+            # the body and joined, so a short label beside a tall chart, a column that starts beside a side
+            # title, or a picture behind the body all count for the height they cover.
+            spans = sorted((max(top, _box(s)[1]), min(bottom, _box(s)[1] + _box(s)[3])) for s in shapes
+                           if s is not title and id(s) not in rail and not s.name.startswith("lit-notice") and content(s)
+                           and _box(s)[1] < bottom and _box(s)[1] + _box(s)[3] > top)
+            if spans and bottom > top:
                 cursor = top
                 gaps = []
-                for start, end in rows:
+                for start, end in spans:
                     gaps.append(max(0, start - cursor))
                     cursor = max(cursor, end)
                 gaps.append(max(0, bottom - cursor))

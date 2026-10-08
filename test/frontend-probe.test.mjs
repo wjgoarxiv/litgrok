@@ -43,9 +43,9 @@ test('litwork hands interface work to the frontend probe and excludes non-interf
   assert.match(work, /CLI or backend-only[^\n]*no interface probe/i);
 });
 
-test('frontend notice credits all three clean-room research sources', () => {
+test('frontend notice credits its clean-room research sources', () => {
   const notice = readFileSync(join(root, '.grok/skills/frontend-ui-ux/THIRD-PARTY-NOTICE.txt'), 'utf8');
-  for (const anchor of ['pbakaus/impeccable', 'Paul Bakaus', 'Apache', '9d715cc', 'jakubkrehel/skills', 'Jakub Krehel', '267330e', 'ibelick/ui-skills', 'Julien Thibeaut', 'MIT']) assert.ok(notice.includes(anchor), anchor);
+  for (const anchor of ['jakubkrehel/skills', 'Jakub Krehel', '267330e', 'ibelick/ui-skills', 'Julien Thibeaut', 'MIT']) assert.ok(notice.includes(anchor), anchor);
 });
 
 test('static fallback identifies source signals and keeps rendered checks unverified', () => {

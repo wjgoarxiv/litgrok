@@ -286,14 +286,14 @@ LitGrok을 설치한 프로젝트의 Git 루트에서 Grok Build를 열거나 �
 <td>슬라이드와 문서에 넣을 다이어그램을 편집 가능한 형태로 그리고, 검사한 뒤 PNG와 SVG로 내보냅니다.</td>
 </tr>
 <tr>
-<td><img src="./docs/assets/skills/lit-pptx.webp" width="240" alt="편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 기본은 AZURE-PRO와 Pretendard이고, 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다." /></td>
+<td><img src="./docs/assets/skills/lit-pptx.webp" width="240" alt="편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다." /></td>
 <td><code>lit-pptx</code><br /><sub><code>/lit-pptx &lt;presentation request&gt;</code></sub></td>
-<td>편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 기본은 AZURE-PRO와 Pretendard이고, 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다.</td>
+<td>편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다.</td>
 </tr>
 <tr>
-<td><img src="./docs/assets/skills/lit-docx.webp" width="240" alt="서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 한국어 보고서는 korean-generic 서식을 쓰고, 문체 검사와 DOCX 점검을 돌리며 LibreOffice가 있으면 페이지도 확인합니다." /></td>
+<td><img src="./docs/assets/skills/lit-docx.webp" width="240" alt="서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 문서에 맞춰 절제된 여섯 가지 방향 가운데 하나를 고르거나, 지정한 학술지 서식을 씁니다. 문체 검사와 페이지 단위 검사를 돌리며 LibreOffice가 있으면 페이지도 확인합니다." /></td>
 <td><code>lit-docx</code><br /><sub><code>/lit-docx &lt;document request&gt;</code></sub></td>
-<td>서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 한국어 보고서는 korean-generic 서식을 쓰고, 문체 검사와 DOCX 점검을 돌리며 LibreOffice가 있으면 페이지도 확인합니다.</td>
+<td>서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 문서에 맞춰 절제된 여섯 가지 방향 가운데 하나를 고르거나, 지정한 학술지 서식을 씁니다. 문체 검사와 페이지 단위 검사를 돌리며 LibreOffice가 있으면 페이지도 확인합니다.</td>
 </tr>
 <tr>
 <td><img src="./docs/assets/skills/frontend-ui-ux.webp" width="240" alt="실제로 동작하는 화면을 만들고, 프로브로 일곱 가지 보기를 렌더링합니다. 네 가지 폭, 다크 모드, 모션 줄이기, 200% 확대입니다." /></td>
@@ -486,7 +486,10 @@ flowchart TD
 
 개념도나 기술 다이어그램에는 `lit-diagram-drawer` 스킬을 씁니다. 슬래시 경로(`/lit-diagram-drawer`)는 아직 실제 Grok Build 세션에서 확인하지 못했으니 `/skills`에서 찾아 쓰세요. 일반 화면은 `/frontend-ui-ux`, 측정 데이터 그래프는 `/lit-scientific-visualization`이 맡습니다.
 
-발표자료는 `lit-pptx`, 보고서와 Word 문서는 `lit-docx`를 씁니다. `lit`만 입력하고 원하는 것을 설명하면, 요청 문구를 보고 둘 중 하나나 둘 다를 고르라고 프로젝트 규칙이 Grok Build에 안내합니다. 어느 쪽을 골랐는지는 세션에서 보입니다. 발표자료는 AZURE-PRO 템플릿과 Pretendard 글꼴로, 한국어 문서는 korean-generic 서식으로 시작합니다.
+발표자료는 `lit-pptx`, 보고서와 Word 문서는 `lit-docx`를 씁니다. `lit`만 입력하고 원하는 것을 설명하면, 요청 문구를 보고 둘 중 하나나 둘 다를 고르라고 프로젝트 규칙이 Grok Build에 안내합니다. 어느 쪽을 골랐는지는 세션에서 보입니다. 
+두 스킬 모두 정해진 한 가지 모양으로 시작하지 않습니다. 슬라이드나 페이지를 쓰기 전에 요청을 먼저 읽습니다. 누가 읽는지, 발표하는지 미리 돌려 읽는지, 표와 그림과 단계가 얼마나 되는지를 보고 그 일에 맞는 디자인 방향을 고릅니다. 답변에는 고른 방향과 이유 한 문장, 그리고 함께 어울리는 다른 두 방향이 나옵니다. 마음에 들지 않으면 그 이름만 말하면 바뀝니다. `lit`만 입력한 요청이라면 아무것도 묻지 않고 이 과정을 거칩니다.
+
+발표자료에는 여덟 가지 방향이 있고, 방향마다 색, 제목 위치, 슬라이드 배치가 다릅니다. 숫자 중심의 실적 보고, 슬라이드마다 한 가지만 말하는 피치, 사진 중심 발표, 강의, 연구 발표, 한국어 보고서형 덱, 잡지형 편집 배치, 어두운 배경의 기조연설이 있습니다. 슬라이드 제목은 주제를 이름으로 붙이고, 주장은 수치의 근거와 출처와 함께 본문에 둡니다. 그래서 슬라이드 아래쪽이 비지 않습니다. 문서에는 절제된 여섯 가지 방향이 있습니다. 보고서, 개조식 보고, 매뉴얼, 제안서, 메모, 저널형입니다. 여섯 방향은 먹색 제목과 선만 쓰는 표로 된 차분한 인쇄 페이지를 함께 쓰고, 첫 페이지, 요약, 제목 번호, 쓸 수 있는 몇 가지 구성 요소, 머리글 같은 구조로 서로 구별됩니다. 한국어 문서는 날짜, 표 제목, 번호를 한국식으로 씁니다. 학술지 서식(Elsevier, ACS, IEEE, Nature, korean-generic)과 예전 AZURE·BOILERPLATE 덱 템플릿은 이름을 대면 그대로 씁니다. 글꼴은 처음부터 끝까지 Pretendard입니다.
 
 두 스킬에는 엔진과 템플릿, 품질 검사 스크립트가 함께 들어 있습니다. 처음 쓸 때는 버전이 고정된 의존성을 전용 캐시에 설치합니다. 슬라이드에는 Node.js 20.9 이상이 필요하지만, Word 문서 작업과 기본 설치는 이 조건과 상관없습니다. 명령어와 선택적 렌더 도구는 각 스킬 문서에 있습니다.
 

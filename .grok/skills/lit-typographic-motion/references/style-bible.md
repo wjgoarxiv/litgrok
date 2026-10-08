@@ -38,7 +38,7 @@ State the pick and its reason in the reply; the render report records it too.
   underline, never small text: it clears 3:1 only), gold accent `#D9A441` for one moment only,
   graphite `#4B5058` for hairlines, and a dim bone for pending words that still clears 4.5:1.
 - **Voices:** Archivo display (width 75/100/125, weight 400/700/900 static instances) for titles;
-  the product's PretendardGOV Regular/Bold for Hangul; MesloLGS NF for annotations and figures.
+  the product's Pretendard Regular/Bold for Hangul; MesloLGS NF for annotations and figures.
 - **Motion tokens:** `slam` 180 ms on the downbeat (the proven `cubic-bezier(0.16,1,0.3,1)`
   deceleration, entrance scale never below 0.95); `hold` after the slam; `snap-cut` 0 ms at every
   scene boundary. No spring, no bounce.
@@ -80,7 +80,7 @@ State the pick and its reason in the reply; the render report records it too.
 - **Palette:** indigo ground `#0E1420`, off-white type `#E8ECEF`, two gradient stops (deep teal
   `#124559`, violet `#4C3B6E`), coral `#E07856` as punctuation for one moment only. Off-white
   clears 4.5:1 on every point of the gradient, so no scrim is needed.
-- **Voices:** Archivo 100/700 used calmly (no width animation), PretendardGOV Regular for Hangul,
+- **Voices:** Archivo 100/700 used calmly (no width animation), Pretendard Regular for Hangul,
   MesloLGS NF sparingly for annotations.
 - **Motion tokens:** `drift` 2-4 s on the in-out sine curve `cubic-bezier(0.37,0,0.63,1)`, matched to
   the gradient's slow flow; `surge-punch` 300 ms on the slam curve, timed to a scheduled surge.

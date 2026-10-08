@@ -8,6 +8,8 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
+from craft_extras import text_em
+
 
 def inspect(path):
     deck = Presentation(path)
@@ -41,8 +43,10 @@ def inspect(path):
                 for paragraph in shape.text_frame.paragraphs:
                     font_sizes = [int(run.font.size) for run in paragraph.runs if run.font.size]
                     points = max(font_sizes, default=int(paragraph.font.size or 18 * 12700))
-                    chars_per_line = max(1, available_width / max(1, points * .55))
-                    estimated_height += math.ceil(max(1, len(paragraph.text)) / chars_per_line) * points * 1.15
+                    # Each explicit break starts a line; each line wraps by the face's advance widths.
+                    for line in paragraph.text.split('\v') or ['']:
+                        lines = max(1, math.ceil(text_em(line) * points / available_width))
+                        estimated_height += lines * points * 1.15
                 if estimated_height > available_height * 1.25:
                     overflow['frame'] = True
             if overflow:

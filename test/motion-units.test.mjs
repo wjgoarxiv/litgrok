@@ -163,7 +163,7 @@ test('cmap coverage reads the shipped fonts and stroke SVGs (MO-D-04)', () => {
   const archivo = cmapCoverage(new Uint8Array(readFileSync(join(skill, 'fonts/Archivo-w100-wt700.ttf'))));
   assert.equal(archivo('A'.codePointAt(0)), true);
   assert.equal(archivo('가'.codePointAt(0)), false);
-  const pretendard = cmapCoverage(new Uint8Array(readFileSync(join(root, '.grok/skills/lit-pptx/pretendard-font/public/static/PretendardGOV-Regular.otf'))));
+  const pretendard = cmapCoverage(new Uint8Array(readFileSync(join(root, '.grok/skills/lit-pptx/pretendard-font/public/static/Pretendard-Regular.otf'))));
   assert.equal(pretendard('가'.codePointAt(0)), true);
   const stroke = strokeCoverage(readFileSync(join(skill, 'fonts/stroke/EMSReadability.svg'), 'utf8'));
   assert.equal(stroke('A'.codePointAt(0)), true);

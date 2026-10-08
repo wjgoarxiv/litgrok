@@ -11,6 +11,9 @@ exits non-zero if ANY real defect is found:
 No LibreOffice / rendering engine required: everything is read from the OOXML
 via python-pptx. (A renderer is only ever needed for *visual* preview, which is
 optional and lives in thumbnail.py.)
+
+`--sibling other.pptx` names the same source compiled under another tonality; the deck output checks
+then fail the pair when they differ on fewer than two content slides (one in a deck of under four) (OF-116).
 """
 
 from __future__ import annotations
@@ -28,7 +31,8 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from craft_extras import assess as assess_craft
+from craft_extras import assess as assess_craft, display_slide
+from deck_output import assess as assess_output, compare_skeletons
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATE = ROOT / "scripts" / "validate_pptx.py"
@@ -94,10 +98,22 @@ def _bbox(shape):
         return None
 
 
-def _resolve_bg(shape, idx, filled):
+def _slide_ground(slide) -> tuple[int, int, int]:
+    """The slide's own solid background colour; white when it sets none."""
+    try:
+        fill = slide.background.fill
+        if fill.type == 1:  # MSO_FILL.SOLID
+            return _hex_to_rgb(fill.fore_color.rgb) or (255, 255, 255)
+    except (AttributeError, TypeError, ValueError):
+        pass
+    return (255, 255, 255)
+
+
+def _resolve_bg(shape, idx, filled, ground=(255, 255, 255)):
     """Effective background for a text shape: its own fill, else the topmost
     filled shape drawn *behind* it (lower z-order) that contains its centre,
-    else white. Prevents false positives like white text over a charcoal band."""
+    else the slide's ground. Prevents false positives like white text over a
+    charcoal band or light type on a dark slide."""
     own = _shape_fill_rgb(shape)
     if own is not None:
         return own
@@ -112,7 +128,7 @@ def _resolve_bg(shape, idx, filled):
                 best = f_rgb  # later (higher idx) wins -> topmost behind text
         if best is not None:
             return best
-    return (255, 255, 255)
+    return ground
 
 
 def check_contrast(path: Path) -> dict[str, Any]:
@@ -123,10 +139,11 @@ def check_contrast(path: Path) -> dict[str, Any]:
     for s_idx, slide in enumerate(prs.slides, start=1):
         shapes = list(slide.shapes)
         filled = [(i, rgb, _bbox(sh)) for i, sh in enumerate(shapes) if (rgb := _shape_fill_rgb(sh)) is not None]
+        ground = _slide_ground(slide)
         for idx, shape in enumerate(shapes):
             if not getattr(shape, "has_text_frame", False):
                 continue
-            bg = _resolve_bg(shape, idx, filled)
+            bg = _resolve_bg(shape, idx, filled, ground)
             for para in shape.text_frame.paragraphs:
                 for run in para.runs:
                     if not run.text.strip():
@@ -448,7 +465,11 @@ def check_evidence_binding(path: Path) -> dict[str, Any]:
             checked += 1
             figure_box = _bbox_in(shape)
             nearby: list[str] = []
-            if figure_box is not None:
+            page_area = (prs.slide_width / 914400.0) * (prs.slide_height / 914400.0)
+            if figure_box is not None and _is_full_bleed(figure_box, page_area):
+                # Nothing can sit under a full-bleed picture: its caption and source ride on the panel over it.
+                nearby = [text for other in shapes if other is not shape and (text := _shape_text(other))]
+            elif figure_box is not None:
                 figure_width = figure_box[2] - figure_box[0]
                 for other in shapes:
                     text = _shape_text(other)
@@ -621,8 +642,8 @@ def check_visual_substance(path: Path) -> dict[str, Any]:
             if kind or shape.shape_type == MSO_SHAPE_TYPE.CHART:
                 boxes.append((max(0, x1), max(height * 0.18, y1),
                               min(width, x2), min(height * 0.91, y2)))
-        if slide_no == 1 or not boxes:
-            continue
+        if slide_no == 1 or not boxes or display_slide(slide):
+            continue  # a cover, section, statement or quote holds a statement, not a body
         body_slides += 1
         if has_table and not any(sh.shape_type == MSO_SHAPE_TYPE.CHART for sh in slide.shapes):
             table_slides += 1
@@ -695,7 +716,7 @@ def run_validate(pptx: Path) -> dict[str, Any]:
 
 
 # ── gate ───────────────────────────────────────────────────────────────────
-def qa(pptx: Path) -> dict[str, Any]:
+def qa(pptx: Path, sibling: Path | None = None) -> dict[str, Any]:
     validate_report = run_validate(pptx)
     inv_summary = summarize_inventory(load_inventory_issues(pptx))
     contrast = check_contrast(pptx)
@@ -704,6 +725,11 @@ def qa(pptx: Path) -> dict[str, Any]:
     objective = check_objective_quality(pptx)
     substance = check_visual_substance(pptx)
     craft = assess_craft(Presentation(str(pptx)))
+    output = assess_output(Presentation(str(pptx)))
+    # The same source under another tonality, when given: the two decks differ on at least two content slides (OF-116).
+    if sibling is not None:
+        output["findings"] += compare_skeletons(Presentation(str(pptx)), Presentation(str(sibling)), sibling.name)
+        output["pass"] = not any(f["severity"] == "HIGH" for f in output["findings"])
 
     reasons: list[str] = []
     if not validate_report.get("pass", False):
@@ -743,6 +769,11 @@ def qa(pptx: Path) -> dict[str, Any]:
         reasons.append(f"visual substance: {len(substance['findings'])} finding(s); see fix hints")
     if not craft["pass"]:
         reasons.append(f"office craft: {sum(f['severity'] == 'HIGH' for f in craft['findings'])} high finding(s)")
+    if not output["pass"]:
+        high = sorted({f["rule"] for f in output["findings"] if f["severity"] == "HIGH"})
+        reasons.append(f"deck output: {', '.join(high)} — vary title treatments and layout families by slide role, "
+                       "fill the body and every region a title leaves, keep each treatment's frame, write titles as "
+                       "topic labels, give a dark ground dark figures, and give each tonality its own structure")
 
     return {
         "file": str(pptx),
@@ -760,14 +791,16 @@ def qa(pptx: Path) -> dict[str, Any]:
         "objective": objective,
         "visual_substance": substance,
         "office_craft": craft,
+        "deck_output": output,
     }
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Honest renderer-agnostic QA gate for PPTX decks.")
     parser.add_argument("pptx", type=Path)
+    parser.add_argument("--sibling", type=Path, help="the same source compiled under another tonality (OF-116)")
     args = parser.parse_args(argv)
-    report = qa(args.pptx.resolve())
+    report = qa(args.pptx.resolve(), args.sibling.resolve() if args.sibling else None)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["pass"] else 1
 

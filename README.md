@@ -286,14 +286,14 @@ All 38 skills, one row each. The routes are the ones each skill documents, and `
 <td>A checked, editable diagram for slides and documents, with PNG and Office-safe SVG exports.</td>
 </tr>
 <tr>
-<td><img src="./docs/assets/skills/lit-pptx.webp" width="240" alt="An editable PowerPoint deck with its Markdown source, AZURE-PRO and Pretendard by default. A QA gate runs on the file, and slides are inspected when LibreOffice is present." /></td>
+<td><img src="./docs/assets/skills/lit-pptx.webp" width="240" alt="An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present." /></td>
 <td><code>lit-pptx</code><br /><sub><code>/lit-pptx &lt;presentation request&gt;</code></sub></td>
-<td>An editable PowerPoint deck with its Markdown source, AZURE-PRO and Pretendard by default. A QA gate runs on the file, and slides are inspected when LibreOffice is present.</td>
+<td>An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present.</td>
 </tr>
 <tr>
-<td><img src="./docs/assets/skills/lit-docx.webp" width="240" alt="A styled Word document with its Markdown source; Korean reports use korean-generic. Prose lint and a DOCX audit run, and pages are inspected when LibreOffice is present." /></td>
+<td><img src="./docs/assets/skills/lit-docx.webp" width="240" alt="A styled Word document with its Markdown source, set in one of six restrained directions picked for the document, or in a publisher profile you name. Prose lint and a page-level gate run, and pages are inspected when LibreOffice is present." /></td>
 <td><code>lit-docx</code><br /><sub><code>/lit-docx &lt;document request&gt;</code></sub></td>
-<td>A styled Word document with its Markdown source; Korean reports use korean-generic. Prose lint and a DOCX audit run, and pages are inspected when LibreOffice is present.</td>
+<td>A styled Word document with its Markdown source, set in one of six restrained directions picked for the document, or in a publisher profile you name. Prose lint and a page-level gate run, and pages are inspected when LibreOffice is present.</td>
 </tr>
 <tr>
 <td><img src="./docs/assets/skills/frontend-ui-ux.webp" width="240" alt="Builds a working interface, then a probe renders it in seven views: four widths, dark, reduced motion and 200% zoom." /></td>
@@ -486,7 +486,10 @@ Use `/frontend-ui-ux <surface and outcome>` to build and inspect an interface yo
 
 For concept and technical diagrams, use the `lit-diagram-drawer` skill. Its slash route, `/lit-diagram-drawer`, hasn't been confirmed in a live Grok Build session yet, so find it through `/skills`. Ordinary interfaces go to `/frontend-ui-ux`, and plots of measured data go to `/lit-scientific-visualization`.
 
-For slides, use `lit-pptx`; for reports and Word documents, use `lit-docx`. If you type a bare `lit` and describe what you want, the project rule asks Grok Build to choose one or both from your wording, and your session shows which one it picked. Decks start from the AZURE-PRO template with the Pretendard font, and Korean documents use the korean-generic style.
+For slides, use `lit-pptx`; for reports and Word documents, use `lit-docx`. If you type a bare `lit` and describe what you want, the project rule asks Grok Build to choose one or both from your wording, and your session shows which one it picked. 
+Neither skill starts from one fixed look. Before it writes a slide or a page, it reads the request for the things that shape a design: who reads the file, whether it is presented or sent ahead, how much of it is tables, pictures or steps. Then it picks a direction for that job. The reply names the direction, gives the reason in a sentence and mentions two others that would also suit, so you can switch with one word. A bare `lit` request gets all of this without a single question.
+
+Decks have eight directions, each with its own colours, title placements and slide layouts: a dense numbers review, a pitch with one idea per slide, a picture-led deck, a teaching deck, a research talk, a Korean briefing deck, an editorial layout and a dark keynote. Slide titles name the topic, and the claim sits in the body with the basis and source of its figures, so the slides use the whole page. Documents have six restrained directions: report, brief, manual, proposal, memo and journal. They share one quiet print page with ink headings and plain ruled tables, and they differ in structure: the first page, the summary, the heading numbers, the few components each allows and the running head. Korean documents follow Korean conventions for dates, table captions and numbering. Publisher profiles (Elsevier, ACS, IEEE, Nature, korean-generic) and the older AZURE and BOILERPLATE deck templates still work when you ask for them by name. Pretendard is the typeface throughout.
 
 Both skills bring their engines, templates and QA scripts with them. The first time you use one, it installs its pinned dependencies into its own cache. Slides need Node.js 20.9 or newer; Word documents and the base installer don't depend on that. Each skill page lists its commands and the optional render tools.
 

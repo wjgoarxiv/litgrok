@@ -23,7 +23,7 @@ never under `.grok/vendor/`. `LITGROK_MOTION_CACHE` (an absolute path) replaces 
 - `install.lock` — held while an install runs; a second install started meanwhile stops and says so.
 
 Archivo instances, VT323, Silkscreen and the five EMS stroke fonts ship inside the skill; the
-Hangul body pair is the lit-pptx skill's own PretendardGOV Regular and Bold, checked against
+Hangul body pair is the lit-pptx skill's own Pretendard Regular and Bold, checked against
 LitGrok's recorded hashes.
 
 ## Commands

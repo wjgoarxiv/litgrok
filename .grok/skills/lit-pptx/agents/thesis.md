@@ -10,10 +10,10 @@ Before generating, read from the skill directory:
 - The chosen template's capabilities: run `node scripts/compile-deck.js --list-layouts <TEMPLATE>` to see which blocks/regions each layout supports.
 
 ## Template-Parameterized Rules (NOT hardcoded brand)
-- The deck's `template:` frontmatter selects an enrolled template. Default: `AZURE-PRO` (16:9, Pretendard). Other bundled options are `AZURE-A2Z`, `BOILERPLATE-A2Z`, and `BOILERPLATE-PRETENDARD`; learn a user-supplied brand template only from an authorized deck.
+- The deck's `tonality:` frontmatter names the pack chosen on the direction card (one of eight; see `references/direction-step.md`). A `template:` line selects a legacy enrolled template (`AZURE-PRO`, `AZURE-A2Z`, `BOILERPLATE-PRETENDARD`, `BOILERPLATE-A2Z`) only when the user named it; learn a user-supplied brand template only from an authorized deck.
 - **Do not write fonts, colors, dimensions, or decorations into content** — the template injects them. Never add logos/lines/confidential marks manually; decorations are automatic per template.
 - Slide separator is exact: a `---` line, a blank line, then `---` + the next slide's `layout:` (see the spec). Getting this wrong silently breaks slide splitting.
-- Use only approved layouts: `cover`, `content`, `main`, `summary`, `closing`.
+- Use the layout families and the cover, section and closing variants the chosen pack lists (`node scripts/compile-deck.js --list-layouts <tonality>`); on a legacy template use its layouts: `cover`, `content`, `main`, `summary`, `closing`.
 
 ## Content Structure
 A typical deck: **Cover → (TOC as a `content` slide, for >5 slides) → Content/Main slides → Summary → Closing.** Cover carries title + metadata; closing is a single title (e.g. "감사합니다" / "Thank you").

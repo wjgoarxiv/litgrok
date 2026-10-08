@@ -12,7 +12,7 @@ import { fnv1a32 } from './seed.mjs';
 import { flagLadder, isSoftwareRenderer } from './chrome.mjs';
 
 const LOOK_PASSES = new Set(['glitch', 'tidal-gradient', 'crt', 'dither', 'swiss-grid', 'terminal-ui']);
-const HANGUL_FONT_FILES = new Set(['PretendardGOV-Regular.otf', 'PretendardGOV-Bold.otf', 'Galmuri9.ttf', 'Pretendard-Regular.otf']);
+const HANGUL_FONT_FILES = new Set(['Pretendard-Regular.otf', 'Pretendard-Bold.otf', 'Galmuri9.ttf']);
 const EPS = 1e-6;
 
 const pass = (id, detail = '') => ({ id, status: 'PASS', detail });

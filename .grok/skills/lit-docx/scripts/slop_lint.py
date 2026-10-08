@@ -40,6 +40,10 @@ class Finding:
     severity: str = "HIGH"
 
 
+TITLE_MINOR = {"a", "an", "the", "and", "but", "or", "nor", "for", "of", "in", "on", "at", "to", "by", "as", "via", "with", "from"}
+REFERENCE_SECTIONS = {"references", "reference", "bibliography", "참고문헌", "참고 문헌"}
+
+
 CRAFT_LIMITS = {"latin_chars": 90, "cjk_chars": 38, "numeric_share": .70, "latin_glyph": .55, "cjk_glyph": 1.0}
 
 
@@ -145,8 +149,9 @@ def heading_case_ok(heading: str, expected: str) -> bool:
     if expected == "sentence_case":
         return bare[0].isupper() and bare[1:] != bare[1:].upper()
     if expected == "title_case":
-        words = [w for w in re.findall(r"[A-Za-z][A-Za-z'-]*", bare)]
-        return all(word[0].isupper() for word in words[: min(len(words), 6)]) if words else True
+        # Title case capitalises every word but a short article, conjunction or preposition after the first.
+        words = [w for w in re.findall(r"[A-Za-z][A-Za-z'-]*", bare)][:6]
+        return all(word[0].isupper() or (i and word in TITLE_MINOR) for i, word in enumerate(words)) if words else True
     return True
 
 
@@ -241,7 +246,10 @@ def lint_text(md_text: str, publisher: dict, phrase_rules: dict, locale: str, ge
                 for match in re.finditer(re.escape(phrase), section_text):
                     add_finding(findings, full_text, offsets, section_pos + match.start(), "rule-21-ko-ai-phrase", section_name, f"한국어 AI 표현: '{match.group(0)}'", match.group(0))
 
-        if section_text.count("—") >= 2 or section_text.count(" - ") >= 1:
+        # A spaced hyphen between two words reads as a dash; one that opens a line is a list marker
+        # (a key figure's basis, a nested point), and a table row is data whose dash marks an empty cell.
+        prose = "\n".join(line for line in section_text.split("\n") if not line.lstrip().startswith("|"))
+        if prose.count("—") >= 2 or re.search(r"\S - ", prose):
             add_finding(findings, full_text, offsets, max(section_pos, 0), "rule-02-em-dash-cluster", section_name, "Paragraph uses dash-heavy rhetorical style", section_text[:120])
 
         sentences = sentence_split(section_text)
@@ -286,7 +294,8 @@ def lint_text(md_text: str, publisher: dict, phrase_rules: dict, locale: str, ge
                 for match in re.finditer(re.escape(phrase), section_text):
                     add_finding(findings, full_text, offsets, section_pos + match.start(), "rule-24-ko-loanword", section_name, f"외래어 남용 감지: '{match.group(0)}'", match.group(0))
 
-        if len(lengths) >= 4 and wc >= 80:
+        # A reference list is a run of entries, not prose.
+        if len(lengths) >= 4 and wc >= 80 and section_name.strip().lower() not in REFERENCE_SECTIONS:
             mean = sum(lengths) / len(lengths)
             variance = sum((item - mean) ** 2 for item in lengths) / len(lengths)
             if variance ** 0.5 < 6:
@@ -308,8 +317,10 @@ def lint_text(md_text: str, publisher: dict, phrase_rules: dict, locale: str, ge
         if total_words >= 250 and section_name.lower() == "methods" and section_ratio < 0.15:
             add_finding(findings, full_text, offsets, max(section_pos, 0), "rule-09-section-balance", section_name, "Methods section is too small relative to the manuscript", section_text[:120])
 
-        ttr = type_token_ratio(section_text)
-        if ttr < 0.45 and wc > 40:
+        # The ratio falls as text grows, so it is read per subsection (the smallest headed part).
+        parts = [part for part in re.split(r"(?m)^(?=#{2,6} )", section_text) if word_count(part) > 40]
+        ttr = min((type_token_ratio(part) for part in parts), default=1.0)
+        if ttr < 0.45:
             add_finding(findings, full_text, offsets, max(section_pos, 0), "rule-10-lexical-diversity", section_name, f"Lexical diversity is low (TTR={ttr:.2f})", section_text[:120])
 
         for pattern in adjective_stacks:
@@ -384,23 +395,58 @@ def write_submission_checklist(target_dir: Path, publisher_name: str, publisher:
     return target
 
 
+CJK_FALLBACK = {"Batang", "Gulim", "MS Mincho"}
+
+
+def _style_eastasia(styles_xml: str) -> tuple[str | None, dict]:
+    """The eastAsia face of the document defaults and of each style, with its basedOn parent."""
+    defaults = re.search(r"<w:docDefaults>.*?</w:docDefaults>", styles_xml, re.DOTALL)
+    face = re.search(r'<w:rFonts\b[^>]*\bw:eastAsia="([^"]+)"', defaults.group(0)) if defaults else None
+    styles = {}
+    for block in re.findall(r"<w:style\b.*?</w:style>", styles_xml, re.DOTALL):
+        sid = re.search(r'w:styleId="([^"]+)"', block)
+        if sid:
+            own = re.search(r'<w:rPr>.*?<w:rFonts\b[^>]*\bw:eastAsia="([^"]+)".*?</w:rPr>', block, re.DOTALL)
+            based = re.search(r'<w:basedOn w:val="([^"]+)"', block)
+            styles[sid.group(1)] = (own.group(1) if own else None, based.group(1) if based else None)
+    return (face.group(1) if face else None), styles
+
+
 def audit_docx_cjk(path: Path) -> list[Finding]:
+    """Every Hangul run needs a real eastAsia face: its own, or one inherited from its run style,
+    its paragraph style chain or the document defaults."""
     findings: list[Finding] = []
     with zipfile.ZipFile(path) as zf:
         doc_xml = zf.read("word/document.xml").decode("utf-8")
+        styles_xml = zf.read("word/styles.xml").decode("utf-8") if "word/styles.xml" in zf.namelist() else ""
+    default, styles = _style_eastasia(styles_xml)
+
+    def inherited(style_id: str | None) -> str | None:
+        seen = set()
+        while style_id and style_id not in seen:
+            seen.add(style_id)
+            face, style_id = styles.get(style_id, (None, None))
+            if face:
+                return face
+        return None
+
+    paragraph_pattern = re.compile(r"<w:p\b[^>]*>(.*?)</w:p>", re.DOTALL)
     run_pattern = re.compile(r"<w:r(?:\s[^>]*)?>(.*?)</w:r>", re.DOTALL)
     text_pattern = re.compile(r"<w:t[^>]*>(.*?)</w:t>", re.DOTALL)
-    eastasia_pattern = re.compile(r'w:eastAsia="([^"]+)"')
-    for run in run_pattern.findall(doc_xml):
-        texts = text_pattern.findall(run)
-        if not texts:
-            continue
-        joined = "".join(texts)
-        if not re.search(r"[가-힣]", joined):
-            continue
-        eastasia = eastasia_pattern.search(run)
-        if eastasia is None or eastasia.group(1) in {"Batang", "Gulim", "MS Mincho"}:
-            findings.append(Finding("rule-30-cjk-font-fallback", 0, 0, "DOCX", "Hangul run is missing explicit Pretendard-style eastAsia font pairing", joined[:80]))
+    # The face sits on rFonts; a lang element's eastAsia attribute names a language, not a face.
+    eastasia_pattern = re.compile(r'<w:rFonts\b[^>]*\bw:eastAsia="([^"]+)"')
+    for paragraph in paragraph_pattern.findall(doc_xml):
+        p_style = re.search(r'<w:pStyle w:val="([^"]+)"', paragraph)
+        p_face = inherited(p_style.group(1) if p_style else "Normal") or default
+        for run in run_pattern.findall(paragraph):
+            joined = "".join(text_pattern.findall(run))
+            if not re.search(r"[가-힣]", joined):
+                continue
+            own = eastasia_pattern.search(run)
+            r_style = re.search(r'<w:rStyle w:val="([^"]+)"', run)
+            face = own.group(1) if own else inherited(r_style.group(1) if r_style else None) or p_face
+            if face is None or face in CJK_FALLBACK:
+                findings.append(Finding("rule-30-cjk-font-fallback", 0, 0, "DOCX", "Hangul run is missing explicit Pretendard-style eastAsia font pairing", joined[:80]))
     return findings
 
 

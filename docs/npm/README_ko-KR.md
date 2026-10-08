@@ -68,7 +68,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 세션이 불러온 전체 목록은 `/skills`에서 보입니다. [GitHub의 스킬 갤러리](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md#스킬-한눈에-보기)에서는 38개 스킬을 결과 그림과 함께 볼 수 있습니다.
 
-코드 밖의 일도 있습니다. `lit-pptx`는 발표자료를, `lit-docx`는 보고서와 Word 문서를 만들고, `/frontend-ui-ux`는 화면을 만들어 확인하며, `/readme-studio`는 저장소 사실에 근거한 README를 씁니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 씁니다.
+코드 밖의 일도 있습니다. `lit-pptx`는 발표자료를, `lit-docx`는 보고서와 Word 문서를 그 일에 맞게 고른 디자인 방향으로 만들고(답변에 다른 두 방향도 함께 알려 줍니다), `/frontend-ui-ux`는 화면을 만들어 확인하며, `/readme-studio`는 저장소 사실에 근거한 README를 씁니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 씁니다.
 
 ## 설치하면 달라지는 것
 

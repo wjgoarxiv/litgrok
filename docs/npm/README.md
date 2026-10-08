@@ -68,7 +68,7 @@ Long sessions can write their own handoff. Turn on automatic handoff with `litgr
 
 `/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok#skills-at-a-glance) shows all 38 with a picture of each result.
 
-Beyond code, `lit-pptx` makes slide decks, `lit-docx` makes reports and Word documents, `/frontend-ui-ux` builds and checks interfaces, `/readme-studio` writes source-checked READMEs, and `lit-humanizer` rewrites stiff English or Korean prose.
+Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (eight for decks, six restrained ones for documents); `/frontend-ui-ux` builds and checks interfaces, `/readme-studio` writes source-checked READMEs, and `lit-humanizer` rewrites stiff English or Korean prose.
 
 ## What changes after install
 

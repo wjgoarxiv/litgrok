@@ -27,9 +27,10 @@ slide = deck.slides.add_slide(deck.slide_layouts[6])
 title = slide.shapes.add_textbox(Inches(.5), Inches(.2), Inches(7), Inches(.5))
 title.text = 'Reading view'
 title.text_frame.paragraphs[0].runs[0].font.size = Pt(34)
-body = slide.shapes.add_textbox(Inches(.5), Inches(1), Inches(7), Inches(1))
-body.text = '가' * 110
-body.text_frame.paragraphs[0].runs[0].font.size = Pt(18)
+# A 9 in frame at 14 pt sets about 53 Hangul glyphs a line, well past the 38-glyph measure.
+body = slide.shapes.add_textbox(Inches(.5), Inches(1), Inches(9), Inches(1))
+body.text = '가' * 160
+body.text_frame.paragraphs[0].runs[0].font.size = Pt(14)
 body.text_frame.paragraphs[0].runs[0]._r.get_or_add_rPr().append(OxmlElement('a:gradFill'))
 outer = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(8), Inches(2), Inches(4), Inches(3))
 inner = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(8.1), Inches(2.1), Inches(3.8), Inches(2.8))

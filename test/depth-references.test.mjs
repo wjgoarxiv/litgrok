@@ -11,7 +11,35 @@ const SCIENTIFIC_VENDOR_REFERENCES = join(PRODUCT_ROOT, '.grok', 'vendor', 'scie
 const SCIENTIFIC_VENDOR_PREFIX = '../../vendor/scientific-visualization/references';
 
 const REFERENCE_SETS = new Map([
-  ['lit-docx', ['frontmatter_schema.md', 'journal_style_spec.md', 'markdown_quality_checklist.md', 'slop_rules.md']],
+  ['lit-docx', [
+    'components.md',
+    'direction-step.md',
+    'frontmatter_schema.md',
+    'journal_style_spec.md',
+    'markdown_quality_checklist.md',
+    'page-composition.md',
+    'slop_rules.md',
+    'tonalities/brief.md',
+    'tonalities/journal.md',
+    'tonalities/manual.md',
+    'tonalities/memo.md',
+    'tonalities/proposal.md',
+    'tonalities/report.md',
+  ]],
+  ['lit-pptx', [
+    'density-and-fill.md',
+    'direction-step.md',
+    'layout-families.md',
+    'title-treatments.md',
+    'tonalities/atlas.md',
+    'tonalities/chalk.md',
+    'tonalities/gazette.md',
+    'tonalities/ledger.md',
+    'tonalities/night.md',
+    'tonalities/paper.md',
+    'tonalities/signal.md',
+    'tonalities/studio.md',
+  ]],
   ['lit-typographic-motion', ['complete-contract.md', 'craft-loop.md', 'runtime.md', 'scene-contract.md', 'stage.md', 'style-bible.md', 'treatment.md', 'type-craft.md']],
   ['autoresearch', [
     'core-principles.md',

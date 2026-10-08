@@ -34,7 +34,7 @@ function baseline() {
   };
   const frames = Array.from({ length: TOTAL }, (_, frame) => ({
     frame, pass: null, rgbaSha256: 'x', ink: 5000, shotIndex: frame < 144 ? 0 : 1,
-    textBoxes: [{ elementId: 'title-0', text: frame < 144 ? 'Field Notes' : '작은', voice: frame < 144 ? 'display' : 'body', fontFile: frame < 144 ? 'Archivo-w100-wt900.ttf' : 'PretendardGOV-Bold.otf', fontSizePx: 120, capHeightPx: 84, weight: 700, fill: '#E9EBE4', bbox: [144, 400, 900, 520], script: frame < 144 ? 'latin' : 'hangul', trackingEm: 0, opacity: 1 }],
+    textBoxes: [{ elementId: 'title-0', text: frame < 144 ? 'Field Notes' : '작은', voice: frame < 144 ? 'display' : 'body', fontFile: frame < 144 ? 'Archivo-w100-wt900.ttf' : 'Pretendard-Bold.otf', fontSizePx: 120, capHeightPx: 84, weight: 700, fill: '#E9EBE4', bbox: [144, 400, 900, 520], script: frame < 144 ? 'latin' : 'hangul', trackingEm: 0, opacity: 1 }],
     graphics: [{ elementId: 'rule', kind: 'rule', bbox: [143, 167, 1777, 169] }],
     fills: [], blocks: [], post: { flash: 0, invert: false, shake: [0, 0], zoom: 1, grain: 0.045, fade: 1 },
     flash: { general: null, red: null, stepArea: 0 },

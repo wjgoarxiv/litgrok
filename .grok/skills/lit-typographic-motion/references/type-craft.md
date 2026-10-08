@@ -9,7 +9,7 @@ The type kit splits every string into script runs. A Hangul run is Hangul syllab
 Latin run is Latin letters. Digits, punctuation and spaces are not their own run: they join the run
 on their left, or the run on their right when nothing is on the left. So `2026년` is one Hangul run,
 `LIT팀` is `LIT` + `팀`, and `LIT 스튜디오` is `LIT ` + `스튜디오`. Each run takes the voice's font
-for its script: Archivo or VT323 for Latin, the product's PretendardGOV pair or Galmuri9 for Hangul.
+for its script: Archivo or VT323 for Latin, the product's Pretendard pair or Galmuri9 for Hangul.
 
 A Hangul run never takes tracking and never takes width-axis motion, even inside a mixed line
 where the Latin run beside it does. The gate fails a Hangul text box with non-zero tracking or an
@@ -41,7 +41,7 @@ never take negative tracking. Hangul runs stay at 0.
 
 ## Weights and sizes (MO-FT-07)
 
-- PretendardGOV Regular (400) is the floor for held Hangul body text; titles and large slams use
+- Pretendard Regular (400) is the floor for held Hangul body text; titles and large slams use
   Bold (700). Nothing between or beyond those two files is synthesized.
 - Galmuri9 renders at 45 px or larger (at least five times its 9 px grid) so its strokes do not fuse;
   the terminal scenes never set it smaller. A long Hangul line in terminalcore falls back to the body

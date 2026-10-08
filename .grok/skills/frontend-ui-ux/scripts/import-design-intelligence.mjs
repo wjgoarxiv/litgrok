@@ -20,7 +20,7 @@ const COMPANIONS = Object.freeze([
   ["LICENSE", "738f69dfa83db5c347c678fb9d90e560877059f0de93a327c39001bff92dc014"],
   ["PROVENANCE.json", "a00be969523fe376a07d310b7418be0c41824f01241294bdf00e82eb4d736e87"],
   ["SOURCE-MANIFEST.json", "9adf471d95aaf17e7866e1c7674cb1a101daae9abdab87c71c96a60f2a58e6fa"],
-  ["THIRD-PARTY-NOTICE.txt", "1a04566c00cf3e1e75a5de6b4e5fe0ada59fcececb6603016365ad8bdfa9e8ae"],
+  ["THIRD-PARTY-NOTICE.txt", "638a38f15c4398eb999040eca6c4ad32d8dc0eaf0b096643f73081ab1f85d5cc"],
 ]);
 
 function hash(bytes) {
