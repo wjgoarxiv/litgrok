@@ -14,12 +14,6 @@ faces:
   body: Pretendard Regular
   label: Pretendard Regular
   numeral: Pretendard Regular
-faces-pretendard-only:
-  display: Pretendard Bold
-  title: Pretendard Bold
-  body: Pretendard Regular
-  label: Pretendard Regular
-  numeral: Pretendard Regular
 
 palette:
   ground: "#0F1419"
@@ -32,8 +26,6 @@ palette:
   accent-tint: "#2A2418"
   field: "#1E2A36"
   on-field: "#F5F7FA"
-  positive: "#6CC08B"
-  negative: "#F08A7E"
   series: ["#E3A857", "#7FB8E0", "#A3AEBA", "#C58FD0"]
 
 ramp: reading
@@ -41,8 +33,6 @@ hero: false
 type-voice:
   title-tracking: -1
   display-tracking: -2
-  latin-case: sentence
-  figures: tabular
 
 density: 10
 variance: 6
@@ -74,27 +64,17 @@ sections: [section-numeral, section-field]
 closings: [closing-statement, closing-decision-box]
 
 table:
-  style: header-fill
   header: surface
   header-ink: ink
   rules: rows
   banding: none
-  numbers: right-tabular
   totals: bold
   protagonist: accent-tint
 chart:
   gridlines: hairline
   labels: direct
   highlight: accent-on-muted
-  annotation: on
 image:
-  bleed: side-only
-  crop: allowed
   frame: none
 
 fill-order: [anchor-visual, step-up, distribute, change-family]
-avoid:
-  - neon or saturated glows
-  - a pure black ground
-  - light slides mixed in
-  - thin light type below 18 pt

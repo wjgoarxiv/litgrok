@@ -418,7 +418,7 @@ function listTonalities() {
   return [...names].sort();
 }
 
-const PALETTE_ROLES = ["ground", "surface", "ink", "ink-muted", "line", "accent", "accent-deep", "accent-tint", "field", "on-field", "positive", "negative"];
+const PALETTE_ROLES = ["ground", "surface", "ink", "ink-muted", "line", "accent", "accent-deep", "accent-tint", "field", "on-field"];
 const FACE_KEYS = ["display", "title", "body", "label", "numeral"];
 const FACES = {
   "Pretendard Regular": { font: "Pretendard", bold: false },
@@ -443,8 +443,7 @@ const DISPLAY_DEVICES = {
 };
 // Contrast pairs every pack must meet (text pairs 4.5:1, large marks 3:1).
 const CONTRAST_PAIRS = [["ink", "ground", 4.5], ["ink", "surface", 4.5], ["ink-muted", "ground", 4.5], ["ink-muted", "surface", 4.5],
-  ["accent", "ground", 3.0], ["accent-deep", "accent-tint", 4.5], ["ink", "accent-tint", 4.5], ["on-field", "field", 4.5],
-  ["positive", "ground", 4.5], ["negative", "ground", 4.5]];
+  ["accent", "ground", 3.0], ["accent-deep", "accent-tint", 4.5], ["ink", "accent-tint", 4.5], ["on-field", "field", 4.5]];
 
 function luminance(hexColour) {
   const v = String(hexColour).replace("#", "");
@@ -470,7 +469,7 @@ function validatePack(pack, file) {
   need(typeof pack.intent === "string" && pack.intent.length > 0, "intent is missing");
   need(isList(pack.canvas) && pack.canvas.length > 0 && pack.canvas.every((c) => grid.CANVAS[c]), "canvas must list 16:9 and/or 4:3");
   // `faces` is the deck's default and is Pretendard only; `faces-a2z` applies when the source asks.
-  for (const key of ["faces", "faces-pretendard-only", "faces-a2z"]) {
+  for (const key of ["faces", "faces-a2z"]) {
     if (key === "faces-a2z" && pack[key] == null) continue;
     const faces = pack[key] || {};
     for (const role of FACE_KEYS) {

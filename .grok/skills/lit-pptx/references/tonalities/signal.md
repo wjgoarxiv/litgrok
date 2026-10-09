@@ -19,18 +19,15 @@ timeline or long itemised text, none of which the pack carries.
 | ink / ink-muted / line | `#15131A` / `#55525C` / `#D4D4D8` |
 | accent / accent-deep / accent-tint | `#C8361A` / `#6E1A0C` / `#FBE7E2` |
 | field / on-field | `#C8361A` / `#FFFFFF` |
-| positive / negative | `#1E7A3F` / `#15131A` (a loss keeps the ink and carries its ▼) |
 | chart series | `#C8361A`, `#15131A`, `#6B6870`, `#2F6F8F` |
 | faces | Pretendard Bold for display, titles and figures; Regular for body and labels |
-| figures | proportional |
 | radius / edge | 0 / fill |
 
 Density 10, compact ramp (title 26, display 36). Variance 6 allows four treatments; the pack has four.
 
-**Tables**: open style, no header fill, a rule above and below, numbers right-aligned, totals bold;
+**Tables**: no header fill, a rule above and below, numbers right-aligned, totals bold;
 the row whose first cell appears in the title is tinted red-pale as the row the slide is about.
-**Charts**: no gridlines, direct labels, the red on the highlighted series, annotations allowed.
-**Pictures** may bleed and crop.
+**Charts**: no gridlines, direct labels, the red on the highlighted series.
 
 ## Titles by role
 
@@ -73,6 +70,7 @@ Decoration: colour field, hairline rules, real numerals. No cards.
 - Red for losses; a loss is ink with ▼.
 - More than two lines of display text on any slide.
 - Cards and boxed bullet groups.
+- Bullet lists longer than four items.
 - A statement slide that holds a claim; claims go in the body of a content slide.
 
 ## Two worked slides

@@ -19,18 +19,15 @@ for a read-alone briefing.
 | ink / ink-muted / line | `#1A1D21` / `#555B63` / `#D6D9DD` |
 | accent / accent-deep / accent-tint | `#2B4C7E` / `#1B2F4E` / `#E6ECF4` |
 | field / on-field | `#1A1D21` / `#FFFFFF` |
-| positive / negative | `#1E7A3F` / `#B3261E` |
 | chart series | `#2B4C7E`, `#555B63`, `#8A6A2E`, `#3E7A5A` |
 | faces | Pretendard Regular for display and figures, Bold for titles, Regular for body |
-| figures | proportional |
 | radius / edge | 0 / fill |
 
 Atlas is the one pack whose display face is Regular: large cover and statement text stays light so
 the photograph keeps the weight. Density 10, compact ramp. Variance 7 allows all five treatments.
 
-**Pictures** may bleed and crop, with no frame. **Tables** (inside KPI rows) use a light grid of row
-rules, no header fill. **Charts**, if a figure is placed as an image, follow hairline gridlines and
-direct labels without annotation.
+**Pictures** take no frame. **Tables** (inside KPI rows) use a light grid of row rules, no header
+fill. **Charts**, if a figure is placed as an image, follow hairline gridlines and direct labels.
 
 ## Titles by role
 

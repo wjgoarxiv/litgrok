@@ -18,16 +18,14 @@ KPI row); and for a timeline, which it cannot draw.
 | ink / ink-muted / line | `#1F2933` / `#4E5A66` / `#CBD3DA` |
 | accent / accent-deep / accent-tint | `#9A3412` / `#6B2409` / `#FCEBE0` |
 | field / on-field | `#1F3B33` / `#FFFFFF` |
-| positive / negative | `#1E7A3F` / `#B3261E` |
 | chart series | `#9A3412`, `#1F3B33`, `#4E5A66`, `#2E6A8E` |
 | faces | Pretendard Bold for titles, step numerals and display; Regular for body |
-| figures | proportional |
 | radius / edge | 6 pt / fill |
 
 Density 10, compact ramp. Variance 6 allows four treatments; the pack has exactly four.
 
 **Tables**: header row in the accent tint with deep rust labels, row rules, numbers right-aligned,
-totals bold. **Pictures** may bleed on one side only and are not cropped.
+totals bold.
 
 ## Titles by role
 

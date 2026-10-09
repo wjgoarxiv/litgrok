@@ -73,7 +73,9 @@ test('DOCX public audit reports numeric alignment through the packaged launcher'
 });
 
 // Gate matchers on pack-drawn slides. Each pair holds a false positive that the gate must stop
-// raising and the true positive it must keep raising; no threshold moves.
+// raising and the true positive it must keep raising. One threshold moved: OF-102 reads text above
+// 11 pt, not 10.5 pt, because the engine sets captions and table text at 11 pt on the compact ramp
+// (the compiled caption test below fails at 10.5 pt).
 function craft(body) {
   return run(`import sys,json\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.util import Inches, Pt\nfrom craft_extras import assess\np=Presentation();p.slide_width=Inches(13.333);p.slide_height=Inches(7.5)\np.slides.add_slide(p.slide_layouts[6])\ndef slide():\n return p.slides.add_slide(p.slide_layouts[6])\ndef box(s,x,y,w,h,text='',size=13,name=None,fill=None):\n b=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(x),Inches(y),Inches(w),Inches(h)) if fill else s.shapes.add_textbox(Inches(x),Inches(y),Inches(w),Inches(h))\n if fill: b.fill.solid();b.fill.fore_color.rgb=RGBColor.from_string(fill);b.line.fill.background()\n if name: b.name=name\n if text:\n  b.text_frame.word_wrap=True\n  for i,line in enumerate(text.split('\\\\n')):\n   para=b.text_frame.paragraphs[0] if i==0 else b.text_frame.add_paragraph();para.text=line\n   for r in para.runs: r.font.size=Pt(size)\n return b\n${body}\nprint(json.dumps(assess(p)))`);
 }
@@ -145,6 +147,16 @@ test('the deck gate fails a flat engine deck on treatments, composition, frames 
 test('a full-bleed picture carries its caption and source on the panel laid over it', () => {
   const result = run(`import sys,json,tempfile\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.util import Inches, Pt\nfrom PIL import Image\nfrom qa_deck import check_evidence_binding\nimg=tempfile.NamedTemporaryFile(suffix='.png');Image.new('RGB',(160,90),(120,130,140)).save(img.name)\np=Presentation();p.slide_width=Inches(13.333);p.slide_height=Inches(7.5)\nfor full in (True, False):\n s=p.slides.add_slide(p.slide_layouts[6])\n pic=s.shapes.add_picture(img.name,0,0,p.slide_width,p.slide_height) if full else s.shapes.add_picture(img.name,Inches(1),Inches(1),Inches(6),Inches(3.4))\n pic._element.nvPicPr.cNvPr.set('descr','Figure 1. Boardwalk on recycled decking | Source: sample photo')\n b=s.shapes.add_textbox(Inches(0.33),Inches(6.0),Inches(7),Inches(0.3)) if full else s.shapes.add_textbox(Inches(8),Inches(1),Inches(4),Inches(0.3))\n b.text='Figure 1. Boardwalk on recycled decking | Source: sample photo'\nf=tempfile.NamedTemporaryFile(suffix='.pptx');p.save(f.name)\nprint(json.dumps(check_evidence_binding(f.name)))`);
   assert.deepEqual(result.violations.map((v) => v.slide), [2]);
+});
+
+test('OF-112 fails a deck whose median empty band passes 0.20 and passes one at the cap', () => {
+  // Three content slides under a top-rule title: the body runs from 96 pt to the 486 pt floor (390 pt),
+  // and each text block ends at the given depth, so 388.5 pt leaves 0.25 of it empty and 408 pt 0.20.
+  const deckAt = (bottom) => run(`import sys,json\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.util import Pt\nfrom deck_output import assess\np=Presentation();p.slide_width=Pt(960);p.slide_height=Pt(540);p.core_properties.subject='lit-pptx tonality=ledger density=5 grid=standard variance=5'\ndef text(s,x,y,w,h,t,size,name=None):\n b=s.shapes.add_textbox(Pt(x),Pt(y),Pt(w),Pt(h));b.text_frame.word_wrap=True;b.text=t\n for r in b.text_frame.paragraphs[0].runs: r.font.size=Pt(size)\n if name: b.name=name\nfor n in range(3):\n s=p.slides.add_slide(p.slide_layouts[6])\n text(s,48,100,40,4,'',13,'family@text-column')\n text(s,48,36,864,60,f'거점별 운영 지표 {n+1}',26,'title@top-rule')\n text(s,48,130,864,${bottom}-130,'본문 한 줄과 근거 한 줄을 적는다 '*12,13)\nprint(json.dumps(assess(p)))`);
+  const over = deckAt(388.5);
+  assert.deepEqual(rules(over, 'OF-112', 'HIGH').map((f) => [f.slide, f.value, f.threshold]), [[null, 0.25, 0.2]]);
+  assert.equal(over.pass, false);
+  assert.deepEqual(rules(deckAt(408), 'OF-112'), []);
 });
 
 test('OF-114 reads compound nouns and plural nouns as labels, and finite verbs as sentences', () => {
@@ -736,6 +748,49 @@ test('a single takeaway stays with its timeline, a chart states its unit once, a
   // The field moves left only when the rows and the step keep their sizes and line counts (it never costs type).
   const field = close.page.find((s) => s.fill && s.x > 300 && Math.round(s.x + s.w) === 960);
   assert.ok(field && field.x < 24 + 912 * 7 / 12 - 12, `the field starts where the rows end: ${JSON.stringify(field)}`);
+});
+
+test('an 11 pt chart caption the engine sets across the body is not read as body text', () => {
+  // The compact ramp sets captions at 11 pt across the chart, so a long one runs past the 90-character
+  // body measure on its first line. OF-102 starts above 11 pt for this reason; at 10.5 pt this fails.
+  const { pptx } = deck('caption', `---
+tonality: paper
+title: Single-feed conversion study
+notice: Sample data — replace with real figures
+---
+
+---
+layout: cover-typographic
+
+# Single-feed conversion study
+---
+
+---
+layout: chart-insight
+
+## Conversion over time at 2.0 L/min
+
+::: chart type=line unit="%"
+| Hour | Run A (%) | Run B (%) |
+|---|---|---|
+| 1 | 14 | 11 |
+| 2 | 28 | 23 |
+| 3 | 40 | 33 |
+| 4 | 49 | 41 |
+| 5 | 54 | 46 |
+| 6 | 57 | 49 |
+> Single-feed conversion over time at 2.0 L/min, mean of three replicates per run with the reactor held at 80 °C (synthetic sample data)
+:::
+
+- Run A leads Run B by eight points after six hours
+- The gap opens in the first three hours and then holds
+- Source: sample bench study, October 2026 (sample)
+---
+`);
+  const captionLine = shapes(pptx, 2).map((s) => s[5]).find((text) => text.startsWith('Figure 1.')).split('\n')[0];
+  assert.ok(captionLine.length > 90, captionLine);
+  const { report } = deckGate(pptx);
+  assert.deepEqual(report.office_craft.findings.filter((f) => f.rule === 'OF-102'), []);
 });
 
 test('a legacy template still compiles with no tonality', () => {

@@ -1,5 +1,5 @@
-# Ledger: a quarterly review the reader studies line by line. Compact type, tabular figures,
-# tables and KPI rows carry the argument; the accent marks the current period and one key figure.
+# Ledger: a quarterly review the reader studies line by line. Compact type; tables and KPI rows
+# carry the argument; the accent marks the current period and one key figure.
 # A poor fit for a short spoken pitch or for a briefing written as running prose.
 id: ledger
 name: Ledger
@@ -9,12 +9,6 @@ canvas: ["16:9", "4:3"]
 
 # LitGrok bundles Pretendard Regular and Bold only: title range comes from size, colour and placement.
 faces:
-  display: Pretendard Bold
-  title: Pretendard Bold
-  body: Pretendard Regular
-  label: Pretendard Regular
-  numeral: Pretendard Bold
-faces-pretendard-only:
   display: Pretendard Bold
   title: Pretendard Bold
   body: Pretendard Regular
@@ -32,8 +26,6 @@ palette:
   accent-tint: "#E2F0EC"
   field: "#0A4438"
   on-field: "#FFFFFF"
-  positive: "#1E7A3F"
-  negative: "#B3261E"
   series: ["#0E6B5A", "#4B5866", "#9A6A12", "#2F5F8A"]
 
 ramp: reading
@@ -41,8 +33,6 @@ hero: false
 type-voice:
   title-tracking: -1
   display-tracking: -1
-  latin-case: sentence
-  figures: tabular
 
 density: 10
 variance: 5
@@ -74,27 +64,17 @@ sections: [section-rule, section-numeral]
 closings: [closing-decision-box, closing-ask]
 
 table:
-  style: ledger
   # The header row is the ledger's one dark mass: deep field, white labels.
   header: field
   header-ink: on-field
   rules: header-and-totals
   banding: none
-  numbers: right-tabular
   totals: bold
 chart:
   gridlines: hairline
   labels: direct
   highlight: accent-on-muted
-  annotation: on
 image:
-  bleed: side-only
-  crop: none
   frame: hairline
 
 fill-order: [step-up, distribute, anchor-visual, change-family]
-avoid:
-  - KPI cards for counts that are not results
-  - more than one accent on a chart
-  - tables stretched by padding
-  - side-rail on two data slides in a row

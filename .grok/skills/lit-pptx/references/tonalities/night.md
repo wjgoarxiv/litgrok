@@ -19,19 +19,16 @@ for running text.
 | ink / ink-muted / line | `#E8EDF2` / `#A3AEBA` / `#5A6672` |
 | accent / accent-deep / accent-tint | `#E3A857` / `#F2C98A` / `#2A2418` |
 | field / on-field | `#1E2A36` / `#F5F7FA` |
-| positive / negative | `#6CC08B` / `#F08A7E` |
 | chart series | `#E3A857`, `#7FB8E0`, `#A3AEBA`, `#C58FD0` |
 | faces | Pretendard Bold for titles and display, Regular for body and numerals |
-| figures | tabular |
 | radius / edge | 6 pt / fill |
 
 On Night `accent-deep` is the lighter amber, because "deep" means the stronger contrast against the
 ground. Density 10, compact ramp. Variance 6 allows four of the pack's five treatments.
 
-**Tables** (KPI rows, closing tables): header on the surface colour, row rules, numbers right-aligned
-and tabular, totals bold; the row named in the title is tinted. **Charts**: hairline gridlines,
-direct labels, amber on the highlighted series, annotations allowed. Charts are native, drawn on the
-dark ground at full size. Pictures bleed on one side only.
+**Tables** (KPI rows, closing tables): header on the surface colour, row rules, numbers right-aligned,
+totals bold; the row named in the title is tinted. **Charts**: hairline gridlines, direct labels,
+amber on the highlighted series. Charts are native, drawn on the dark ground at full size.
 
 ## Titles by role
 

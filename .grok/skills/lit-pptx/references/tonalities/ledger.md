@@ -1,7 +1,7 @@
 # Ledger
 
 Ledger is for decks that are studied line by line: quarterly results, budgets, programme status.
-White pages, compact type, tabular figures, tables with a dark header row, and one deep green that
+White pages, compact type, tables with a dark header row, and one deep green that
 marks the current period or the figure the slide is about. Tables and KPI rows carry the argument;
 the title only labels it.
 
@@ -19,19 +19,17 @@ where Gazette's band heads and boxed summary serve the reader better.
 | ink / ink-muted / line | `#16212C` / `#4B5866` / `#D0D6DC` |
 | accent / accent-deep / accent-tint | `#0E6B5A` / `#0A4438` / `#E2F0EC` |
 | field / on-field | `#0A4438` / `#FFFFFF` |
-| positive / negative | `#1E7A3F` / `#B3261E` |
 | chart series | `#0E6B5A`, `#4B5866`, `#9A6A12`, `#2F5F8A` |
 | faces | Pretendard Bold for titles and figures, Regular for body and labels |
-| figures | tabular, so columns of numbers align |
 | radius / edge | 0 / fill |
 
 Density 10 puts Ledger on the compact ramp (body 13 pt, labels 11, sources 9, title 26) with 24 pt
 margins. Variance 5 allows four title treatments in a deck.
 
 **Tables**: header row in the field colour with white labels, rules under the header and over the
-totals, no banding, numbers right-aligned and tabular, the totals row bold. **Charts**: hairline
-gridlines, direct labels, the accent on the highlighted series and muted ink for the rest, short
-annotations allowed. Pictures, if ever used, sit inside a hairline frame and never bleed.
+totals, no banding, numbers right-aligned, the totals row bold. **Charts**: hairline
+gridlines, direct labels, the accent on the highlighted series and muted ink for the rest.
+Pictures, if ever used, sit inside a hairline frame.
 
 ## Titles by role
 

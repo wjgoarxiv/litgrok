@@ -17,17 +17,15 @@ open layouts starve tables (Studio has no table family), and for read-alone brie
 | ink / ink-muted / line | `#141414` / `#525252` / `#D2D2CE` |
 | accent / accent-deep / accent-tint | `#8A5A00` / `#4D3200` / `#F5ECD9` |
 | field / on-field | `#141414` / `#FFFFFF` |
-| positive / negative | `#1E7A3F` / `#B3261E` |
 | chart series | `#8A5A00`, `#141414`, `#525252`, `#3B5F7F` |
 | faces | Pretendard Bold for titles, display and figures; Regular for body |
-| figures | proportional |
 | radius / edge | 0 / fill |
 
 Density 10, compact ramp. **Variance 8 allows all five treatments**, and the engine uses them.
 
-**Tables** (inside KPI rows and timelines): open style, a 2 pt rule under the header, no fills,
-numbers right-aligned. **Charts**: no gridlines, direct labels, the ochre on the highlighted series,
-annotations allowed. **Pictures** bleed and crop freely, with no frame.
+**Tables** (inside KPI rows and timelines): a 2 pt rule under the header, no fills, numbers
+right-aligned. **Charts**: no gridlines, direct labels, the ochre on the highlighted series.
+**Pictures** take no frame.
 
 ## Titles by role
 

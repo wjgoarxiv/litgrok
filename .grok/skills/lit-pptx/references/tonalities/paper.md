@@ -18,18 +18,16 @@ timeline or a process, none of which Paper carries.
 | ink / ink-muted / line | `#111418` / `#50565E` / `#C9CDD2` |
 | accent / accent-deep / accent-tint | `#8C1C2B` / `#5E121C` / `#F6E6E8` |
 | field / on-field | `#111418` / `#FFFFFF` |
-| positive / negative | `#1E6B3A` / `#50565E` |
 | chart series | `#8C1C2B`, `#111418`, `#50565E`, `#2E5E8A` (series order, first is the proposed method) |
 | faces | Pretendard Bold for titles and display, Regular for body and numerals |
-| figures | tabular |
 | radius / edge | 0 / border |
 
 Density 10, compact ramp. Variance 5 allows four treatments, which is all Paper has.
 
 **Tables**: booktabs (a heavy rule above the header, a light one under it, a heavy one at the foot),
-no fills, numbers right-aligned and tabular, totals bold. **Charts**: hairline gridlines, direct
-labels, colour by series order with the proposed method first, no annotation. **Pictures** never
-bleed, crop or take a frame.
+no fills, numbers right-aligned, totals bold. **Charts**: hairline gridlines, direct
+labels, colour by series order with the proposed method first. **Pictures** take
+no frame.
 
 ## Titles by role
 

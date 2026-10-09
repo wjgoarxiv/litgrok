@@ -19,10 +19,8 @@ a chart nor an image family), and for English read-alone decks, which suit Ledge
 | ink / ink-muted / line | `#1A2230` / `#4A5568` / `#C8D0DA` |
 | accent / accent-deep / accent-tint | `#A61B1B` / `#233A4F` / `#E8EEF4` |
 | field / on-field | `#233A4F` / `#FFFFFF` |
-| positive / negative | `#1E7A3F` / `#1A2230` |
 | chart series | `#A61B1B`, `#233A4F`, `#4A5568`, `#7A6A2A` |
 | faces | Pretendard Bold for titles and figures, Regular for body and labels |
-| figures | tabular |
 | radius / edge | 0 / fill and border |
 
 Density 10, compact ramp. **Variance 4 allows three title treatments**, out of the four the pack
@@ -31,7 +29,7 @@ groups, two columns, a full table, a matrix, a timeline.
 
 **Tables**: header in the slate field with white labels, a hairline grid on every cell, the first
 column shaded with the surface colour, numbers right-aligned, totals bold. Pictures, if forced in,
-sit in a hairline frame with no bleed.
+sit in a hairline frame.
 
 ## Titles by role
 

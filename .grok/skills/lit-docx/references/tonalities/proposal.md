@@ -42,7 +42,6 @@ Worked examples: `examples/04-proposal-ko.md` (cover and 3 body pages) and `exam
 | Accent on | title rule, callout rules |
 | Components | keyfigures (3 per row), callout (at most one), columns |
 | Figures | at most 0.60 of the frame high |
-| Fill target | median 0.75 |
 
 ## Components
 

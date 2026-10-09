@@ -14,12 +14,6 @@ faces:
   body: Pretendard Regular
   label: Pretendard Regular
   numeral: Pretendard Bold
-faces-pretendard-only:
-  display: Pretendard Bold
-  title: Pretendard Bold
-  body: Pretendard Regular
-  label: Pretendard Regular
-  numeral: Pretendard Bold
 
 palette:
   ground: "#FAFBFC"
@@ -32,8 +26,6 @@ palette:
   accent-tint: "#FCEBE0"
   field: "#1F3B33"
   on-field: "#FFFFFF"
-  positive: "#1E7A3F"
-  negative: "#B3261E"
   series: ["#9A3412", "#1F3B33", "#4E5A66", "#2E6A8E"]
 
 ramp: reading
@@ -41,8 +33,6 @@ hero: false
 type-voice:
   title-tracking: -1
   display-tracking: -1
-  latin-case: sentence
-  figures: proportional
 
 density: 10
 variance: 6
@@ -80,25 +70,16 @@ sections: [section-numeral, section-rail]
 closings: [closing-summary-list, closing-ask]
 
 table:
-  style: header-fill
   header: accent-tint
   header-ink: accent-deep
   rules: rows
   banding: none
-  numbers: right-tabular
   totals: bold
 chart:
   gridlines: hairline
   labels: direct
   highlight: accent-on-muted
-  annotation: on
 image:
-  bleed: side-only
-  crop: none
   frame: none
 
 fill-order: [distribute, step-up, change-family, anchor-visual]
-avoid:
-  - more than one marked term per slide
-  - numerals on points that are not a sequence
-  - definitions buried in bullets instead of the sidebar
