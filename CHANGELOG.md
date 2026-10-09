@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.0.16 — 2026-10-09
+
+- The deck check in `lit-pptx` now finds placeholder text. It reads its placeholder words from a list that LitGrok had never shipped, so it found nothing, and a slide that still said "Lorem ipsum" or "[작성 중]" passed. The list now ships with the skill, and the installer copies it.
+- The same check reads a one-word placeholder term such as "todo", "tbd", "fixme" or "placeholder" as a whole word. A slide that mentions "Mastodon" or a "photodocument" now passes, while "TODO:", "TODOs" and "(TBD)" still fail.
+- The eight deck looks and six document looks no longer list settings the engine never applied, such as letter case, figure style, picture cropping and page fill targets, and their reference pages no longer promise them. Decks and documents come out the same as before.
+
 ## 1.0.15 — 2026-10-08
 
 - `lit-pptx` now chooses how a deck should look before it builds anything. It reads who the deck is for, whether it is presented or sent ahead, and how much of it is tables, pictures or steps, then picks one of eight looks: a dense numbers review, a pitch with one idea per slide, a picture-led deck, a teaching deck, a research talk, a Korean briefing deck, an editorial layout or a dark keynote. The reply names the look, gives the reason in a sentence and mentions two others that would also suit; say one of their names to switch. The AZURE and BOILERPLATE templates still work when you ask for them by name.
