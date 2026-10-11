@@ -1,7 +1,23 @@
 {
   "name": "@litfamily/litgrok",
   "version": "1.0.16",
-  "description": "Grok Build skills, project rules, and hooks installer.",
+  "description": "Installer for LitGrok: skills, a project rule and hooks that help xAI Grok Build sessions plan, build, check and hand off their work.",
+  "keywords": [
+    "grok",
+    "grok-build",
+    "xai",
+    "coding-agent",
+    "ai-agents",
+    "agent-workflow",
+    "agent-skills",
+    "hooks",
+    "planning",
+    "code-review",
+    "research",
+    "context-handoff",
+    "korean",
+    "office-documents"
+  ],
   "type": "module",
   "bin": {
     "litgrok-ai": "bin/litgrok.mjs",
@@ -60,6 +76,7 @@
   },
   "license": "MIT",
   "author": "LitGrok contributors",
+  "homepage": "https://github.com/wjgoarxiv/litgrok#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/wjgoarxiv/litgrok.git"

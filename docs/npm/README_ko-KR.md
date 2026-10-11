@@ -3,9 +3,9 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-Grok Build에서 작은 결과물을 만들고, 확인한 내용과 다음 할 일을 프로젝트에 남기세요.
+xAI Grok Build에 스킬, 프로젝트 규칙, 훅을 더해 세션마다 계획하고, 만들고, 확인하고, 다음 세션이 이어받을 인수인계 문서를 남기게 합니다.
 
-**[GitHub에서 전체 안내와 스킬 갤러리 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference_ko-KR.md)
+**[GitHub에서 README 전체 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [안내서](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide_ko-KR.md) · [전체 스킬](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md) · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference_ko-KR.md)
 
 <p align="center">
 <a href="#30초-설치"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/badge-version.svg" alt="1.0.16" /></a>
@@ -14,7 +14,7 @@ Grok Build에서 작은 결과물을 만들고, 확인한 내용과 다음 할 �
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-LitGrok은 Grok Build 위에서 계획하고, 만들고, 확인하고, 다음 세션이 읽을 인수인계 문서를 남기는 흐름을 더합니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다.
+Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다.
 
 ## 30초 설치
 
@@ -35,7 +35,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 처음 입력해 볼 것
 
-프로젝트의 Git 루트에서 Grok Build를 열거나 다시 시작합니다. Grok은 신뢰한 프로젝트 훅만 실행하니, `/hooks-trust`에서 훅을 살펴보고 신뢰해 주세요. Grok Build 1.0.23에서는 `grok --trust inspect --json`으로도 같은 일을 할 수 있었습니다. Git이 없는 일반 폴더에서는 스킬과 규칙은 불러와도 훅은 잡히지 않을 수 있습니다. 그다음 이렇게 보내 보세요.
+프로젝트의 Git 루트에서 Grok Build를 열거나 다시 시작합니다. Grok은 신뢰한 프로젝트 훅만 실행하니, `/hooks-trust`에서 훅을 살펴보고 신뢰해 주세요. Grok Build 1.0.13에서는 `grok --trust inspect --json`으로도 같은 일을 할 수 있었습니다. Git이 없는 일반 폴더에서는 스킬과 규칙은 불러와도 훅은 잡히지 않을 수 있습니다. 그다음 이렇게 보내 보세요.
 
 ```text
 /litwork 외부 의존성 없이 index.html 하나로 할 일 목록을 만들어줘. 추가·완료·삭제 동작을 구현하고, 확인한 내용과 다음 할 일을 남겨줘. 브라우저를 자동으로 열지 말고 내가 확인할 순서를 알려줘.
@@ -66,7 +66,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 | `/review-work` | 변경 사항과 그 근거를 검토합니다. |
 | `/litresearch` | 출처를 따라갈 수 있는 범위 안에서 조사하고, 근거보다 크게 말하지 않습니다. |
 
-세션이 불러온 전체 목록은 `/skills`에서 보입니다. [GitHub의 스킬 갤러리](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md#스킬-한눈에-보기)에서는 38개 스킬을 결과 그림과 함께 볼 수 있습니다.
+세션이 불러온 전체 목록은 `/skills`에서 보입니다. [GitHub의 스킬 갤러리](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md)에서는 38개 스킬을 결과 그림과 함께 볼 수 있습니다.
 
 코드 밖의 일도 있습니다. `lit-pptx`는 발표자료를, `lit-docx`는 보고서와 Word 문서를 그 일에 맞게 고른 디자인 방향으로 만들고(답변에 다른 두 방향도 함께 알려 줍니다), `/frontend-ui-ux`는 화면을 만들어 확인하며, `/readme-studio`는 저장소 사실에 근거한 README를 씁니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 씁니다.
 
@@ -105,7 +105,9 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 
 ---
 
-**[GitHub에서 전체 안내, 스킬 갤러리, 문제 해결 보기 →](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)**
+**[GitHub에서 화면 캡처, 설치 옵션, 문제 해결 안내서 보기 →](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide_ko-KR.md)**
+
+LitGrok 덕분에 같은 설명을 덜 반복하게 됐다면, [GitHub 스타](https://github.com/wjgoarxiv/litgrok) 하나가 다른 Grok Build 사용자에게 이 프로젝트를 알리는 데 도움이 됩니다.
 
 [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/LICENSE)
 

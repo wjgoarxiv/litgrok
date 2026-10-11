@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { run } from '../bin/litgrok.mjs';
 import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
+import { installStatusLine, removeStatusLine } from '../bin/status-line-config.mjs';
 
 const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PRODUCT_ROOT = dirname(TEST_DIRECTORY);
@@ -28,6 +29,7 @@ function baseEnvironment(home) {
   const env = { ...process.env, HOME: home };
   delete env.CI;
   delete env.NO_COLOR;
+  delete env.COLUMNS;
   return env;
 }
 
@@ -56,10 +58,10 @@ function readHudRecords(stateRoot) {
   return entries.map((entry) => JSON.parse(readFileSync(join(stateRoot, entry), 'utf8')));
 }
 
-function runStatus({ home, stateRoot, cwd, env = {}, model = 'grok-4', percentage = 42 }) {
-  assert.ok(existsSync(STATUS_SCRIPT), 'the status-line command must be packaged');
-  const statusInput = { cwd, model: { display_name: model }, context_window: { used_percentage: percentage } };
-  return spawnSync(process.execPath, [STATUS_SCRIPT], {
+function runStatus({ home, stateRoot, cwd, env = {}, model = 'grok-4', percentage = 42, extra = {}, script = STATUS_SCRIPT }) {
+  assert.ok(existsSync(script), 'the status-line command must be packaged');
+  const statusInput = { cwd, model: { display_name: model }, context_window: { used_percentage: percentage }, ...extra };
+  return spawnSync(process.execPath, [script], {
     cwd,
     encoding: 'utf8',
     env: { ...baseEnvironment(home), LITGROK_HUD_STATE_ROOT: stateRoot, ...env },
@@ -147,11 +149,11 @@ test('HUD discipline follows bounded visible prompt tokens and clears code or no
     const records = readHudRecords(stateRoot);
     assert.ok(records.every((record) => record.discipline === discipline), `${prompt}: HUD records should be ${discipline}`);
 
-    const status = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0' } });
+    const status = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0', COLUMNS: '120' } });
     assert.equal(status.status, 0, `${prompt}: ${status.stderr}`);
     const expected = discipline
-      ? `🔥 LIT IGNITED · ${discipline} 🔥 │ grok-4 │ ctx 42%`
-      : 'LIT · grok │ grok-4 │ ctx 42%';
+      ? `[🔥LIT] 🔥 LIT IGNITED · ${discipline} 🔥 | grok-4 │ ctx [█▎░] 42%`
+      : '[🔥LIT] | grok-4 │ ctx [█▎░] 42%';
     assert.equal(stripVTControlCharacters(status.stdout).trim(), expected, prompt);
     assert.equal(status.stdout.includes('\u001b'), false, 'the plain HUD row emits zero escape bytes');
   }
@@ -185,33 +187,37 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
 
   const plain = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0' } });
   assert.equal(plain.status, 0, plain.stderr);
-  assert.equal(stripVTControlCharacters(plain.stdout).trim(), '🔥 LIT IGNITED · lit-plan 🔥 │ grok-4 │ ctx 42%');
+  assert.equal(stripVTControlCharacters(plain.stdout).trim(), '[🔥LIT] 🔥 LIT IGNITED · lit-plan 🔥 | grok-4 │ ctx [█▎░] 42%');
   assert.equal(plain.stdout.includes('\u001b'), false, 'LITGROK_HUD_COLOR=0 emits zero escape bytes');
 
   const otherWorkspace = join(root, 'other-workspace');
   mkdirSync(otherWorkspace);
   const idle = runStatus({ home, stateRoot, cwd: otherWorkspace, env: { LITGROK_HUD_COLOR: '0' } });
   assert.equal(idle.status, 0, idle.stderr);
-  assert.equal(stripVTControlCharacters(idle.stdout).trim(), 'LIT · grok │ grok-4 │ ctx 42%');
+  assert.equal(stripVTControlCharacters(idle.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42%');
   const coloredIdle = runStatus({ home, stateRoot, cwd: otherWorkspace });
   assert.equal(coloredIdle.status, 0, coloredIdle.stderr);
-  assert.equal(stripVTControlCharacters(coloredIdle.stdout).trim(), 'LIT · grok │ grok-4 │ ctx 42%');
-  assert.match(coloredIdle.stdout, /^\u001b\[1m\u001b\[38;2;255;99;55mLIT · grok/u, 'the cleared row keeps its orange ignition style');
+  assert.equal(stripVTControlCharacters(coloredIdle.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42%');
+  assert.match(coloredIdle.stdout, /^\u001b\[1m\u001b\[38;2;255;99;55m\[🔥LIT\]\u001b\[0m \| /u, 'the brand keeps its orange style');
 
   const colored = runStatus({ home, stateRoot, cwd: workspace });
   assert.equal(colored.status, 0, colored.stderr);
   const visible = stripVTControlCharacters(colored.stdout).trim();
   const label = 'LIT IGNITED · lit-plan';
   const coloredLine = colored.stdout.trimEnd();
-  assert.equal(visible, '🔥 LIT IGNITED · lit-plan 🔥 │ grok-4 │ ctx 42%');
-  assert.ok(coloredLine.startsWith('🔥 \u001b[1m\u001b[38;2;255;99;55mL'), 'color is enabled while stdout is a pipe');
-  assert.ok(coloredLine.includes('\u001b[38;2;0;229;255mn\u001b[0m 🔥 │'), 'the label ends at cyan before the unpainted flame');
-  assert.match(coloredLine, /\u001b\[0m \u001b\[1m\u001b\[38;2;\d+;\d+;\d+mI/u, 'the space after LIT is unpainted');
-  assert.match(coloredLine, /\u001b\[0m \u001b\[1m\u001b\[38;2;\d+;\d+;\d+ml/u, 'the space after the separator is unpainted');
-  const painted = [...coloredLine.matchAll(/\u001b\[1m\u001b\[38;2;(\d+;\d+;\d+)m(.)\u001b\[0m/gu)];
+  assert.equal(visible, '[🔥LIT] 🔥 LIT IGNITED · lit-plan 🔥 | grok-4 │ ctx [█▎░] 42%');
+  assert.ok(coloredLine.startsWith('\u001b[1m\u001b[38;2;255;99;55m[🔥LIT]\u001b[0m 🔥 \u001b[1m\u001b[38;2;255;99;55mL'), 'color is enabled while stdout is a pipe');
+  assert.ok(coloredLine.includes('\u001b[38;2;0;229;255mn\u001b[0m 🔥 |'), 'the label ends at cyan before the unpainted flame');
+  assert.match(coloredLine, /mT \u001b\[38;2;\d+;\d+;\d+mI/u, 'the space after LIT is unpainted');
+  assert.match(coloredLine, /m· \u001b\[38;2;\d+;\d+;\d+ml/u, 'the space after the separator is unpainted');
+  // Bold is set once for the label and each letter changes only the colour, which keeps the row under Grok's 1024-character cut.
+  const labelStart = coloredLine.indexOf('🔥 \u001b[1m') + '🔥 \u001b[1m'.length;
+  const labelText = coloredLine.slice(labelStart, coloredLine.indexOf('\u001b[0m', labelStart));
+  const painted = [...labelText.matchAll(/\u001b\[38;2;(\d+;\d+;\d+)m([^\u001b ])/gu)];
   assert.equal(painted.map((match) => match[2]).join(''), [...label].filter((character) => character !== ' ').join(''));
-  assert.ok(coloredLine.startsWith('🔥 '), 'the leading flame and space are unpainted');
-  const secondFlame = coloredLine.indexOf('🔥 │ ');
+  assert.equal(stripVTControlCharacters(labelText), label);
+  assert.ok(coloredLine.includes('\u001b[0m 🔥 \u001b'), 'the leading flame and space are unpainted');
+  const secondFlame = coloredLine.indexOf('🔥 | ');
   assert.notEqual(secondFlame, -1, 'the trailing flame remains present');
   assert.doesNotMatch(coloredLine.slice(secondFlame), /\u001b/u, 'the trailing flame and model/context segment are unpainted');
 
@@ -231,13 +237,42 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
   const clippedDiscipline = runStatus({ home, stateRoot, cwd: workspace });
   assert.equal(clippedDiscipline.status, 0, clippedDiscipline.stderr);
   assert.match(stripVTControlCharacters(clippedDiscipline.stdout), /🔥 LIT IGNITED · [^\n]*… 🔥/u);
-  assert.match(clippedDiscipline.stdout, /\u001b\[1m\u001b\[38;2;\d+;\d+;\d+m…\u001b\[0m/u, 'the clipped ellipsis is painted after plain-text clipping');
+  assert.match(clippedDiscipline.stdout, /\u001b\[38;2;\d+;\d+;\d+m…\u001b\[0m/u, 'the clipped ellipsis is painted after plain-text clipping');
 
-  const long = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12) });
+  const long = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), extra: { effort: { level: 'high' }, context_window: { used_percentage: 42, context_window_size: 256000 } } });
   assert.equal(long.status, 0, long.stderr);
   const bounded = stripVTControlCharacters(long.stdout).trim();
   assert.equal(bounded.split(/\r?\n/u).length, 1);
   assert.ok(bounded.length < 80, 'the row must be trimmed below 80 cells');
+  assert.match(bounded, /… \[high\] │ ctx \[█▎░\] 42%\/256k$/u, 'only the model name is clipped');
+  const wide = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), env: { COLUMNS: '200' } });
+  assert.ok(stripVTControlCharacters(wide.stdout).trim().length > 80, 'a wider row from Grok COLUMNS keeps more of the model');
+});
+
+test('status line keeps the compact layout: installed version, effort, window size, unknown context', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  // An installed copy finds its version in the install manifest beside its hooks folder.
+  const installed = join(root, 'installed', '.grok');
+  mkdirSync(join(installed, 'hooks'), { recursive: true });
+  for (const name of readdirSync(dirname(STATUS_SCRIPT))) {
+    if (name.endsWith('.mjs')) writeFileSync(join(installed, 'hooks', name), readFileSync(join(dirname(STATUS_SCRIPT), name)));
+  }
+  writeFileSync(join(installed, '.litgrok-install-manifest.json'), `${JSON.stringify({ schema: 'litgrok.install-manifest/v1', version: '9.8.7', files: {} })}\n`);
+  const script = join(installed, 'hooks', 'lit-status-line.mjs');
+  const row = (extra, percentage = 10) => {
+    const result = runStatus({ home, stateRoot, cwd: workspace, model: 'Grok 4.5', percentage, extra, script, env: { LITGROK_HUD_COLOR: '0' } });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trimEnd();
+  };
+  const window = { context_window: { used_percentage: 10, context_window_size: 2000000 } };
+  assert.equal(row({ effort: { level: 'high' }, ...window }), '[🔥LIT v9.8.7] | Grok 4.5 [high] │ ctx [▎░░] 10%/2m');
+  assert.equal(row({ context_window: { used_percentage: 10, context_window_size: 256000 } }), '[🔥LIT v9.8.7] | Grok 4.5 │ ctx [▎░░] 10%/256k');
+  assert.equal(row({ context_window: { context_window_size: 256000 } }), '[🔥LIT v9.8.7] | Grok 4.5 │ ctx ?/256k');
+  assert.equal(row({ context_window: {} }), '[🔥LIT v9.8.7] | Grok 4.5 │ ctx ?');
+  assert.equal(row({ effort: { level: '\u001b[31mhigh' }, ...window }), '[🔥LIT v9.8.7] | Grok 4.5 │ ctx [▎░░] 10%/2m', 'an odd effort value is not echoed');
+  writeFileSync(join(installed, '.litgrok-install-manifest.json'), '{"version":"\u001b[31m1"}\n');
+  assert.equal(row(window), '[🔥LIT] | Grok 4.5 │ ctx [▎░░] 10%/2m', 'an unreadable manifest drops the version');
 });
 
 test('user opt-in merges status line config and backs up the prior config', async (t) => {
@@ -351,4 +386,56 @@ test('uninstall removes only the managed status-line value and backs up the chan
   assert.match(remaining, /\[mcp\]\nservers = \[\]/u);
   assert.doesNotMatch(remaining, /litgrok-managed-status-line|\[ui\.status_line\]/u);
   assert.ok(statusBackups(home).some((name) => readFileSync(join(grokRoot, name), 'utf8') === beforeUninstall));
+});
+
+const CONFIG_SHAPES = {
+  'empty file': '',
+  'no final newline': 'a = 1',
+  'one final newline': 'a = 1\n',
+  'blank line at the end': 'a = 1\n\n',
+  'two blank lines at the end': 'a = 1\n\n\n',
+  'table without final newline': '[model]\nname = "grok-4"',
+  'CRLF lines': '[model]\r\nname = "grok-4"\r\n',
+  'comment only': '# local settings\n',
+  'ui table header': '[ui]\ntheme = "dark"\n',
+  'ui dotted keys': 'ui.theme = "dark"\n',
+  'ui inline table inside another table': '[tool]\nui = { theme = "dark" }\n',
+  'ui = text inside a multi-line string': 's = """\nui = 1\n[fake]\n"""\n',
+  'ui = text inside a multi-line literal string': "s = '''\nui = 1\n'''\n",
+};
+
+test('status-line install then remove restores the original config bytes for every shape', (t) => {
+  for (const [shape, original] of Object.entries(CONFIG_SHAPES)) {
+    const root = mkdtempSync(join(tmpdir(), 'litgrok-status-shape-'));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const config = join(root, 'config.toml');
+    writeFileSync(config, original);
+    assert.equal(installStatusLine(root).changed, true, `${shape}: installs`);
+    assert.match(readFileSync(config, 'utf8'), /\[ui\.status_line\]/u, shape);
+    assert.equal(removeStatusLine(root).changed, true, `${shape}: removes`);
+    assert.equal(readFileSync(config, 'utf8'), original, `${shape}: original bytes come back`);
+  }
+});
+
+test('status-line install fails closed when ui is already a value or an array of tables', (t) => {
+  for (const original of [
+    'ui = { theme = "dark" }\n',
+    '"ui" = { theme = "dark" }\n',
+    "ui = 'compact'\n",
+    '[[ui]]\ntheme = "dark"\n',
+    'a = [\n  [1, 2]\n]\nui = { theme = "x" }\n',
+    'a = [\n  "]",\n  [3],\n]\nui = 1\n',
+    's = """\n[fake]\n"""\nui = { theme = "x" }\n',
+    'm = { a = [\n1] }\n"ui" = 2\n',
+  ]) {
+    const root = mkdtempSync(join(tmpdir(), 'litgrok-status-conflict-'));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const config = join(root, 'config.toml');
+    writeFileSync(config, original);
+    const result = installStatusLine(root);
+    assert.equal(result.changed, false, original);
+    assert.match(result.detail, /not configured.*ui/u, original);
+    assert.equal(readFileSync(config, 'utf8'), original, 'the config is left untouched');
+    assert.equal(readdirSync(root).length, 1, 'no backup or temporary file is left behind');
+  }
 });

@@ -1,11 +1,29 @@
 // Read-only views of the pre-warmed motion cache. Nothing here installs, fetches or repairs: a
-// render only checks what `litgrok-ai motion-runtime install` wrote (MO-A-42/43).
+// render only checks what `litgrok motion-runtime install` wrote (MO-A-42/43).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { cacheRoot, lockHash, sha256, SKILL_ROOT } from './fonts.mjs';
 
-export const PREWARM_COMMAND = 'litgrok-ai motion-runtime install';
+// The pre-warm must come from the release that shipped this skill copy, or its lockfile digest differs.
+// An installed copy finds that release in the installer's ownership receipt next to skills/; the copy
+// inside the npm package finds it in the package manifest. Anything else falls back to latest.
+export function skillRelease() {
+  const grokRoot = dirname(dirname(SKILL_ROOT));
+  const sources = [
+    [join(grokRoot, '.litgrok-install-manifest.json'), (data) => data.schema === 'litgrok.install-manifest/v1'],
+    [join(dirname(grokRoot), 'package.json'), (data) => data.name === '@litfamily/litgrok'],
+  ];
+  for (const [file, matches] of sources) {
+    try {
+      const data = JSON.parse(readFileSync(file, 'utf8'));
+      if (matches(data) && /^\d+\.\d+\.\d+$/u.test(data.version)) return data.version;
+    } catch { /* absent or unreadable: try the next source */ }
+  }
+  return 'latest';
+}
+
+export const PREWARM_COMMAND = `npm exec --yes --package @litfamily/litgrok@${skillRelease()} -- litgrok motion-runtime install`;
 export const REQUIRED_DEPS = Object.freeze(['opentype.js', 'ws']);
 
 export function depsDir(env = process.env) { return join(cacheRoot(env), 'node'); }

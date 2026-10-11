@@ -117,7 +117,7 @@ Film context: this is a film request. Load `lit-typographic-motion` from `.grok/
 Film commands, run from the skill root:
 
 - `node scripts/motion.mjs` with `make`, `stage`, `sound`, `look`, `gate`, `verify` (each takes `--out <dir>`);
-- pre-warm outside the session: `litgrok-ai motion-runtime install`.
+- pre-warm outside the session: `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install`.
 
 ## Office output selection
 

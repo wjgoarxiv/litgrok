@@ -17,6 +17,9 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const skill = join(root, '.grok/skills/lit-typographic-motion');
 const motion = join(skill, 'scripts/motion.mjs');
 const bin = join(root, 'bin/litgrok.mjs');
+// The pre-warm must come from the same release as the skill copy, or the lockfile digest differs.
+const VERSION = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+const PINNED = `npm exec --yes --package @litfamily/litgrok@${VERSION.replaceAll('.', '\\.')} -- litgrok motion-runtime install`;
 const CHROME = resolveChrome(process.env);
 const NO_CHROME = CHROME ? false : 'Chrome/Chromium not found on this host; set CHROME_PATH to run the browser checks';
 const BANNER = /lit-typographic-motion \(LitGrok\) — film director: treatment first, then the type or stage path/;
@@ -74,7 +77,7 @@ async function warmCache() {
     await installDeps(env);
     warmed = { base, env };
   } catch (error) {
-    warmed = { skip: `npm cache lacks the pinned engine deps for an offline install (${error.message}); run litgrok-ai motion-runtime install once with network` };
+    warmed = { skip: `npm cache lacks the pinned engine deps for an offline install (${error.message}); run npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install once with network` };
   }
   return warmed;
 }
@@ -85,7 +88,7 @@ test('status on an empty cache prints the five probes and names every missing it
     const result = spawnSync(process.execPath, [bin, 'motion-runtime', 'status'], { encoding: 'utf8', env: { ...process.env, LITGROK_MOTION_CACHE: base } });
     assert.equal(result.status, 0, result.stderr);
     for (const probe of ['Chrome:', 'ffmpeg:', 'WebGL2 renderer:', 'Software GL:', 'Pre-warm:']) assert.match(result.stdout, new RegExp(`│ ${probe}`));
-    assert.match(result.stdout, /Pre-warm: MISSING deps opentype\.js, ws \(missing\); Galmuri9 \(missing\); MesloLGS NF \(missing\) — fix: litgrok-ai motion-runtime install/);
+    assert.match(result.stdout, new RegExp(`Pre-warm: MISSING deps opentype\\.js, ws \\(missing\\); Galmuri9 \\(missing\\); MesloLGS NF \\(missing\\) — fix: ${PINNED}`));
     assert.match(result.stdout, /Audio tier: venv absent/);
     assert.deepEqual(readdirSync(base), [], 'status never writes the cache');
   } finally { rmSync(base, { recursive: true, force: true }); }
@@ -116,7 +119,7 @@ test('an unwarmed cache exits 14 before any frame and writes nothing to the cach
   try {
     const result = cli(['make', '--brief', writeBrief(work), '--out', join(work, 'out')], { ...process.env, LITGROK_MOTION_CACHE: base, HTTPS_PROXY: 'http://127.0.0.1:9', npm_config_offline: 'true' });
     assert.equal(result.status, 14, result.stderr);
-    assert.match(result.stderr, /BLOCKED_DEPS_NOT_PREWARMED[^\n]*litgrok-ai motion-runtime install/);
+    assert.match(result.stderr, new RegExp(`BLOCKED_DEPS_NOT_PREWARMED[^\\n]*${PINNED}`));
     assert.deepEqual(readdirSync(base), []);
   } finally { rmSync(base, { recursive: true, force: true }); cleanup(work); }
 });
@@ -205,7 +208,7 @@ test('Tier 2: an absent or drifted venv falls back to Tier 1 with the warning; a
     const runRecord = (out) => JSON.parse(readFileSync(join(out, '.run', 'run.json'), 'utf8'));
     const absent = cli(['make', '--brief', brief, '--out', join(work, 'a'), '--stills-only'], cache.env);
     assert.equal(absent.status, 0, absent.stderr);
-    assert.match(absent.stderr, /audio analysis not prewarmed: run litgrok-ai motion-runtime install --audio/);
+    assert.match(absent.stderr, new RegExp(`audio analysis not prewarmed: run ${PINNED} --audio`));
     assert.equal(runRecord(join(work, 'a')).audioTier, 'text-reading-time');
 
     const site = join(venv, 'lib', 'python3.12', 'site-packages');
@@ -235,7 +238,7 @@ test('Tier 3: --word-timing without models exits 14; install states the pins and
     const env = { ...process.env, LITGROK_MOTION_CACHE: base, HTTPS_PROXY: 'http://127.0.0.1:9' };
     const render = cli(['make', '--brief', writeBrief(work), '--out', join(work, 'o'), '--word-timing'], env);
     assert.equal(render.status, 14, render.stderr);
-    assert.match(render.stderr, /litgrok-ai motion-runtime install --word-timing/);
+    assert.match(render.stderr, new RegExp(`${PINNED} --word-timing`));
     const install = spawnSync(process.execPath, [bin, 'motion-runtime', 'install', '--word-timing'], { encoding: 'utf8', env });
     assert.equal(install.status, 14);
     const statement = install.stdout.indexOf('word-timing models');
@@ -276,7 +279,7 @@ test('the installer stays copy-only offline and its receipt names the motion pre
   try {
     const result = await installInto(project, home, { HTTPS_PROXY: 'http://127.0.0.1:9', npm_config_offline: 'true' });
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with litgrok-ai motion-runtime install/);
+    assert.match(result.stdout, new RegExp(`Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with ${PINNED}$`, 'm'));
     assert.ok(existsSync(join(project, '.grok/skills/lit-typographic-motion/scripts/motion.mjs')));
     assert.equal(existsSync(join(home, '.cache', 'litgrok', 'motion-runtime')), false, 'install never pre-warms by itself');
   } finally { rmSync(home, { recursive: true, force: true }); rmSync(project, { recursive: true, force: true }); }
@@ -306,7 +309,7 @@ test('the installed rule names a command that resolves inside the installed skil
     }
     const runtime = spawnSync(process.execPath, [bin, 'motion-runtime', '--help'], { encoding: 'utf8' });
     assert.equal(runtime.status, 0);
-    assert.match(runtime.stdout, /Usage: litgrok-ai motion-runtime install\|status/);
+    assert.match(runtime.stdout, /Usage: litgrok motion-runtime install\|status/);
   } finally { rmSync(home, { recursive: true, force: true }); rmSync(project, { recursive: true, force: true }); }
 });
 
@@ -324,10 +327,10 @@ test('every CLI launched through a symlinked directory prints real output, never
     assert.match(bare.stdout, BANNER);
     const prewarm = run('linked-scripts/prewarm.mjs', ['--help']);
     assert.equal(prewarm.status, 0);
-    assert.match(prewarm.stdout, /Usage: litgrok-ai motion-runtime/);
+    assert.match(prewarm.stdout, /Usage: litgrok motion-runtime/);
     const installer = run('linked-bin/litgrok.mjs', ['motion-runtime', '--help']);
     assert.equal(installer.status, 0);
-    assert.match(installer.stdout, /Usage: litgrok-ai motion-runtime/);
+    assert.match(installer.stdout, /Usage: litgrok motion-runtime/);
     const beat = spawnSync('python3', [join(dir, 'linked-scripts/beat_grid.py')], { env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, encoding: 'utf8' });
     if (!beat.error) { assert.equal(beat.status, 2); assert.match(beat.stderr, /usage: beat_grid\.py/); }
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -448,3 +451,33 @@ test('type path: a short supplied WAV is muxed and padded with the librosa tier 
 });
 
 test.after(() => { if (warmed?.base) rmSync(warmed.base, { recursive: true, force: true }); });
+
+test('no user-facing text tells anyone to run the unpublished unscoped package', () => {
+  // The scoped package @litfamily/litgrok still carries a litgrok-ai bin alias, but a user who ran the
+  // installer through npm exec or npx has no such command on PATH, and the unscoped npm name is gone.
+  const roots = ['bin', '.grok', 'docs', 'hooks', 'README.md', 'README_ko-KR.md', 'AGENTS.md'];
+  const files = spawnSync('git', ['ls-files', '-co', '--exclude-standard', '--', ...roots], { cwd: root, encoding: 'utf8' }).stdout.split('\n').filter(Boolean)
+    .filter((file) => /\.(?:mjs|js|md|txt|json)$|THIRD_PARTY_NOTICES$/u.test(file) && existsSync(join(root, file)));
+  assert.ok(files.length > 100, 'scanned the product text');
+  const offenders = [];
+  for (const file of files) {
+    readFileSync(join(root, file), 'utf8').split('\n').forEach((line, index) => {
+      if (/\blitgrok-ai (?:motion-runtime|install)\b/u.test(line)) offenders.push(`${file}:${index + 1}`);
+    });
+  }
+  assert.deepEqual(offenders, []);
+});
+
+test('an installed skill copy names the pre-warm of the release that installed it', async () => {
+  const home = scratch('pinned-home');
+  const project = scratch('pinned-project');
+  const base = scratch('pinned-cache');
+  try {
+    assert.equal((await installInto(project, home)).code, 0);
+    const prewarm = join(project, '.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
+    const status = spawnSync(process.execPath, [prewarm, 'status'], { encoding: 'utf8', cwd: project, env: { ...process.env, LITGROK_MOTION_CACHE: base } });
+    assert.equal(status.status, 0, status.stderr);
+    assert.match(status.stdout, new RegExp(`fix: ${PINNED}`));
+    assert.doesNotMatch(status.stdout, /@latest/);
+  } finally { for (const dir of [home, project, base]) rmSync(dir, { recursive: true, force: true }); }
+});

@@ -1,5 +1,5 @@
 # lit-typographic-motion Tier 2 (librosa beat grid, ISC). Installed only by
-# litgrok-ai motion-runtime install --audio with pip --require-hashes --only-binary=:all:.
+# npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --audio with pip --require-hashes --only-binary=:all:.
 # Regenerate: uv pip compile (librosa==0.11.0) --universal --generate-hashes --only-binary :all: --python-version 3.12
 audioop-lts==0.2.2 ; python_full_version >= '3.13' \
     --hash=sha256:0337d658f9b81f4cd0fdb1f47635070cc084871a3d4646d9de74fdf4e7c3d24a \

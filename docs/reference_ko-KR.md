@@ -40,7 +40,7 @@ flowchart TD
 - `.grok/rules/00-litgrok.md` project rule
 - 설치된 payload를 짧게 알리는 `SessionStart` hook
 - reader-facing write의 hedge 표현을 차단하되 quoted state enum, JSON/YAML scalar, fenced code, status table은 제외하는 `PreToolUse` hook. Host는 명시적인 deny와 exit 2만 차단으로 처리합니다. exit 0은 허용이고 timeout, crash, malformed output은 fail-open이므로 write가 진행됩니다.
-- `.grok/litgrok/session-ledger/`에 bounded package-owned record만 추가하는 `UserPromptSubmit`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `SubagentStart`, `SubagentStop`, `PreCompact`, `PostCompact` hook. stdout을 출력하지 않으며 문서화되지 않은 event field 접근을 주장하지 않습니다.
+- `.grok/litgrok/session-ledger/`에 bounded package-owned record만 추가하는 `UserPromptSubmit`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `SubagentStart`, `SubagentStop`, `PreCompact`, `PostCompact` hook. stdout을 출력하지 않으며 문서화되지 않은 event field 접근을 주장하지 않습니다. 기록할 때마다 ledger의 첫 record로만 이 세션의 identity를 확인하고, 끊긴 마지막 줄은 건너뛸 수 있게 닫으며, 8 MiB를 넘은 ledger는 `<key>.<n>.jsonl`로 옮긴 뒤 새로 시작하고, segment는 최근 두 개만 남깁니다. 한 번에 한 hook만 옮기며, Stop gate는 가장 최근 segment와 현재 ledger를 함께 읽습니다. 첫 record가 다른 세션의 것인 큰 ledger는 옮기지 않고 거부합니다. LitGrok이 `.grok/litgrok/`에 처음 쓸 때 `*` 한 줄짜리 `.gitignore`도 만듭니다.
 - package의 `.grok/` tree 전체를 user 또는 project 경로에 복사하는 dependency-free `npx` installer
 - Grok Build가 지원하는 plugin manifest 형식의 root-level `plugin.json`을 제공합니다. `grok plugin validate`가 이를 검증하고 `.grok/skills`, `.grok/agents`, hook manifest를 가리킵니다. `.grok/agents/` 아래 Grok-native agent 11개와 hook/rule을 함께 제공합니다.
 - Marketplace listing, MCP server config, plugin-supplied LSP server config, command catalog, output style, TUI/skin surface는 여전히 제공하지 않습니다.
@@ -94,6 +94,14 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user
 
 `--user`는 `~/.grok/skills`, `~/.grok/rules`, `~/.grok/hooks`를 대상으로 합니다. dry-run, `--no-color`, `NO_COLOR`, `CI`는 `--yes`와 무관하게 파일을 바꾸지 않습니다. 환경 변수 값이 비어 있어도 적용됩니다. `--yes` 없이 실행한 non-interactive 역시 파일을 바꾸지 않는 미리보기이며, `--yes`를 쓰면 위 조건이 없는 한 TTY 없이도 설치가 진행됩니다. installer는 `.grok/.litgrok-install-manifest.json`에 SHA-256 소유권을 기록합니다. byte가 같은 파일은 다시 쓰지 않고, 이전 payload hash와 일치하는 installer 소유 파일은 업그레이드에서 교체할 수 있습니다. 사용자가 바꿨거나 소유권을 확인할 수 없는 파일이 있으면 전체 설치를 거절하고 덮어쓰지 않습니다. manifest가 없을 때 0.2.5의 pristine payload는 내장 migration snapshot으로 인식하며 업그레이드 뒤 새 manifest를 기록합니다.
 
+### 업데이트 확인
+
+```bash
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
+```
+
+`doctor`는 읽기만 합니다. 패키지 버전을 출력하고, npm 레지스트리에 최신 안정 `@litfamily/litgrok` 버전을 최대 3초 동안 물어봅니다. 더 새 버전이 있으면 `newer version available: <version> (run: npm exec --yes --package @litfamily/litgrok@latest -- litgrok install)` 한 줄을 더합니다. 최신이면 아무것도 더하지 않고, 레지스트리에 닿지 못하면 `update check unavailable` 한 줄만 출력합니다. 설치하거나 파일을 쓰지 않습니다. `NO_UPDATE_NOTIFIER`, `CI`, `LITGROK_NO_UPDATE_CHECK` 중 하나가 있으면(값이 비어 있어도) 레지스트리에 묻지 않습니다.
+
 ### 지속 상태 행 (선택)
 
 상태 행은 사용자 또는 관리자 설정에서만 구성합니다. Grok은 project config나 plugin에서 `[ui.status_line]`을 읽지 않습니다 ([상태 행 문서](https://docs.x.ai/build/features/status-line), [설정 참조](https://docs.x.ai/build/settings/reference)). 사용자 범위 설치와 함께 사용하려면 다음 명령을 실행합니다.
@@ -113,11 +121,13 @@ refresh_interval = 2
 
 기존 config를 바꾸기 전 `config.toml.litgrok-backup-<id>`로 백업합니다. 이미 `ui.status_line` 값이 있으면 파일을 변경하지 않습니다. 사용자 범위 제거는 현재 config를 백업하고 LitGrok이 쓴 그대로인 값만 삭제하며 사용자 수정과 다른 설정을 보존합니다. 이 옵션은 project 설치에서 거부되고 기본값은 꺼져 있으며, 열두 번째 hook 등록을 추가하지 않습니다.
 
-상태 command는 Grok의 stdin 상태 JSON을 읽고 `🔥 LIT IGNITED · lit-plan 🔥 │ grok-4 │ ctx 42%` 또는 `LIT · grok │ grok-4 │ ctx 42%` 한 줄을 출력합니다. 본문에서 inline 또는 fenced Markdown code를 제외한 뒤 `lit-scientific-visualization`, `lit-handoff`, `autoconference`, `autoresearch`, `lit-plan`, `litwork` 중 처음 일치한 항목이 규율을 정하고, 단독 `lit`은 `litwork`로 표시합니다. 색상을 사용하면 활성 `LIT IGNITED · <discipline>` label에 굵은 문자별 truecolor gradient(`#FF6337 → #FF2D95 → #00E5FF`)를 적용하고 불꽃 emoji와 model/context 구간은 색칠하지 않습니다. Grok 실행 환경에서 `LITGROK_HUD_COLOR=0` 또는 빈 값을 포함한 `NO_COLOR`를 설정하면 escape byte가 없는 plain 행을 사용합니다. Grok은 passive hook stdout을 무시하므로 `UserPromptSubmit` hook이 부수 효과로 현재 기록을 씁니다. JSON은 hashed session/cwd key를 사용해 `${TMPDIR:-os.tmpdir()}/litgrok-hud/` 아래, repository와 home 밖에 저장합니다. `LITGROK_HUD_STATE_ROOT`로 경로를 바꿀 수 있지만 repository와 home 내부는 허용되지 않습니다. 다음 prompt가 활성 규율과 일치하지 않으면 null 규율을 써서 mark를 지웁니다. 상태 command에는 문서화된 session ID가 없으므로 cwd로 기록합니다. hook에 session ID가 없을 때 기본 기록 key는 workspace가 됩니다. 갱신은 2초 timer 기반이라 prompt 뒤 최대 2초 늦게 표시될 수 있습니다. Grok 문서에는 상태 행의 ANSI 지원이 적혀 있지 않지만, Grok Build 1.0.13에서 truecolor, 굵은 글씨, emoji가 표시되는 것을 확인했습니다.
+상태 command는 Grok의 stdin 상태 JSON을 읽고 `[🔥LIT vX.Y.Z] 🔥 LIT IGNITED · lit-plan 🔥 | Grok 4.5 [high] │ ctx [█▎░] 42%/2m` 또는 `[🔥LIT vX.Y.Z] | Grok 4.5 [high] │ ctx [█▎░] 42%/2m` 같은 행을 출력합니다. 버전은 hooks 폴더 옆 설치 manifest에서, 괄호 값은 Grok의 `effort.level`에서, 빗금 뒤 크기는 `context_window.context_window_size`에서 읽고, 모르는 값은 뺍니다. 모르는 비율은 `ctx ?`로 표시합니다. Grok은 `COLUMNS`를 행 너비로 넘기며, 좁으면 모델 이름을 먼저, 스킬 이름을 그다음에 줄입니다. `COLUMNS`가 없으면 79칸에 맞춥니다. 본문에서 inline 또는 fenced Markdown code를 제외한 뒤 `lit-scientific-visualization`, `lit-handoff`, `autoconference`, `autoresearch`, `lit-plan`, `litwork` 중 처음 일치한 항목이 규율을 정하고, 단독 `lit`은 `litwork`로 표시합니다. 색상을 사용하면 활성 `LIT IGNITED · <discipline>` label에 굵은 문자별 truecolor gradient(`#FF6337 → #FF2D95 → #00E5FF`)를 적용하고 `[🔥LIT vX.Y.Z]` 브랜드는 굵은 주황색이고, 불꽃 emoji와 model/context 구간은 색칠하지 않습니다. Grok 실행 환경에서 `LITGROK_HUD_COLOR=0` 또는 빈 값을 포함한 `NO_COLOR`를 설정하면 escape byte가 없는 plain 행을 사용합니다. Grok은 passive hook stdout을 무시하므로 `UserPromptSubmit` hook이 부수 효과로 현재 기록을 씁니다. JSON은 hashed session/cwd key를 사용해 `${TMPDIR:-os.tmpdir()}/litgrok-hud/` 아래, repository와 home 밖에 저장합니다. `LITGROK_HUD_STATE_ROOT`로 경로를 바꿀 수 있지만 repository와 home 내부는 허용되지 않습니다. 다음 prompt가 활성 규율과 일치하지 않으면 null 규율을 써서 mark를 지웁니다. 행은 이 기록을 cwd로 찾습니다. hook에 session ID가 없을 때 기본 기록 key는 workspace가 됩니다. 갱신은 2초 timer 기반이라 prompt 뒤 최대 2초 늦게 표시될 수 있습니다. Grok 문서에는 상태 행의 ANSI 지원이 적혀 있지 않지만, Grok Build 1.0.13에서 truecolor, 굵은 글씨, emoji가 표시되는 것을 확인했습니다.
+
+스킬이 동작 중이면 행 아래에 `🔥 LIT  ● litwork  1m42s · 3 tools · 1 agent` 같은 리본 한 줄이 더 붙을 수 있습니다. Grok은 상태 command 출력을 다섯 줄까지 보여 주고 줄마다 escape를 포함해 1024자에서 자르는데, 여기서 나오는 줄은 모두 그보다 짧습니다. 리본은 턴이 도는 동안, 턴이 끝난 뒤 20초 동안, 그리고 경고가 있을 때 나타나고, 그 밖에는 빠져서 행이 다시 한 줄이 됩니다. 타이머는 Grok의 `turn.started_at_ms`부터 지난 시간입니다. 도구 호출 수(`PostToolUse`와 `PostToolUseFailure`)와 아직 도는 하위 에이전트 수(`SubagentStart`에서 `SubagentStop`을 뺀 값)는 session ledger의 현재 턴에서 셉니다. ledger는 Grok의 `session_id`로 `workspace.repo_root`, `workspace.current_dir`, `cwd` 아래에서 찾고, 파일의 마지막 128 KiB만 읽으며 symbolic link는 읽지 않습니다. session id나 ledger, 그 턴의 `UserPromptSubmit` 기록이 없으면 두 수를 모두 뺍니다. 턴의 마지막 기록이 plan gate block이나 핸드오프 지시로 붙잡히지 않은 `Stop`이면 턴이 끝난 것으로 보고, 리본은 ledger 시각으로 잰 `✓ litwork  complete · 3m05s · 3 tools`로 바뀝니다. 경고가 있으면 스킬 칸이 주황으로 바뀌고 경고 하나를 보여 줍니다. 이번 턴의 plan gate block(`plan gate: save plans/<slug>.md`), 이번 턴의 핸드오프 지시(`handoff requested`), 자동 핸드오프가 켜져 있을 때 퍼센트까지 10포인트 이내로 다가온 컨텍스트(`ctx 76% → handoff at 80%`)나 퍼센트에 닿은 컨텍스트(`ctx 85% ≥ handoff at 80%`)가 그 경고입니다. `COLUMNS`가 좁으면 도구 호출 수, 하위 에이전트 수, 타이머, 긴 경고 문구, 경고, 브랜드 이름 순으로 빼고 마지막에 스킬 이름을 줄입니다. 한글 같은 넓은 문자는 두 칸으로 셉니다. 칸은 기본적으로 색 블록이고, `LITGROK_HUD_GLYPHS=nerd`를 설정하면 Nerd Font의 둥근 끝과 아이콘을 씁니다. 색이 없으면 `(🔥 LIT) (● litwork)`처럼 괄호로 표시합니다. `LITGROK_HUD_COLOR=256` 또는 `16`은 두 줄의 모든 색을 가장 가까운 256색이나 16색으로 바꾸고, `LITGROK_HUD_LINES=1`은 행을 한 줄로 유지합니다.
 
 ### 자동 핸드오프 (선택)
 
-자동 핸드오프는 컨텍스트가 사용자가 정한 퍼센트에 닿으면 모델에게 핸드오프를 요청합니다. 기본값은 꺼짐이고 내장 퍼센트는 없습니다. 프로젝트 루트에서 `litgrok auto-handoff on <percent>`(1~99 정수), `on`만 쓰기(마지막 퍼센트를 다시 쓰고 없으면 묻습니다), `off`(퍼센트는 기억), `status`로 관리하며, 설정은 바꾸기 전까지 `.grok/litgrok/auto-handoff.json`에 `{ "enabled": false, "percent": null }`로 있습니다. `LITGROK_AUTO_HANDOFF=1|0`과 `LITGROK_AUTO_HANDOFF_PERCENT`는 그 환경에서 시작한 세션의 파일 설정보다 우선하고, 잘못된 값은 꺼짐으로 처리하며 `status`가 경고를 출력합니다.
+자동 핸드오프는 컨텍스트가 사용자가 정한 퍼센트에 닿으면 모델에게 핸드오프를 요청합니다. 기본값은 꺼짐이고 내장 퍼센트는 없습니다. `litgrok auto-handoff on <percent>`(1~99 정수), `on`만 쓰기(마지막 퍼센트를 다시 쓰고 없으면 묻습니다), `off`(퍼센트는 기억), `status`로 관리합니다. 어느 하위 폴더에서 실행해도 가장 가까운 Git 루트를 찾아 그 파일을 쓰고 경로를 출력합니다. 훅은 Grok Build가 알려 주는 작업 루트(보통 Grok Build를 시작한 폴더)의 파일을 읽으므로, 위쪽에 다른 프로젝트 루트가 있거나, Git 루트가 없거나(그 폴더 하나에만 적용), Git 루트가 홈 폴더이면 명령이 안내 문구를 덧붙이며, 설정은 바꾸기 전까지 `.grok/litgrok/auto-handoff.json`에 `{ "enabled": false, "percent": null }`로 있습니다. `LITGROK_AUTO_HANDOFF=1|0`과 `LITGROK_AUTO_HANDOFF_PERCENT`는 그 환경에서 시작한 세션의 파일 설정보다 우선하고, 잘못된 값은 꺼짐으로 처리하며 `status`가 경고를 출력합니다.
 
 Grok Build는 훅에 컨텍스트 사용량을 달리 알려 주지 않으므로 이 기능은 위의 상태 행에 의존합니다. 켜져 있는 동안 상태 command는 `context_window.used_percentage`와 `context_window.auto_compact_threshold_percent`(Grok이 모르면 생략하고, 생략된 값은 기록하지 않습니다)를 같은 임시 `litgrok-hud` 루트의 세션별 기록 `context-<hash>.json`에 씁니다. 이 기록은 상태 command가 실행될 때마다 갱신되고, 10분이 지났거나 다른 세션의 것이면 무시합니다. `Stop` 훅(문서화된 결정 제어이며 subagent, 세션 종료 fire, `stopHookActive`일 때는 건너뜁니다)이 이 기록을 읽습니다. 퍼센트 이상인 첫 턴 종료에서 세션 ledger에 `auto-handoff-directive` 항목을 덧붙이고, 모델에게 패키지의 `lit-handoff` 절차 파일을 읽으라는 block 사유를 돌려줍니다. 사유는 "Context for Continuation" 아래에 `litgrok-auto-handoff: <세션 id의 해시>` 줄을 넣고 "Handoff saved. Run /compact now." 한 줄을 남기라고 요청합니다. 이 항목 덕분에 지시는 한 번 넘을 때마다 한 번만 나가며, 그 뒤의 압축이나 다른 퍼센트가 다음 넘김을 준비시킵니다.
 
@@ -138,7 +148,7 @@ non-TTY stream에서는 색상 없이 같은 줄을 출력합니다.
   ╰─ Grok Build owns model and effort; the installer writes no model keys
 ```
 
-Project hook은 신뢰한 project와 Git repository root가 모두 있어야 실행됩니다. 일반 폴더에서는 skill과 rule이 로드되어도 Grok Build가 project root를 찾지 못해 hook이 0개로 남을 수 있습니다. 새 disposable project라면 trust 전에 사용자가 `git init`을 실행하고, 기존 저장소라면 실제 root에서 Grok Build를 여세요. LitGrok은 `git init`을 실행하거나 trust를 바꾸지 않습니다. Grok Build에서 `/hooks-trust`를 사용하세요. 관찰된 Grok Build 1.0.23에서는 `grok --trust inspect --json`도 동작했지만 `--help`에는 global option이 표시되지 않았습니다. 이 명령 동작은 해당 버전에서 확인한 것입니다. 결정은 `~/.grok/trusted_folders.toml`에 저장됩니다. Installer는 project install과 preview에서 이 요구사항을 출력합니다.
+Project hook은 신뢰한 project와 Git repository root가 모두 있어야 실행됩니다. 일반 폴더에서는 skill과 rule이 로드되어도 Grok Build가 project root를 찾지 못해 hook이 0개로 남을 수 있습니다. 새 disposable project라면 trust 전에 사용자가 `git init`을 실행하고, 기존 저장소라면 실제 root에서 Grok Build를 여세요. LitGrok은 `git init`을 실행하거나 trust를 바꾸지 않습니다. Grok Build에서 `/hooks-trust`를 사용하세요. 관찰된 Grok Build 1.0.13에서는 `grok --trust inspect --json`도 동작했지만 `--help`에는 global option이 표시되지 않았습니다. 이 명령 동작은 해당 버전에서 확인한 것입니다. 결정은 `~/.grok/trusted_folders.toml`에 저장됩니다. Installer는 project install과 preview에서 이 요구사항을 출력합니다.
 
 패키지 원본과 여전히 같은 파일만 삭제합니다.
 
@@ -271,11 +281,11 @@ MIT. [LICENSE](../LICENSE)를 보세요.
 
 ## npm package migration
 
-`@litfamily/litgrok`은 기존 npm 이름 `litgrok-ai`를 대체할 미공개 scoped 후보입니다. 위 명령은 출시 예정 경로이며 공개 가용성을 증명하지 않습니다. 실행 별칭 `litgrok`·`litgrok-ai`, plugin 이름 `litgrok`, `.grok` 경로와 `litgrok.install-manifest/v1` 스키마는 유지합니다. 영수증의 `package: "litgrok-ai"`는 레지스트리 이름이 아닌 기존 소유권 식별자입니다.
+`@litfamily/litgrok`은 기존 npm 이름 `litgrok-ai`를 대체하는 scoped npm 이름입니다. 실행 별칭 `litgrok`·`litgrok-ai`, plugin 이름 `litgrok`, `.grok` 경로와 `litgrok.install-manifest/v1` 스키마는 유지합니다. 영수증의 `package: "litgrok-ai"`는 레지스트리 이름이 아닌 기존 소유권 식별자입니다.
 
 기존 설치가 있는 같은 프로젝트에서 위 scoped `install --dry-run` 명령을 실행하세요. 사용자 범위였다면 동일하게 `--user`를 붙입니다. 경로를 검토한 뒤 대화형 터미널에서 `install`을 실행합니다. 먼저 삭제하거나 기존 소유권 영수증을 지울 필요가 없습니다. 소유권이 확인된 파일은 갱신하고, 재실행 시 같은 파일은 유지합니다. 수정·외부 파일, 위조한 소유자 또는 심볼릭 링크가 있으면 쓰기 전에 거부합니다. 수정 파일은 직접 백업하고 조정하세요. 업그레이드를 강제하려고 영수증을 지우지 마세요. 제거도 같은 범위를 사용하며 관련 없는 설정과 생성된 세션 상태는 보존합니다.
 
-로컬 후보는 `npm exec --yes --package /absolute/path/to/candidate.tgz -- litgrok install`로 확인할 수 있습니다. 격리된 같은 범위에 보존한 기존 이름 tarball을 먼저 설치하고 scoped tarball을 적용하세요. 이는 로컬 이전 검증이며 공개 설치나 인증된 호스트 검증이 아닙니다. `CI`, `NO_COLOR`, `--no-color`, `--dry-run`은 `--yes`가 있어도 쓰지 않는 미리보기입니다. `--yes` 없이 실행한 비대화형 실행 역시 미리보기이며, `--yes`를 쓰면 위 조건이 없는 한 TTY 없이도 진행됩니다. 일회성 npm 실행은 기존 전역 설치 별칭을 자동 교체하지 않습니다.
+로컬 패키지 파일은 `npm exec --yes --package /absolute/path/to/package.tgz -- litgrok install`로 확인할 수 있습니다. 격리된 같은 범위에 보존한 기존 이름 tarball을 먼저 설치하고 scoped tarball을 적용하세요. 이는 로컬 이전 검증이며 공개 설치나 인증된 호스트 검증이 아닙니다. `CI`, `NO_COLOR`, `--no-color`, `--dry-run`은 `--yes`가 있어도 쓰지 않는 미리보기입니다. `--yes` 없이 실행한 비대화형 실행 역시 미리보기이며, `--yes`를 쓰면 위 조건이 없는 한 TTY 없이도 진행됩니다. 일회성 npm 실행은 기존 전역 설치 별칭을 자동 교체하지 않습니다.
 
 [개인정보와 로컬 데이터](./privacy.md), [지원](../SUPPORT.md), [기여 안내](../CONTRIBUTING.md)를 참고하세요. README에는 명시적인 도형과 윤곽선으로 변환한 글리프로 구성한 Ignition SVG 표지를 사용합니다. 맞물리는 심벌과 주황·라임·ivory 색상은 터미널 mark와 일치합니다. WebP 대체 이미지는 같은 벡터 원본에서 렌더링했으며, 현재 원본 제작에는 이미지 생성을 사용하지 않습니다. 설치 명령은 문서 본문에서 관리합니다.
 

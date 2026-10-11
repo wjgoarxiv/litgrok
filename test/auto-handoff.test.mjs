@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -35,11 +35,11 @@ function environment(sb, extra = {}) {
   return { ...env, ...extra };
 }
 
-async function cli(sb, args, extraEnv = {}) {
+async function cli(sb, args, extraEnv = {}, cwd = sb.workspace) {
   let stdout = '';
   let stderr = '';
   const code = await run(['auto-handoff', ...args], {
-    cwd: sb.workspace,
+    cwd,
     env: environment(sb, extraEnv),
     stdin: { isTTY: false },
     stdout: { isTTY: false, write(value) { stdout += String(value); return true; } },
@@ -278,7 +278,7 @@ test('the status line records the context percent only while active, and only wh
   assert.deepEqual(contextFiles(sb), [], 'an unknown percent is never guessed');
 
   const row = statusLine(sb, { percent: 42, threshold: 85 });
-  assert.match(row.stdout, /ctx 42%/u, 'the row itself is unchanged');
+  assert.match(row.stdout, /ctx \[[^\]]+\] 42%/u, 'the row itself is unchanged');
   const files = contextFiles(sb);
   assert.equal(files.length, 1);
   const record = JSON.parse(readFileSync(join(sb.stateRoot, files[0]), 'utf8'));
@@ -587,4 +587,91 @@ test('the marker is a stable digest of the session id, not the id itself', async
   const key = createHash('sha256').update(SESSION).digest('hex').slice(0, 32);
   assert.equal(gate.handoffMarker(SESSION), `litgrok-auto-handoff: ${key}`);
   assert.equal(gate.handoffMarker(SESSION).includes(SESSION), false);
+});
+
+test('the command run from a subfolder manages the file at the Git project root and names it', async (t) => {
+  const sb = sandbox(t);
+  mkdirSync(join(sb.workspace, '.git'));
+  const deep = join(sb.workspace, 'src', 'deep');
+  mkdirSync(deep, { recursive: true });
+
+  const on = await cli(sb, ['on', '60'], {}, deep);
+  assert.equal(on.code, 0, on.stderr);
+  assert.deepEqual(readConfig(sb), { enabled: true, percent: 60 }, 'the file lands where the Stop hook looks');
+  assert.equal(existsSync(join(deep, '.grok')), false, 'nothing is written under the subfolder');
+  assert.ok(on.stdout.includes(configPath(sb)), 'the command prints the file it saved');
+
+  const status = await cli(sb, ['status']);
+  assert.match(status.stdout, /ON at 60 percent/u);
+  assert.ok(status.stdout.includes(configPath(sb)));
+  const fromDeep = await cli(sb, ['status'], {}, deep);
+  assert.match(fromDeep.stdout, /ON at 60 percent/u);
+
+  const off = await cli(sb, ['off'], {}, deep);
+  assert.equal(off.code, 0, off.stderr);
+  assert.deepEqual(readConfig(sb), { enabled: false, percent: 60 });
+});
+
+test('the saved setting sits in a state folder that ignores itself in Git', async (t) => {
+  const sb = sandbox(t);
+  await armed(sb, 60);
+  assert.equal(readFileSync(join(sb.workspace, '.grok', 'litgrok', '.gitignore'), 'utf8'), '*\n');
+  assert.equal(existsSync(join(sb.workspace, '.grok', '.gitignore')), false);
+});
+
+test('a single Git project gets no root note', async (t) => {
+  const sb = sandbox(t);
+  mkdirSync(join(sb.workspace, '.git'));
+  const on = await cli(sb, ['on', '60']);
+  assert.equal(on.code, 0, on.stderr);
+  assert.doesNotMatch(on.stdout, /Note:/u);
+});
+
+test('a nested repository names both roots and says how to choose', async (t) => {
+  const sb = sandbox(t);
+  const outer = realpathSync(sb.workspace);
+  const inner = join(outer, 'inner');
+  mkdirSync(join(outer, '.git'));
+  mkdirSync(join(inner, '.git'), { recursive: true });
+  mkdirSync(join(inner, 'src'));
+  const on = await cli(sb, ['on', '60'], {}, join(inner, 'src'));
+  assert.equal(on.code, 0, on.stderr);
+  assert.ok(existsSync(join(inner, '.grok', 'litgrok', 'auto-handoff.json')));
+  assert.match(on.stdout, /Note:/u);
+  assert.ok(on.stdout.includes(inner) && on.stdout.includes(join(outer, '.grok', 'litgrok', 'auto-handoff.json')), on.stdout);
+  assert.match(on.stdout, /folder where you start Grok Build/u);
+  const status = await cli(sb, ['status'], {}, join(inner, 'src'));
+  assert.match(status.stdout, /Note:/u);
+
+  // A state folder above a Git root counts too.
+  const sb2 = sandbox(t);
+  const top = realpathSync(sb2.workspace);
+  mkdirSync(join(top, '.grok', 'litgrok'), { recursive: true });
+  mkdirSync(join(top, 'repo', '.git'), { recursive: true });
+  const second = await cli(sb2, ['on', '50'], {}, join(top, 'repo'));
+  assert.match(second.stdout, /Note:/u);
+  assert.ok(second.stdout.includes(join(top, '.grok', 'litgrok', 'auto-handoff.json')), second.stdout);
+});
+
+test('outside Git the setting is per folder and the command says so', async (t) => {
+  const sb = sandbox(t);
+  const folder = join(realpathSync(sb.workspace), 'a', 'b');
+  mkdirSync(folder, { recursive: true });
+  const on = await cli(sb, ['on', '60'], {}, folder);
+  assert.equal(on.code, 0, on.stderr);
+  assert.ok(existsSync(join(folder, '.grok', 'litgrok', 'auto-handoff.json')));
+  assert.match(on.stdout, /Note: no Git root/u);
+  assert.ok(on.stdout.includes(folder));
+  assert.match(on.stdout, /only when Grok Build starts in that folder/u);
+});
+
+test('a home folder that is a Git repository is named, never used silently', async (t) => {
+  const sb = sandbox(t);
+  mkdirSync(join(sb.home, '.git'));
+  const notes = join(sb.home, 'notes', 'x');
+  mkdirSync(notes, { recursive: true });
+  const on = await cli(sb, ['on', '60'], {}, notes);
+  assert.equal(on.code, 0, on.stderr);
+  assert.match(on.stdout, /Note: the Git root here is your home folder/u);
+  assert.ok(on.stdout.includes(realpathSync(sb.home)) || on.stdout.includes(sb.home), on.stdout);
 });

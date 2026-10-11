@@ -3,9 +3,9 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-Make something useful in Grok Build. Leave the checked result and the next step with your project.
+Skills, a project rule and hooks for xAI's Grok Build that help every session plan the change, build it, check it, and leave a handoff the next session can pick up.
 
-**[Full guide and skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference.md)
+**[Full README on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [Guide](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide.md) · [All skills](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference.md)
 
 <p align="center">
 <a href="#install-in-30-seconds"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/badge-version.svg" alt="1.0.16" /></a>
@@ -14,7 +14,7 @@ Make something useful in Grok Build. Leave the checked result and the next step 
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-LitGrok gives Grok Build a way of working: plan the change, build it, check it, and leave a handoff the next session can read. It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model.
+Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model.
 
 ## Install in 30 seconds
 
@@ -35,7 +35,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## The first thing to type
 
-Open (or restart) Grok Build from the project's Git root. Grok runs project hooks only after you trust them, so review and trust them in `/hooks-trust`; on Grok Build 1.0.23, `grok --trust inspect --json` did the same. In a plain folder without Git, the skills and rules load but the hooks stay off. Then send:
+Open (or restart) Grok Build from the project's Git root. Grok runs project hooks only after you trust them, so review and trust them in `/hooks-trust`; on Grok Build 1.0.13, `grok --trust inspect --json` did the same. In a plain folder without Git, the skills and rules load but the hooks stay off. Then send:
 
 ```text
 /litwork Build a to-do list in one index.html with no external dependencies. Implement add, complete, and delete. Leave the checks performed and the next step. Do not open a browser automatically; give me the steps to check it myself.
@@ -66,7 +66,7 @@ Long sessions can write their own handoff. Turn on automatic handoff with `litgr
 | `/review-work` | Reviews a change and its evidence. |
 | `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
 
-`/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok#skills-at-a-glance) shows all 38 with a picture of each result.
+`/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) shows all 38 with a picture of each result.
 
 Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (eight for decks, six restrained ones for documents); `/frontend-ui-ux` builds and checks interfaces, `/readme-studio` writes source-checked READMEs, and `lit-humanizer` rewrites stiff English or Korean prose.
 
@@ -105,7 +105,9 @@ The installer never runs `git init`, trusts hooks, signs in or picks a model for
 
 ---
 
-**[Full guide, skills gallery and troubleshooting on GitHub →](https://github.com/wjgoarxiv/litgrok#readme)**
+**[Guide with screenshots, install options and troubleshooting on GitHub →](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide.md)**
+
+If LitGrok saves you some re-explaining, a [star on GitHub](https://github.com/wjgoarxiv/litgrok) helps other Grok Build users find it.
 
 [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/reference.md) · [Changelog](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/CHANGELOG.md) · [Privacy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/docs/privacy.md) · [MIT license](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.16/LICENSE)
 

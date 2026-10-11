@@ -27,7 +27,7 @@ const NPM_PAGES = [
 ];
 const slug = (heading) => heading.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/gu, '-');
 
-function assertMotionCover(name, text, cover, still) {
+function assertMotionCover(name, text, cover, still, { liveBadges = false } = {}) {
   assert.ok(text.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="${still}" />`), `${name}: reduced-motion still`);
   assert.ok(text.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="${cover}" />`), `${name}: motion source`);
   assert.ok(text.includes(`<img src="${cover}" width="100%"`), `${name}: img fallback keeps the motion cover`);
@@ -38,13 +38,29 @@ function assertMotionCover(name, text, cover, still) {
   assert.doesNotMatch(text, /unpublished local candidate|아직 공개되지 않은 로컬 후보/u);
   assert.match(text, /npm exec --yes --package @litfamily\/litgrok@latest -- litgrok install/u);
   assert.doesNotMatch(text, /ignition-film\.mp4|ignition-poster\.png|ignition-readme\.gif/u);
-  assert.doesNotMatch(text, /README visual draft|<video\b|https?:\/\/img\.shields\.io/u);
+  assert.doesNotMatch(text, /README visual draft|<video\b/u);
+  const badges = [...text.matchAll(/<img src="(https:\/\/img\.shields\.io\/[^"]+)"/gu)].map((match) => match[1]);
+  if (!liveBadges) {
+    assert.deepEqual(badges, [], `${name}: the npm card shows only artwork shipped in the package`);
+    return;
+  }
+  // The GitHub landing carries exactly four live badges, between the title and the first section.
+  assert.deepEqual(badges.map((url) => new URL(url).pathname), [
+    '/npm/v/@litfamily/litgrok',
+    '/npm/dm/@litfamily/litgrok',
+    '/badge/license-MIT-blue',
+    '/github/stars/wjgoarxiv/litgrok',
+  ], `${name}: npm version, npm downloads, license and GitHub stars`);
+  for (const url of badges) {
+    const at = text.indexOf(url);
+    assert.ok(at > text.indexOf('<h1 align="center">LitGrok') && at < text.indexOf('\n## '), `${name}: badges sit under the title`);
+  }
 }
 
 test('GitHub READMEs lead with the motion cover from repository-relative assets and keep the exact copyable rows', () => {
   for (const [name, reference, install] of GITHUB_PAGES) {
     const text = read(name);
-    assertMotionCover(name, text, './docs/assets/cover-motion.webp', './docs/assets/cover-motion-still.webp');
+    assertMotionCover(name, text, './docs/assets/cover-motion.webp', './docs/assets/cover-motion-still.webp', { liveBadges: true });
     assert.match(text, /<p align="center"><img src="\.\/docs\/assets\/readme\/ascii-readme\.svg" width="480" alt="[^"]+" \/><\/p>/u);
     const blocks = [...text.matchAll(/<details>\n<summary>[^\n]+<\/summary>\n\n```text\n([\s\S]*?)\n```\n\n<\/details>/gu)];
     assert.equal(blocks.length, 1);
@@ -59,9 +75,12 @@ test('GitHub READMEs lead with the motion cover from repository-relative assets 
   }
 });
 
+const DOC_PAGES = ['docs/guide.md', 'docs/guide_ko-KR.md', 'docs/skills.md', 'docs/skills_ko-KR.md'];
+
 test('GitHub README relative links and in-page anchors resolve inside the repository', () => {
-  for (const [name] of GITHUB_PAGES) {
+  for (const name of [...GITHUB_PAGES.map(([page]) => page), ...DOC_PAGES]) {
     const text = read(name);
+    const base = dirname(name);
     const anchors = new Set([...text.matchAll(/^#{1,6} (.+)$/gmu)].map((match) => slug(match[1])));
     const targets = [
       ...[...text.matchAll(/(?:src|srcset|href)="([^"]+)"/gu)].map((match) => match[1]),
@@ -74,8 +93,9 @@ test('GitHub README relative links and in-page anchors resolve inside the reposi
         assert.ok(anchors.has(decodeURIComponent(target.slice(1))), `${name}: no heading for ${target}`);
         continue;
       }
-      assert.ok(target.startsWith('./'), `${name}: relative target must start with ./: ${target}`);
-      const [path, fragment] = decodeURIComponent(target.slice(2)).split('#');
+      assert.ok(target.startsWith('./') || (base !== '.' && target.startsWith('../')), `${name}: relative target must start with ./ (or ../ from docs/): ${target}`);
+      const [relative, fragment] = decodeURIComponent(target).split('#');
+      const path = join(base, relative);
       assert.ok(existsSync(join(ROOT, path)), `${name}: ${path} must exist in the repository`);
       if (fragment && path.endsWith('.md')) {
         const headings = new Set([...read(path).matchAll(/^#{1,6} (.+)$/gmu)].map((match) => slug(match[1])));
@@ -178,9 +198,9 @@ test('README artwork retains approved bytes, notices and static release metadata
   assert.ok(!packageJson.files.some((path) => !path.startsWith('!') && (path === 'docs' || path === 'docs/assets' || /[*?]/u.test(path))), 'broad docs globs stay out of the package allowlist');
 });
 
-test('README skill tables give every packaged skill one shipped 240 px snapshot in both languages', () => {
+test('the skills pages give every packaged skill one shipped 240 px snapshot in both languages', () => {
   const packageJson = JSON.parse(read('package.json'));
-  const base = './docs/assets/skills/';
+  const base = './assets/skills/';
   const skills = readdirSync(join(ROOT, '.grok/skills'), { withFileTypes: true })
     .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
   assert.ok(packageJson.files.includes('docs/assets/skills'), 'skill snapshots ship so npmjs can render them');
@@ -191,28 +211,26 @@ test('README skill tables give every packaged skill one shipped 240 px snapshot 
     assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', id);
     assert.ok(bytes.length <= 81_920, `${id} snapshot exceeds 80 KiB`);
   }
-  for (const [name, heading, anchor, next, intro, motion] of [
-    ['README.md', '## Skills at a glance', '#skills-at-a-glance', '## The routes you will use most', `All ${skills.length} skills, one row each.`, 'The cover is brand motion made with the LitFamily motion skill'],
-    ['README_ko-KR.md', '## 스킬 한눈에 보기', '#스킬-한눈에-보기', '## 자주 쓰는 명령', `스킬 ${skills.length}개를 한 줄씩 정리했습니다.`, '커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출'],
+  for (const [name, page, heading, intro, motion] of [
+    ['README.md', 'docs/skills.md', '# LitGrok skills at a glance', `All ${skills.length} skills, one row each.`, 'The cover is brand motion made with the LitFamily motion skill'],
+    ['README_ko-KR.md', 'docs/skills_ko-KR.md', '# LitGrok 스킬 한눈에 보기', `스킬 ${skills.length}개를 한 줄씩 정리했습니다.`, '커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출'],
   ]) {
     const text = read(name);
-    assert.equal(text.split('\n').filter((line) => line === heading).length, 1, `${name}: one skills section`);
-    const navLink = text.indexOf(`](${anchor})`);
-    assert.ok(navLink > 0 && navLink < text.indexOf('\n## '), `${name}: the top nav links the skills section`);
+    const navLink = text.indexOf(`href="./${page}"`);
+    assert.ok(navLink > 0 && navLink < text.indexOf('\n## '), `${name}: the top nav links the skills page`);
     assert.ok(text.includes(motion), `${name}: the cover note names the motion skill`);
-    const start = text.indexOf(`\n${heading}\n`);
-    const end = text.indexOf(`\n${next}\n`);
-    assert.ok(start > 0 && end > start, `${name}: the skills section precedes ${next}`);
-    const section = text.slice(start, end);
-    assert.ok(section.includes(intro), `${name}: the intro states the packaged skill count`);
+    assert.equal([...text.matchAll(/assets\/skills\//gu)].length, 0, `${name}: the gallery lives on its own page`);
+    const section = read(page);
+    assert.equal(section.split('\n')[0], heading, `${page}: titled as the skills page`);
+    assert.ok(section.includes(intro), `${page}: the intro states the packaged skill count`);
     const rows = [...section.matchAll(/<tr>\n<td><img src="([^"]+)" width="240" alt="[^"]+" \/><\/td>\n<td><code>([^<]+)<\/code><br \/><sub>/gu)];
-    assert.deepEqual(rows.map((match) => match[2]).sort(), skills, `${name}: one row per packaged skill`);
-    for (const [, src, id] of rows) assert.equal(src, `${base}${id}.webp`, `${name}: ${id} snapshot URL`);
-    assert.equal([...text.matchAll(/docs\/assets\/skills\//gu)].length, skills.length, `${name}: snapshots appear only in the skills table`);
+    assert.deepEqual(rows.map((match) => match[2]).sort(), skills, `${page}: one row per packaged skill`);
+    for (const [, src, id] of rows) assert.equal(src, `${base}${id}.webp`, `${page}: ${id} snapshot URL`);
+    assert.equal([...section.matchAll(/assets\/skills\//gu)].length, skills.length, `${page}: snapshots appear only in the skills table`);
   }
   for (const [name, gallery, motion] of [
-    ['docs/npm/README.md', 'https://github.com/wjgoarxiv/litgrok#skills-at-a-glance', 'The cover is brand motion made with the LitFamily motion skill'],
-    ['docs/npm/README_ko-KR.md', 'https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md#스킬-한눈에-보기', '커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출'],
+    ['docs/npm/README.md', 'https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md', 'The cover is brand motion made with the LitFamily motion skill'],
+    ['docs/npm/README_ko-KR.md', 'https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md', '커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출'],
   ]) {
     const text = read(name);
     assert.ok(text.includes(`](${gallery})`), `${name}: the npm card links the gallery on GitHub`);
@@ -222,7 +240,7 @@ test('README skill tables give every packaged skill one shipped 240 px snapshot 
 });
 
 const PROMO = 'docs/assets/promo';
-const screensHeading = (name) => (name === 'README.md' ? '### What you will see on screen' : '### 화면에 나오는 모습');
+const screensHeading = (name) => (name === 'docs/guide.md' ? '## What you will see on screen' : '## 화면에 나오는 모습');
 // The film is set in Pretendard; these are the approved bytes of the English and Korean versions.
 const PROMO_FILES = {
   'promo.mp4': '1e44809c1d15ae395b20ec96b38158383a0f7d0363be35b4a52950bb8233b428',
@@ -302,24 +320,28 @@ test('the film source sets its copy in Pretendard and keeps the Korean film on t
   assert.match(page, /const LANG = "en";/u);
 });
 
-test('GitHub READMEs place the promo after the quick start with a reduced-motion still first and the MP4 linked, and the npm cards leave it out', () => {
-  for (const [name, heading, before, after, prefix] of [
-    ['README.md', '## Watch it in motion', '## Quick start', '## Skills at a glance', 'promo'],
-    ['README_ko-KR.md', '## 움직임으로 보기', '## 빠른 시작', '## 스킬 한눈에 보기', 'promo-ko'],
+test('the guide pages place the promo after the screen captures with a reduced-motion still first and the MP4 linked, and the npm cards leave it out', () => {
+  for (const [name, readme, heading, after, prefix] of [
+    ['docs/guide.md', 'README.md', '## Watch it in motion', '## Install options', 'promo'],
+    ['docs/guide_ko-KR.md', 'README_ko-KR.md', '## 움직임으로 보기', '## 설치 옵션', 'promo-ko'],
   ]) {
     const text = read(name);
     const start = text.indexOf(`\n${heading}\n`);
-    assert.ok(text.indexOf(`\n${before}\n`) > 0 && text.indexOf(`\n${before}\n`) < start, `${name}: the promo follows the quick start`);
-    assert.ok(start > 0 && start < text.indexOf(`\n${after}\n`), `${name}: the promo precedes the skills table`);
+    assert.ok(text.indexOf(screensHeading(name)) > 0 && text.indexOf(screensHeading(name)) < start, `${name}: the promo follows the screen captures`);
+    assert.ok(start > 0 && start < text.indexOf(`\n${after}\n`), `${name}: the promo precedes ${after}`);
     const section = text.slice(start, text.indexOf(`\n${after}\n`));
     assert.ok(section.indexOf('prefers-reduced-motion: reduce') < section.indexOf('prefers-reduced-motion: no-preference'), `${name}: reduced-motion still comes first`);
-    assert.ok(section.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/promo/${prefix}-still.webp" />`), `${name}: still source`);
-    assert.ok(section.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/promo/${prefix}-preview.webp" />`), `${name}: preview source`);
-    assert.match(section, new RegExp(`<img src="\\./docs/assets/promo/${prefix}-preview\\.webp" width="880" alt="[^"]{60,}" />`, 'u'), `${name}: img fallback with a descriptive alt`);
-    assert.ok(section.includes(`<a href="./docs/assets/promo/${prefix}.mp4">`) && section.includes(`](./docs/assets/promo/${prefix}.mp4)`), `${name}: the MP4 is linked twice`);
+    assert.ok(section.includes(`<source media="(prefers-reduced-motion: reduce)" srcset="./assets/promo/${prefix}-still.webp" />`), `${name}: still source`);
+    assert.ok(section.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="./assets/promo/${prefix}-preview.webp" />`), `${name}: preview source`);
+    assert.match(section, new RegExp(`<img src="\\./assets/promo/${prefix}-preview\\.webp" width="880" alt="[^"]{60,}" />`, 'u'), `${name}: img fallback with a descriptive alt`);
+    assert.ok(section.includes(`<a href="./assets/promo/${prefix}.mp4">`) && section.includes(`](./assets/promo/${prefix}.mp4)`), `${name}: the MP4 is linked twice`);
     const screens = text.slice(text.indexOf(screensHeading(name)), start);
-    assert.equal([...text.matchAll(/<picture>/gu)].length - [...screens.matchAll(/<picture>/gu)].length, 2, `${name}: the cover and the promo are the only pictures outside the screen captures`);
-    assert.equal([...text.matchAll(/width="100%"/gu)].length, 1, `${name}: the cover stays the only full-width image`);
+    assert.equal([...text.matchAll(/<picture>/gu)].length - [...screens.matchAll(/<picture>/gu)].length, 1, `${name}: the promo is the only picture outside the screen captures`);
+    const landing = read(readme);
+    assert.doesNotMatch(landing, /assets\/promo\//u, `${readme}: the film lives in the guide`);
+    assert.ok(landing.includes(`href="./${name}#${slug(heading.slice(3))}"`), `${readme}: the top nav links the film`);
+    assert.equal([...landing.matchAll(/<picture>/gu)].length, 1, `${readme}: the cover is the only picture; the demo slot plays the session film`);
+    assert.equal([...landing.matchAll(/width="100%"/gu)].length, 1, `${readme}: the cover stays the only full-width image`);
   }
   for (const [name] of NPM_PAGES) assert.doesNotMatch(read(name), /docs\/assets\/promo|promo(?:-ko)?\.mp4/u, `${name}: the npm card does not embed the promo`);
 });

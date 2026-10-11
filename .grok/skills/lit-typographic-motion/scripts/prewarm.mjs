@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// `litgrok-ai motion-runtime install|status [--audio] [--word-timing]` (MO-A-42/44/53/54/55).
+// `litgrok motion-runtime install|status [--audio] [--word-timing]` (MO-A-42/44/53/54/55).
 // install is the only step that touches the network: pinned npm deps via `npm ci`, pinned fonts and
-// licence files by URL + sha256, and (opt-in) the hash-pinned librosa venv. `litgrok-ai install`
+// licence files by URL + sha256, and (opt-in) the hash-pinned librosa venv. `litgrok install`
 // stays copy-only; a render never installs, fetches or repairs anything.
 import { spawnSync } from 'node:child_process';
 import { closeSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ import { AUDIO_REQUIREMENTS, audioState, audioVenvDir, depsDir, depsState, PREWA
 import { isSoftwareRenderer, openRenderer, resolveChrome, UNKNOWN_RENDERER } from './lib/chrome.mjs';
 import { findTool, previewRung } from './lib/render.mjs';
 
-export const RUNTIME_USAGE = `Usage: litgrok-ai motion-runtime install|status [--audio] [--word-timing]
+export const RUNTIME_USAGE = `Usage: litgrok motion-runtime install|status [--audio] [--word-timing]
   install        npm ci the pinned engine deps and fetch the pinned fonts into the motion cache
   install --audio        also build the hash-pinned librosa venv (Tier 2 beat grid)
   install --word-timing  state the model sizes and pins; fails closed while a pin is unverified

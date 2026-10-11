@@ -3,6 +3,8 @@ import { constants, copyFileSync, lstatSync, linkSync, readFileSync, renameSync,
 import { basename, dirname, join, resolve } from 'node:path';
 
 const MARKER = '# litgrok-managed-status-line-v1';
+// Written when the config did not end with a newline, so removal can take back the one LitGrok added.
+const MARKER_ADDED_NEWLINE = `${MARKER} added-final-newline`;
 const MAX_CONFIG_BYTES = 1024 * 1024;
 
 function configError(code) {
@@ -57,7 +59,7 @@ function tableHeader(line) {
 
 function managedBlock(text, command) {
   const lines = splitLines(text);
-  const markers = lines.map((line, index) => rawLineText(line) === MARKER ? index : -1).filter((index) => index >= 0);
+  const markers = lines.map((line, index) => [MARKER, MARKER_ADDED_NEWLINE].includes(rawLineText(line)) ? index : -1).filter((index) => index >= 0);
   if (markers.length !== 1) return null;
   const markerIndex = markers[0];
   let headerIndex = markerIndex + 1;
@@ -83,6 +85,7 @@ function managedBlock(text, command) {
     || refresh.length !== 1 || refresh[0].value !== '2') return null;
   return {
     markerIndex,
+    addedNewline: rawLineText(lines[markerIndex]) === MARKER_ADDED_NEWLINE,
     headerIndex,
     sectionEnd,
     valueIndexes: [type[0].index, commandValues[0].index, refresh[0].index],
@@ -91,6 +94,60 @@ function managedBlock(text, command) {
 
 function hasStatusLineSetting(text) {
   return splitLines(text).some((line) => /\bstatus_line\b/u.test(lineText(line)));
+}
+
+// The lines that start a TOML statement: lines inside a multi-line string, array or inline table are
+// skipped, so `[1, 2]` closing an array or `[x]` inside a string is never taken for a table header.
+function statements(text) {
+  const found = [];
+  let depth = 0;
+  let quote = null;
+  let start = 0;
+  while (start < text.length) {
+    let end = text.indexOf('\n', start);
+    if (end < 0) end = text.length;
+    if (depth === 0 && quote === null) {
+      const code = lineText(text.slice(start, end));
+      if (code.startsWith('[')) {
+        found.push({ code, header: true });
+        start = end + 1;
+        continue;
+      }
+      if (code) found.push({ code, header: false });
+    }
+    for (let index = start; index < end; index += 1) {
+      const character = text[index];
+      if (quote !== null) {
+        if (character === '\\' && (quote === '"' || quote === '"""')) index += 1;
+        else if (text.startsWith(quote, index)) {
+          index += quote.length - 1;
+          quote = null;
+        }
+      } else if (character === '#') break;
+      else if (text.startsWith('"""', index) || text.startsWith("'''", index)) {
+        quote = text.slice(index, index + 3);
+        index += 2;
+      } else if (character === '"' || character === "'") quote = character;
+      else if (character === '[' || character === '{') depth += 1;
+      else if ((character === ']' || character === '}') && depth > 0) depth -= 1;
+    }
+    if (quote === '"' || quote === "'") quote = null;
+    start = end + 1;
+  }
+  return found;
+}
+
+// A [ui.status_line] header cannot extend a top-level `ui = ...` value or inline table (TOML rejects the
+// file), and after [[ui]] it would attach to an array element.
+function conflictingUi(text) {
+  let topLevel = true;
+  for (const { code, header } of statements(text)) {
+    if (header) {
+      if (/^\[\[\s*(?:ui|"ui"|'ui')\s*\]\]$/u.test(code)) return '[[ui]]';
+      topLevel = false;
+    } else if (topLevel && /^(?:ui|"ui"|'ui')\s*=/u.test(code)) return 'ui = ...';
+  }
+  return null;
 }
 
 function shellQuote(value) {
@@ -131,9 +188,9 @@ function writeConfig(path, previous, next) {
   }
 }
 
-function statusLineBlock(command) {
+function statusLineBlock(command, marker) {
   return [
-    MARKER,
+    marker,
     '[ui.status_line]',
     'type = "command"',
     `command = ${JSON.stringify(command)}`,
@@ -141,10 +198,10 @@ function statusLineBlock(command) {
   ].join('\n');
 }
 
-function appendBlock(text, block) {
-  if (!text) return `${block}\n`;
-  const separator = text.endsWith('\n\n') ? '' : text.endsWith('\n') ? '\n' : '\n\n';
-  return `${text}${separator}${block}\n`;
+// No separator line is added, so removing the block gives back the original bytes.
+function appendBlock(text, command) {
+  if (!text || text.endsWith('\n')) return `${text}${statusLineBlock(command, MARKER)}\n`;
+  return `${text}\n${statusLineBlock(command, MARKER_ADDED_NEWLINE)}\n`;
 }
 
 export function installStatusLine(root) {
@@ -154,7 +211,14 @@ export function installStatusLine(root) {
   if (managedBlock(previous.text, command)) return { changed: false, detail: 'already managed by LitGrok' };
   if (previous.text.includes(MARKER)) return { changed: false, detail: 'modified LitGrok status-line config preserved' };
   if (hasStatusLineSetting(previous.text)) return { changed: false, detail: 'existing user status_line preserved' };
-  const next = appendBlock(previous.text, statusLineBlock(command));
+  const conflict = conflictingUi(previous.text);
+  if (conflict) {
+    return {
+      changed: false,
+      detail: `status line not configured: ${path} sets ${conflict} at the top level, which a [ui.status_line] table cannot extend; add status_line inside your ui setting yourself`,
+    };
+  }
+  const next = appendBlock(previous.text, command);
   writeConfig(path, previous, next);
   return { changed: true, detail: 'user status line configured' };
 }
@@ -167,7 +231,13 @@ function removeManagedBlock(text, block) {
     if (!remove.has(index) && lineText(lines[index]) !== '') remaining.push(index);
   }
   if (remaining.length === 0) remove.add(block.headerIndex);
-  return lines.filter((_, index) => !remove.has(index)).join('');
+  const kept = lines.map((line, index) => (remove.has(index) ? null : line));
+  // Take back the final newline LitGrok added, but only while nothing follows the user's last line.
+  const before = block.markerIndex - 1;
+  if (block.addedNewline && before >= 0 && kept.slice(before + 1).every((line) => line === null) && kept[before].endsWith('\n')) {
+    kept[before] = kept[before].slice(0, -1);
+  }
+  return kept.filter((line) => line !== null).join('');
 }
 
 export function removeStatusLine(root) {

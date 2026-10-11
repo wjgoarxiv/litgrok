@@ -3,9 +3,13 @@
 ## One rule
 
 Everything the engine needs from the network is installed once, outside any Grok session, by
-`litgrok-ai motion-runtime install`. A render reads that cache and never installs, fetches, repairs
-or re-verifies against the network. `litgrok-ai install` (the skill copy) stays copy-only and never
+`npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install`. A render reads that cache and never installs, fetches, repairs
+or re-verifies against the network. `litgrok install` (the skill copy) stays copy-only and never
 touches the network either; it only prints where to pre-warm.
+
+`<installed version>` is the LitGrok release that installed this skill copy, because the pre-warm
+must use the same pinned lockfile. The install receipt, `status` and every BLOCKED message print the
+command with that version filled in; copy it from there.
 
 ## The cache
 
@@ -28,12 +32,12 @@ LitGrok's recorded hashes.
 
 ## Commands
 
-- `litgrok-ai motion-runtime install` — deps and fonts; prints one line per item and the cache path.
-- `litgrok-ai motion-runtime install --audio` — also the Tier 2 venv (needs `uv` or Python 3.11-3.13).
-- `litgrok-ai motion-runtime install --word-timing` — prints the model table (id, revision,
+- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` — deps and fonts; prints one line per item and the cache path.
+- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --audio` — also the Tier 2 venv (needs `uv` or Python 3.11-3.13).
+- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --word-timing` — prints the model table (id, revision,
   licence, size) before any download. While any pin is unverified it fails closed and downloads
   nothing; Tier 3 then stays unavailable.
-- `litgrok-ai motion-runtime status` — the five probes, every time:
+- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime status` — the five probes, every time:
   1. Chrome path and version;
   2. ffmpeg path, version line and the preview encoder rung (`libwebp_anim`, `img2webp` or GIF);
   3. the WebGL2 renderer string from a real headless probe;
@@ -51,7 +55,7 @@ LitGrok's recorded hashes.
 | 11 | BLOCKED_NO_WEBGL2 | Chrome ran but no WebGL2 context on any rung, not even SwiftShader. |
 | 12 | BLOCKED_NO_FFMPEG_FOR_VIDEO | ffmpeg missing for a film; `--stills-only` still works and exits 0. |
 | 13 | GATE_FAIL_QA | a pre-flight or full-gate rule failed; the report names it. |
-| 14 | BLOCKED_DEPS_NOT_PREWARMED | engine deps (or word-timing models) absent: run `litgrok-ai motion-runtime install` outside the session. |
+| 14 | BLOCKED_DEPS_NOT_PREWARMED | engine deps (or word-timing models) absent: run `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` outside the session. |
 | 15 | BLOCKED_FONT_FETCH | a required font or its licence is missing or its bytes do not match the pin: run the same install. A mismatch is treated as tampering and never repaired in session. |
 | 16 | BLOCKED_TREATMENT_INVALID | `treatment.json` is missing or a field fails; the message names the field. Fix the treatment, never the check. |
 | 17 | STAGE_CONTRACT_ERROR | the stage page broke its contract: no `LitStage.define`, a size that is not the format, a forbidden element or API, a flipbook or animated raster, a refused path, a missing copy line, or a capture of the wrong size. |
@@ -112,7 +116,7 @@ Timing tiers on the type path:
 - **Tier 2** runs when the treatment supplies an audio file and the venv is ready:
   `scripts/beat_grid.py` analyses the file once before rendering and the beat list replaces the
   fixed grid. An absent venv, or one whose installed packages no longer match the pins, falls back
-  to Tier 1 with the warning `audio analysis not prewarmed: run litgrok-ai motion-runtime install
+  to Tier 1 with the warning `audio analysis not prewarmed: run npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install
   --audio`, and the track is still muxed. Never aubio, essentia or madmom.
 - **Tier 3** is opt-in with `--word-timing` and never selected by bare `lit`; absent models exit 14.
 

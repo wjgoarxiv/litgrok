@@ -86,7 +86,7 @@ type, rules and graphics into the shot's layers and returns post-chain overrides
   same holds and snaps apply. If the venv is absent or no longer matches its pins, the render falls
   back to Tier 1 with a warning and still renders.
 - **Tier 3 (`--word-timing`, opt-in only):** never used by bare `lit`. Without pinned models the
-  render exits 14 and names `litgrok-ai motion-runtime install --word-timing`.
+  render exits 14 and names `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --word-timing`.
 
 ## Frames, samples and seeds
 

@@ -20,11 +20,11 @@ Under bare `lit`, ask no questions: choose defaults and label them, and label ev
 5. Look again at the new stills (`look --round 2`, then a round 3 if an answer asks for one).
 6. `node scripts/motion.mjs verify --out <dir>` decides done.
 
-Pre-warm happens outside the session: `litgrok-ai motion-runtime install` (status: `litgrok-ai motion-runtime status`). A render never installs or fetches.
+Pre-warm happens outside the session: `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` (status: `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime status`). A render never installs or fetches.
 
 A flash FAIL withholds the exports under `withheld/`; say so and never present them as a film. Never downgrade to pass: fix the cause or deliver with the failure stated.
 
-Exit codes: 10 no Chrome (set CHROME_PATH), 11 no WebGL2, 12 no ffmpeg (stills still work), 13 gate FAIL, 14 runtime not pre-warmed, 15 font missing or tampered (fix both with `litgrok-ai motion-runtime install` outside the session), 16 treatment invalid (the field is named), 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid. Name the code and its fix.
+Exit codes: 10 no Chrome (set CHROME_PATH), 11 no WebGL2, 12 no ffmpeg (stills still work), 13 gate FAIL, 14 runtime not pre-warmed, 15 font missing or tampered (fix both with `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` outside the session), 16 treatment invalid (the field is named), 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid. Name the code and its fix.
 
 ## References
 

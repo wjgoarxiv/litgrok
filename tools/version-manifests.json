@@ -17,14 +17,14 @@
     {
       "path": "README.md",
       "kind": "pinned",
-      "occurrences": 2,
-      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release."
+      "occurrences": 1,
+      "why": "The GitHub landing page uses repository-relative artwork and live registry badges; only the pinned-install example carries the release."
     },
     {
       "path": "README_ko-KR.md",
       "kind": "pinned",
-      "occurrences": 2,
-      "why": "The GitHub landing page uses repository-relative artwork; only its version badge alt text and the pinned-install example carry the release."
+      "occurrences": 1,
+      "why": "The GitHub landing page uses repository-relative artwork and live registry badges; only the pinned-install example carries the release."
     },
     {
       "path": "docs/npm/README.md",

@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { basename, dirname, join } from 'node:path';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
@@ -633,4 +634,189 @@ test('Stop plan gate blocks at most twice per session, then passes with a warnin
   const ledgerDirectory = join(workspaceRoot, '.grok', 'litgrok', 'session-ledger');
   const lines = readFileSync(join(ledgerDirectory, readdirSync(ledgerDirectory)[0]), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
   assert.equal(lines.filter((record) => record.signal === 'plan-gate-block').length, 2);
+});
+
+// Pipe reads arrive in 64 KiB chunks, so a 300 KB Korean event splits multi-byte characters at each seam.
+const KOREAN_BULK = '가'.repeat(100_000);
+
+test('hooks decode stdin once, so Korean text split across pipe chunks stays intact', () => {
+  const workspaceRoot = mkdtempSync(join(tmpdir(), 'litgrok-stdin-utf8-'));
+  try {
+    const event = passiveEvent('PostToolUse', workspaceRoot);
+    event.toolInput = { content: KOREAN_BULK };
+    const result = runHook(join(HOOKS_DIRECTORY, 'post-tool-use.mjs'), event, passiveEnvironment(event, 'post-tool-use'));
+    assert.equal(result.status, 0, result.stderr);
+    const expected = createHash('sha256').update(JSON.stringify(event.toolInput)).digest('hex');
+    assert.equal(readOnlyLedgerRecord(workspaceRoot).tool.inputSha256, expected, 'the recorder must hash the text Grok sent');
+  } finally {
+    rmSync(workspaceRoot, { recursive: true, force: true });
+  }
+
+  // Unchanged existing prose after a chunk seam must not look newly added to the edit guard.
+  const shared = `${KOREAN_BULK}\n\nAs an AI language model, I cannot access live market data.\n`;
+  const edit = writeEvent('', 'deliverables/report.md');
+  edit.toolInput = { path: 'deliverables/report.md', old_string: shared, new_string: `${shared}검토를 마쳤습니다.` };
+  const guard = runHook(HEDGE_COMMAND, edit);
+  assert.equal(guard.status, 0, guard.stdout + guard.stderr);
+  assert.deepEqual(JSON.parse(guard.stdout), { decision: 'allow' });
+
+  for (const name of ['deliverable-hedge-guard.mjs', 'record-passive-event.mjs', 'session-start.mjs', 'lit-status-line.mjs']) {
+    assert.doesNotMatch(readFileSync(join(HOOKS_DIRECTORY, name), 'utf8'), /input \+= chunk/u, `${name} must not decode stdin chunk by chunk`);
+  }
+});
+
+function ledgerFileFor(workspaceRoot, sessionId) {
+  return join(workspaceRoot, '.grok', 'litgrok', 'session-ledger', `${createHash('sha256').update(sessionId).digest('hex').slice(0, 32)}.jsonl`);
+}
+
+function seedLedger(workspaceRoot, sessionId, text) {
+  const file = ledgerFileFor(workspaceRoot, sessionId);
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, text);
+  return file;
+}
+
+function seedRecord(sessionId, extra = {}) {
+  return `${JSON.stringify({ schema: 'litgrok.hook-event/v1', event: 'UserPromptSubmit', sessionId, recordedAt: new Date(Date.now() - 60_000).toISOString(), ...extra })}\n`;
+}
+
+const parsedLines = (file) => readFileSync(file, 'utf8').split('\n').filter(Boolean).flatMap((line) => {
+  try { return [JSON.parse(line)]; } catch { return []; }
+});
+
+test('a torn last line in the session ledger never stops later hooks or the Stop plan gate', () => {
+  const workspaceRoot = planGateWorkspace('torn-ledger');
+  const file = seedLedger(workspaceRoot, 'session-plan-gate', `${seedRecord('session-plan-gate')}{"schema":"litgrok.hook-ev`);
+  const result = runTurn(workspaceRoot, { stopExtra: { permissionMode: 'plan' } });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).decision, 'block', 'the plan gate must still run');
+  const records = parsedLines(file);
+  assert.deepEqual(
+    records.map((record) => record.signal ?? record.event),
+    ['UserPromptSubmit', 'UserPromptSubmit', 'turn-ended', 'plan-gate-block'],
+    'the torn line is skipped and every new record stays whole',
+  );
+});
+
+test('a ledger past the size cap rotates to a numbered segment instead of failing every hook', () => {
+  const workspaceRoot = planGateWorkspace('rotate');
+  const sessionId = 'session-plan-gate';
+  const prompt = turnEvent('UserPromptSubmit', workspaceRoot, { prompt: 'lit-plan' });
+  const started = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, passiveEnvironment(prompt, 'user-prompt-submit'));
+  assert.equal(started.status, 0, started.stderr);
+  const file = ledgerFileFor(workspaceRoot, sessionId);
+  const filler = `${JSON.stringify({ schema: 'litgrok.hook-event/v1', event: 'PostToolUse', sessionId, pad: 'x'.repeat(4000) })}\n`;
+  appendFileSync(file, filler.repeat(Math.ceil((8 * 1024 * 1024) / filler.length) + 1));
+
+  const stop = turnEvent('Stop', workspaceRoot, { reason: 'end_turn' });
+  const result = runHook(join(HOOKS_DIRECTORY, 'stop.mjs'), stop, passiveEnvironment(stop, 'stop'));
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).decision, 'block', 'the lit-plan turn recorded before rotation still arms the gate');
+
+  const directory = dirname(file);
+  const segments = readdirSync(directory).filter((name) => /^[0-9a-f]{32}\.\d+\.jsonl$/u.test(name));
+  assert.equal(segments.length, 1, 'the full ledger moves aside as one numbered segment');
+  const current = parsedLines(file);
+  assert.equal(current[0].event, 'Stop', 'a fresh ledger starts with the new record');
+  assert.ok(readFileSync(file).length < 64 * 1024);
+});
+
+test('the ledger still refuses a foreign first record and a symbolic link', () => {
+  const workspaceRoot = planGateWorkspace('foreign');
+  seedLedger(workspaceRoot, 'session-plan-gate', seedRecord('another-session'));
+  const prompt = turnEvent('UserPromptSubmit', workspaceRoot);
+  const foreign = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, passiveEnvironment(prompt, 'user-prompt-submit'));
+  assert.equal(foreign.status, 1);
+  assert.match(foreign.stderr, /LEDGER_IDENTITY_MISMATCH/u);
+
+  const linked = planGateWorkspace('symlink');
+  const target = join(linked, 'elsewhere.jsonl');
+  writeFileSync(target, '');
+  const file = ledgerFileFor(linked, 'session-plan-gate');
+  mkdirSync(dirname(file), { recursive: true });
+  symlinkSync(target, file);
+  const linkedPrompt = turnEvent('UserPromptSubmit', linked);
+  const refused = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), linkedPrompt, passiveEnvironment(linkedPrompt, 'user-prompt-submit'));
+  assert.equal(refused.status, 1);
+  assert.equal(readFileSync(target, 'utf8'), '', 'nothing is written through the link');
+});
+
+test('runtime state folders ignore themselves in Git; the committed payload never gets an ignore file', () => {
+  const workspaceRoot = planGateWorkspace('state-ignore');
+  mkdirSync(join(workspaceRoot, '.grok', 'skills'), { recursive: true });
+  const prompt = turnEvent('UserPromptSubmit', workspaceRoot);
+  const result = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, passiveEnvironment(prompt, 'user-prompt-submit'));
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(workspaceRoot, '.grok', 'litgrok', '.gitignore'), 'utf8'), '*\n');
+  assert.equal(existsSync(join(workspaceRoot, '.grok', '.gitignore')), false, 'the .grok payload root stays committable');
+  assert.equal(existsSync(join(workspaceRoot, '.grok', 'skills', '.gitignore')), false);
+
+  writeFileSync(join(workspaceRoot, '.grok', 'litgrok', '.gitignore'), 'session-ledger/\n');
+  assert.equal(runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, passiveEnvironment(prompt, 'user-prompt-submit')).status, 0);
+  assert.equal(readFileSync(join(workspaceRoot, '.grok', 'litgrok', '.gitignore'), 'utf8'), 'session-ledger/\n', 'a user-edited ignore file is kept');
+});
+
+function bigFiller(sessionId) {
+  const filler = `${JSON.stringify({ schema: 'litgrok.hook-event/v1', event: 'PostToolUse', sessionId, pad: 'x'.repeat(4000) })}\n`;
+  return filler.repeat(Math.ceil((8 * 1024 * 1024) / filler.length) + 1);
+}
+
+test('an oversized ledger whose first record is foreign is refused, never rotated', () => {
+  const workspaceRoot = planGateWorkspace('foreign-oversized');
+  const file = seedLedger(workspaceRoot, 'session-plan-gate', `${seedRecord('another-session')}${bigFiller('another-session')}`);
+  const prompt = turnEvent('UserPromptSubmit', workspaceRoot);
+  const result = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, passiveEnvironment(prompt, 'user-prompt-submit'));
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /LEDGER_FILE_UNSAFE/u);
+  assert.deepEqual(readdirSync(dirname(file)).filter((name) => name.endsWith('.jsonl')), [basename(file)], 'the foreign file stays where it is');
+});
+
+test('rotation keeps only the two newest segments', () => {
+  const workspaceRoot = planGateWorkspace('prune');
+  const sessionId = 'session-plan-gate';
+  const file = seedLedger(workspaceRoot, sessionId, `${seedRecord(sessionId)}${bigFiller(sessionId)}`);
+  for (const number of [1, 2, 3]) writeFileSync(file.replace(/\.jsonl$/u, `.${number}.jsonl`), seedRecord(sessionId));
+  const prompt = turnEvent('UserPromptSubmit', workspaceRoot);
+  const result = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, passiveEnvironment(prompt, 'user-prompt-submit'));
+  assert.equal(result.status, 0, result.stderr);
+  const segments = readdirSync(dirname(file)).filter((name) => /\.\d+\.jsonl$/u.test(name)).map((name) => Number(name.split('.')[1])).sort();
+  assert.deepEqual(segments, [3, 4]);
+});
+
+function spawnHook(command, event, environment) {
+  return new Promise((resolveRun) => {
+    const child = spawn(process.execPath, [command], { cwd: PRODUCT_ROOT, env: { ...process.env, ...environment }, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stderr = '';
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('close', (status) => resolveRun({ status, stderr }));
+    child.stdin.end(`${JSON.stringify(event)}\n`);
+  });
+}
+
+test('concurrent appenders rotate once, keep every record once and never hard-link a segment twice', async () => {
+  for (let round = 0; round < 8; round += 1) {
+    const workspaceRoot = planGateWorkspace(`concurrent-${round}`);
+    const sessionId = 'session-plan-gate';
+    const file = seedLedger(workspaceRoot, sessionId, `${seedRecord(sessionId)}${bigFiller(sessionId)}`);
+    const hudRoot = mkdtempSync(join(tmpdir(), 'litgrok-hud-concurrent-'));
+    try {
+      const runs = await Promise.all(Array.from({ length: 48 }, (_, index) => {
+        const prompt = turnEvent('UserPromptSubmit', workspaceRoot, { promptId: `concurrent-${index}` });
+        return spawnHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), prompt, {
+          ...passiveEnvironment(prompt, 'user-prompt-submit'),
+          LITGROK_HUD_STATE_ROOT: join(hudRoot, 'state'),
+        });
+      }));
+      assert.deepEqual(runs.filter((run) => run.status !== 0).map((run) => run.stderr), [], `round ${round}`);
+    } finally {
+      rmSync(hudRoot, { recursive: true, force: true });
+    }
+    const directory = dirname(file);
+    const ledgers = readdirSync(directory).filter((name) => name.endsWith('.jsonl'));
+    const inodes = ledgers.map((name) => statSync(join(directory, name)).ino);
+    assert.equal(new Set(inodes).size, inodes.length, `round ${round}: one name per ledger file (${ledgers.join(', ')})`);
+    const ids = ledgers.flatMap((name) => parsedLines(join(directory, name))).map((record) => record.promptId).filter((id) => id?.startsWith('concurrent-'));
+    assert.equal(ids.length, 48, `round ${round}: every record once`);
+    assert.equal(new Set(ids).size, 48);
+  }
 });

@@ -1,6 +1,6 @@
 {
   "schema": "litgrok.motion-font-pins/v1",
-  "note": "Every font the engine may draw with. bundled = shipped in this skill; reused = the product lit-pptx pair checked against LitGrok's own hashes; fetched = pinned URL + sha256, fetched only by litgrok-ai motion-runtime install.",
+  "note": "Every font the engine may draw with. bundled = shipped in this skill; reused = the product lit-pptx pair checked against LitGrok's own hashes; fetched = pinned URL + sha256, fetched only by npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install.",
   "fonts": {
     "archivo-75-400": {
       "source": "bundled",

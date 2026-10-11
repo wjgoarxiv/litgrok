@@ -3,15 +3,18 @@
 import { renderMark } from './lit-mark.mjs';
 import { claimSessionIgnition } from './record-passive-event.mjs';
 
-let input = '';
+// Decode once: a multi-byte character can straddle two pipe chunks.
+const chunks = [];
+let bytes = 0;
 for await (const chunk of process.stdin) {
-  input += chunk;
-  if (Buffer.byteLength(input) > 1024 * 1024) break;
+  bytes += chunk.length;
+  chunks.push(chunk);
+  if (bytes > 1024 * 1024) break;
 }
 let event;
 try {
-  if (Buffer.byteLength(input) > 1024 * 1024) throw new Error('EVENT_TOO_LARGE');
-  event = JSON.parse(input);
+  if (bytes > 1024 * 1024) throw new Error('EVENT_TOO_LARGE');
+  event = JSON.parse(Buffer.concat(chunks).toString('utf8'));
   if (claimSessionIgnition(event)) process.stdout.write(`${renderMark({ args: process.argv.slice(2) }).join('\n')}\n`);
 } catch (error) {
   process.stderr.write(`LitGrok session-start: ${error.code || 'EVENT_INVALID'}\n`);

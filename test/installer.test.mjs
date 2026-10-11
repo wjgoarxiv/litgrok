@@ -906,14 +906,14 @@ test('landing docs link the repository cover and retain the complete lifecycle i
       assert.match(readme, /plain folder[^\n]*(?:skills|rules)[^\n]*hooks remain/i);
       assert.match(readme, /git init/);
       assert.match(readme, /grok --trust inspect --json/);
-      assert.match(readme, /Grok Build 1\.0\.23/);
+      assert.match(readme, /Grok Build 1\.0\.13/);
     assert.match(readme, /installer (?:never runs|does not run) `?git init`?/i);
     } else {
       assert.match(readme, /Git 프로젝트 루트/);
       assert.match(readme, /일반 폴더[^\n]*(?:skill|rule)[^\n]*hook/i);
       assert.match(readme, /git init/);
       assert.match(readme, /grok --trust inspect --json/);
-      assert.match(readme, /Grok Build 1\.0\.23/);
+      assert.match(readme, /Grok Build 1\.0\.13/);
       assert.match(readme, /(?:Installer|설치 프로그램)[^\n]*(?:git init|trust)[^\n]*(?:않|안)/);
     }
     assert.match(readme, /plugin manifest/i);
@@ -1121,5 +1121,17 @@ test('tree uninstall refuses wholesale when one discovered payload file changed'
   } finally {
     rmSync(packageFixture.root, { recursive: true, force: true });
     rmSync(project, { recursive: true, force: true });
+  }
+});
+
+test('every Grok Build version the docs cite for grok --trust is the one the installer prints', () => {
+  const installer = readFileSync(join(PRODUCT_ROOT, 'bin', 'litgrok.mjs'), 'utf8');
+  const printed = new Set([...installer.matchAll(/on Grok Build (\d+\.\d+\.\d+), grok --trust/gu)].map((match) => match[1]));
+  assert.equal(printed.size, 1, 'the installer names one observed Grok Build version');
+  const [observed] = printed;
+  for (const file of ['README.md', 'README_ko-KR.md', 'docs/reference.md', 'docs/reference_ko-KR.md', 'docs/npm/README.md', 'docs/npm/README_ko-KR.md']) {
+    for (const [phrase, version] of readFileSync(join(PRODUCT_ROOT, file), 'utf8').matchAll(/Grok Build (\d+\.\d+\.\d+)/gu)) {
+      assert.equal(version, observed, `${file}: "${phrase}" must name the Grok Build version the installer prints`);
+    }
   }
 });

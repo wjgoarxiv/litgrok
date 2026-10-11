@@ -97,14 +97,15 @@ function loadRules() {
 }
 
 async function readEvent() {
-  let input = '';
-  let oversized = false;
+  // Decode once: a multi-byte character can straddle two pipe chunks.
+  const chunks = [];
+  let bytes = 0;
   for await (const chunk of process.stdin) {
-    input += chunk;
-    if (Buffer.byteLength(input) > MAX_EVENT_BYTES) { input = ''; oversized = true; }
+    bytes += chunk.length;
+    if (bytes <= MAX_EVENT_BYTES) chunks.push(chunk);
   }
-  if (oversized) throw new Error('event exceeded the size limit; write left unchanged');
-  try { return JSON.parse(input); } catch { throw new Error('event could not be parsed; write left unchanged'); }
+  if (bytes > MAX_EVENT_BYTES) throw new Error('event exceeded the size limit; write left unchanged');
+  try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new Error('event could not be parsed; write left unchanged'); }
 }
 
 try {

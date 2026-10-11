@@ -29,7 +29,7 @@ Presets: swiss-signal | terminalcore | tidal. Exit codes: 0 OK, 10 no Chrome, 11
 12 no ffmpeg for video, 13 gate FAIL, 14 runtime not pre-warmed, 15 font missing or tampered,
 16 treatment invalid, 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid.
 --swiftshader forces the SwiftShader rung (the CI determinism setting). Pre-warm outside the session:
-litgrok-ai motion-runtime install
+npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install
 ${ONE_LINE_CREDIT}
 `;
 

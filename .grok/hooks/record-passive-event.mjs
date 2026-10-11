@@ -5,18 +5,28 @@ import {
   existsSync,
   fstatSync,
   fsyncSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   openSync,
+  readdirSync,
   readFileSync,
+  readSync,
   realpathSync,
+  unlinkSync,
+  writeFileSync,
   writeSync,
 } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 import { writeHudRecords } from './litgrok-hud-state.mjs';
 
 const MAX_EVENT_BYTES = 1024 * 1024;
+// A ledger past this size moves aside as a numbered segment and a fresh one starts.
 const MAX_LEDGER_BYTES = 8 * 1024 * 1024;
+// Identity is checked on the first record only, so appending never rereads the whole ledger.
+const FIRST_RECORD_PROBE_BYTES = 64 * 1024;
+const KEPT_SEGMENTS = 2;
+const ROTATION_LOCK_STALE_MS = 30 * 1000;
 const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
 const HUD_DISCIPLINE_PATTERN = /(?:^|[\s/])(lit-scientific-visualization|lit-handoff|autoconference|autoresearch|lit-plan|litwork|lit)(?=$|[^\w-])/iu;
@@ -100,13 +110,16 @@ function normalizedEventName(value) {
 }
 
 async function readEvent() {
-  let input = '';
+  // Decode once: a multi-byte character can straddle two pipe chunks.
+  const chunks = [];
+  let bytes = 0;
   for await (const chunk of process.stdin) {
-    input += chunk;
-    if (Buffer.byteLength(input) > MAX_EVENT_BYTES) throw new RecorderError('EVENT_TOO_LARGE');
+    bytes += chunk.length;
+    if (bytes > MAX_EVENT_BYTES) throw new RecorderError('EVENT_TOO_LARGE');
+    chunks.push(chunk);
   }
   try {
-    const event = JSON.parse(input);
+    const event = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     if (!event || typeof event !== 'object' || Array.isArray(event)) throw new Error();
     return event;
   } catch {
@@ -169,11 +182,22 @@ function ensureDirectory(path) {
   if (!status.isDirectory() || status.isSymbolicLink()) throw new RecorderError('LEDGER_DIRECTORY_UNSAFE');
 }
 
+// .grok/litgrok/ holds only runtime state (session ids, cwd, tool names, the auto-handoff choice), never
+// the payload a project commits, so it ignores itself in Git. An existing file is the user's and is kept.
+export function ignoreStateDirectory(productDirectory) {
+  try {
+    writeFileSync(join(productDirectory, '.gitignore'), '*\n', { flag: 'wx', mode: 0o644 });
+  } catch (error) {
+    if (error?.code !== 'EEXIST') throw error;
+  }
+}
+
 function ledgerPath(realWorkspaceRoot, sessionId) {
   const grokDirectory = join(realWorkspaceRoot, '.grok');
   const productDirectory = join(grokDirectory, 'litgrok');
   const ledgerDirectory = join(productDirectory, 'session-ledger');
   for (const path of [grokDirectory, productDirectory, ledgerDirectory]) ensureDirectory(path);
+  ignoreStateDirectory(productDirectory);
   const sessionKey = createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
   return join(ledgerDirectory, `${sessionKey}.jsonl`);
 }
@@ -195,21 +219,132 @@ export function claimSessionIgnition(event) {
   }
 }
 
-function validateExistingLedger(path, sessionId) {
-  if (!existsSync(path)) return;
-  const status = lstatSync(path);
-  if (!status.isFile() || status.isSymbolicLink() || status.size > MAX_LEDGER_BYTES) {
-    throw new RecorderError('LEDGER_FILE_UNSAFE');
-  }
-  const text = readFileSync(path, 'utf8');
-  for (const line of text.split(/\r?\n/).filter(Boolean)) {
+function readAt(descriptor, length, position) {
+  const buffer = Buffer.alloc(length);
+  const read = readSync(descriptor, buffer, 0, length, position);
+  return buffer.subarray(0, read);
+}
+
+function segmentPattern(path) {
+  return new RegExp(`^${basename(path, '.jsonl')}\\.(\\d+)\\.jsonl$`, 'u');
+}
+
+function segmentNumbers(path) {
+  const pattern = segmentPattern(path);
+  return readdirSync(dirname(path)).flatMap((name) => {
+    const match = pattern.exec(name);
+    return match ? [Number(match[1])] : [];
+  });
+}
+
+// Only one hook rotates at a time. The lock is an exclusive empty file; one left by a crashed hook is
+// taken over once it is older than ROTATION_LOCK_STALE_MS.
+function takeRotationLock(path) {
+  const lock = `${path}.rotate.lock`;
+  const noFollow = constants.O_NOFOLLOW ?? 0;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const record = JSON.parse(line);
-      if (record.schema !== RECORD_SCHEMA || record.sessionId !== sessionId) throw new Error();
-    } catch {
-      throw new RecorderError('LEDGER_IDENTITY_MISMATCH');
+      closeSync(openSync(lock, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow, 0o600));
+      return lock;
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error;
+      const status = lstatSync(lock, { throwIfNoEntry: false });
+      if (!status || Date.now() - status.mtimeMs <= ROTATION_LOCK_STALE_MS) return null;
+      try {
+        unlinkSync(lock);
+      } catch (removeError) {
+        if (removeError?.code !== 'ENOENT') throw removeError;
+      }
     }
   }
+  return null;
+}
+
+// Moves the measured ledger aside as the next numbered segment and keeps only the newest
+// KEPT_SEGMENTS segments. Returns false when another hook holds the rotation lock; true when the
+// ledger was rotated here or had already been rotated, so the caller reopens the live name.
+function rotateLedger(path, measured) {
+  const lock = takeRotationLock(path);
+  if (lock === null) return false;
+  try {
+    const live = lstatSync(path, { throwIfNoEntry: false });
+    if (!live || live.ino !== measured.ino || live.dev !== measured.dev) return true;
+    let number = Math.max(0, ...segmentNumbers(path)) + 1;
+    for (;;) {
+      try {
+        linkSync(path, join(dirname(path), `${basename(path, '.jsonl')}.${number}.jsonl`));
+        break;
+      } catch (error) {
+        if (error?.code !== 'EEXIST') throw error;
+        number += 1;
+      }
+    }
+    unlinkSync(path);
+    for (const old of segmentNumbers(path).sort((left, right) => right - left).slice(KEPT_SEGMENTS)) {
+      try {
+        unlinkSync(join(dirname(path), `${basename(path, '.jsonl')}.${old}.jsonl`));
+      } catch (error) {
+        if (error?.code !== 'ENOENT') throw error;
+      }
+    }
+    return true;
+  } finally {
+    try {
+      unlinkSync(lock);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+}
+
+// Checks identity on the first record before anything else, so an oversized foreign file is refused,
+// never rotated. Returns { prefix } with a newline when the last record was torn (it stays one skipped
+// line instead of swallowing the new record), plus rotate: 'full' past the size cap or 'torn' when the
+// only record never got its newline.
+function checkOpenLedger(descriptor, sessionId) {
+  const status = fstatSync(descriptor);
+  if (!status.isFile()) throw new RecorderError('LEDGER_FILE_UNSAFE');
+  if (status.size === 0) return { prefix: '' };
+  const oversized = status.size > MAX_LEDGER_BYTES;
+  const refusal = oversized ? 'LEDGER_FILE_UNSAFE' : 'LEDGER_IDENTITY_MISMATCH';
+  const head = readAt(descriptor, Math.min(status.size, FIRST_RECORD_PROBE_BYTES), 0);
+  const end = head.indexOf(0x0a);
+  if (end < 0) {
+    if (status.size <= FIRST_RECORD_PROBE_BYTES) return { rotate: 'torn', prefix: '\n' };
+    throw new RecorderError(refusal);
+  }
+  try {
+    const record = JSON.parse(head.subarray(0, end).toString('utf8'));
+    if (record.schema !== RECORD_SCHEMA || record.sessionId !== sessionId) throw new Error();
+  } catch {
+    throw new RecorderError(refusal);
+  }
+  const prefix = readAt(descriptor, 1, status.size - 1)[0] === 0x0a ? '' : '\n';
+  return oversized ? { rotate: 'full', prefix } : { prefix };
+}
+
+// Records of one session, oldest first: the newest rotated segment and then the live ledger. Lines
+// that do not parse (a torn write) or belong to another session are skipped.
+export function readLedgerRecords(ledgerFile, sessionId) {
+  const files = [];
+  const numbers = existsSync(dirname(ledgerFile)) ? segmentNumbers(ledgerFile) : [];
+  if (numbers.length > 0) files.push(join(dirname(ledgerFile), `${basename(ledgerFile, '.jsonl')}.${Math.max(...numbers)}.jsonl`));
+  files.push(ledgerFile);
+  const records = [];
+  for (const file of files) {
+    const status = lstatSync(file, { throwIfNoEntry: false });
+    if (!status?.isFile()) continue;
+    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+      if (!line) continue;
+      try {
+        const record = JSON.parse(line);
+        if (record?.sessionId === sessionId) records.push(record);
+      } catch {
+        // A torn line is skipped.
+      }
+    }
+  }
+  return records;
 }
 
 function toolRecord(event, expectedEvent) {
@@ -222,21 +357,32 @@ function toolRecord(event, expectedEvent) {
   };
 }
 
-function appendRecord(path, record) {
-  validateExistingLedger(path, record.sessionId);
+function openLedger(path) {
   const noFollow = constants.O_NOFOLLOW ?? 0;
-  const descriptor = openSync(
-    path,
-    constants.O_WRONLY | constants.O_APPEND | constants.O_CREAT | noFollow,
-    0o600,
-  );
   try {
-    if (!fstatSync(descriptor).isFile()) throw new RecorderError('LEDGER_FILE_UNSAFE');
-    writeSync(descriptor, `${JSON.stringify(record)}\n`);
-    fsyncSync(descriptor);
-  } finally {
-    closeSync(descriptor);
+    return openSync(path, constants.O_RDWR | constants.O_APPEND | constants.O_CREAT | noFollow, 0o600);
+  } catch (error) {
+    if (error?.code === 'ELOOP' || error?.code === 'EISDIR') throw new RecorderError('LEDGER_FILE_UNSAFE');
+    throw error;
   }
+}
+
+function appendRecord(path, record) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const descriptor = openLedger(path);
+    try {
+      const check = checkOpenLedger(descriptor, record.sessionId);
+      if (check.rotate && rotateLedger(path, fstatSync(descriptor))) continue;
+      // Another hook is moving a torn ledger aside; reopen. A full one can take this record meanwhile.
+      if (check.rotate === 'torn') continue;
+      writeSync(descriptor, `${check.prefix}${JSON.stringify(record)}\n`);
+      fsyncSync(descriptor);
+      return;
+    } finally {
+      closeSync(descriptor);
+    }
+  }
+  throw new RecorderError('LEDGER_FILE_UNSAFE');
 }
 
 export function appendSessionRecord(ledgerFile, baseRecord, fields) {

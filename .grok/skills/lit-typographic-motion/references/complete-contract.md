@@ -18,7 +18,7 @@ activation:
 preconditions:
   - the request asks to create a new video, clip, motion graphics, lyric video or title sequence
   - the skill directory resolves from the installed .grok tree (project or user)
-  - the motion runtime was pre-warmed outside the session (litgrok-ai motion-runtime install)
+  - the motion runtime was pre-warmed outside the session (npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install)
 ```
 
 The project rule `.grok/rules/00-litgrok.md` suggests this skill for a bare `lit` film request

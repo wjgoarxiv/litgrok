@@ -51,6 +51,7 @@ const PRE_MANIFEST_PAYLOAD_HASHES = Object.freeze({
   'agents/litgrok-quality-reviewer.md': 'ed6f2687770f0f31c6821f0ad49d717362807f0bb5f4f27cf4d36be1e7dfd5a2',
   'hooks/deliverable-hedge-guard.json': '65a0008a8c51be203a385f0ca55a5e7eb9e60e487c701c08d6d2407f0a3a1170',
   'hooks/deliverable-hedge-guard.mjs': '78f997d793e94853d1ef9073fbc9dd8b1577fe756d5e8a89d4fc3859d4bde5a9',
+  'hooks/plan-gate.mjs': '0477520c23776d4031e0703fc0d776a53a7e2938f5ec1a41ac0f3388bc91d7a3',
   'hooks/record-passive-event.mjs': '9f5bd1d6c8b8e6c0be4cc61cf31f0e26f4f8a41fceb826e88567f22efa2b0090',
   'hooks/session-start.mjs': '5706ccce58340e78e435b9c1fd2224e101872ce1d0f51a9d187feb31b67c3b5d',
   'hooks/stop.mjs': 'c796f02ac3dc99716d0c2f478bf93ec35cd8a9c725de18d12895957ee261b9c3',
@@ -197,7 +198,7 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/text-naturalization/SKILL.md': 'aa1ff8f68ab0bf71cb47818b536c4a2934da65adb413ee43ec5839b540b2df8e',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--dry-run] [--no-color] [--yes]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok-ai motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--dry-run] [--no-color] [--yes]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -359,7 +360,7 @@ function receiptCard(options, root, colors, { status, written, current }) {
     '  │ Hooks: project hooks require trust from a Git project root',
     '  │ Trust: use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json',
     '  │ Installer never runs git init or changes trust',
-    '  │ Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with litgrok-ai motion-runtime install',
+    `  │ Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@${packageVersion()} -- litgrok motion-runtime install`,
     '  │ Next: restart Grok Build',
     `  ${paint('╰─', titleColor, colors)}`,
     '',
@@ -763,6 +764,71 @@ function unsafeInstallAncestor(root, files) {
   return null;
 }
 
+const UPDATE_REGISTRY_URL = 'https://registry.npmjs.org/@litfamily%2flitgrok/latest';
+const UPDATE_CHECK_TIMEOUT_MS = 3000;
+const UPDATE_INSTALL_LINE = 'npm exec --yes --package @litfamily/litgrok@latest -- litgrok install';
+const UPDATE_OPT_OUTS = ['NO_UPDATE_NOTIFIER', 'CI', 'LITGROK_NO_UPDATE_CHECK'];
+
+function stableVersion(value) {
+  const match = typeof value === 'string' ? /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u.exec(value) : null;
+  return match ? match.slice(1).map(Number) : null;
+}
+
+function isNewerVersion(candidate, current) {
+  const a = stableVersion(candidate);
+  const b = stableVersion(current);
+  if (!a || !b) return false;
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] !== b[index]) return a[index] > b[index];
+  }
+  return false;
+}
+
+async function latestRegistryVersion(fetchFn) {
+  // A referenced timer, unlike AbortSignal.timeout, keeps the process alive until the bound fires.
+  const controller = new AbortController();
+  let timer;
+  const deadline = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error('registry check timed out');
+      controller.abort(error);
+      reject(error);
+    }, UPDATE_CHECK_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([deadline, (async () => {
+      const response = await fetchFn(UPDATE_REGISTRY_URL, { headers: { accept: 'application/json' }, signal: controller.signal });
+      if (!response.ok) throw new Error(`registry answered ${response.status}`);
+      const version = (await response.json())?.version;
+      if (!stableVersion(version)) throw new Error('registry answered without a stable version');
+      return version;
+    })()]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Read-only: prints the package version and, at most, one notify-only update line.
+// It never installs; the user runs the printed command themselves.
+async function runDoctor(args, { env, stdout, stderr, fetchFn }) {
+  if (args.some((argument) => argument !== '--no-color')) {
+    stderr.write(USAGE);
+    return 1;
+  }
+  const current = packageVersion();
+  stdout.write(`litgrok ${current}\n`);
+  if (UPDATE_OPT_OUTS.some((name) => Object.hasOwn(env, name))) return 0;
+  let latest;
+  try {
+    latest = await latestRegistryVersion(fetchFn);
+  } catch {
+    stdout.write('update check unavailable (offline or registry unreachable)\n');
+    return 0;
+  }
+  if (isNewerVersion(latest, current)) stdout.write(`newer version available: ${latest} (run: ${UPDATE_INSTALL_LINE})\n`);
+  return 0;
+}
+
 export async function run(args, context = {}) {
   if (args[0] === 'motion-runtime') {
     const { runMotionRuntime } = await import('../.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
@@ -771,6 +837,14 @@ export async function run(args, context = {}) {
   if (args[0] === 'auto-handoff') {
     const { runAutoHandoff } = await import('../.grok/hooks/auto-handoff.mjs');
     return runAutoHandoff(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr, cwd: context.cwd ?? process.cwd() });
+  }
+  if (args[0] === 'doctor') {
+    return runDoctor(args.slice(1), {
+      env: context.env ?? process.env,
+      stdout: context.stdout ?? process.stdout,
+      stderr: context.stderr ?? process.stderr,
+      fetchFn: context.fetch ?? globalThis.fetch,
+    });
   }
   const env = context.env ?? process.env;
   const stdin = context.stdin ?? process.stdin;

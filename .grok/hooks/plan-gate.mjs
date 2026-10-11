@@ -11,20 +11,12 @@ import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from 'node
 import { join } from 'node:path';
 
 import { countImplementationRows } from '../skills/lit-plan/scripts/scaffold-plan.mjs';
+import { readLedgerRecords } from './record-passive-event.mjs';
 
 export const PLAN_GATE_SIGNAL = 'plan-gate-block';
 export const PLAN_GATE_MAX_BLOCKS = 2;
 const SCAFFOLD = '.grok/skills/lit-plan/scripts/scaffold-plan.mjs';
 const MAX_PLAN_BYTES = 256 * 1024;
-
-function ledgerRecords(ledgerFile, sessionId) {
-  if (!existsSync(ledgerFile)) return [];
-  return readFileSync(ledgerFile, 'utf8')
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .map((line) => JSON.parse(line))
-    .filter((record) => record.sessionId === sessionId);
-}
 
 function turnStart(records, promptId) {
   const prompts = records.filter((record) => record.event === 'UserPromptSubmit');
@@ -59,7 +51,7 @@ export function evaluatePlanGate({ event, workspaceRoot, sessionId, ledgerFile }
   if (event.reason !== undefined && event.reason !== 'end_turn') return { block: false };
   if (event.subagentType !== undefined) return { block: false };
 
-  const records = ledgerRecords(ledgerFile, sessionId);
+  const records = readLedgerRecords(ledgerFile, sessionId);
   const { since, litPlanTurn } = turnStart(records, event.promptId);
   const planMode = event.permissionMode === 'plan' || litPlanTurn;
   const written = plansWrittenSince(workspaceRoot, since);

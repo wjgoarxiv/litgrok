@@ -76,7 +76,7 @@ test('SKILL.md stays lean, loads the treatment first, routes every reference, an
   assert.doesNotMatch(order.split('\n').find((line) => line.startsWith('2. ')).split('type →')[0], /scene-contract|type-craft|style-bible/, 'the stage path never requires a type-path reference');
   for (const command of ['stage --out <dir> --stills-only', 'make --out <dir> --stills-only', 'look --out <dir> --round 1 --answers <file>', 'sound --out <dir>', 'node scripts/motion.mjs verify --out <dir>']) assert.ok(skill.includes(command), command);
   assert.match(skill, /at least 600 s/);
-  assert.match(skill, /litgrok-ai motion-runtime install/);
+  assert.match(skill, /npm exec --yes --package @litfamily\/litgrok@<installed version> -- litgrok motion-runtime install/);
   assert.match(skill, /ask no (?:style )?questions/i);
   assert.match(skill, /hand-encoded films[^\n]*are not the deliverable/i);
   assert.match(skill, /Exit codes:[^\n]*16 treatment invalid[^\n]*20 sound invalid/);
@@ -282,7 +282,7 @@ test('the film context is neutral, at most 700 bytes of prose, and names both ro
   for (const genre of ['announcement', 'brand-mood', 'explainer', 'lyric', 'title sequence', 'music video']) assert.doesNotMatch(prose, new RegExp(genre, 'i'), `no genre nouns in the film context (${genre})`);
   assert.match(commands, /`node scripts\/motion\.mjs` with `make`, `stage`, `sound`, `look`, `gate`, `verify`/);
   assert.equal((commands.match(/scripts\/motion\.mjs/g) ?? []).length, 1, 'the installed script is named once');
-  assert.match(commands, /litgrok-ai motion-runtime install/);
+  assert.match(commands, /npm exec --yes --package @litfamily\/litgrok@<installed version> -- litgrok motion-runtime install/);
 });
 
 const NO_COPY = [

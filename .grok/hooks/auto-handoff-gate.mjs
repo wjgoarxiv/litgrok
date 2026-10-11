@@ -8,11 +8,12 @@
 // what makes it fire once.
 
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
 import { readContextRecord } from './litgrok-hud-state.mjs';
+import { readLedgerRecords } from './record-passive-event.mjs';
 
 export const DIRECTIVE_SIGNAL = 'auto-handoff-directive';
 export const RELOAD_SIGNAL = 'auto-handoff-reload';
@@ -38,21 +39,6 @@ function lineCarriesMarker(line, marker) {
 
 function carriesMarker(text, marker) {
   return text.split(/\r?\n/).some((line) => lineCarriesMarker(line, marker));
-}
-
-function ledgerRecords(ledgerFile, sessionId) {
-  if (!existsSync(ledgerFile)) return [];
-  const records = [];
-  for (const line of readFileSync(ledgerFile, 'utf8').split(/\r?\n/)) {
-    if (!line) continue;
-    try {
-      const record = JSON.parse(line);
-      if (record.sessionId === sessionId) records.push(record);
-    } catch {
-      // A damaged line is skipped; the recorder itself refuses to append to a ledger it cannot read.
-    }
-  }
-  return records;
 }
 
 function lastIndex(records, predicate, after = -1) {
@@ -121,7 +107,7 @@ export function evaluateAutoHandoff({ event, env = process.env, workspaceRoot, e
   const settings = resolveAutoHandoff({ env, dirs: [workspaceRoot, eventCwd] });
   if (!settings.active) return { block: false };
 
-  const records = ledgerRecords(ledgerFile, sessionId);
+  const records = readLedgerRecords(ledgerFile, sessionId);
   const directiveIndex = lastIndex(records, (record) => record.signal === DIRECTIVE_SIGNAL);
   const compactIndex = directiveIndex < 0 ? -1 : lastIndex(records, (record) => record.event === 'PostCompact', directiveIndex);
 

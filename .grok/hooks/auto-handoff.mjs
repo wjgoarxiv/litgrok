@@ -4,9 +4,10 @@
 // environment); `on` without a number reuses the last value, and there is no built-in default.
 
 import { randomUUID } from 'node:crypto';
-import { lstatSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { readNewestContextRecord } from './litgrok-hud-state.mjs';
+import { ignoreStateDirectory } from './record-passive-event.mjs';
 
 export const ENABLE_VARIABLE = 'LITGROK_AUTO_HANDOFF';
 export const PERCENT_VARIABLE = 'LITGROK_AUTO_HANDOFF_PERCENT';
@@ -21,6 +22,58 @@ export function parsePercent(text) {
 
 function configPath(directory) {
   return join(directory, ...CONFIG_FILE.split('/'));
+}
+
+function present(path) {
+  try {
+    lstatSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function samePath(left, right) {
+  const canonical = (path) => {
+    try {
+      return realpathSync(path);
+    } catch {
+      return resolve(path);
+    }
+  };
+  return canonical(left) === canonical(right);
+}
+
+// Project hooks run only from a Git project root, and Grok hands its workspace root to the Stop hook and
+// the status line. The command picks the nearest Git root from any subfolder; outside Git it uses cwd.
+export function projectRoot(cwd) {
+  let directory = resolve(cwd);
+  for (;;) {
+    if (present(join(directory, '.git'))) return { root: directory, git: true };
+    const parent = dirname(directory);
+    if (parent === directory) return { root: resolve(cwd), git: false };
+    directory = parent;
+  }
+}
+
+// The host decides the workspace root, so say when the chosen folder may not be the one it uses.
+function rootNotes({ root, git }, home) {
+  const notes = [];
+  if (!git) {
+    notes.push(`Note: no Git root above ${root}, so this setting belongs to that folder alone. Project hooks need a Git root, and they read this file only when Grok Build starts in that folder.`);
+  } else if (home && samePath(root, home)) {
+    notes.push(`Note: the Git root here is your home folder (${root}), so this setting applies to Grok Build sessions started in your home folder. For a project inside it, run git init in the project and run this command there.`);
+  }
+  for (let directory = dirname(root); ; directory = dirname(directory)) {
+    // A dotfiles repository at home is not a project root unless LitGrok already keeps state there.
+    const homeRepository = home && samePath(directory, home) && !present(join(directory, '.grok', 'litgrok'));
+    if (!homeRepository && (present(join(directory, '.git')) || present(join(directory, '.grok', 'litgrok')))) {
+      notes.push(`Note: ${directory} above it is also a project root. The hooks read the file under the folder where you start Grok Build: ${configPath(root)} when you start in ${root}, or ${configPath(directory)} when you start in ${directory}. Run this command in the folder where you start Grok Build.`);
+      break;
+    }
+    if (dirname(directory) === directory) break;
+  }
+  return notes;
 }
 
 // Returns { found: false } or { found: true, valid, enabled, percent, reason }.
@@ -127,6 +180,7 @@ function ensureDirectory(path) {
 export function writeAutoHandoffFile(directory, settings) {
   ensureDirectory(join(directory, '.grok'));
   ensureDirectory(join(directory, '.grok', 'litgrok'));
+  ignoreStateDirectory(join(directory, '.grok', 'litgrok'));
   const target = configPath(directory);
   try {
     const existing = lstatSync(target);
@@ -189,13 +243,17 @@ export async function runAutoHandoff(args, { env = process.env, stdout = process
     return 1;
   }
 
-  const resolved = resolveAutoHandoff({ env, dirs: [cwd] });
+  const located = projectRoot(cwd);
+  const { root } = located;
+  const notes = rootNotes(located, env.HOME || null);
+  const file = `Project file: ${configPath(root)}`;
+  const resolved = resolveAutoHandoff({ env, dirs: [root] });
   if (action === 'status') {
-    stdout.write(`${describe(resolved, env).join('\n')}\n`);
+    stdout.write(`${[...describe(resolved, env), file, ...notes].join('\n')}\n`);
     return 0;
   }
 
-  const stored = readAutoHandoffFile(cwd);
+  const stored = readAutoHandoffFile(root);
   const previous = stored.found && stored.valid ? stored.percent : null;
   let next;
   if (action === 'off') {
@@ -211,12 +269,12 @@ export async function runAutoHandoff(args, { env = process.env, stdout = process
   }
 
   try {
-    writeAutoHandoffFile(cwd, next);
+    writeAutoHandoffFile(root, next);
   } catch (error) {
     return fail(`litgrok auto-handoff: ${error instanceof Error ? error.message : String(error)}`);
   }
 
-  const after = resolveAutoHandoff({ env, dirs: [cwd] });
+  const after = resolveAutoHandoff({ env, dirs: [root] });
   const lines = [];
   if (action === 'off') {
     lines.push('Automatic handoff is OFF for this project.');
@@ -225,6 +283,7 @@ export async function runAutoHandoff(args, { env = process.env, stdout = process
     lines.push(`Automatic handoff is ON at ${next.percent} percent for this project.`);
     lines.push('When a turn ends with the context at or above that percent, the model is asked to write a handoff and then to tell you to run /compact.');
   }
+  lines.push(`Saved in ${configPath(root)}`, ...notes);
   if (after.enabled !== next.enabled) lines.push(`Warning: ${ENABLE_VARIABLE} is set in this shell, so sessions started from here stay ${after.enabled ? 'ON' : 'OFF'}.`);
   const { warning } = hostWarning(next.enabled ? next.percent : null, env);
   if (warning) lines.push(warning);
