@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 1.0.17 — 2026-10-11
+
+- The README is shorter and written for someone opening it for the first time: what LitGrok does, how to install it and what to type first. The detailed material moved, unchanged, into a guide and a skills page in English and Korean, and the GitHub page shows a short film of a real session as its demo.
+- The optional status row is more compact. It reads like `[🔥LIT vX.Y.Z] | Grok 4.5 [high] │ ctx [█▎░] 42%/2m`, with the installed version, the model and its reasoning effort, and the context used out of the window size. A value Grok does not send is left out, and an unknown percent shows as `ctx ?`.
+- While a LitGrok skill runs, a second line under the row shows the skill, how long the turn has run, the tool calls so far and the subagents still running. It reads `complete` for twenty seconds after the turn ends and then goes away, and it turns amber when the plan gate or automatic handoff needs you. `LITGROK_HUD_LINES=1` keeps the row to one line.
+- The new `litgrok doctor` prints the installed version and, when npm has a newer one, the command that installs it. It only reads the registry and never installs anything.
+- Long sessions and Korean input keep working. Hooks read Korean text over 64 KB without garbling it, and the session log survives a torn last line and rotates once it passes 8 MiB, keeping the two newest parts.
+- `litgrok auto-handoff` uses the project's Git root when run from a subfolder and prints the file it used. The `.grok/litgrok/` runtime folder keeps itself out of Git.
+- When `config.toml` already has an inline `ui` table, the status-line install leaves the file untouched and explains what to change. It used to add a second `ui` table that made the file invalid. Removing the status line now restores the original file byte for byte.
+- The motion pre-warm command works. The installer and the motion skill pointed to a command name that was never published; they now print `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install`, pinned to the installed release.
+
 ## 1.0.16 — 2026-10-09
 
 - The deck check in `lit-pptx` now finds placeholder text. It reads its placeholder words from a list that LitGrok had never shipped, so it found nothing, and a slide that still said "Lorem ipsum" or "[작성 중]" passed. The list now ships with the skill, and the installer copies it.
