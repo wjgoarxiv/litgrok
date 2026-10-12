@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.0.18 — 2026-10-12
+
+- The README shows automatic handoff step by step. Each `litgrok auto-handoff` command (`on 60`, `status`, `off`) and the environment switches appear as terminal pictures with their real output, followed by the status row as the context nears your percent and the handoff is requested, and the `/compact` step that comes after.
+- Install has a short prompt you can paste into a coding agent so it installs LitGrok for you. The agent shows its plan and waits for your yes, uses only the official npm package, passes `--yes` with `NO_COLOR` and `CI` cleared so a shell without a terminal really installs, asks before adding the status row, checks the result and reminds you to restart Grok Build. The prompt is in English and Korean.
+- The GitHub page plays a new short film of the `--shout` session in seven numbered steps, from the bare `lit` request to the closing `litwork complete` status line, and the caption under it is gone.
+- The slide runtime in `lit-pptx` and the readme-studio HyperFrames template pin sharp 0.35.5, and the HyperFrames and Remotion templates pin source-map-js 1.2.2. Slides still need Node.js 20.9 or newer.
+
 ## 1.0.17 — 2026-10-11
 
 - The README is shorter and written for someone opening it for the first time: what LitGrok does, how to install it and what to type first. The detailed material moved, unchanged, into a guide and a skills page in English and Korean, and the GitHub page shows a short film of a real session as its demo.
