@@ -14,9 +14,7 @@
 
 <p align="center"><a href="#30초-설치">설치</a> &nbsp; <a href="./docs/guide_ko-KR.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 안내서</a> &nbsp; <a href="./docs/skills_ko-KR.md">스킬</a> &nbsp; <a href="./docs/guide_ko-KR.md#움직임으로-보기"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> 영상</a> &nbsp; <a href="./docs/guide_ko-KR.md#안전하게-설치하고-지우기"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> 안전</a> &nbsp; <a href="./docs/reference_ko-KR.md">상세 안내</a> &nbsp; <a href="./README.md">English</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="작은 Node 프로젝트에서 실제로 진행한 Grok Build 세션을 짧은 영상으로 만들었고, 기다리는 시간은 줄였습니다. --shout 플래그를 요청하면 상태 행에 LIT IGNITED · litwork가 뜨고, 새 테스트가 실패한 뒤 greet.js를 고치며, 답은 node greet.js --shout Ada가 HELLO, ADA!를 출력한다고 알립니다." /></p>
-
-<p align="center"><sub>LitGrok을 설치한 실제 Grok Build 1.0.13 세션을 터미널에서 녹화한 뒤, 그린 터미널 창 위에서 카메라를 움직이며 다시 재생했습니다. 기다리는 시간을 줄이고 프로젝트 폴더를 ~/greet로 표시했으며, 나머지 글자는 Grok Build가 출력한 그대로입니다. 설치 화면은 <a href="./docs/guide_ko-KR.md">안내서</a>에 있습니다.</sub></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="작은 Node 프로젝트에서 실제로 진행한 Grok Build 세션을 짧은 영상으로 만들었고, 일곱 단계로 흘러갑니다. 1. 요청이 lit으로 시작합니다: lit add a --shout flag that prints the greeting in capitals, with a test. 2. LitGrok이 켜지고 상태 행에 [LIT v1.0.16] LIT IGNITED · litwork가 뜹니다. 3. 먼저 플레이북을 읽습니다. 프로젝트 지침과 코드 변경 스킬을 읽고 Read 2 skills가 보입니다. 4. greet.js를 고치기 전에 테스트부터 씁니다. 5. 이어서 고치고, 고칠 때마다 pre_tool_use와 post_tool_use 훅에 체크 표시가 붙습니다. 6. 실제로 테스트를 돌립니다: Re-run tests and check the shout CLI. 7. 증거와 함께 끝납니다. node greet.js --shout Ada가 이제 HELLO, ADA!를 출력하고, 상태 행에 litwork complete · 35s · 2 tools가 뜹니다." /></p>
 
 ## 왜 LitGrok인가요
 
@@ -33,6 +31,26 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.17`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
+
+### 코딩 에이전트에게 설치 맡기기
+
+설치를 코딩 에이전트에게 맡기고 싶다면 프로젝트 폴더에서 에이전트를 열고 아래 프롬프트를 붙여 넣으세요. 에이전트가 계획을 먼저 보여 주고 승인을 기다리게 하며, 공식 npm 패키지만 쓰게 하고, 결과를 확인한 뒤에 보고하게 합니다. 에이전트의 셸에는 터미널이 연결되어 있지 않습니다. 그래서 설치 줄에 `--yes`를 붙이고 `NO_COLOR`와 `CI`를 지웁니다. 그렇게 하지 않으면 설치 프로그램은 미리보기만 하고 끝납니다.
+
+```text
+xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
+공식 npm 패키지 @litfamily/litgrok만 써. 저장소를 클론하거나, 다른 설치 스크립트를 실행하거나, 다른 패키지를 쓰지 마.
+무엇이든 바꾸기 전에 계획을 먼저 보여 주고 내가 승인할 때까지 기다려.
+
+1. Node.js와 Grok Build가 설치되어 있는지, 이 폴더가 프로젝트의 Git 루트인지 확인해. Git 저장소가 아니면 git init을 실행하기 전에 나에게 물어봐.
+2. 설치를 미리 보고, 파일이 어디에 들어갈지 보여 줘.
+   npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run
+3. 설치해. 네 셸에는 터미널이 없으니 --yes를 붙이고 NO_COLOR와 CI를 지워. 그렇지 않으면 미리보기만 하고 끝나.
+   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes
+4. LitGrok 상태 행도 원하는지 나에게 물어봐. 상태 행은 사용자 설치라서 LitGrok을 ~/.grok/에도 복사하고, ~/.grok/config.toml을 백업한 뒤 상태 행 설정을 추가해. 내가 원한다고 할 때만 실행해.
+   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line --yes
+5. 확인해. 설치 결과에 "Status: Ready"가 있고, 프로젝트에 .grok/skills, .grok/rules, .grok/hooks가 생겼는지 봐. 출력에 "no files written"이 있으면 다른 옵션을 시도하지 말고 그 줄에 적힌 이유를 알려 줘.
+6. 무엇을 어디에 썼는지, 설치 프로그램이 거부한 것, 확인하지 못한 것을 보고해. 마지막으로 프로젝트의 Git 루트에서 Grok Build를 다시 시작하고 /hooks-trust로 훅을 신뢰하라고 알려 줘.
+```
 
 ## 빠른 시작
 
@@ -117,13 +135,38 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 ## 자동 핸드오프
 
-세션이 길어지면 컨텍스트가 차고, Grok이 대화를 압축하면서 세부 내용이 사라집니다. LitGrok은 그 전에 인수인계 문서를 받아 둘 수 있습니다. 퍼센트는 직접 정하고, 정하기 전까지 이 기능은 꺼져 있습니다.
+세션이 길어지면 Grok의 컨텍스트 창이 조금씩 찹니다. 거의 다 차면 Grok이 대화를 압축하고, 하던 일의 세부 내용이 그 과정에서 빠져나갑니다. 자동 핸드오프는 모델이 아직 모든 것을 기억할 때 인수인계 문서를 쓰게 해서, 압축이 끝난 뒤에도 하던 자리에서 바로 이어 가게 합니다.
+
+이 기능은 직접 켜기 전까지 꺼져 있고, 퍼센트도 언제나 직접 정합니다. 설정은 프로젝트마다 따로이며 그 프로젝트의 `.grok/litgrok/auto-handoff.json`에 저장됩니다. 컨텍스트가 얼마나 찼는지는 선택 기능인 상태 행에서 읽습니다. Grok이 그 수치를 상태 행에만 알려 주고 훅에는 알려 주지 않기 때문입니다. 그러니 상태 행부터 켜 두세요. 사용자 설정에 들어가므로 한 번만 하면 됩니다. 요청을 보내는 Stop 훅도 다른 프로젝트 훅과 같아서, 신뢰한 Git 루트(`/hooks-trust`)에서 동작합니다.
 
 ```bash
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 ```
 
-턴이 끝났을 때 컨텍스트가 그 퍼센트 이상이면 Stop 훅이 모델에게 인수인계 문서를 쓰라고 요청하고, 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리해 압축할 때를 알려 줍니다. `LITGROK_AUTO_HANDOFF_PERCENT`를 설정하면 그 환경에서는 저장된 퍼센트 대신 그 값을 씁니다. 컨텍스트 수치는 선택 기능인 상태 행에서 읽으니 `install --user --status-line`으로 상태 행을 켜 두어야 하고, 다른 프로젝트 훅처럼 신뢰한 Git 루트(`/hooks-trust`)에서만 동작합니다. [모든 설정과 단계별 동작](./docs/guide_ko-KR.md#자동-핸드오프-자세히)
+둘째 줄은 프로젝트 안에서 실행하세요. 하위 폴더에서 실행해도 Git 루트를 알아서 찾습니다. 그다음 `auto-handoff status`를 실행하면 설정을 다시 읽어 보여 주고, 각 값이 어디서 왔는지와 동작을 막을 만한 문제가 있는지 알려 줍니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-on-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-on-light.webp" width="953" alt="zsh라는 제목의 터미널 창. litgrok auto-handoff on 60 명령이 Automatic handoff is ON at 60 percent for this project., When a turn ends with the context at or above that percent, the model is asked to write a handoff and then to tell you to run /compact., Saved in ~/demo/.grok/litgrok/auto-handoff.json을 출력합니다. 이어서 litgrok auto-handoff status가 Automatic handoff: ON at 60 percent, Set by: .grok/litgrok/auto-handoff.json, Percent: 60, from .grok/litgrok/auto-handoff.json, Grok's own auto-compact point: not reported yet, It needs the LitGrok status line (litgrok install --user --status-line) to see how full the context is. Without it, nothing happens., Project file: ~/demo/.grok/litgrok/auto-handoff.json을 출력합니다." /></picture></p>
+
+### 세션에서 보이는 것
+
+컨텍스트가 정한 퍼센트의 10포인트 안으로 들어오면 상태 행 아래 리본이 주황색으로 바뀌고 얼마나 가까운지 보여 줍니다. 턴이 끝났을 때 컨텍스트가 정한 퍼센트 이상이면 Stop 훅이 모델을 한 단계 더 일하게 하고, `lit-handoff` 절차대로 인수인계 문서를 쓰라고 한 번 요청합니다. 그러면 리본에 `handoff requested`가 뜹니다. 문서가 저장되면 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리합니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="782" alt="grok라는 제목의 터미널 창. /litwork 턴 동안의 상태 행 세 개가 있고, 모두 LIT IGNITED · litwork | Grok 4.5 [high]와 컨텍스트 수치를 보여 주며 아래에 주황색 리본이 붙어 있습니다. 54%/2m일 때 리본은 ctx 54% → handoff at 60% · 1m04s · 2 tools, 61%/2m일 때는 ctx 61% ≥ handoff at 60%입니다. Stop 훅이 핸드오프를 요청한 뒤에는 handoff requested · 1m04s · 2 tools가 됩니다." /></picture></p>
+
+이때 `/compact`를 직접 입력하세요. Grok은 훅이 압축을 시작하게 해 주지 않습니다. 압축이 끝나고 다음 턴이 끝날 때, LitGrok은 이 세션이 저장한 인수인계 문서를 모델에게 알려 주고 현재 파일을 확인한 뒤 문서에 적힌 다음 단계부터 이어 가라고 요청합니다. Grok도 설정을 바꾸지 않았다면 85퍼센트에서 스스로 압축하니, 그보다 낮은 퍼센트를 고르세요.
+
+### 끄기, 셸마다 정하기
+
+`auto-handoff off`는 프로젝트에서 기능을 끄고 퍼센트는 기억해 둡니다. 나중에 숫자 없이 `auto-handoff on`만 실행해도 같은 숫자로 다시 켜집니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-off-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-off-light.webp" width="917" alt="zsh라는 제목의 터미널 창. litgrok auto-handoff off 명령이 Automatic handoff is OFF for this project., 60 percent is remembered for the next &quot;on&quot;., Saved in ~/demo/.grok/litgrok/auto-handoff.json을 출력합니다." /></picture></p>
+
+Grok Build를 시작하는 환경에서 정할 수도 있습니다. 셸 하나나 스크립트에서만 다르게 쓰고 싶을 때 편합니다. `LITGROK_AUTO_HANDOFF=1`은 그 환경에서 시작하는 모든 세션에서 기능을 켜고, `0`이면 그 환경에서는 꺼 둡니다. `LITGROK_AUTO_HANDOFF_PERCENT`는 퍼센트를 정하며 저장된 값보다 우선합니다. 환경 변수가 프로젝트 파일을 덮어쓰고 있으면 `status`가 알려 줍니다.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-env-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-env-light.webp" width="953" alt="zsh라는 제목의 터미널 창. export LITGROK_AUTO_HANDOFF=1 LITGROK_AUTO_HANDOFF_PERCENT=50 다음에 litgrok auto-handoff status 명령이 Automatic handoff: ON at 50 percent, Set by: LITGROK_AUTO_HANDOFF, Percent: 50, from LITGROK_AUTO_HANDOFF_PERCENT, LITGROK_AUTO_HANDOFF in this environment overrides .grok/litgrok/auto-handoff.json.을 출력하고, 이어서 자동 압축 지점과 상태 행 안내, Project file: ~/demo/.grok/litgrok/auto-handoff.json이 나옵니다." /></picture></p>
+
+[단계별 동작 전체, 오래됐거나 다른 세션이 쓴 인수인계 문서를 어떻게 다루는지까지](./docs/guide_ko-KR.md#자동-핸드오프-자세히)
 
 ## 어떻게 동작하나요
 

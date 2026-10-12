@@ -83,8 +83,9 @@ test('both GitHub pages show the session film in the demo slot near the top, and
     assert.ok(content.indexOf(slots[0]) < content.indexOf('\n## '), `${file}: the demo slot sits above the first section`);
     const alt = /^<!-- demo-gif --><p align="center"><img src="\.\/docs\/assets\/demo\.webp" width="960" alt="([^"]+)" \/><\/p>$/u.exec(slots[0])?.[1] ?? '';
     assert.ok(alt.startsWith(opening[file]), `${file}: the demo slot shows the session film with an honest alt`);
-    for (const quote of ['--shout', 'LIT IGNITED · litwork', 'HELLO, ADA!']) assert.ok(alt.includes(quote), `${file}: the film alt quotes "${quote}"`);
-    assert.ok(alt.length <= 300, `${file}: the demo slot keeps a short alt`);
+    for (const quote of ['--shout', '[LIT v1.0.16] LIT IGNITED · litwork', 'Read 2 skills', 'pre_tool_use', 'Re-run tests and check the shout CLI', 'HELLO, ADA!', 'litwork complete · 35s · 2 tools']) assert.ok(alt.includes(quote), `${file}: the film alt quotes "${quote}"`);
+    assert.ok(alt.length <= 800, `${file}: the demo slot keeps its alt to the seven steps`);
+    assert.doesNotMatch(content, /<sub>[^<]*(?:recorded|replayed|녹화|재생)/u, `${file}: no method caption under the demo`);
     assert.equal([...content.matchAll(/assets\/screens\//gu)].length, 0, `${file}: the captures live in the guide`);
   }
 });
@@ -144,4 +145,50 @@ test('README prose never states a payload count that differs from what the insta
       assert.equal(Number(count.replaceAll(',', '')), discovered, `${file}: "${phrase}" must match the ${discovered} files the installer discovers`);
     }
   }
+});
+
+// Captures of the `litgrok auto-handoff` command and of the status line around a Stop-hook handoff request.
+const autoHandoff = {
+  'auto-handoff-env-dark.webp': '7f04e0f5d98e79144e10f3ffd079f64791b6e7e56ddcba9649eb1e5616a1165d',
+  'auto-handoff-env-light.webp': '8eaa41a1d3b7162f16fe37168ad2aa3bdc1b085fc564bfe202219758d7ffdadf',
+  'auto-handoff-off-dark.webp': 'fd8406fc4ae6a7addfd3b8bdb8c6bdc2c7d75f57fe1c5d7c017a849a6c944851',
+  'auto-handoff-off-light.webp': '609517ec31c81bb19a72e93b21584b5cd228a05b4d296f51bbfcab5cb99c7b6e',
+  'auto-handoff-on-dark.webp': '48bb553aacfe8d7e132d390a209da8e194acad7bd79b415fe0f948c33f52199a',
+  'auto-handoff-on-light.webp': 'ebe15d4e3c53722c9f3c16421fb346f4c6b8af61791860cd99c8aa111ab6e97c',
+  'auto-handoff-session-dark.webp': '300d0e3766f809c780899e063f2a3f505b52d806752f89078e9ea50a7b126500',
+  'auto-handoff-session-light.webp': '77a20b29310cdff35818d4a3e976d8280b2bfdd4b394c2787412fd9bd9fdd0aa',
+};
+const autoHandoffQuotes = {
+  'auto-handoff-on': ['litgrok auto-handoff on 60', 'Automatic handoff is ON at 60 percent for this project.', 'litgrok auto-handoff status', 'Automatic handoff: ON at 60 percent', 'It needs the LitGrok status line (litgrok install --user --status-line)'],
+  'auto-handoff-session': ['ctx 54% → handoff at 60%', 'ctx 61% ≥ handoff at 60%', 'handoff requested'],
+  'auto-handoff-off': ['litgrok auto-handoff off', 'Automatic handoff is OFF for this project.', '60 percent is remembered for the next &quot;on&quot;.'],
+  'auto-handoff-env': ['export LITGROK_AUTO_HANDOFF=1 LITGROK_AUTO_HANDOFF_PERCENT=50', 'Automatic handoff: ON at 50 percent', 'Percent: 50, from LITGROK_AUTO_HANDOFF_PERCENT', 'LITGROK_AUTO_HANDOFF in this environment overrides .grok/litgrok/auto-handoff.json.'],
+};
+
+test('both GitHub pages show every automatic-handoff capture in its section, themed and quoted', () => {
+  const folder = join(ROOT, 'docs/assets/auto-handoff');
+  assert.deepEqual(readdirSync(folder).sort(), Object.keys(autoHandoff).sort());
+  for (const [name, expected] of Object.entries(autoHandoff)) {
+    const bytes = readFileSync(join(folder, name));
+    assert.ok(bytes.length <= MAX_SCREEN_BYTES, `${name} must stay under 60 KiB`);
+    assert.equal(bytes.subarray(8, 16).toString(), 'WEBPVP8L', `${name} is a lossless WebP`);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), expected, name);
+  }
+  for (const [file, heading] of [['README.md', '## Automatic handoff'], ['README_ko-KR.md', '## 자동 핸드오프']]) {
+    const content = read(file);
+    const start = content.indexOf(`\n${heading}\n`);
+    assert.ok(start > 0, `${file} has the section`);
+    const section = content.slice(start, content.indexOf('\n## ', start + 4));
+    const pictures = [...section.matchAll(/<p align="center">(<picture>[\s\S]*?<\/picture>)<\/p>/gu)].map((match) => match[1]);
+    assert.deepEqual(pictures.map((html) => /auto-handoff\/([\w-]+)-light\.webp/u.exec(html)?.[1]), Object.keys(autoHandoffQuotes), `${file} shows the four captures in order`);
+    for (const html of pictures) {
+      const name = /auto-handoff\/([\w-]+)-light\.webp/u.exec(html)[1];
+      assert.ok(html.includes(`srcset="./docs/assets/auto-handoff/${name}-dark.webp"`), `${file}: dark source for ${name}`);
+      const alt = /alt="([^"]+)"/u.exec(html)?.[1] ?? '';
+      for (const quote of autoHandoffQuotes[name]) assert.ok(alt.includes(quote), `${file}: alt of ${name} must quote "${quote}"`);
+    }
+  }
+  const pkg = JSON.parse(read('package.json'));
+  assert.equal(pkg.files.some((entry) => !entry.startsWith('!') && /docs\/assets\/auto-handoff|docs\/assets$|^docs$/u.test(entry)), false, 'the captures stay out of the package');
+  for (const card of ['docs/npm/README.md', 'docs/npm/README_ko-KR.md']) assert.doesNotMatch(read(card), /assets\/auto-handoff/u);
 });

@@ -55,7 +55,7 @@ function install(kind) {
 function ready(kind) { return existsSync(path.join(root, kind, '.ready')); }
 
 function node() {
-  if (!supportsSlideNode()) throw new Error('LitGrok slide runtime requires Node.js 20.9 or newer (sharp 0.35.4)');
+  if (!supportsSlideNode()) throw new Error('LitGrok slide runtime requires Node.js 20.9 or newer (sharp 0.35.5)');
   if (!ready('node')) process.stderr.write('LitGrok office: installing pinned Node dependencies in cache\n');
   const target = install('node');
   process.env.NODE_PATH = [path.join(target, 'node_modules'), process.env.NODE_PATH].filter(Boolean).join(path.delimiter);

@@ -14,9 +14,7 @@
 
 <p align="center"><a href="#install-in-30-seconds">Install</a> &nbsp; <a href="./docs/guide.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Guide</a> &nbsp; <a href="./docs/skills.md">Skills</a> &nbsp; <a href="./docs/guide.md#watch-it-in-motion"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> Film</a> &nbsp; <a href="./docs/guide.md#safety-and-uninstall"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> Safety</a> &nbsp; <a href="./docs/reference.md">Reference</a> &nbsp; <a href="./README_ko-KR.md">한국어</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="A short film of a real Grok Build session in a small Node project, waiting shortened. A --shout flag is asked for; the status row shows LIT IGNITED · litwork, the new test fails, greet.js is fixed and the reply says node greet.js --shout Ada prints HELLO, ADA!" /></p>
-
-<p align="center"><sub>A real Grok Build 1.0.13 session with LitGrok installed, recorded in a terminal and replayed on a drawn terminal window with camera moves. Waiting time is shortened and the project folder is shown as ~/greet; the rest is as Grok Build printed it. What an install prints is in <a href="./docs/guide.md">the guide</a>.</sub></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="A short film of a real Grok Build session in a small Node project, in seven steps. 1, the request starts with lit: lit add a --shout flag that prints the greeting in capitals, with a test. 2, LitGrok lights up: the status line reads [LIT v1.0.16] LIT IGNITED · litwork. 3, it reads its playbook, the project guidance and the code-change skill, and shows Read 2 skills. 4, the test is written first, before greet.js changes. 5, then the fix, checked: the pre_tool_use and post_tool_use hooks tick on each edit. 6, real tests: Re-run tests and check the shout CLI. 7, done, with evidence: node greet.js --shout Ada now prints HELLO, ADA!, and the status line reads litwork complete · 35s · 2 tools." /></p>
 
 ## Why LitGrok
 
@@ -33,6 +31,26 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.17`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
+
+### Let a coding agent install it
+
+If you would rather hand the install to a coding agent, open it in the project folder and paste the prompt below. It asks the agent to show you its plan and wait for your yes, to use only the official npm package, and to check the result before it reports back. An agent's shell has no terminal attached, which is why the install lines carry `--yes` and clear `NO_COLOR` and `CI`; without that the installer only previews.
+
+```text
+Install LitGrok, the skill pack for xAI's Grok Build, into this project.
+Use only the official npm package @litfamily/litgrok. Do not clone repositories, run other install scripts or use any other package.
+Before you change anything, show me your plan and wait for my yes.
+
+1. Check that Node.js and Grok Build are installed and that this folder is the project's Git root. If it is not a Git repository, ask me before running git init.
+2. Preview the install and show me where the files would go:
+   npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run
+3. Install. Your shell has no terminal, so pass --yes and clear NO_COLOR and CI, or the installer only previews:
+   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes
+4. Ask me whether I also want the LitGrok status row. It is a user install: it copies LitGrok into ~/.grok/ and adds a status line to ~/.grok/config.toml after backing it up. Only if I say yes, run:
+   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line --yes
+5. Verify: the install receipt says "Status: Ready", and the project now has .grok/skills, .grok/rules and .grok/hooks. If the output says "no files written", tell me the reason printed on that line instead of trying other flags.
+6. Report what was written and where, anything the installer refused, and anything you could not check. Then remind me to restart Grok Build from the project's Git root and to trust the hooks with /hooks-trust.
+```
 
 ## Quick start
 
@@ -117,13 +135,38 @@ For a larger change, `/lit-plan` writes a plan file with numbered rows and the c
 
 ## Automatic handoff
 
-A long session eventually fills the context, and Grok compacts the conversation and drops detail. LitGrok can ask for a handoff before that happens. Pick the percent yourself; the feature stays off until you do:
+A long session slowly fills Grok's context window. When it is nearly full, Grok compacts the conversation, and the details of what you were in the middle of get squeezed out. Automatic handoff has the model write its handoff while it still remembers everything, so after the compaction it can pick up exactly where it was.
+
+It stays off until you turn it on, and the percent is always your choice. The setting belongs to one project and lives in that project's `.grok/litgrok/auto-handoff.json`. LitGrok learns how full the context is from the optional status row, because Grok shares that figure with the status row and with no hook, so add the row first; it lives in your user settings and only needs doing once. The Stop hook that does the asking is a project hook like the others, so it runs in a trusted Git root (`/hooks-trust`).
 
 ```bash
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 ```
 
-When a turn ends at or above that percent, the Stop hook asks the model to write the handoff, and the model finishes with "Handoff saved. Run /compact now." so you know when to compact. `LITGROK_AUTO_HANDOFF_PERCENT` overrides the saved percent for one environment. LitGrok reads the context figure from the optional status row, so add the row with `install --user --status-line`, and like every project hook this one needs a trusted Git root (`/hooks-trust`). [The full set of switches, step by step](./docs/guide.md#automatic-handoff-in-detail).
+Run the second line inside the project; from a subfolder it finds the Git root on its own. `auto-handoff status` then reads the setting back, says where each part of it came from, and warns you about anything that would keep it from working.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-on-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-on-light.webp" width="953" alt="Terminal window titled zsh. The command litgrok auto-handoff on 60 prints Automatic handoff is ON at 60 percent for this project., When a turn ends with the context at or above that percent, the model is asked to write a handoff and then to tell you to run /compact. and Saved in ~/demo/.grok/litgrok/auto-handoff.json. Then litgrok auto-handoff status prints Automatic handoff: ON at 60 percent, Set by: .grok/litgrok/auto-handoff.json, Percent: 60, from .grok/litgrok/auto-handoff.json, Grok's own auto-compact point: not reported yet, It needs the LitGrok status line (litgrok install --user --status-line) to see how full the context is. Without it, nothing happens. and Project file: ~/demo/.grok/litgrok/auto-handoff.json." /></picture></p>
+
+### What you see in a session
+
+Once the context comes within ten points of your percent, the ribbon under the status row turns amber and shows how close it is. When a turn ends at or above your percent, the Stop hook keeps the model going for one more step and asks it, once, to write the handoff with the `lit-handoff` procedure. The ribbon then reads `handoff requested`. When the packet is saved, the model ends with one plain line: "Handoff saved. Run /compact now."
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="782" alt="Terminal window titled grok. Three status rows during a /litwork turn, each reading LIT IGNITED · litwork | Grok 4.5 [high] with the context figure, and an amber ribbon under each. At 54%/2m the ribbon reads ctx 54% → handoff at 60% · 1m04s · 2 tools. At 61%/2m it reads ctx 61% ≥ handoff at 60%. After the Stop hook asks for the handoff it reads handoff requested · 1m04s · 2 tools." /></picture></p>
+
+That is your cue to type `/compact`, since Grok lets no hook start a compaction. After it, the next time a turn ends, LitGrok points the model at the handoff this session saved and asks it to check the current files and continue from the next steps written there. Grok also compacts on its own at 85 percent unless you changed that, so choose a percent below it.
+
+### Turning it off, or deciding per shell
+
+`auto-handoff off` stops it for the project and keeps your percent, so a plain `auto-handoff on` later brings back the same number.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-off-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-off-light.webp" width="917" alt="Terminal window titled zsh. The command litgrok auto-handoff off prints Automatic handoff is OFF for this project., 60 percent is remembered for the next &quot;on&quot;. and Saved in ~/demo/.grok/litgrok/auto-handoff.json." /></picture></p>
+
+You can also decide from the environment you start Grok Build in, which is handy for a single shell or a script. `LITGROK_AUTO_HANDOFF=1` turns the feature on for every session started from that environment, and `0` keeps it off there. `LITGROK_AUTO_HANDOFF_PERCENT` sets the percent and wins over the saved one. `status` tells you when the environment is overriding the project file.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-env-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-env-light.webp" width="953" alt="Terminal window titled zsh. After export LITGROK_AUTO_HANDOFF=1 LITGROK_AUTO_HANDOFF_PERCENT=50, the command litgrok auto-handoff status prints Automatic handoff: ON at 50 percent, Set by: LITGROK_AUTO_HANDOFF, Percent: 50, from LITGROK_AUTO_HANDOFF_PERCENT, LITGROK_AUTO_HANDOFF in this environment overrides .grok/litgrok/auto-handoff.json., then the auto-compact and status line notes and Project file: ~/demo/.grok/litgrok/auto-handoff.json." /></picture></p>
+
+[Every step in detail, including what happens when a handoff is stale or written by another session](./docs/guide.md#automatic-handoff-in-detail).
 
 ## How it works
 

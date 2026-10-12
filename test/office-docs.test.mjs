@@ -69,7 +69,7 @@ test('bare lit report and slides guidance is general and enrolled', () => {
 
 test('pinned Office dependency tree excludes the audited vulnerable versions', () => {
   const lock = JSON.parse(readFileSync(join(root, '.grok/skills/lit-pptx/package-lock.json'), 'utf8'));
-  assert.equal(lock.packages['node_modules/sharp'].version, '0.35.4');
+  assert.equal(lock.packages['node_modules/sharp'].version, '0.35.5');
   assert.equal(lock.packages['node_modules/image-size'].version, '2.0.4');
   const { supportsSlideNode } = require(join(root, '.grok/skills/lit-pptx/scripts/deps.cjs'));
   assert.equal(supportsSlideNode('18.20.0'), false);
