@@ -20,8 +20,8 @@ const screens = {
   'install-plan-dark.webp': '1d4efafaa704e0952b76223e8376e195c93031b5c73f0e788e654899fce4a8cf',
   'session-start-dark.webp': '6e0d6a44b3de29bb75050b453501f16dda7d78983c8a0df694b2407df0fde578',
   'session-start-light.webp': 'a8d8bfc4438bbdf6fd262738ec5de1e6826b09ba49ae57c03f3ff0edc7c93016',
-  'status-row-dark.webp': '133b1dce1c8bbb348024227212685659245d5041daf6595ea8a9897d77017e18',
-  'status-row-light.webp': '3bd33559fc4560158b1c68ae0bb0ad3fecfb374153dd042eb21ac24d6cbdc3bf',
+  'status-row-dark.webp': '02c6929c55d28b58519f7d42964d2bebaa2f8c39dcaaef98da4d30c6ed8a5982',
+  'status-row-light.webp': '70a49106c8819cd53b1c164a20e64677f9402882279b1b0d09d8592c2aac466d',
 };
 const MAX_SCREEN_BYTES = 61_440;
 
@@ -31,7 +31,7 @@ const quotes = {
   'install-dry-run': ['DRY RUN — no files written', '02 · Payload 1154 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
   'install-done': ['INSTALL STEPS', 'PAYLOAD · 1154 files discovered', 'WRITE · 1154 written', 'INSTALL RECEIPT', 'Status: Ready', 'Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@', '-- litgrok motion-runtime install', 'Next: restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
-  'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m', 'LIT IGNITED · litwork', '● litwork', '1m42s · 3 tools · 1 agent'],
+  'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m', 'LIT IGNITED · litwork', '● litwork', '1m42s · 3 tools · 1 agent', 'plan ✓ ━━━━', 'WORK 3/7', 'review · ──── done ·', 'Bash · 0:12', 'tests ✓ 3'],
 };
 // The install plan stays a single dark picture: the cream cells of the mark fade on a white window.
 const themedNames = ['install-done', 'session-start', 'install-dry-run', 'status-row'];

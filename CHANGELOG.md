@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The status row shows where a session is in the LIT workflow. Once a prompt names `deep-interview`, `lit-plan`, `start-work`, `litwork`, a bare `lit` or `review-work`, a line such as `plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   ⠹ Bash · 0:31   tests ✓ 214` shows the stages passed, the current stage with the checked tasks of the newest plan, the tool running now and for how long, and the last test run. A command that only mentions a test runner inside a heredoc or a quoted string is not counted as a test run. LitGrok keeps only stage names, task counts and the test verdict, never a prompt, a command or its output.
+- `litgrok install --user --notify` turns on Grok's own terminal notification for a finished turn, an approval request or an error, even while you are looking at the terminal. It is off until you ask for it, and a user uninstall removes only the unchanged table it added.
+- The running ribbon and the live tool step now show in Grok Build 1.0.13, which sends the status line no turn start. LitGrok reads a turn in flight from its own session log instead, and stops showing it once the turn ends, fails or has been quiet for ten minutes.
+- The bright cell that moves along the workflow rail is cyan, so it stays visible on a light terminal.
+
 ## 1.0.18 — 2026-10-12
 
 - The README shows automatic handoff step by step. Each `litgrok auto-handoff` command (`on 60`, `status`, `off`) and the environment switches appear as terminal pictures with their real output, followed by the status row as the context nears your percent and the handoff is requested, and the `/compact` step that comes after.

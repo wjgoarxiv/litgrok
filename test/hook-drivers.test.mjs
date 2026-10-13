@@ -16,6 +16,7 @@ const HEDGE_CONFIG = join(HOOKS_DIRECTORY, 'deliverable-hedge-guard.json');
 const HEDGE_COMMAND = join(HOOKS_DIRECTORY, 'deliverable-hedge-guard.mjs');
 const PASSIVE_HOOKS = [
   ['UserPromptSubmit', 'user-prompt-submit'],
+  ['PreToolUse', 'pre-tool-use'],
   ['PostToolUse', 'post-tool-use'],
   ['PostToolUseFailure', 'post-tool-use-failure'],
   ['Stop', 'stop'],
@@ -71,7 +72,7 @@ function passiveEvent(eventName, workspaceRoot) {
     cwd: workspaceRoot,
     workspaceRoot,
   };
-  if (eventName === 'PostToolUse' || eventName === 'PostToolUseFailure') {
+  if (eventName === 'PreToolUse' || eventName === 'PostToolUse' || eventName === 'PostToolUseFailure') {
     event.toolName = 'Edit';
     event.toolInput = {};
   }
@@ -186,7 +187,6 @@ test('hook configs use the nested documented shape and package-owned commands', 
         },
       ],
     };
-    if (eventName === 'PostToolUse') registration.matcher = '^(Edit|edit|Write|write)$';
     assert.deepEqual(config, { hooks: { [eventName]: [registration] } });
   }
 
@@ -228,7 +228,9 @@ for (const [eventName, stem] of PASSIVE_HOOKS) {
       assert.equal(record.cwd, event.cwd);
       assert.equal(record.workspaceRoot, event.workspaceRoot);
       assert.equal(record.hookName, stem);
-      if (event.toolName) {
+      if (eventName === 'PreToolUse') {
+        assert.deepEqual(record.tool, { name: event.toolName }, 'a starting call keeps its tool name only');
+      } else if (event.toolName) {
         assert.deepEqual(record.tool, {
           name: event.toolName,
           inputSha256: '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',

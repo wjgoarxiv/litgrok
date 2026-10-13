@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { run } from '../bin/litgrok.mjs';
 import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
-import { installStatusLine, removeStatusLine } from '../bin/status-line-config.mjs';
+import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from '../bin/status-line-config.mjs';
 
 const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PRODUCT_ROOT = dirname(TEST_DIRECTORY);
@@ -438,4 +438,76 @@ test('status-line install fails closed when ui is already a value or an array of
     assert.equal(readFileSync(config, 'utf8'), original, 'the config is left untouched');
     assert.equal(readdirSync(root).length, 1, 'no backup or temporary file is left behind');
   }
+});
+
+test('the finish notification is opt-in, user scope only, and uninstall takes back exactly what it added', async (t) => {
+  const { root, home, workspace } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const grokRoot = join(home, '.grok');
+  mkdirSync(grokRoot);
+  const configPath = join(grokRoot, 'config.toml');
+  const original = '[ui]\ntheme = "dark"\n';
+  writeFileSync(configPath, original);
+
+  const preview = await runInstaller(['install', '--user', '--yes', '--notify', '--dry-run'], home);
+  assert.equal(preview.code, 0, preview.stderr);
+  assert.match(preview.stdout, /would configure user finish notification .*config\.toml/u);
+  assert.equal(readFileSync(configPath, 'utf8'), original, 'a dry run writes nothing');
+
+  const plain = await runInstaller(['install', '--user', '--yes'], home);
+  assert.equal(plain.code, 0, plain.stderr);
+  assert.equal(readFileSync(configPath, 'utf8'), original, 'off unless asked for');
+
+  for (const args of [['install', '--project', '--yes', '--notify'], ['uninstall', '--user', '--yes', '--notify']]) {
+    const io = captureIo();
+    assert.notEqual(await run(args, { ...io, cwd: workspace, env: baseEnvironment(home) }), 0, args.join(' '));
+  }
+
+  const install = await runInstaller(['install', '--user', '--yes', '--notify', '--status-line'], home);
+  assert.equal(install.code, 0, install.stderr);
+  assert.match(install.stdout, /finish notification configured/u);
+  const config = readFileSync(configPath, 'utf8');
+  assert.ok(config.startsWith(original));
+  assert.match(config, /# litgrok-managed-notifications-v1\n\[ui\.notifications\]\ncondition = "always"\nevents = \["turn_complete", "approval_required", "agent_error"\]\n/u);
+  assert.match(config, /\[ui\.status_line\]/u);
+
+  const again = await runInstaller(['install', '--user', '--yes', '--notify'], home);
+  assert.equal(again.code, 0, again.stderr);
+  assert.equal(readFileSync(configPath, 'utf8'), config, 'a second opt-in changes nothing');
+
+  const uninstall = await runInstaller(['uninstall', '--user', '--yes'], home);
+  assert.equal(uninstall.code, 0, uninstall.stderr);
+  assert.equal(readFileSync(configPath, 'utf8'), original, 'both blocks come out and the original bytes come back');
+});
+
+test('the finish notification leaves the user\'s own notification settings and conflicting ui values alone', (t) => {
+  for (const original of [
+    '[ui.notifications]\nmethod = "bel"\n',
+    '[[ui.notifications.hooks]]\ncommand = "afplay /System/Library/Sounds/Glass.aiff"\n',
+    '[ui]\nnotifications = { condition = "never" }\n',
+    'ui = { theme = "dark" }\n',
+    '[[ui]]\ntheme = "dark"\n',
+  ]) {
+    const root = mkdtempSync(join(tmpdir(), 'litgrok-notify-preserve-'));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const config = join(root, 'config.toml');
+    writeFileSync(config, original);
+    const result = installNotifications(root);
+    assert.equal(result.changed, false, original);
+    assert.equal(readFileSync(config, 'utf8'), original, 'the config is left untouched');
+    assert.equal(readdirSync(root).length, 1, 'no backup or temporary file is left behind');
+  }
+
+  const root = mkdtempSync(join(tmpdir(), 'litgrok-notify-edited-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const config = join(root, 'config.toml');
+  writeFileSync(config, 'a = 1');
+  assert.equal(installNotifications(root).changed, true);
+  const edited = readFileSync(config, 'utf8').replace('condition = "always"', 'condition = "unfocused"');
+  writeFileSync(config, edited);
+  assert.equal(removeNotifications(root).changed, false, 'an edited block is the user\'s now');
+  assert.equal(readFileSync(config, 'utf8'), edited);
+  writeFileSync(config, edited.replace('condition = "unfocused"', 'condition = "always"'));
+  assert.equal(removeNotifications(root).changed, true);
+  assert.equal(readFileSync(config, 'utf8'), 'a = 1', 'the newline LitGrok added goes too');
 });

@@ -6,7 +6,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMark, terminalMode } from '../.grok/hooks/lit-mark.mjs';
-import { installStatusLine, removeStatusLine } from './status-line-config.mjs';
+import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from './status-line-config.mjs';
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PAYLOAD_ROOT = join(PACKAGE_ROOT, '.grok');
@@ -52,6 +52,9 @@ const PRE_MANIFEST_PAYLOAD_HASHES = Object.freeze({
   'hooks/deliverable-hedge-guard.json': '65a0008a8c51be203a385f0ca55a5e7eb9e60e487c701c08d6d2407f0a3a1170',
   'hooks/deliverable-hedge-guard.mjs': '78f997d793e94853d1ef9073fbc9dd8b1577fe756d5e8a89d4fc3859d4bde5a9',
   'hooks/plan-gate.mjs': '0477520c23776d4031e0703fc0d776a53a7e2938f5ec1a41ac0f3388bc91d7a3',
+  'hooks/post-tool-use-failure.mjs': 'b6d290bb93909a4a1a5abbba25ccc87a3ccd806a3d2810868297bab9db18b784',
+  'hooks/post-tool-use.json': 'ddccda78e32ca3f072cba48ce57a413e54e9f9da36376fadbb08eeae1fe5c95b',
+  'hooks/post-tool-use.mjs': '8984c47025285cfe2bc4a4f34edcba5921c96071703306a8c39fbc7874b73cdb',
   'hooks/record-passive-event.mjs': '9f5bd1d6c8b8e6c0be4cc61cf31f0e26f4f8a41fceb826e88567f22efa2b0090',
   'hooks/session-start.mjs': '5706ccce58340e78e435b9c1fd2224e101872ce1d0f51a9d187feb31b67c3b5d',
   'hooks/stop.mjs': 'c796f02ac3dc99716d0c2f478bf93ec35cd8a9c725de18d12895957ee261b9c3',
@@ -198,7 +201,7 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/text-naturalization/SKILL.md': 'aa1ff8f68ab0bf71cb47818b536c4a2934da65adb413ee43ec5839b540b2df8e',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--dry-run] [--no-color] [--yes]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -207,17 +210,24 @@ function parseInstall(args) {
   const remaining = [...args];
   let command = 'install';
   if (['install', 'uninstall'].includes(remaining[0])) command = remaining.shift();
-  if (remaining.some((argument) => !['--user', '--project', '--status-line', '--dry-run', '--no-color', '--yes'].includes(argument))) return null;
+  if (remaining.some((argument) => !['--user', '--project', '--status-line', '--notify', '--dry-run', '--no-color', '--yes'].includes(argument))) return null;
   if (remaining.includes('--user') && remaining.includes('--project')) return null;
-  if (remaining.includes('--status-line') && (command !== 'install' || !remaining.includes('--user'))) return null;
+  // Both opt-ins change ~/.grok/config.toml, which only a user install may touch.
+  if ((remaining.includes('--status-line') || remaining.includes('--notify')) && (command !== 'install' || !remaining.includes('--user'))) return null;
   return {
     command,
     dryRun: remaining.includes('--dry-run'),
     noColor: remaining.includes('--no-color'),
     yes: remaining.includes('--yes'),
     statusLine: remaining.includes('--status-line'),
+    notify: remaining.includes('--notify'),
     scope: remaining.includes('--user') ? 'user' : 'project',
   };
+}
+
+// What the user-config opt-ins did, appended to the WRITE step.
+function configDetail(...results) {
+  return results.filter(Boolean).map((result) => ` · ${result.detail}`).join('');
 }
 
 function packageVersion() {
@@ -908,6 +918,7 @@ export async function run(args, context = {}) {
     stdout.write(`${reasons.join(' / ')} — no files written\n`);
     for (const { target } of files) stdout.write(`would ${options.command} ${target}\n`);
     if (options.statusLine) stdout.write(`would configure user status line ${join(root, 'config.toml')}\n`);
+    if (options.notify) stdout.write(`would configure user finish notification ${join(root, 'config.toml')}\n`);
     printHookTrustRequirement(files);
     return 0;
   }
@@ -988,8 +999,12 @@ export async function run(args, context = {}) {
       progress.start('WRITE');
       let removed = 0;
       let statusLineResult = null;
+      let notifyResult = null;
       try {
-        if (options.scope === 'user') statusLineResult = removeStatusLine(root);
+        if (options.scope === 'user') {
+          statusLineResult = removeStatusLine(root);
+          notifyResult = removeNotifications(root);
+        }
         for (let index = 0; index < files.length; index += 1) {
           if (!['current', 'owned'].includes(states.states[index])) continue;
           unlinkSync(files[index].target);
@@ -999,7 +1014,7 @@ export async function run(args, context = {}) {
         removeRetiredDirectories(states.retiredDirectories);
         removeEmptyPayloadDirectories(payloadDirectories(root, files));
         removeOwnershipManifest(root, states.manifest);
-        const statusDetail = statusLineResult ? ` · ${statusLineResult.detail}` : '';
+        const statusDetail = configDetail(statusLineResult, notifyResult);
         progress.finish('ok', 'WRITE', `${removed} removed · ${states.counts.missing} already absent${statusDetail}`, elapsedSince(writeStarted));
       } catch (error) {
         progress.finish('failed', 'WRITE', errorText(error), elapsedSince(writeStarted));
@@ -1014,14 +1029,16 @@ export async function run(args, context = {}) {
 
     if (states.states.every((state) => state === 'current') && states.legacyStates.every((state) => state === 'missing') && states.retiredDirectories.length === 0) {
       let statusLineResult = null;
+      let notifyResult = null;
       try {
         writeOwnershipManifest(root, files, states.manifest);
         if (options.statusLine) statusLineResult = installStatusLine(root);
+        if (options.notify) notifyResult = installNotifications(root);
       } catch (error) {
         if (error && typeof error === 'object') error.step = 'WRITE';
         throw error;
       }
-      const statusDetail = statusLineResult ? ` · ${statusLineResult.detail}` : '';
+      const statusDetail = configDetail(statusLineResult, notifyResult);
       skipStep(progress, 'WRITE', `SKIPPED · 0 written · ${states.counts.current} already-current${statusDetail}`);
       const receipt = receiptCard(options, displayRoot, colors, { status: 'Already current', written: 0, current: states.counts.current });
       progress.close();
@@ -1045,8 +1062,9 @@ export async function run(args, context = {}) {
       removeRetiredDirectories(states.retiredDirectories);
       writeOwnershipManifest(root, files, states.manifest);
       const statusLineResult = options.statusLine ? installStatusLine(root) : null;
+      const notifyResult = options.notify ? installNotifications(root) : null;
       const legacyDetail = removedLegacy === 0 ? '' : ` · ${removedLegacy} legacy removed`;
-      const statusDetail = statusLineResult ? ` · ${statusLineResult.detail}` : '';
+      const statusDetail = configDetail(statusLineResult, notifyResult);
       progress.finish('ok', 'WRITE', `${installed} written · ${states.counts.current} already-current · ${states.counts.owned} owned${legacyDetail}${statusDetail}`, elapsedSince(writeStarted));
     } catch (error) {
       progress.finish('failed', 'WRITE', errorText(error), elapsedSince(writeStarted));

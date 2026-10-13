@@ -4,9 +4,12 @@
 import { appendSessionRecord, recordPassiveEvent } from './record-passive-event.mjs';
 import { PLAN_GATE_SIGNAL, evaluatePlanGate } from './plan-gate.mjs';
 import { evaluateAutoHandoff } from './auto-handoff-gate.mjs';
+import { planProgress } from './plan-progress.mjs';
+import { updateWorkflowState } from './workflow-stage.mjs';
 
 const observed = await recordPassiveEvent('Stop');
 if (observed) {
+  let held = false;
   // Plan gate: a planning turn must persist plans/<slug>.md; evaluated after the ledger record so a block is counted.
   let gate;
   try {
@@ -21,6 +24,7 @@ if (observed) {
     gate = { block: false };
   }
   if (gate.block) {
+    held = true;
     appendSessionRecord(observed.ledgerFile, observed.record, { signal: PLAN_GATE_SIGNAL, reason: gate.reason });
     process.stdout.write(`${JSON.stringify({ decision: 'block', reason: gate.reason })}\n`);
   } else {
@@ -35,9 +39,23 @@ if (observed) {
         ledgerFile: observed.ledgerFile,
       });
       if (handoff.record) appendSessionRecord(observed.ledgerFile, observed.record, handoff.record);
-      if (handoff.block) process.stdout.write(`${JSON.stringify({ decision: 'block', reason: handoff.reason })}\n`);
+      if (handoff.block) {
+        held = true;
+        process.stdout.write(`${JSON.stringify({ decision: 'block', reason: handoff.reason })}\n`);
+      }
     } catch (error) {
       process.stderr.write(`LitGrok auto-handoff: AUTO_HANDOFF_FAILED ${error instanceof Error ? error.message : String(error)}\n`);
+    }
+  }
+  // The workflow row: a stop that ends the turn closes the current stage, a held one keeps it open.
+  if (observed.ledgerFile) {
+    try {
+      updateWorkflowState(observed.ledgerFile, observed.environment.sessionId, {
+        ended: !held,
+        plan: planProgress(observed.environment.realWorkspaceRoot),
+      });
+    } catch (error) {
+      process.stderr.write(`LitGrok workflow state: ${error instanceof Error ? error.message : String(error)}\n`);
     }
   }
 }

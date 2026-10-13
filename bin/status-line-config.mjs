@@ -3,8 +3,10 @@ import { constants, copyFileSync, lstatSync, linkSync, readFileSync, renameSync,
 import { basename, dirname, join, resolve } from 'node:path';
 
 const MARKER = '# litgrok-managed-status-line-v1';
-// Written when the config did not end with a newline, so removal can take back the one LitGrok added.
-const MARKER_ADDED_NEWLINE = `${MARKER} added-final-newline`;
+const NOTIFY_MARKER = '# litgrok-managed-notifications-v1';
+// The finish alert: Grok's own terminal notification for a finished turn, an approval request or an
+// error, raised even while the terminal has focus (Grok's default fires only when it does not).
+const NOTIFY_VALUES = [['condition', '"always"'], ['events', '["turn_complete", "approval_required", "agent_error"]']];
 const MAX_CONFIG_BYTES = 1024 * 1024;
 
 function configError(code) {
@@ -53,18 +55,22 @@ function splitLines(text) {
   return text.match(/[^\n]*\n|[^\n]+$/gu) ?? [];
 }
 
-function tableHeader(line) {
-  return /^\[\s*ui\s*\.\s*status_line\s*\]$/u.test(lineText(line));
+const STATUS_LINE_HEADER = /^\[\s*ui\s*\.\s*status_line\s*\]$/u;
+const NOTIFY_HEADER = /^\[\s*ui\s*\.\s*notifications\s*\]$/u;
+
+function statusLineValues(command) {
+  return [['type', '"command"'], ['command', JSON.stringify(command)], ['refresh_interval', '2']];
 }
 
-function managedBlock(text, command) {
+// One table LitGrok added after its marker, found only while its values are exactly as written.
+function managedBlock(text, { marker, header, values: expected }) {
   const lines = splitLines(text);
-  const markers = lines.map((line, index) => [MARKER, MARKER_ADDED_NEWLINE].includes(rawLineText(line)) ? index : -1).filter((index) => index >= 0);
+  const markers = lines.map((line, index) => [marker, `${marker} added-final-newline`].includes(rawLineText(line)) ? index : -1).filter((index) => index >= 0);
   if (markers.length !== 1) return null;
   const markerIndex = markers[0];
   let headerIndex = markerIndex + 1;
   while (headerIndex < lines.length && lineText(lines[headerIndex]) === '') headerIndex += 1;
-  if (!tableHeader(lines[headerIndex] ?? '')) return null;
+  if (!header.test(lineText(lines[headerIndex] ?? ''))) return null;
   let sectionEnd = headerIndex + 1;
   while (sectionEnd < lines.length && !/^\s*\[\[?[^\]]+\]\]?\s*$/u.test(lines[sectionEnd].replace(/\r?\n$/u, ''))) sectionEnd += 1;
 
@@ -77,23 +83,19 @@ function managedBlock(text, command) {
     entries.push({ index, value: assignment[2] });
     values.set(assignment[1], entries);
   }
-  const type = values.get('type') ?? [];
-  const commandValues = values.get('command') ?? [];
-  const refresh = values.get('refresh_interval') ?? [];
-  if (type.length !== 1 || type[0].value !== '"command"'
-    || commandValues.length !== 1 || commandValues[0].value !== JSON.stringify(command)
-    || refresh.length !== 1 || refresh[0].value !== '2') return null;
+  const found = expected.map(([key]) => values.get(key) ?? []);
+  if (found.some((entries, index) => entries.length !== 1 || entries[0].value !== expected[index][1])) return null;
   return {
     markerIndex,
-    addedNewline: rawLineText(lines[markerIndex]) === MARKER_ADDED_NEWLINE,
+    addedNewline: rawLineText(lines[markerIndex]) === `${marker} added-final-newline`,
     headerIndex,
     sectionEnd,
-    valueIndexes: [type[0].index, commandValues[0].index, refresh[0].index],
+    valueIndexes: found.map((entries) => entries[0].index),
   };
 }
 
-function hasStatusLineSetting(text) {
-  return splitLines(text).some((line) => /\bstatus_line\b/u.test(lineText(line)));
+function hasSetting(text, key) {
+  return splitLines(text).some((line) => new RegExp(`\\b${key}\\b`, 'u').test(lineText(line)));
 }
 
 // The lines that start a TOML statement: lines inside a multi-line string, array or inline table are
@@ -188,29 +190,32 @@ function writeConfig(path, previous, next) {
   }
 }
 
-function statusLineBlock(command, marker) {
-  return [
-    marker,
-    '[ui.status_line]',
-    'type = "command"',
-    `command = ${JSON.stringify(command)}`,
-    'refresh_interval = 2',
-  ].join('\n');
+function blockText(marker, table, values) {
+  return [marker, table, ...values.map(([key, value]) => `${key} = ${value}`)].join('\n');
 }
 
-// No separator line is added, so removing the block gives back the original bytes.
-function appendBlock(text, command) {
-  if (!text || text.endsWith('\n')) return `${text}${statusLineBlock(command, MARKER)}\n`;
-  return `${text}\n${statusLineBlock(command, MARKER_ADDED_NEWLINE)}\n`;
+// No separator line is added, so removing the block gives back the original bytes. A config that did
+// not end with a newline gets the marker's added-final-newline form, so removal can take that one back.
+function appendBlock(text, marker, table, values) {
+  if (!text || text.endsWith('\n')) return `${text}${blockText(marker, table, values)}\n`;
+  return `${text}\n${blockText(`${marker} added-final-newline`, table, values)}\n`;
+}
+
+function statusLineSpec(root) {
+  return { marker: MARKER, header: STATUS_LINE_HEADER, values: statusLineValues(commandValue(root)) };
+}
+
+function notifySpec() {
+  return { marker: NOTIFY_MARKER, header: NOTIFY_HEADER, values: NOTIFY_VALUES };
 }
 
 export function installStatusLine(root) {
   const path = join(root, 'config.toml');
-  const command = commandValue(root);
+  const spec = statusLineSpec(root);
   const previous = readConfig(path);
-  if (managedBlock(previous.text, command)) return { changed: false, detail: 'already managed by LitGrok' };
+  if (managedBlock(previous.text, spec)) return { changed: false, detail: 'already managed by LitGrok' };
   if (previous.text.includes(MARKER)) return { changed: false, detail: 'modified LitGrok status-line config preserved' };
-  if (hasStatusLineSetting(previous.text)) return { changed: false, detail: 'existing user status_line preserved' };
+  if (hasSetting(previous.text, 'status_line')) return { changed: false, detail: 'existing user status_line preserved' };
   const conflict = conflictingUi(previous.text);
   if (conflict) {
     return {
@@ -218,9 +223,28 @@ export function installStatusLine(root) {
       detail: `status line not configured: ${path} sets ${conflict} at the top level, which a [ui.status_line] table cannot extend; add status_line inside your ui setting yourself`,
     };
   }
-  const next = appendBlock(previous.text, command);
+  const next = appendBlock(previous.text, MARKER, '[ui.status_line]', spec.values);
   writeConfig(path, previous, next);
   return { changed: true, detail: 'user status line configured' };
+}
+
+// The opt-in finish alert. Any notification setting of the user's own is left as it is.
+export function installNotifications(root) {
+  const path = join(root, 'config.toml');
+  const spec = notifySpec();
+  const previous = readConfig(path);
+  if (managedBlock(previous.text, spec)) return { changed: false, detail: 'finish notification already managed by LitGrok' };
+  if (previous.text.includes(NOTIFY_MARKER)) return { changed: false, detail: 'modified LitGrok notification config preserved' };
+  if (hasSetting(previous.text, 'notifications')) return { changed: false, detail: 'existing user notifications preserved' };
+  const conflict = conflictingUi(previous.text);
+  if (conflict) {
+    return {
+      changed: false,
+      detail: `finish notification not configured: ${path} sets ${conflict} at the top level, which a [ui.notifications] table cannot extend; add notifications inside your ui setting yourself`,
+    };
+  }
+  writeConfig(path, previous, appendBlock(previous.text, NOTIFY_MARKER, '[ui.notifications]', NOTIFY_VALUES));
+  return { changed: true, detail: 'finish notification configured' };
 }
 
 function removeManagedBlock(text, block) {
@@ -240,15 +264,22 @@ function removeManagedBlock(text, block) {
   return kept.filter((line) => line !== null).join('');
 }
 
-export function removeStatusLine(root) {
+function removeBlock(root, spec, name) {
   const path = join(root, 'config.toml');
-  const command = commandValue(root);
   const previous = readConfig(path);
   if (!previous.exists) return { changed: false, detail: 'no user config found' };
-  const block = managedBlock(previous.text, command);
-  if (!block) return { changed: false, detail: 'no unchanged LitGrok status-line value found' };
-  const next = removeManagedBlock(previous.text, block);
-  if (next === previous.text) return { changed: false, detail: 'no LitGrok status-line value removed' };
+  const found = managedBlock(previous.text, spec);
+  if (!found) return { changed: false, detail: `no unchanged LitGrok ${name} value found` };
+  const next = removeManagedBlock(previous.text, found);
+  if (next === previous.text) return { changed: false, detail: `no LitGrok ${name} value removed` };
   writeConfig(path, previous, next);
-  return { changed: true, detail: 'LitGrok status-line value removed' };
+  return { changed: true, detail: `LitGrok ${name} value removed` };
+}
+
+export function removeStatusLine(root) {
+  return removeBlock(root, statusLineSpec(root), 'status-line');
+}
+
+export function removeNotifications(root) {
+  return removeBlock(root, notifySpec(), 'notification');
 }

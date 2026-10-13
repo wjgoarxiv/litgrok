@@ -123,7 +123,7 @@ test('no second line without an active skill, without a turn, or in one-line mod
   assert.equal(runStatus(idleSkill, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' }).lines.length, 1, 'no skill, no ribbon');
 
   const sb = sandbox(t);
-  seedLedger(sb.workspace, busyTurn());
+  seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }]]);
   const between = runStatus(sb, { env: PLAIN });
   assert.deepEqual(between.plain, [LINE_ONE], 'a skill between turns, with nothing to report, keeps one line');
 
@@ -142,6 +142,25 @@ test('a running turn shows the skill, the turn timer, tool calls and running sub
   // Without a prompt id the latest prompt in the ledger starts the turn.
   assert.match(runStatus(sb, { env: PLAIN, turnAgoMs: 5_000 }).plain[1], /^\(🔥 LIT\) \(● litwork\) [5-9]s · 3 tools · 1 agent$/u);
   assert.match(runStatus(sb, { env: PLAIN, turnAgoMs: 3_725_000 }).plain[1], / 1h02m · /u, 'an hour-long turn shows hours and minutes');
+});
+
+// Grok Build 1.0.13 sends no turn field at all: during a turn it re-runs the command with the payload of
+// the last state change. Without the field the ledger tells whether a turn is in flight.
+test('without a turn field, an unended recent turn in the ledger runs, and a stop, a failure or a quiet ledger ends it', (t) => {
+  const sb = sandbox(t);
+  seedLedger(sb.workspace, busyTurn());
+  const running = runStatus(sb, { env: PLAIN });
+  assert.equal(running.lines.length, 2);
+  assert.match(running.plain[1], /^\(🔥 LIT\) \(● litwork\) 1m4\ds · 3 tools · 1 agent$/u, 'the timer starts at the prompt record');
+
+  seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }]]);
+  assert.deepEqual(runStatus(sb, { env: PLAIN }).plain, [LINE_ONE], 'a stop ends the turn');
+  seedLedger(sb.workspace, [...busyTurn(), ['StopFailure', 5]]);
+  assert.deepEqual(runStatus(sb, { env: PLAIN }).plain, [LINE_ONE], 'a failed turn has ended and is not shown as complete');
+  seedLedger(sb.workspace, busyTurn(700));
+  assert.deepEqual(runStatus(sb, { env: PLAIN }).plain, [LINE_ONE], 'a turn whose ledger has been quiet for ten minutes is not shown as running');
+  seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }], ['Stop', 30, { signal: 'plan-gate-block' }]]);
+  assert.match(runStatus(sb, { env: PLAIN }).plain[1], /^\(🔥 LIT\) \(⚠ litwork\) plan gate: save plans\/<slug>\.md · 1m4\ds · /u, 'a held stop keeps the turn running');
 });
 
 test('the ribbon leaves out what LitGrok does not know instead of guessing', (t) => {
@@ -192,6 +211,7 @@ test('amber warnings: a plan-gate block this turn and a context nearing the auto
   assert.match(runStatus(sb, { env: handoff, turnAgoMs: 100_000, promptId: 'p1', percent: 50 }).plain[1], /^\(🔥 LIT\) \(● lit-plan\) /u, 'far below the percent there is no warning');
   assert.match(runStatus(sb, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1', percent: 85 }).plain[1], /^\(🔥 LIT\) \(● lit-plan\) /u, 'no warning while automatic handoff is off');
   // Between turns a context warning still shows, so the next turn's handoff is no surprise.
+  seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }]]);
   assert.deepEqual(runStatus(sb, { env: handoff, percent: 78 }).plain.slice(1), ['(🔥 LIT) (⚠ lit-plan) ctx 78% → handoff at 80%']);
 });
 

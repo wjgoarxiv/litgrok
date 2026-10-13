@@ -74,7 +74,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.18/hooks/hooks.json)에 있는 훅 등록 열한 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
 
-지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다.
+지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다. 프롬프트가 작업 흐름 스킬을 시작하면 지금 단계, 돌고 있는 도구, 마지막 테스트 결과도 함께 보입니다. 턴이 끝날 때 Grok의 터미널 알림을 받으려면 `--notify`를 붙이세요.
 
 ## 안전과 제거
 

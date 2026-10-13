@@ -6,6 +6,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
 import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
+import { STAGES, readWorkflowState } from './workflow-stage.mjs';
 
 const MAX_INPUT_BYTES = 64 * 1024;
 const GRADIENT_STOPS = [[255, 99, 55], [255, 45, 149], [0, 229, 255]];
@@ -18,6 +19,8 @@ const LEDGER_TAIL_BYTES = 128 * 1024;
 const COMPLETE_SHOWN_MS = 20 * 1000;
 const HANDOFF_NEAR_POINTS = 10;
 const CLOCK_SKEW_MS = 5 * 1000;
+// A turn the ledger has not heard from for this long is no longer shown as running.
+const LEDGER_TURN_QUIET_MS = 10 * 60 * 1000;
 const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
 // [background, foreground] of each pill.
 const PILLS = {
@@ -33,6 +36,16 @@ const GLYPHS = {
 };
 const ANSI_16 = [[0, 0, 0], [205, 0, 0], [0, 205, 0], [205, 205, 0], [0, 0, 238], [205, 0, 205], [0, 205, 205], [229, 229, 229],
   [127, 127, 127], [255, 0, 0], [0, 255, 0], [255, 255, 0], [92, 92, 255], [255, 0, 255], [0, 255, 255], [255, 255, 255]];
+// The workflow row's rail runs orange to pink to a softer cyan than the label.
+const RAIL_STOPS = [[255, 99, 55], [255, 45, 149], [95, 215, 255]];
+// The moving head is the label's cyan: a white cell would vanish on a light terminal.
+const RAIL = { ink: [11, 15, 20], faint: [72, 79, 88], head: [0, 229, 255], red: [255, 95, 95] };
+const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+// Grok's own tool names, shortened to the words people know them by. Any other name shows as sent.
+const TOOL_LABELS = {
+  run_terminal_command: 'Bash', read_file: 'Read', search_replace: 'Edit', write: 'Write', grep: 'Grep', list_dir: 'List',
+  todo_write: 'Todo', web_search: 'Search', web_fetch: 'Fetch', image_edit: 'Image', monitor: 'Monitor', ask_user_question: 'Ask',
+};
 
 async function readInput() {
   // Decode once: a multi-byte character can straddle two pipe chunks.
@@ -153,10 +166,10 @@ function sgr(rgb, depth, background = false) {
   return `\u001b[${background ? 48 : 38};2;${rgb.join(';')}m`;
 }
 
-function gradientColor(position) {
+function gradientColor(position, stops = GRADIENT_STOPS) {
   const stop = position <= 0.5 ? 0 : 1;
   const fraction = position <= 0.5 ? position * 2 : (position - 0.5) * 2;
-  return GRADIENT_STOPS[stop].map((value, index) => Math.round(value + (GRADIENT_STOPS[stop + 1][index] - value) * fraction));
+  return stops[stop].map((value, index) => Math.round(value + (stops[stop + 1][index] - value) * fraction));
 }
 
 // Bold is set once and each letter only changes the colour, so the longest label stays far below the cut.
@@ -247,6 +260,25 @@ function readLedgerTail(status) {
   return null;
 }
 
+// The hooks keep the session's workflow snapshot beside its ledger, in the same folders.
+function readWorkflow(status) {
+  const sessionId = status?.session_id;
+  if (typeof sessionId !== 'string' || sessionId === '' || sessionId.length > 512) return null;
+  const name = `${createHash('sha256').update(sessionId).digest('hex').slice(0, 32)}.workflow.json`;
+  for (const directory of statusDirs(status)) {
+    if (typeof directory !== 'string' || !isAbsolute(directory)) continue;
+    let root;
+    try {
+      root = realpathSync(directory);
+    } catch {
+      continue;
+    }
+    const state = readWorkflowState(join(root, '.grok', 'litgrok', 'session-ledger', name), sessionId);
+    if (state) return state;
+  }
+  return null;
+}
+
 // What the ledger says about the current turn: it starts at the prompt Grok names, or the latest one.
 // A turn whose start is not in the tail is unknown, so nothing is counted.
 function turnActivity(records, promptId) {
@@ -260,10 +292,20 @@ function turnActivity(records, promptId) {
   const held = (record) => record.signal === 'plan-gate-block' || record.signal === 'auto-handoff-directive'
     || (record.signal === 'auto-handoff-reload' && record.outcome === 'loaded');
   const last = turn.at(-1);
-  const ended = last?.event === 'Stop' && !held(last);
+  const failed = last?.event === 'StopFailure';
+  const ended = (last?.event === 'Stop' && !held(last)) || failed;
+  // A call is in flight while its PreToolUse is the turn's newest tool record. Parallel calls can hide
+  // one that is still running; that shows less, never a finished call as running.
+  const lastTool = turn.filter((record) => record.event === 'PreToolUse' || TOOL_EVENTS.has(record.event)).at(-1);
+  const liveStart = Date.parse(lastTool?.recordedAt);
   return {
+    live: !ended && lastTool?.event === 'PreToolUse' && typeof lastTool.tool?.name === 'string' && Number.isFinite(liveStart)
+      ? { name: lastTool.tool.name, startedAt: liveStart }
+      : null,
     startedAt: Date.parse(records[start].recordedAt),
+    lastAt: Date.parse((last ?? records[start]).recordedAt),
     endedAt: ended ? Date.parse(last.recordedAt) : null,
+    failed,
     tools: turn.filter((record) => TOOL_EVENTS.has(record.event)).length,
     agents: Math.max(0, count('SubagentStart') - count('SubagentStop')),
     planGate: !ended && turn.some((record) => record.signal === 'plan-gate-block'),
@@ -293,17 +335,30 @@ function warningText(status, activity) {
   return null;
 }
 
-function bandState(status, now) {
-  const started = status?.turn?.started_at_ms;
-  const running = typeof started === 'number' && Number.isFinite(started) && started > 0;
-  const activity = turnActivity(readLedgerTail(status), running ? status.prompt_id : undefined);
+// Whether a turn runs and since when. Grok's turn field decides when Grok sends one. Grok Build 1.0.13
+// sends none and, during a turn, re-runs the command with the payload of the last state change; then a
+// turn runs while the ledger's newest prompt has nothing that ended it and the ledger heard from it
+// recently. A cancel that records no stop shows as running until the ledger has been quiet that long.
+function turnState(status, activity, now) {
+  if (status !== null && typeof status === 'object' && Object.hasOwn(status, 'turn')) {
+    const started = status.turn?.started_at_ms;
+    const running = typeof started === 'number' && Number.isFinite(started) && started > 0;
+    return { running, startedAt: running && started <= now + CLOCK_SKEW_MS ? started : null };
+  }
+  const running = activity !== null && activity.endedAt === null && Number.isFinite(activity.startedAt)
+    && activity.startedAt <= now + CLOCK_SKEW_MS && now - activity.lastAt <= LEDGER_TURN_QUIET_MS;
+  return { running, startedAt: running ? activity.startedAt : null };
+}
+
+function bandState(status, now, activity, turn) {
+  const running = turn.running;
   const warning = warningText(status, activity);
   let timer = null;
   let state = null;
   if (running) {
     state = 'running';
-    if (started <= now + CLOCK_SKEW_MS) timer = duration(Math.max(0, now - started));
-  } else if (activity?.endedAt && now - activity.endedAt <= COMPLETE_SHOWN_MS && activity.endedAt <= now + CLOCK_SKEW_MS) {
+    if (turn.startedAt !== null) timer = duration(Math.max(0, now - turn.startedAt));
+  } else if (activity?.endedAt && !activity.failed && now - activity.endedAt <= COMPLETE_SHOWN_MS && activity.endedAt <= now + CLOCK_SKEW_MS) {
     state = 'complete';
     timer = duration(Math.max(0, activity.endedAt - activity.startedAt));
   }
@@ -360,6 +415,109 @@ function formatBand(discipline, band, depth, nerd, maxCells) {
   return renderBand(discipline, band, depth, nerd, { ...last, skillCells: Math.max(1, room) }).painted;
 }
 
+function clock(ms) {
+  const seconds = Math.floor(Math.max(0, ms) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const rest = String(seconds % 60).padStart(2, '0');
+  return minutes < 60 ? `${minutes}:${rest}` : `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}:${rest}`;
+}
+
+// The current stage's pill: its name, the plan's checked tasks while working, and a tick once the
+// stage's turn has ended (for work, only once every task is checked).
+function stageLabel(workflow) {
+  if (workflow.stage === 'done') return 'DONE ✓';
+  const plan = workflow.plan;
+  const counter = workflow.stage === 'work' && plan?.total > 0 ? ` ${plan.done}/${plan.total}` : '';
+  const finished = workflow.ended && (workflow.stage !== 'work' || (plan?.total > 0 && plan.done === plan.total));
+  return `${workflow.stage.toUpperCase()}${counter}${finished ? ' ✓' : ''}`;
+}
+
+// The breadcrumb as { text, role, position, rail } pieces. Stage k of n sits at k/(n-1) along the
+// orange-pink-cyan gradient and each rail cell between two stages takes its own step in between.
+// Rails up to the current stage are lit. A stage before it shows a tick when the session went through
+// it; interview shows only when it happened.
+function breadcrumbPieces(workflow, { rail, compact }) {
+  const shown = STAGES.filter((stage) => stage !== 'interview' || workflow.visited.includes('interview') || workflow.stage === 'interview');
+  const current = shown.indexOf(workflow.stage);
+  const last = Math.max(1, shown.length - 1);
+  const pieces = [];
+  shown.forEach((stage, index) => {
+    if (index > 0) {
+      if (!compact) pieces.push({ text: ' ', role: 'space' });
+      for (let cell = 0; cell < rail; cell += 1) {
+        pieces.push({ text: index <= current ? '━' : '─', role: index <= current ? 'lit' : 'dim', position: (index - 1 + (cell + 1) / (rail + 1)) / last, rail: [index, cell] });
+      }
+      if (!compact) pieces.push({ text: ' ', role: 'space' });
+    }
+    const position = index / last;
+    if (index === current) pieces.push({ text: stageLabel(workflow), role: 'pill', position });
+    else if (index > current) pieces.push({ text: compact ? '·' : `${stage} ·`, role: 'future' });
+    else if (workflow.visited.includes(stage)) pieces.push({ text: compact ? '✓' : `${stage} ✓`, role: 'past', position });
+    else pieces.push({ text: compact ? '-' : stage, role: 'skipped' });
+  });
+  return { pieces, current };
+}
+
+// While a turn runs, one bright cell rides the rail into the current stage and moves on at each
+// redraw (Grok redraws about every 300 ms during a turn).
+function renderBreadcrumb(workflow, tier, depth, running, now) {
+  const { pieces, current } = breadcrumbPieces(workflow, tier);
+  const plain = pieces.map(({ text, role }) => (role === 'pill' ? `[${text}]` : text)).join('');
+  if (!depth) return { plain, painted: plain };
+  const head = running ? [current > 0 ? current : 1, Math.floor(now / 300) % tier.rail] : null;
+  const painted = pieces.map(({ text, role, position, rail }) => {
+    if (role === 'space') return text;
+    if (role === 'future' || role === 'skipped') return `${sgr(TEXT.dim, depth)}${text}`;
+    const rgb = gradientColor(position, RAIL_STOPS);
+    if (role === 'pill') return `${sgr(rgb, depth, true)}${sgr(RAIL.ink, depth)}\u001b[1m ${text} \u001b[0m`;
+    if (role === 'past') return `${sgr(rgb, depth)}${text}`;
+    if (head && rail[0] === head[0] && rail[1] === head[1]) return `${sgr(RAIL.head, depth)}${text}`;
+    return `${sgr(role === 'lit' ? rgb : RAIL.faint, depth)}${text}`;
+  }).join('');
+  return { plain, painted: `${painted}\u001b[0m` };
+}
+
+function toolLabel(name) {
+  return Object.hasOwn(TOOL_LABELS, name) ? TOOL_LABELS[name] : clipCells(plainText(name, 'tool'), 20);
+}
+
+function renderWorkflow(workflow, live, running, depth, now, tier) {
+  const paint = (text, rgb) => (depth ? `${sgr(rgb, depth)}${text}\u001b[0m` : text);
+  const parts = [];
+  if (workflow?.stage) parts.push(renderBreadcrumb(workflow, tier, depth, running, now));
+  if (live && tier.live) {
+    const spinner = SPINNER[Math.floor(now / 100) % SPINNER.length];
+    const text = tier.live === 'full' ? `${spinner} ${toolLabel(live.name)} · ${clock(now - live.startedAt)}` : `${spinner} ${clock(now - live.startedAt)}`;
+    parts.push({ plain: text, painted: paint(text, TEXT.amber) });
+  }
+  if (workflow?.test && tier.tests) {
+    const pass = workflow.test.verdict === 'pass';
+    const text = `tests ${pass ? '✓' : '✗'}${workflow.test.count === undefined ? '' : ` ${workflow.test.count}`}`;
+    parts.push({ plain: text, painted: paint(text, pass ? TEXT.green : RAIL.red) });
+  }
+  return { plain: parts.map((part) => part.plain).join('   '), painted: parts.map((part) => part.painted).join('   ') };
+}
+
+// Narrow rows shorten the rails, then drop the test badge, the tool's name, the tool and the stage
+// names, and last of all keep only the current stage.
+function formatWorkflow(workflow, live, running, depth, now, maxCells) {
+  const tiers = [
+    { rail: 4, live: 'full', tests: true },
+    { rail: 2, live: 'full', tests: true },
+    { rail: 2, live: 'full', tests: false },
+    { rail: 2, live: 'short', tests: false },
+    { rail: 1, live: false, tests: false },
+    { rail: 1, compact: true, live: false, tests: false },
+  ];
+  for (const tier of tiers) {
+    const row = renderWorkflow(workflow, live, running, depth, now, tier);
+    if (width(row.plain) <= maxCells && row.painted.length <= MAX_LINE_CHARACTERS) return row.painted || null;
+  }
+  if (!workflow?.stage) return null;
+  const label = clipCells(stageLabel(workflow), Math.max(1, maxCells - 2));
+  return depth ? `${sgr(RAIL_STOPS[1], depth, true)}${sgr(RAIL.ink, depth)}\u001b[1m ${label} \u001b[0m` : `[${label}]`;
+}
+
 const input = await readInput();
 try {
   recordContextForHandoff(input);
@@ -388,14 +546,35 @@ const row = formatRow({
   version: installedVersion(),
 }, depth, maxCells);
 // The ribbon is a second line, shown only while a skill is active and a turn runs, has just ended or
-// needs attention. LITGROK_HUD_LINES=1 keeps the compact row alone.
+// needs attention. The workflow row follows it once the session has a workflow stage, or while a skill
+// is active and there is a tool in flight or a test verdict to show. LITGROK_HUD_LINES=1 keeps the
+// compact row alone.
 let band = null;
-if (discipline && process.env.LITGROK_HUD_LINES !== '1') {
+let workflowLine = null;
+if (process.env.LITGROK_HUD_LINES !== '1') {
+  const now = Date.now();
+  let activity = null;
   try {
-    const state = bandState(input, Date.now());
-    if (state) band = formatBand(discipline, state, depth, process.env.LITGROK_HUD_GLYPHS === 'nerd', maxCells);
+    activity = turnActivity(readLedgerTail(input), input?.prompt_id);
   } catch {
-    band = null;
+    activity = null;
+  }
+  const turn = turnState(input, activity, now);
+  const { running } = turn;
+  if (discipline) {
+    try {
+      const state = bandState(input, now, activity, turn);
+      if (state) band = formatBand(discipline, state, depth, process.env.LITGROK_HUD_GLYPHS === 'nerd', maxCells);
+    } catch {
+      band = null;
+    }
+  }
+  try {
+    const workflow = readWorkflow(input);
+    const live = running ? activity?.live ?? null : null;
+    if (workflow?.stage || (discipline && (live || workflow?.test))) workflowLine = formatWorkflow(workflow, live, running, depth, now, maxCells);
+  } catch {
+    workflowLine = null;
   }
 }
-process.stdout.write(band ? `${row}\n${band}\n` : `${row}\n`);
+process.stdout.write(`${[row, band, workflowLine].filter(Boolean).join('\n')}\n`);
