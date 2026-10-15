@@ -62,7 +62,7 @@ Decoration: hairline rules and box outlines only.
 
 - Number every figure and table and give each caption its condition and source: "Figure 2. Logger
   positions at k = 12, test district (sample)".
-- Use `figure-academic` for a figure that needs reading: observation, limitation, implication.
+- Use `figure-academic` for a figure that needs reading: observation, basis, implication.
 - Reserve crimson for one thing across the whole talk: the proposed method's series, row or label.
 - Put the method on a `method` slide with the objective and each term defined.
 - End with references and the definitions the talk relies on, eight to ten lines.
@@ -116,7 +116,7 @@ layout: figure-academic
 ![압력계 12대 배치, 시험 구역 (예시) | 출처: 예시 그림](assets/example-b.png)
 
 - **관찰** 절반이 구역 중심이 아닌 긴 송수관 위에 놓인다
-- **한계** 야간 수요 기준으로 맞춘 배치다
+- **근거** 야간 수요 기준으로 맞춘 배치다
 - **의미** 접근이 쉬운 지점을 골라도 정확도 손실이 작다
 - 출처: 예시 수리 모형, 2025년 소화전 시험으로 보정 (예시)
 ---

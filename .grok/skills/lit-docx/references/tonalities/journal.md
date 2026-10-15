@@ -45,7 +45,7 @@ Worked example: `examples/06-journal-en.md` (3 pages).
 
 ## Components
 
-Only the callout, drawn with ink rules since the pack has no accent. Use it for a note on how to read the numbers, a definition, or a caveat; one in a three- or four-page piece is plenty. The two-column body counts as a component kind and so does the opening title block, so the gate's two-kind floor is met without adding anything. Key figures and sidebars become plain text here.
+Only the callout, drawn with ink rules since the pack has no accent. Use it for a note on how to read the numbers, a definition, or a fact about the data; one in a three- or four-page piece is plenty. The two-column body counts as a component kind and so does the opening title block, so the gate's two-kind floor is met without adding anything. Key figures and sidebars become plain text here.
 
 ## Writing the source
 

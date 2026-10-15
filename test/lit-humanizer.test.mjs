@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -22,7 +24,7 @@ test('lit-humanizer is enrolled in the native plugin and always-on route', () =>
 test('LitGrok detector mirrors every canonical block and warning fixture', () => {
   const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
   const fixtures = JSON.parse(readFileSync(join(SKILL, 'fixtures', 'rule-cases.json'), 'utf8'));
-  assert.equal(rules.length, 51);
+  assert.equal(rules.length, 54);
   for (const rule of rules) {
     const positive = fixtures.positive[rule.id];
     const negative = fixtures.negative[rule.id];
@@ -98,4 +100,134 @@ test('comprehension template uses citations and keeps ledgers outside the delive
   assert.doesNotMatch(template, /확인 안 된 것|신뢰도|confidence/i);
   assert.doesNotMatch(template, /data-src=/);
   assert.doesNotMatch(template, /honesty ledger|evidence table/i);
+});
+
+const PLEDGE_RULES = ['ko-negative-pledge', 'ko-negative-pledge-repeat', 'en-negative-pledge'];
+const SEVERITY_RANK = { warn: 1, block: 2 };
+const GUARD_TIMEOUT_MS = JSON.parse(readFileSync(join(ROOT, '.grok', 'hooks', 'deliverable-hedge-guard.json'), 'utf8')).hooks.PreToolUse[0].hooks[0].timeout * 1000;
+
+function loadPledgeCases() {
+  return JSON.parse(readFileSync(join(ROOT, 'test', 'fixtures', 'lit-humanizer', 'pledge-cases.json'), 'utf8'));
+}
+
+function guardVerdict(event, cwd) {
+  const run = spawnSync(process.execPath, [join(ROOT, '.grok', 'hooks', 'deliverable-hedge-guard.mjs')], {
+    cwd,
+    encoding: 'utf8',
+    input: `${JSON.stringify({ hookEventName: 'PreToolUse', sessionId: 'pledge-suite', cwd, workspaceRoot: cwd, ...event })}\n`,
+  });
+  return { status: run.status, stdout: run.stdout, stderr: run.stderr, reply: run.stdout.trim() ? JSON.parse(run.stdout) : null };
+}
+
+test('every negative pledge hits its expected rule at its expected severity', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const { pledges } = loadPledgeCases();
+  assert.equal(pledges.length, 15);
+  for (const pledge of pledges) {
+    const hits = scanText(pledge.text, rules, 'pledge.md');
+    if (pledge.severity === 'none') {
+      assert.deepEqual(hits, [], `pledge ${pledge.n} must stay clean`);
+      continue;
+    }
+    const top = hits.reduce((best, hit) => Math.max(best, SEVERITY_RANK[hit.severity]), 0);
+    assert.equal(top, SEVERITY_RANK[pledge.severity], `pledge ${pledge.n} top severity`);
+    assert.ok(hits.some((hit) => hit.rule === pledge.rule && hit.severity === pledge.severity), `pledge ${pledge.n} needs ${pledge.rule}`);
+  }
+});
+
+test('operating rules, method lines and notices stay clear of the pledge rules', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const cases = loadPledgeCases();
+  assert.ok(cases.near_misses.length >= 20);
+  assert.ok(cases.near_misses_review.length >= 80);
+  for (const near of [...cases.near_misses, ...cases.near_misses_review]) {
+    const stray = scanText(near.text, rules, 'near-miss.md').filter((hit) => PLEDGE_RULES.includes(hit.rule));
+    assert.deepEqual(stray, [], `near-miss must not hit a pledge rule: ${near.text}`);
+  }
+});
+
+test('whole-document cases block or stay clean on the rule they name', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const { document_cases: documents } = loadPledgeCases();
+  assert.equal(documents.length, 8);
+  for (const doc of documents) {
+    const blocked = scanText(doc.text, rules, 'document.md').some((hit) => hit.rule === doc.rule && hit.severity === 'block');
+    assert.equal(blocked, doc.expect === 'block', `${doc.rule} ${doc.expect}: ${JSON.stringify(doc.text)}`);
+  }
+});
+
+test('the guard denies a pledge written to a reader-facing file and passes the near-misses', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-pledge-'));
+  try {
+    const write = (content, toolName = 'Write') => guardVerdict({ toolName, toolInput: { path: join(workspace, 'report.md'), content } }, workspace);
+    const denied = write('동일 조건의 독립 성능 비교로 쓰지 않음.');
+    assert.equal(denied.status, 2, denied.stderr);
+    assert.equal(denied.reply.decision, 'deny');
+    assert.match(denied.reply.reason, /ko-negative-pledge/);
+    const english = write('# Notes\n\nThese figures do not constitute an independent performance comparison.\n');
+    assert.equal(english.status, 2, english.stderr);
+    assert.match(english.reply.reason, /en-negative-pledge/);
+    for (const clean of ['이 장비는 방폭 구역에서 사용하지 않습니다. 냉각수로 쓰지 않음. 한 번에 0.1 이상 바꾸지 않음.', '법률 자문을 대체하지 않습니다.', 'The comparison does not imply causation.']) {
+      const allowed = write(clean);
+      assert.equal(allowed.status, 0, `${clean}: ${allowed.stderr}`);
+      assert.deepEqual(allowed.reply, { decision: 'allow' });
+    }
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('the guard denies a repeated pledge pair within the hook timeout', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-pledge-repeat-'));
+  try {
+    const started = Date.now();
+    const denied = guardVerdict({
+      toolName: 'Write',
+      toolInput: { path: join(workspace, 'report.md'), content: '해석하지 않음. 수율은 82%였다. 대표하지 않음.' },
+    }, workspace);
+    assert.equal(denied.status, 2, denied.stderr);
+    assert.match(denied.reply.reason, /ko-negative-pledge-repeat/);
+    assert.ok(Date.now() - started < GUARD_TIMEOUT_MS);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('a pledge padded with a long whitespace run is still denied inside the hook timeout', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-pledge-pad-'));
+  try {
+    const pledge = '동일 조건의 독립 성능 비교로 쓰지 않음.';
+    for (const padding of [`검증된${' '.repeat(4096)}x`, `해석하지${' '.repeat(65536)}x`]) {
+      const started = Date.now();
+      const denied = guardVerdict({
+        toolName: 'Write',
+        toolInput: { path: join(workspace, 'report.md'), content: `${pledge}\n${padding}\n` },
+      }, workspace);
+      const elapsed = Date.now() - started;
+      assert.equal(denied.status, 2, `${denied.stderr} after ${elapsed} ms`);
+      assert.equal(denied.reply.decision, 'deny');
+      assert.match(denied.reply.reason, /ko-negative-pledge/);
+      assert.ok(elapsed < GUARD_TIMEOUT_MS, `guard took ${elapsed} ms against a ${GUARD_TIMEOUT_MS} ms hook timeout`);
+    }
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('the guard scans only the changed text of an Edit', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-pledge-edit-'));
+  try {
+    const edit = (oldString, newString) => guardVerdict({
+      toolName: 'Edit',
+      toolInput: { path: join(workspace, 'report.md'), old_string: oldString, new_string: newString },
+    }, workspace);
+    const added = edit('수율은 82%였다.', '수율은 82%였다.\n이 표는 순위를 매기기 위한 것이 아닙니다.');
+    assert.equal(added.status, 2, added.stderr);
+    assert.match(added.reply.reason, /ko-negative-pledge/);
+    const untouched = edit('이 그래프는 인과관계를 주장하지 않음.\n수율은 82%였다.', '이 그래프는 인과관계를 주장하지 않음.\n수율은 83%였다.');
+    assert.equal(untouched.status, 0, untouched.stderr);
+    assert.deepEqual(untouched.reply, { decision: 'allow' });
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
 });

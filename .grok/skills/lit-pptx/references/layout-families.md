@@ -50,7 +50,7 @@ section and closing variants.
 | `image-split` | a picture beside its explanation | an image, then bold-headed bullets | atlas, chalk, signal, studio |
 | `photo-grid` | a row of two or three pictures | the images on consecutive lines, then a single sentence | atlas, studio |
 | `figure-pair` | two states of one subject (before/after, A/B) | two images, then one or two measured lines | atlas, paper |
-| `figure-academic` | a journal figure and how to read it | an image captioned `Figure N.`, then bullets headed observation, limitation, implication | paper |
+| `figure-academic` | a journal figure and how to read it | an image captioned `Figure N.`, then bullets headed observation, basis, implication | paper |
 | `asymmetric-feature` | one large picture and a narrow text column | an image, then four or five short bullets | atlas, signal, studio |
 | `references-appendix` | sources and definitions, one a line | `- [1] …` lines, eight to ten entries | gazette, ledger, paper |
 

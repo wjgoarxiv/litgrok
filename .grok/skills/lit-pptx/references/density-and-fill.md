@@ -94,7 +94,7 @@ half of the body.
   is compared with (last year, the plan, a peer), which period it covers, who published it, and what
   follows from it.
 - **Every data slide ends with a source line.** `출처: …` or `Source: …` names the origin and period;
-  a `주: …` or `Note: …` line may follow with a definition or caveat. Both go to the foot strip.
+  a `주: …` or `Note: …` line may follow with a definition or a fact about the data, never a statement of what the slide is not for. Both go to the foot strip.
 - **Tables run five to eight rows**, four to six columns, units in the header or caption, two or
   three takeaways after the caption. Three rows or fewer read better as a `kpi-row` or a
   `comparison`.

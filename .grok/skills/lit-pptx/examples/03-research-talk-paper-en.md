@@ -58,7 +58,7 @@ layout: figure-academic
 ![Logger positions at k = 12, test district (sample) | Source: sample figure](assets/example-b.png)
 
 - **Observation** half the loggers sit on long transmission mains, not zone centres
-- **Limitation** fitted to night demand, where noise is a third of daytime
+- **Basis** fitted to night demand, where noise is a third of daytime
 - **Implication** sites with cheap access lose little accuracy
 - Source: sample hydraulic model, calibrated against 2025 hydrant tests (sample)
 ---
