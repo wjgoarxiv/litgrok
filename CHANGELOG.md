@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.0.20 — 2026-10-15
+
+- Reports and decks no longer fill up with lines that tell the reader what the document is not for, such as `이 수치는 동일 조건의 독립 성능 비교로 쓰지 않음.` When the model writes one into a file, the `PreToolUse` hook denies the write and the model rewrites the line. Three new rules cover Korean self-referencing pledges, repeated disclaimers and the English forms. Legal and financial notices, safety warnings and real negative findings are left alone, and the rules finish in milliseconds even on very long runs of spaces.
+- The `lit-docx` and `lit-pptx` skills now ask for a real limit once, written as a fact beside the number it affects. What a document is not for goes in the chat reply instead.
+
 ## 1.0.19 — 2026-10-13
 
 - The status row shows where a session is in the LIT workflow. Once a prompt names `deep-interview`, `lit-plan`, `start-work`, `litwork`, a bare `lit` or `review-work`, a line such as `plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   ⠹ Bash · 0:31   tests ✓ 214` shows the stages passed, the current stage with the checked tasks of the newest plan, the tool running now and for how long, and the last test run. A command that only mentions a test runner inside a heredoc or a quoted string is not counted as a test run. LitGrok keeps only stage names, task counts and the test verdict, never a prompt, a command or its output.
