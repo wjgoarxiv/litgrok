@@ -138,8 +138,8 @@ test('every negative pledge hits its expected rule at its expected severity', ()
 test('operating rules, method lines and notices stay clear of the pledge rules', () => {
   const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
   const cases = loadPledgeCases();
-  assert.ok(cases.near_misses.length >= 20);
-  assert.ok(cases.near_misses_review.length >= 80);
+  assert.ok(cases.near_misses.length >= 27);
+  assert.ok(cases.near_misses_review.length >= 215);
   for (const near of [...cases.near_misses, ...cases.near_misses_review]) {
     const stray = scanText(near.text, rules, 'near-miss.md').filter((hit) => PLEDGE_RULES.includes(hit.rule));
     assert.deepEqual(stray, [], `near-miss must not hit a pledge rule: ${near.text}`);
@@ -149,7 +149,7 @@ test('operating rules, method lines and notices stay clear of the pledge rules',
 test('whole-document cases block or stay clean on the rule they name', () => {
   const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
   const { document_cases: documents } = loadPledgeCases();
-  assert.equal(documents.length, 8);
+  assert.equal(documents.length, 13);
   for (const doc of documents) {
     const blocked = scanText(doc.text, rules, 'document.md').some((hit) => hit.rule === doc.rule && hit.severity === 'block');
     assert.equal(blocked, doc.expect === 'block', `${doc.rule} ${doc.expect}: ${JSON.stringify(doc.text)}`);
@@ -175,6 +175,55 @@ test('the guard denies a pledge written to a reader-facing file and passes the n
   } finally {
     rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test('pledges real models wrote in host runs all block on their expected rule', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const { pledges_observed: observed } = loadPledgeCases();
+  assert.equal(observed.length, 26);
+  for (const pledge of observed) {
+    const hits = scanText(pledge.text, rules, 'observed.md');
+    assert.ok(hits.some((hit) => hit.rule === pledge.rule && hit.severity === 'block'), `observed pledge needs ${pledge.rule}: ${pledge.text}`);
+  }
+});
+
+test('the guard refuses widened pledges and bold-label callouts but not plain quotes or method sentences', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-pledge-callout-'));
+  try {
+    const write = (content) => guardVerdict({ toolName: 'Write', toolInput: { path: join(workspace, 'report.md'), content } }, workspace);
+    const refused = [
+      ['This table is not a ranking.\n', /en-negative-pledge/],
+      ['이 문서는 제품을 비교하려는 것이 아닙니다.\n', /ko-negative-pledge/],
+      ['> **주의:** 이 표는 순위가 아닙니다.\n', /ko-negative-pledge/],
+      ['> **Note:** This table is not a ranking.\n', /en-negative-pledge/],
+    ];
+    for (const [content, rule] of refused) {
+      const denied = write(content);
+      assert.equal(denied.status, 2, `${content}${denied.stderr}`);
+      assert.equal(denied.reply.decision, 'deny');
+      assert.match(denied.reply.reason, rule);
+    }
+    for (const clean of ['> 이 표는 순위가 아닙니다.\n', '> This table is not a ranking.\n', '숫자와 문자열은 서로 비교할 수 없습니다.\n', 'Do not compare these values directly; convert to SI first.\n']) {
+      const allowed = write(clean);
+      assert.equal(allowed.status, 0, `${clean}${allowed.stderr}`);
+      assert.deepEqual(allowed.reply, { decision: 'allow' });
+    }
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('only a quote line that opens with a bold label is read, and only by rules that name blockquote_callout', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const callouts = rules.filter((rule) => rule.context.includes('blockquote_callout')).map((rule) => rule.id).sort();
+  assert.deepEqual(callouts, ['en-negative-pledge', 'ko-negative-pledge', 'ko-negative-pledge-repeat']);
+  assert.ok(scanText('> **주의:** 이 표는 순위가 아닙니다.\n', rules, 'callout.md').some((hit) => hit.rule === 'ko-negative-pledge' && hit.line === 1));
+  assert.ok(scanText('> __Note__ This table is not a ranking.\n', rules, 'callout.md').some((hit) => hit.rule === 'en-negative-pledge'));
+  assert.deepEqual(scanText('> 이 표는 순위가 아닙니다.\n', rules, 'quote.md'), []);
+  assert.deepEqual(scanText('> *주의* 이 표는 순위가 아닙니다.\n', rules, 'quote.md'), []);
+  assert.equal(scanText('> **주의:** 이 문서는 비교가 아닙니다.\n', rules.filter((rule) => rule.id === 'ko-status-negation'), 'callout.md').length, 0);
+  // a callout is its own segment: it neither joins the previous nor the next sentence
+  assert.deepEqual(scanText('이 표는\n> **주의:** 순위가 아닙니다.\n', rules, 'split.md'), []);
 });
 
 test('the guard denies a repeated pledge pair within the hook timeout', () => {
