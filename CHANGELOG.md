@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.21 — 2026-10-16
+
+- The deliverable guard now refuses more of the lines that tell a reader what a document is not for, such as `This table is not a ranking.` or `이 문서는 제품을 비교하려는 것이 아닙니다.` These forms came from real sessions. Bold-label callouts such as `> **주의:** ...` are now read too, while ordinary quoted text is still skipped. Lines from manuals and lab reports that only look similar stay allowed.
+
 ## 1.0.20 — 2026-10-15
 
 - Reports and decks no longer fill up with lines that tell the reader what the document is not for, such as `이 수치는 동일 조건의 독립 성능 비교로 쓰지 않음.` When the model writes one into a file, the `PreToolUse` hook denies the write and the model rewrites the line. Three new rules cover Korean self-referencing pledges, repeated disclaimers and the English forms. Legal and financial notices, safety warnings and real negative findings are left alone, and the rules finish in milliseconds even on very long runs of spaces.
