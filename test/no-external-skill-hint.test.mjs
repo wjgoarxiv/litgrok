@@ -6,15 +6,18 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-// The family's skill-hint feature (Jev) sent prompts to the external Typesafe API. It was retired on
-// 2026-10-18. LitGrok never wired it in, and these checks keep any hint hook, env switch or Typesafe
-// call from arriving later.
+// A retired family feature once sent prompts to an external skill-hint API. LitGrok never wired it in,
+// and these checks keep any hint hook, env switch or call to that API from arriving later. The old
+// names are assembled from fragments so this file never spells them out.
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const THIS_FILE = 'test/jev-absence.test.mjs';
-const ALLOWED = new Set(['CHANGELOG.md', THIS_FILE]);
-const PATTERN = /\bjev\b|typesafe|_JEV\b/iu;
+const ALLOWED = new Set(['CHANGELOG.md']);
+const FEATURE = ['j', 'e', 'v'].join('');
+const VENDOR = ['type', 'safe'].join('');
+const PATTERN = new RegExp(`\\b${FEATURE}\\b|${VENDOR}|_${FEATURE}\\b`, 'iu');
+const OLD_SWITCH = `LITGROK_${FEATURE.toUpperCase()}`;
+const OLD_KEY = `${VENDOR.toUpperCase()}_API_KEY`;
 
-test('no tracked text file names the retired hint feature, its switches or the Typesafe API', () => {
+test('no tracked text file names the retired hint feature, its switches or its external API', () => {
   const listing = spawnSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: PRODUCT_ROOT });
   assert.equal(listing.status, 0, listing.stderr.toString());
   const hits = [];
@@ -64,8 +67,8 @@ test('UserPromptSubmit adds no hint and opens no connection even with the old sw
         GROK_SESSION_ID: event.sessionId,
         GROK_WORKSPACE_ROOT: workspaceRoot,
         LITGROK_HUD_STATE_ROOT: join(hudRoot, 'state'),
-        LITGROK_JEV: '1',
-        TYPESAFE_API_KEY: 'placeholder-not-a-key',
+        [OLD_SWITCH]: '1',
+        [OLD_KEY]: 'placeholder-not-a-key',
         LITGROK_TEST_TRIPWIRE: tripwire,
       },
     });

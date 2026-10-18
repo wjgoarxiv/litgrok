@@ -3,7 +3,7 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-<p align="center">Skills, a project rule and hooks for xAI's Grok Build that help every session plan the change, build it, check it, and leave a handoff the next session can pick up.</p>
+<p align="center">LitGrok gives xAI's Grok Build the habit of planning before it edits, checking what it built, and leaving a handoff, so tomorrow's session starts where today's stopped. One npm command adds its skills, project rule and hooks to your project.</p>
 
 <p align="center">
 <a href="https://www.npmjs.com/package/@litfamily/litgrok"><img src="https://img.shields.io/npm/v/@litfamily/litgrok?color=FF6337&amp;label=npm" alt="npm version" /></a>
@@ -18,9 +18,19 @@
 
 ## Why LitGrok
 
-Grok Build is quick to start. You type a line and it gets to work. The trouble comes later: a long session fills its context and gets compacted, the next session starts without what the last one knew, and "done" often means the model said so. You end up explaining again where you were, and checking by hand what actually works.
+Grok Build is quick to start. You type a line and it gets to work. The trouble comes later: a long session fills its context and gets compacted, the next session starts without what the last one knew, and "done" often just means the model said so. You end up explaining again where you were, and checking by hand what actually works.
 
-LitGrok gives each session a routine to follow. A bigger change gets a written plan before the first edit. The work is checked against that plan, and anything nobody could check is marked as unverified. Before you stop, a handoff file records what was built, what was checked and what is left, so the next session can read it and carry on. Grok Build still runs the session and picks the model; LitGrok only adds the way of working.
+LitGrok gives each session a routine to follow. A bigger change gets a written plan before the first edit. The work is checked against that plan, and anything nobody could check is marked as unverified. Before you stop, a handoff file records what was built, what was checked and what is left, so the next session can read it and carry on. Grok Build still runs the session and picks the model; LitGrok adds the way of working.
+
+The film above is one real session. Stripped down to three lines, it goes like this:
+
+```text
+you typed   lit add a --shout flag that prints the greeting in capitals, with a test
+it did      wrote the test first, changed greet.js, re-ran the tests and the CLI
+it ended    node greet.js --shout Ada prints HELLO, ADA!   litwork complete · 35s · 2 tools
+```
+
+LitGrok is for anyone whose Grok Build work runs longer than one sitting: a feature spread over a few days, a bug you want a test to prove fixed, a report or a deck that someone else will read. It lives in your project as plain files, and LitGrok itself needs no account or sign-in.
 
 ## Install in 30 seconds
 
@@ -190,9 +200,11 @@ The installer copies plain files into the project's `.grok/` folder and changes 
 
 ## Requirements, update and uninstall
 
-- **Needs:** Node.js and Grok Build. The notes on this page were checked on Grok Build 1.0.13. Slides need Node.js 20.9 or newer; the office skills install their pinned tools into their own cache the first time you use them.
-- **Update:** run the same `install` command again. `litgrok doctor` tells you when a newer version is out; it never installs anything.
-- **Uninstall:** use the scope you installed with. The installer removes only files it put there; if you edited one, it stops before removing anything and names that file.
+You need Node.js and Grok Build; the notes on this page were checked on Grok Build 1.0.13. Slides need Node.js 20.9 or newer, and the office skills install their pinned tools into their own cache the first time you use them.
+
+To update, run the same `install` command again. `litgrok doctor` prints the installed version and, when npm has a newer one, the command that installs it; the doctor itself only reads.
+
+To uninstall, use the scope you installed with. The installer removes only files it put there, and if you edited one, it stops before removing anything and names that file.
 
 ```bash
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall

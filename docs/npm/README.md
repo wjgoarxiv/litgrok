@@ -3,7 +3,7 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-Skills, a project rule and hooks for xAI's Grok Build that help every session plan the change, build it, check it, and leave a handoff the next session can pick up.
+LitGrok gives xAI's Grok Build the habit of planning before it edits, checking what it built, and leaving a handoff, so tomorrow's session starts where today's stopped. One npm command adds its skills, project rule and hooks to your project.
 
 **[Full README on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [Guide](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide.md) · [All skills](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/reference.md)
 
@@ -14,7 +14,7 @@ Skills, a project rule and hooks for xAI's Grok Build that help every session pl
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model.
+Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often just means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
 
 ## Install in 30 seconds
 
@@ -99,9 +99,11 @@ The installer never runs `git init`, trusts hooks, signs in or picks a model for
 
 ## If something does not work
 
-- **No hooks:** Grok runs hooks only from a trusted Git project root. For a new project, run `git init` yourself, then trust it; for an existing one, open Grok Build from its real root.
-- **Nothing was written:** the output says `no files written` and names the reason (`DRY RUN`, `NO COLOR` or `NON-INTERACTIVE`). Fix that case from the list above and run the install again.
-- **No status row:** Grok reads the row from user or administrator configuration, not from a project or plugin, so add it with `install --user --status-line`.
+If the hooks don't show up, check where Grok Build was opened. Grok runs hooks only from a trusted Git project root, so in a new project run `git init` yourself and then trust it, and in an existing one open Grok Build from its real root.
+
+If the installer wrote nothing, the output says `no files written` and names the reason: `DRY RUN`, `NO COLOR` or `NON-INTERACTIVE`. Fix that case from the list above and run the install again.
+
+If the status row is missing, add it with `install --user --status-line`. Grok reads the row only from user or administrator configuration, which is why a project install can't turn it on.
 
 ---
 

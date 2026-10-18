@@ -3,7 +3,7 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-xAI Grok Build에 스킬, 프로젝트 규칙, 훅을 더해 세션마다 계획하고, 만들고, 확인하고, 다음 세션이 이어받을 인수인계 문서를 남기게 합니다.
+LitGrok은 xAI Grok Build가 코드를 고치기 전에 계획부터 세우고, 만든 결과를 확인하고, 인수인계 문서를 남기게 합니다. 그러면 내일 세션이 오늘 멈춘 자리에서 이어집니다. npm 명령 한 줄이면 스킬과 프로젝트 규칙, 훅이 프로젝트에 들어갑니다.
 
 **[GitHub에서 README 전체 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [안내서](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide_ko-KR.md) · [전체 스킬](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md) · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/reference_ko-KR.md)
 
@@ -14,7 +14,7 @@ xAI Grok Build에 스킬, 프로젝트 규칙, 훅을 더해 세션마다 계획
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.22/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다.
+Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
 
 ## 30초 설치
 
@@ -35,7 +35,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 처음 입력해 볼 것
 
-프로젝트의 Git 루트에서 Grok Build를 열거나 다시 시작합니다. Grok은 신뢰한 프로젝트 훅만 실행하니, `/hooks-trust`에서 훅을 살펴보고 신뢰해 주세요. Grok Build 1.0.13에서는 `grok --trust inspect --json`으로도 같은 일을 할 수 있었습니다. Git이 없는 일반 폴더에서는 스킬과 규칙은 불러와도 훅은 잡히지 않을 수 있습니다. 그다음 이렇게 보내 보세요.
+프로젝트의 Git 루트에서 Grok Build를 열거나 다시 시작합니다. Grok은 신뢰한 프로젝트 훅만 실행하니, `/hooks-trust`에서 훅을 살펴보고 신뢰해 주세요. Grok Build 1.0.13에서는 `grok --trust inspect --json`으로도 같은 일을 할 수 있었습니다. Git이 없는 일반 폴더에서는 스킬과 규칙은 불러와도 훅은 꺼진 채로 남습니다. 그다음 이렇게 보내 보세요.
 
 ```text
 /litwork 외부 의존성 없이 index.html 하나로 할 일 목록을 만들어줘. 추가·완료·삭제 동작을 구현하고, 확인한 내용과 다음 할 일을 남겨줘. 브라우저를 자동으로 열지 말고 내가 확인할 순서를 알려줘.
@@ -99,9 +99,11 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 
 ## 잘 안 될 때
 
-- **훅이 보이지 않을 때:** Grok은 신뢰한 Git 프로젝트 루트에서만 훅을 실행합니다. 새 프로젝트라면 신뢰하기 전에 직접 `git init`을 실행하고, 기존 저장소라면 실제 루트에서 Grok Build를 여세요.
-- **파일이 쓰이지 않았을 때:** 출력에 `no files written`과 함께 `DRY RUN`, `NO COLOR`, `NON-INTERACTIVE` 가운데 이유가 나옵니다. 위 목록에서 해당하는 경우를 고치고 다시 설치하세요.
-- **상태 행이 보이지 않을 때:** Grok은 상태 행을 프로젝트나 플러그인 설정이 아닌 사용자나 관리자 설정에서 읽으므로 `install --user --status-line`으로 켜야 합니다.
+훅이 보이지 않으면 Grok Build를 어디서 열었는지부터 보세요. Grok은 신뢰한 Git 프로젝트 루트에서만 훅을 실행합니다. 새 프로젝트라면 직접 `git init`을 실행한 뒤 신뢰하고, 기존 저장소라면 실제 루트에서 Grok Build를 여세요.
+
+아무 파일도 쓰이지 않았다면 출력에 `no files written`과 함께 `DRY RUN`, `NO COLOR`, `NON-INTERACTIVE` 가운데 하나가 이유로 나옵니다. 위 목록에서 해당하는 경우를 고치고 다시 설치하세요.
+
+상태 행이 안 보이면 `install --user --status-line`으로 켜세요. Grok은 상태 행을 사용자나 관리자 설정에서만 읽기 때문에 프로젝트 설치로는 켤 수 없습니다.
 
 ---
 
