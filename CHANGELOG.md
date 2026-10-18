@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- The family's skill-hint feature, Jev, which sent prompts to the external Typesafe API, has been retired because its hints did not measurably change results. LitGrok never shipped it and still makes no such call. A new test keeps a hint hook, a `*_JEV` switch or a Typesafe call from being added later. If your shell still sets `TYPESAFE_API_KEY` or a `*_JEV` variable for this, LitGrok ignores it and you can delete it.
+## 1.0.22 — 2026-10-18
+
+- Asking for a Markdown or plain-text deliverable, such as `report.md` or `slides.md`, now gets plain Markdown. The project rule used to send these to `lit-docx` and `lit-pptx`, so renderer source like front matter and `::: callout` blocks landed in the reader's file and the run spent its time building Office files nobody asked for. Both skills now say their source format is renderer input only. Korean report prose keeps full sentences: the Brief tonality's 개조식 endings apply only when asked for, and the sentence-variance lint is no longer answered by cutting sentences into fragments.
+- `.grok/rules/00-litgrok.md`, which Grok Build loads in full on every turn, drops from 18,323 to 15,469 bytes. The reply and reader-facing rules now come before the routing tables, and every trigger word, alias and route is unchanged. A test holds the installed rule to a 15,500-byte budget.
+- New tests cover guard, status-row and installer paths that a deliberate break used to leave green, including symlinked manifests and payload files, a `.grok` path that is a file and a changelog that lost its release heading. Another test fails if a skill-hint hook, a `*_JEV` switch, a Typesafe call or any network call from the prompt hook is ever added. LitGrok never shipped such hints, so a leftover `TYPESAFE_API_KEY` or `*_JEV` variable in your shell is ignored and can be deleted.
 
 ## 1.0.21 — 2026-10-16
 
