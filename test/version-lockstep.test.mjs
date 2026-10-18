@@ -167,3 +167,13 @@ test("each registry entry declares a valid kind, count, and reason", () => {
     assert.ok(entry.why.trim().length > 0, `incidental reason must be non-empty for ${entry.path}`);
   }
 });
+
+test("a changelog without the current release heading fails and names its file", () => withVersionFixture((root) => {
+  const target = join(root, "CHANGELOG.md");
+  const original = readFileSync(target, "utf8");
+  assert.match(original, new RegExp(`^## ${VERSION.replace(/\./gu, "\\.")}\\s`, "mu"), "fixture precondition: the changelog has the release heading");
+  writeFileSync(target, original.replace(`## ${VERSION}`, "## 0.0.0"), "utf8");
+  const result = runGuard(root);
+  assert.notEqual(result.status, 0, "guard must reject a changelog without the release heading");
+  assert.match(`${result.stdout}\n${result.stderr}`, /CHANGELOG\.md: no release heading/u);
+}));

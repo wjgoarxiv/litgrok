@@ -82,7 +82,6 @@ test('pinned Office dependency tree excludes the audited vulnerable versions', (
 // them back, so they run with the office cache and never skip.
 const docRun = join(root, '.grok/skills/lit-docx/scripts/run.mjs');
 const docEnv = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' };
-delete docEnv.TYPESAFE_API_KEY;
 const docScratch = mkdtempSync(join(tmpdir(), 'litgrok-docx-engine-'));
 test.after(() => rmSync(docScratch, { recursive: true, force: true }));
 function launch(...args) { return spawnSync(process.execPath, [docRun, ...args], { cwd: docScratch, env: docEnv, encoding: 'utf8' }); }

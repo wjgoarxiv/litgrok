@@ -822,3 +822,80 @@ test('concurrent appenders rotate once, keep every record once and never hard-li
     assert.equal(new Set(ids).size, 48);
   }
 });
+
+test('PreToolUse reads only the added lines of a patch', () => {
+  const removedLabel = writeEvent('', 'deliverables/report.md');
+  removedLabel.toolInput = {
+    path: 'deliverables/report.md',
+    patch: '--- a/deliverables/report.md\n+++ b/deliverables/report.md\n-**Evidence:** checked output and logs\n+The guide is complete.',
+  };
+  const allowed = runHook(HEDGE_COMMAND, removedLabel);
+  assert.equal(allowed.status, 0, allowed.stderr);
+  assert.deepEqual(JSON.parse(allowed.stdout), { decision: 'allow' }, 'a label the patch removes is not new prose');
+
+  const addedLabel = writeEvent('', 'deliverables/report.md');
+  addedLabel.toolInput = {
+    path: 'deliverables/report.md',
+    patch: '--- a/deliverables/report.md\n+++ b/deliverables/report.md\n-The guide is complete.\n+**Evidence:** checked output and logs',
+  };
+  const denied = runHook(HEDGE_COMMAND, addedLabel);
+  assert.equal(denied.status, 2, denied.stderr);
+  assert.equal(JSON.parse(denied.stdout).decision, 'deny');
+});
+
+test('PreToolUse allows a write that only repeats the user prompt', () => {
+  const prompt = '**Evidence:** wording supplied by the user';
+  const event = writeEvent(`Quoted request:\n\n${prompt}`);
+  event.user_prompt = prompt;
+  const result = runHook(HEDGE_COMMAND, event);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), { decision: 'allow' });
+});
+
+test('an oversized event fails open with a visible size-limit note', () => {
+  const event = writeEvent(`**Evidence:** checked output and logs\n${'x'.repeat(1024 * 1024)}`);
+  const result = runHook(HEDGE_COMMAND, event);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), { decision: 'allow' });
+  assert.match(result.stderr, /lit-humanizer: event exceeded the size limit; write left unchanged; fail-open/u);
+});
+
+// minimalPdf with a second text line forty points below the first.
+function twoLinePdf(first, second) {
+  const marker = 'SECOND-LINE-MARKER';
+  const single = minimalPdf(marker);
+  const escaped = second.replace(/[\\()]/g, '\\$&');
+  const pdf = single.replace(`(${marker}) Tj`, `(${first.replace(/[\\()]/g, '\\$&')}) Tj 0 -40 Td (${escaped}) Tj`);
+  const content = /stream\n([\s\S]*?)\nendstream/u.exec(pdf)[1];
+  const body = pdf.slice(0, pdf.indexOf('xref\n')).replace(/\/Length \d+/u, `/Length ${Buffer.byteLength(content, 'ascii')}`);
+  const offsets = [...body.matchAll(/^\d+ 0 obj$/gmu)].map((match) => Buffer.byteLength(body.slice(0, match.index), 'ascii'));
+  let tail = `xref\n0 ${offsets.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) tail += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  return `${body}${tail}trailer\n<< /Size ${offsets.length + 1} /Root 1 0 R >>\nstartxref\n${Buffer.byteLength(body, 'ascii')}\n%%EOF\n`;
+}
+
+test('PostToolUse names a block finding ahead of an earlier advisory and refuses a symlinked output', (t) => {
+  const pdfVersion = spawnSync('pdftotext', ['-v'], { encoding: 'utf8' });
+  if (pdfVersion.error || pdfVersion.status !== 0) {
+    t.skip('pdftotext is unavailable; the product reports this inspection boundary');
+    return;
+  }
+  const output = mkdtempSync(join(tmpdir(), 'litgrok-humanizer-post-'));
+  try {
+    const document = join(output, 'report.pdf');
+    writeFileSync(document, twoLinePdf('Not a workaround, but a permanent fix.', '**Evidence:** checked output and logs'));
+    const postEvent = (file) => ({
+      hookEventName: 'PostToolUse', sessionId: 'session-litgrok-driver', cwd: output, workspaceRoot: output,
+      toolName: 'Bash', toolInput: { file_path: file }, toolResponse: { file_path: file },
+    });
+    const result = runHook(HEDGE_COMMAND, postEvent(document));
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /lit-humanizer: block-tier \S+ in .*report\.pdf; fix and rebuild before delivery/u);
+
+    const linked = join(output, 'linked.pdf');
+    symlinkSync(join(output, 'missing.pdf'), linked);
+    const refused = runHook(HEDGE_COMMAND, postEvent(linked));
+    assert.equal(refused.status, 0, refused.stderr);
+    assert.match(refused.stderr, /could not inspect .*linked\.pdf; output left unchanged \(output is not a regular file\)/u);
+  } finally { rmSync(output, { recursive: true, force: true }); }
+});

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The family's skill-hint feature, Jev, which sent prompts to the external Typesafe API, has been retired because its hints did not measurably change results. LitGrok never shipped it and still makes no such call. A new test keeps a hint hook, a `*_JEV` switch or a Typesafe call from being added later. If your shell still sets `TYPESAFE_API_KEY` or a `*_JEV` variable for this, LitGrok ignores it and you can delete it.
+
 ## 1.0.21 — 2026-10-16
 
 - The deliverable guard now refuses more of the lines that tell a reader what a document is not for, such as `This table is not a ranking.` or `이 문서는 제품을 비교하려는 것이 아닙니다.` These forms came from real sessions. Bold-label callouts such as `> **주의:** ...` are now read too, while ordinary quoted text is still skipped. Lines from manuals and lab reports that only look similar stay allowed.

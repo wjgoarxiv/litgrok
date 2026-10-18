@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -510,4 +510,17 @@ test('the finish notification leaves the user\'s own notification settings and c
   writeFileSync(config, edited.replace('condition = "unfocused"', 'condition = "always"'));
   assert.equal(removeNotifications(root).changed, true);
   assert.equal(readFileSync(config, 'utf8'), 'a = 1', 'the newline LitGrok added goes too');
+});
+
+test('status-line install refuses a symlinked config.toml and leaves its target alone', (t) => {
+  const { root, home } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const grokRoot = join(home, '.grok');
+  mkdirSync(grokRoot);
+  const target = join(root, 'shared-config.toml');
+  writeFileSync(target, '[model]\nname = "grok-4"\n');
+  symlinkSync(target, join(grokRoot, 'config.toml'));
+  assert.throws(() => installStatusLine(grokRoot), { code: 'STATUS_CONFIG_UNSAFE' });
+  assert.equal(readFileSync(target, 'utf8'), '[model]\nname = "grok-4"\n');
+  assert.equal(lstatSync(join(grokRoot, 'config.toml')).isSymbolicLink(), true);
 });

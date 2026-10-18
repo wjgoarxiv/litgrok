@@ -281,3 +281,17 @@ test('a wide-character model name is measured in cells on line one', (t) => {
   assert.ok(cells(result.plain[0]) <= 59, `"${result.plain[0]}" is ${cells(result.plain[0])} cells`);
   assert.match(result.plain[0], /… \[high\] │ ctx \[█▎░\] 42%\/2m$/u);
 });
+
+test('the prompt id Grok sends picks the turn the ribbon counts', (t) => {
+  const sb = sandbox(t);
+  seedLedger(sb.workspace, busyTurn());
+  // From the earlier prompt on: four tool calls and two subagents still open.
+  assert.match(runStatus(sb, { env: PLAIN, turnAgoMs: 102_000, promptId: 'old' }).plain[1], / · 4 tools · 2 agents$/u);
+  assert.match(runStatus(sb, { env: PLAIN, turnAgoMs: 102_000, promptId: 'p1' }).plain[1], / · 3 tools · 1 agent$/u);
+});
+
+test('escape sequences in the model name never reach the row', (t) => {
+  const sb = sandbox(t);
+  const { lines } = runStatus(sb, { env: PLAIN, extra: { model: { display_name: '\u001b[31mGrok\u001b[0m 4.5' } } });
+  assert.deepEqual(lines, [LINE_ONE]);
+});

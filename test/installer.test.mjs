@@ -1135,3 +1135,97 @@ test('every Grok Build version the docs cite for grok --trust is the one the ins
     }
   }
 });
+
+test('an ownership manifest naming a parent-directory path fails closed', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'litgrok-dotdot-manifest-'));
+  const env = { ...process.env, HOME: home };
+  delete env.CI;
+  delete env.NO_COLOR;
+  try {
+    const manifest = { schema: 'litgrok.install-manifest/v1', package: 'litgrok-ai', version: '1.0.0', files: { 'skills/../rules/00-litgrok.md': '0'.repeat(64) } };
+    mkdirSync(join(home, '.grok'));
+    writeFileSync(join(home, '.grok', '.litgrok-install-manifest.json'), `${JSON.stringify(manifest)}\n`);
+    const { run } = await import('../bin/litgrok.mjs');
+    const io = captureIo();
+    assert.equal(await run(['install', '--user'], { ...io, cwd: home, env }), 1);
+    assert.equal(existsSync(join(home, '.grok', 'skills', 'litgrok', 'SKILL.md')), false);
+    assert.match(io.read().stderr, /path is invalid: skills\/\.\.\/rules\/00-litgrok\.md/u);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('a symlinked ownership manifest fails closed even when it points at a valid manifest', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'litgrok-linked-manifest-'));
+  const env = { ...process.env, HOME: home };
+  delete env.CI;
+  delete env.NO_COLOR;
+  try {
+    const real = join(home, 'manifest.json');
+    writeFileSync(real, `${JSON.stringify({ schema: 'litgrok.install-manifest/v1', package: 'litgrok-ai', version: '1.0.0', files: {} })}\n`);
+    mkdirSync(join(home, '.grok'));
+    symlinkSync(real, join(home, '.grok', '.litgrok-install-manifest.json'));
+    const { run } = await import('../bin/litgrok.mjs');
+    const io = captureIo();
+    assert.equal(await run(['install', '--user'], { ...io, cwd: home, env }), 1);
+    assert.equal(existsSync(join(home, '.grok', 'skills', 'litgrok', 'SKILL.md')), false);
+    assert.match(io.read().stderr, /Refusing to use \.litgrok-install-manifest\.json: path is not a regular file/u);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('project install names a .grok path that is a regular file', async () => {
+  const project = mkdtempSync(join(tmpdir(), 'litgrok-file-project-'));
+  const env = { ...process.env, HOME: project };
+  delete env.CI;
+  delete env.NO_COLOR;
+  try {
+    writeFileSync(join(project, '.grok'), 'not a directory\n');
+    const { run } = await import('../bin/litgrok.mjs');
+    const io = captureIo();
+    assert.equal(await run(['install'], { ...io, cwd: project, env }), 1);
+    assert.equal(readFileSync(join(project, '.grok'), 'utf8'), 'not a directory\n');
+    assert.match(io.read().stderr, /Refusing non-directory path in install path: .*\.grok/u);
+  } finally {
+    rmSync(project, { recursive: true, force: true });
+  }
+});
+
+test('a symlinked payload destination is refused even when it points at identical bytes', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'litgrok-linked-target-'));
+  const env = { ...process.env, HOME: home };
+  delete env.CI;
+  delete env.NO_COLOR;
+  try {
+    const outside = join(home, 'outside-rule.md');
+    copyFileSync(join(PRODUCT_ROOT, '.grok', 'rules', '00-litgrok.md'), outside);
+    const ruleTarget = join(home, '.grok', 'rules', '00-litgrok.md');
+    mkdirSync(dirname(ruleTarget), { recursive: true });
+    symlinkSync(outside, ruleTarget);
+    const { run } = await import('../bin/litgrok.mjs');
+    const io = captureIo();
+    assert.equal(await run(['install', '--user'], { ...io, cwd: home, env }), 1);
+    assert.equal(existsSync(join(home, '.grok', 'skills', 'litgrok', 'SKILL.md')), false, 'no file is written beside a refused link');
+    assert.match(io.read().stderr, /Refusing to overwrite different existing file: .*00-litgrok\.md/u);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('a terminal stdin with a piped stdout stays a no-write preview without --yes', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'litgrok-half-tty-'));
+  const env = { ...process.env, HOME: home };
+  delete env.CI;
+  delete env.NO_COLOR;
+  try {
+    const { run } = await import('../bin/litgrok.mjs');
+    const io = captureIo({ interactive: false });
+    const exitCode = await run(['install', '--user'], { ...io, stdin: { isTTY: true }, cwd: home, env });
+    assert.equal(exitCode, 0, io.read().stderr);
+    assert.equal(existsSync(join(home, '.grok')), false, 'a piped stdout alone keeps the preview');
+    assert.match(io.read().stdout, /NON-INTERACTIVE/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

@@ -22,7 +22,7 @@ Worked example: `examples/02-brief-ko.md` (3 pages).
 1. Masthead: kicker (검토 보고, 현황 보고, Briefing) and date on the series line, title, subtitle, byline, an accent rule, the notice. Use an empty `::: cover` body; a lead paragraph would push the decision box down.
 2. The decision box, `::: callout kind=key title="결정 요청"`, moved by the converter to stand directly under the title block wherever it sits in the source. It states what is to be approved, by whom, by when, and the amount.
 3. 요약 / Summary: up to four paragraphs, each turned into a numbered point ①-④. The converter makes the first sentence bold (up to the first `다.` or the first full stop) and hangs the point. So each paragraph opens with a short claim and continues with its evidence.
-4. Unnumbered sections, each under a full-width hairline instead of a number: background, options compared, schedule and risks, budget. Write them as dash lists in 개조식, noun or `~함`/`~임` endings, one fact per item.
+4. Unnumbered sections, each under a full-width hairline instead of a number: background, options compared, schedule and risks, budget. Write them as dash lists, one fact per item, whose items are full sentences; use `~함`/`~임` endings only when the user asks for 개조식, and otherwise keep noun endings to table cells and short labels.
 5. Only the folio at the foot, right-aligned, from page 2.
 
 ## Tokens from the pack
@@ -52,7 +52,7 @@ One callout, and it is the decision box. If the source has a second callout it b
 - Keep the first section to four paragraphs; a fifth stays unnumbered.
 - In 개조식 sections, one line per fact, no nested lists. A list of one item loses its dash, so merge a lone item into the sentence above.
 - Use headings that name the content ("대안 비교", "소요 예산"), not "검토 결과" or "기타".
-- 개조식 endings belong to list items only. Headings stay noun phrases, and the 요약 points are full sentences.
+- 개조식 endings belong to list items of a requested 개조식 only. Headings stay noun phrases, and the 요약 points are full sentences in every case.
 
 ## Do and avoid
 
