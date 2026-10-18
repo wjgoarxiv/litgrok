@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.0.23 — 2026-10-18
+
+- The GitHub and npm READMEs, in English and Korean, now say in their first lines what changes for a Grok Build user, show a real session as a short sketch, and name the kind of work LitGrok suits. Install comes sooner, and requirements and troubleshooting read as short paragraphs instead of bold-label lists. The images are unchanged.
+- Leftover notes about the retired skill-hint feature are gone from the test that keeps such a hint from being added; the test is now `test/no-external-skill-hint.test.mjs` and still fails if a hint hook, its old switch or a call to its external API appears. No runtime behavior changed.
+
 ## 1.0.22 — 2026-10-18
 
 - Asking for a Markdown or plain-text deliverable, such as `report.md` or `slides.md`, now gets plain Markdown. The project rule used to send these to `lit-docx` and `lit-pptx`, so renderer source like front matter and `::: callout` blocks landed in the reader's file and the run spent its time building Office files nobody asked for. Both skills now say their source format is renderer input only. Korean report prose keeps full sentences: the Brief tonality's 개조식 endings apply only when asked for, and the sentence-variance lint is no longer answered by cutting sentences into fragments.
