@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.0.24 — 2026-10-19
+
+- Reports and decks no longer pile up sentences that define something by what it is not. The deliverable guard counts definitional negations such as `아닙니다`, `아님`, `is not` and `rather than` in each paragraph, list block or table column. Two Korean ones, or three in any language, make the `PreToolUse` hook deny the write with advice to say what the thing is first; two that are not both Korean only warn. Reworded forms that restate the same definition, such as `~로 읽을 수 없음`, `~을 뜻하지 않음`, `~와는 다르다`, `~로 읽으면 안 된다`, `should not be read as` and `does not mean`, count too, so swapping one negation for another no longer gets past the guard. A plain comparison such as `A와 B는 다르다` is still allowed.
+- Code, quotes, internal paths and short table cells (12 characters or fewer, counted as characters, so an emoji status cell is skipped) are left out of the count.
+- An Edit, a patch or a Write over an existing file is now judged in the context of the whole file, and only on the lines it changes. A change inside a code fence, a blockquote or inline code, or two paragraphs that each have one negation, is no longer refused by mistake, and a new file is still checked in full. The deny reason also goes to stderr as one line.
+- The `lit-humanizer` skill and the always-on rule describe positive-first wording with a before-and-after example.
+
 ## 1.0.23 — 2026-10-18
 
 - The GitHub and npm READMEs, in English and Korean, now say in their first lines what changes for a Grok Build user, show a real session as a short sketch, and name the kind of work LitGrok suits. Install comes sooner, and requirements and troubleshooting read as short paragraphs instead of bold-label lists. The images are unchanged.

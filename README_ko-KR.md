@@ -40,7 +40,7 @@ Node.js와 Grok Build가 있으면 됩니다. 써 보고 싶은 프로젝트에�
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.23`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
+파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.24`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
 
 선택 기능인 상태 행을 켜 두면 세션이 어디까지 왔는지 한눈에 보입니다. 프롬프트가 작업 흐름 스킬을 시작하면 `plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   ⠹ Bash · 0:31   tests ✓ 214` 같은 줄이 붙습니다. 지나온 단계, 지금 단계와 계획에서 체크한 작업 수, 지금 돌고 있는 도구와 걸린 시간, 마지막 테스트 결과를 차례로 보여 줍니다. 상태 행은 사용자 설정에 들어가므로 사용자 범위로 설치할 때 켭니다(`litgrok install --user --status-line`). 턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 명령에 `--notify`를 붙이세요. 화면을 보고 있을 때도 알림이 옵니다. 두 기능 모두 직접 켜기 전에는 꺼져 있습니다.
 

@@ -40,7 +40,7 @@ You need Node.js and Grok Build. Open an interactive terminal in the project you
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.23`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
+The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.24`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
 
 The optional status row is the quickest way to see where a session stands. Once a prompt starts a workflow skill, it gains a line such as `plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   ⠹ Bash · 0:31   tests ✓ 214`: the stages behind you, the stage you are in with the plan tasks checked so far, the tool running right now and for how long, and how the last test run went. The row lives in your user settings, so it comes with a user install (`litgrok install --user --status-line`). Add `--notify` to that command if you also want Grok's terminal notification each time a turn finishes, even while you are watching. Both stay off until you ask for them.
 
