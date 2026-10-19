@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-const VALID_LANGS = new Set(['ko', 'en', 'code']);
+const VALID_LANGS = new Set(['ko', 'en', 'code', 'any']);
 const VALID_SEVERITIES = new Set(['block', 'warn']);
 const VALID_SCOPES = new Set(['line', 'sentence', 'document']);
 
@@ -18,6 +18,15 @@ export function parseRules(raw) {
     }
     if (typeof rule.pattern !== 'string' || typeof rule.flags !== 'string' || !Array.isArray(rule.context) || !Array.isArray(rule.fixture_ids)) {
       throw new Error(`incomplete rule definition: ${rule.id}`);
+    }
+    if (rule.threshold !== undefined) {
+      const { block_ko: blockKo, block_total: blockTotal, warn_total: warnTotal } = rule.threshold ?? {};
+      if (![blockKo, blockTotal, warnTotal].every((value) => Number.isInteger(value) && value >= 2) ||
+        warnTotal >= blockTotal || typeof rule.ko_pattern !== 'string' || rule.severity !== 'block') {
+        throw new Error(`a counted rule needs block_ko, block_total and warn_total of 2 or more, a ko_pattern and block severity: ${rule.id}`);
+      }
+      const counter = (pattern) => new RegExp(pattern, `${rule.flags.replace('g', '')}g`);
+      return { ...rule, regex: new RegExp(rule.pattern, rule.flags), counter: counter(rule.pattern), koCounter: counter(rule.ko_pattern) };
     }
     return { ...rule, regex: new RegExp(rule.pattern, rule.flags) };
   });
@@ -189,12 +198,57 @@ function ruleSegments(rows, rule, cache) {
   return segments;
 }
 
+// A counted rule (one with a tiered threshold) reads each paragraph or list block on its own, split on blank
+// lines, and a Markdown table one column at a time. Cells of 12 characters or fewer are status values.
+function countedSegments(rows) {
+  const blocks = [];
+  let group = [];
+  for (const row of [...rows, { skipped: true }]) {
+    if (!row.skipped && row.candidate.trim()) group.push(row);
+    else if (group.length) { blocks.push(group); group = []; }
+  }
+  const segments = [];
+  for (const block of blocks) {
+    if (!block.every((row) => /^\s*\|/.test(row.candidate))) {
+      segments.push(joinRows(block, '\n'));
+      continue;
+    }
+    const table = block.filter((row) => !/^[\s|:-]+$/.test(row.candidate))
+      .map((row) => row.candidate.trim().replace(/^\|+|\|+$/g, '').split('|').map((cell) => cell.trim()));
+    const width = table.reduce((most, cells) => Math.max(most, cells.length), 0);
+    for (let column = 0; column < width; column += 1) {
+      const text = table.map((cells) => cells[column] ?? '').filter((cell) => [...cell].length > 12).join(' ');
+      if (text) segments.push({ text, line: block[0].number });
+    }
+  }
+  return segments;
+}
+
 export function scanText(text, rules, file = '<stdin>') {
   if (isInternalPath(file)) return [];
   const findings = [];
   const rows = sourceRows(text);
   const segmentCache = new Map();
   for (const rule of rules) {
+    if (rule.threshold !== undefined) {
+      if (!segmentCache.has('counted')) segmentCache.set('counted', countedSegments(rows));
+      // Block at block_ko Korean matches or block_total in any language; warn at exactly warn_total.
+      const { block_ko: blockKo, block_total: blockTotal, warn_total: warnTotal } = rule.threshold;
+      for (const segment of segmentCache.get('counted')) {
+        const matches = [...segment.text.matchAll(rule.counter)];
+        const ko = [...segment.text.matchAll(rule.koCounter)].length;
+        const severity = ko >= blockKo || matches.length >= blockTotal ? 'block' : matches.length >= warnTotal ? 'warn' : null;
+        if (!severity) continue;
+        findings.push({
+          file,
+          rule: rule.id,
+          severity,
+          line: lineAtOffset(segment, matches[0].index),
+          excerpt: segment.text.trim().replace(/\s+/g, ' ').slice(0, 180),
+        });
+      }
+      continue;
+    }
     for (const segment of ruleSegments(rows, rule, segmentCache)) {
       if (!matchesLanguage(rule, segment.text)) continue;
       rule.regex.lastIndex = 0;
@@ -205,6 +259,7 @@ export function scanText(text, rules, file = '<stdin>') {
         rule: rule.id,
         severity: rule.severity,
         line: lineAtOffset(segment, match.index),
+        endLine: lineAtOffset(segment, match.index + Math.max(0, match[0].length - 1)),
         excerpt: segment.text.trim().replace(/\s+/g, ' ').slice(0, 180),
       });
     }

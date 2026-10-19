@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,7 +24,7 @@ test('lit-humanizer is enrolled in the native plugin and always-on route', () =>
 test('LitGrok detector mirrors every canonical block and warning fixture', () => {
   const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
   const fixtures = JSON.parse(readFileSync(join(SKILL, 'fixtures', 'rule-cases.json'), 'utf8'));
-  assert.equal(rules.length, 54);
+  assert.equal(rules.length, 55);
   for (const rule of rules) {
     const positive = fixtures.positive[rule.id];
     const negative = fixtures.negative[rule.id];
@@ -276,6 +276,249 @@ test('the guard scans only the changed text of an Edit', () => {
     const untouched = edit('이 그래프는 인과관계를 주장하지 않음.\n수율은 82%였다.', '이 그래프는 인과관계를 주장하지 않음.\n수율은 83%였다.');
     assert.equal(untouched.status, 0, untouched.stderr);
     assert.deepEqual(untouched.reply, { decision: 'allow' });
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+function loadNegationCases() {
+  return JSON.parse(readFileSync(join(ROOT, 'test', 'fixtures', 'lit-humanizer', 'negation-cases.json'), 'utf8'));
+}
+
+test('negation-cluster gives every stacked-negation fixture its expected tier', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const { positive } = loadNegationCases();
+  assert.equal(positive.length, 16);
+  for (const item of positive) {
+    const hits = scanText(item.text, rules, 'report.md').filter((hit) => hit.rule === 'negation-cluster');
+    const tier = hits.some((hit) => hit.severity === 'block') ? 'block' : hits.length ? 'warn' : 'none';
+    assert.equal(tier, item.expect, `${item.id} should be ${item.expect}`);
+  }
+});
+
+test('negation-cluster stays quiet on single caveats, limitation lines, code, quotes and status tables', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  const { positive, negative } = loadNegationCases();
+  assert.equal(negative.length, 18);
+  for (const item of negative) {
+    assert.ok(!scanText(item.text, rules, 'report.md').some((hit) => hit.rule === 'negation-cluster'), `${item.id} must stay clean`);
+  }
+  assert.deepEqual(scanText(positive[0].text, rules, 'plans/notes.md'), [], 'internal paths stay exempt');
+});
+
+test('the guard refuses a negation cluster, reworded or plain, with the rewrite advice', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-'));
+  try {
+    const { positive, negative } = loadNegationCases();
+    const write = (text) => guardVerdict({ toolName: 'Write', toolInput: { path: join(workspace, 'report.md'), content: `${text}\n` } }, workspace);
+    for (const id of ['p01-hermes-visits', 'p11-reword-read-as']) {
+      const denied = write(positive.find((item) => item.id === id).text);
+      assert.equal(denied.status, 2, `${id}: ${denied.stderr}`);
+      assert.equal(denied.reply.decision, 'deny');
+      assert.match(denied.reply.reason, /block-tier negation-cluster in .*report\.md/);
+      assert.match(denied.reply.reason, /Say what the thing is first/);
+      assert.match(denied.reply.reason, /18,420/);
+    }
+    for (const id of ['n01-one-caveat', 'n11-limitation']) {
+      const allowed = write(negative.find((item) => item.id === id).text);
+      assert.equal(allowed.status, 0, `${id}: ${allowed.stderr}`);
+      assert.deepEqual(allowed.reply, { decision: 'allow' });
+      assert.doesNotMatch(allowed.stderr, /negation-cluster/);
+    }
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('negation-cluster measures table cells in characters, so an emoji does not lengthen a status cell', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  // Each status cell is 10 characters but 14 UTF-16 units.
+  const table = '| 항목 | 상태 |\n| --- | --- |\n| 첫째 | 해당 아님 😀😀😀😀 |\n| 둘째 | 해당 아님 😀😀😀😀 |\n';
+  assert.ok(!scanText(table, rules, 'report.md').some((hit) => hit.rule === 'negation-cluster'));
+});
+
+test('the guard lets a two-negation warning through with the advice, even when another warning comes first', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-order-'));
+  try {
+    const { positive } = loadNegationCases();
+    const warned = positive.find((item) => item.id === 'p09-en-rather').text;
+    const write = (content) => guardVerdict({ toolName: 'Write', toolInput: { path: join(workspace, 'report.md'), content } }, workspace);
+    const alone = write(`${warned}\n`);
+    assert.equal(alone.status, 0, alone.stderr);
+    assert.deepEqual(alone.reply, { decision: 'allow' });
+    assert.match(alone.stderr, /advisory negation-cluster in .*report\.md; review wording/);
+    assert.match(alone.stderr, /Say what the thing is first/);
+    const behind = write(`가격 변화가 수요에 영향을 미치다.\n\n${warned}\n`);
+    assert.equal(behind.status, 0, behind.stderr);
+    assert.deepEqual(behind.reply, { decision: 'allow' });
+    assert.match(behind.stderr, /advisory ko-light-verb in /);
+    assert.match(behind.stderr, /Say what the thing is first/);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('an Edit keeps its fence, quote, inline-code and paragraph context', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-edit-'));
+  try {
+    const file = join(workspace, 'report.md');
+    const edit = (oldString, newString) => guardVerdict({ toolName: 'Edit', toolInput: { path: file, old_string: oldString, new_string: newString } }, workspace);
+    const fenced = (oldString, newString) => {
+      for (const onDisk of [false, true]) {
+        if (onDisk) writeFileSync(file, `소개 문단입니다.\n\n${oldString}\n\n맺음 문단입니다.\n`);
+        else rmSync(file, { force: true });
+        const allowed = edit(oldString, newString);
+        assert.equal(allowed.status, 0, `${JSON.stringify(newString)} on disk=${onDisk}: ${allowed.stdout}`);
+        assert.deepEqual(allowed.reply, { decision: 'allow' });
+      }
+    };
+    fenced('```\nold\n```', '```\n# 아님 아닙니다\n```');
+    fenced('> 주민 수 아님.', '> 주민 수가 아닙니다. 전망치가 아닙니다.');
+    fenced('`x` 설명', '`아님 아닙니다` 설명');
+    fenced('방문 횟수입니다.\n\n탑승 건수입니다.', '방문 횟수는 주민 수가 아닙니다.\n\n탑승 건수는 승객 수가 아닙니다.');
+    // Only the code body changes; the unchanged fence lines live in the file.
+    writeFileSync(file, '소개 문단입니다.\n\n```python\nassert x\nif y: pass\n```\n');
+    const body = edit('assert x\nif y: pass', 'assert x is not None  # 아님 아닙니다\nif y is not a: pass');
+    assert.equal(body.status, 0, body.stdout);
+    assert.deepEqual(body.reply, { decision: 'allow' });
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('an Edit that turns a plain paragraph into a negation cluster is still refused', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-edit-block-'));
+  try {
+    const file = join(workspace, 'report.md');
+    const { positive } = loadNegationCases();
+    const p01 = positive.find((item) => item.id === 'p01-hermes-visits').text;
+    writeFileSync(file, '소개 문단입니다.\n\n방문 횟수입니다.\n\n맺음 문단입니다.\n');
+    const denied = guardVerdict({ toolName: 'Edit', toolInput: { path: file, old_string: '방문 횟수입니다.', new_string: p01 } }, workspace);
+    assert.equal(denied.status, 2, denied.stderr);
+    assert.match(denied.reply.reason, /block-tier negation-cluster in .*report\.md/);
+    assert.match(denied.stderr, /block-tier negation-cluster in .*report\.md.*Say what the thing is first/, 'the deny reason also reaches stderr');
+    // One new negation joins one already in the same paragraph: the paragraph is what changed.
+    writeFileSync(file, '소개 문단입니다.\n\n주민 수가 아닙니다.\n방문 횟수입니다.\n');
+    const joined = guardVerdict({ toolName: 'Edit', toolInput: { path: file, old_string: '방문 횟수입니다.', new_string: '이용자 수도 아닙니다.' } }, workspace);
+    assert.equal(joined.status, 2, joined.stderr);
+    assert.match(joined.reply.reason, /negation-cluster/);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('a patch keeps its hunk context: fences and blank lines survive', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-patch-'));
+  try {
+    const patch = (text) => guardVerdict({ toolName: 'Edit', toolInput: { path: 'README.md', patch: text } }, workspace);
+    for (const text of [
+      '*** Update File: README.md\n@@\n ```\n+x = 1  // 아님 아닙니다\n ```',
+      '*** Update File: README.md\n@@\n+방문 횟수는 주민 수가 아닙니다.\n \n+탑승 건수는 승객 수가 아닙니다.',
+      '*** Update File: README.md\n@@\n+방문 횟수는 주민 수가 아닙니다.\n@@\n+탑승 건수는 승객 수가 아닙니다.',
+    ]) {
+      const allowed = patch(text);
+      assert.equal(allowed.status, 0, `${JSON.stringify(text)}: ${allowed.stdout}`);
+      assert.deepEqual(allowed.reply, { decision: 'allow' });
+    }
+    const denied = patch('*** Update File: README.md\n@@\n 소개 문단입니다.\n \n+방문 횟수입니다. 18,420명이 이용했다는 뜻이 아닙니다. 이용자 수가 아닙니다.');
+    assert.equal(denied.status, 2, denied.stderr);
+    assert.match(denied.reply.reason, /negation-cluster/);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('the deny reason carries the negation advice only when a negation cluster is what blocks', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-advice-'));
+  try {
+    const { positive } = loadNegationCases();
+    const warned = positive.find((item) => item.id === 'p09-en-rather').text;
+    const denied = guardVerdict({ toolName: 'Write', toolInput: { path: join(workspace, 'report.md'), content: `Source: internal logs\n\n${warned}\n` } }, workspace);
+    assert.equal(denied.status, 2, denied.stderr);
+    assert.doesNotMatch(denied.reply.reason, /negation-cluster/);
+    assert.doesNotMatch(denied.reply.reason, /Say what the thing is first/);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('the lit-humanizer skill text raises no negation-cluster finding of its own', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  for (const name of ['SKILL.md', join('assets', 'always-on-rule.md')]) {
+    const hits = scanText(readFileSync(join(SKILL, name), 'utf8'), rules, name).filter((hit) => hit.rule === 'negation-cluster');
+    assert.deepEqual(hits, [], name);
+  }
+});
+
+test('negation-cluster needs a Unicode word boundary, so English glued to Hangul is not counted', () => {
+  const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
+  assert.deepEqual(scanText("값은is not final, 수치는is not a count, 비율은isn't fixed.", rules, 'report.md'), []);
+});
+
+test('a Write over a readable file is judged on the lines it changes; a new file is judged whole', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-write-diff-'));
+  try {
+    const file = join(workspace, 'report.md');
+    const { positive } = loadNegationCases();
+    const p01 = positive.find((item) => item.id === 'p01-hermes-visits').text;
+    const write = (content) => guardVerdict({ toolName: 'Write', toolInput: { path: file, content } }, workspace);
+    writeFileSync(file, `${p01}\n\n일반 문장입니다.\n`);
+    const untouched = write(`${p01}\n\n다른 일반 문장입니다.\n`);
+    assert.equal(untouched.status, 0, untouched.stderr);
+    assert.deepEqual(untouched.reply, { decision: 'allow' });
+    const long = [p01, ...Array.from({ length: 149 }, (_, index) => `문단 ${index + 1}입니다.`)];
+    writeFileSync(file, `${long.join('\n\n')}\n`);
+    long[120] = '고친 문단입니다.';
+    const far = write(`${long.join('\n\n')}\n`);
+    assert.equal(far.status, 0, far.stderr);
+    writeFileSync(file, '소개 문단입니다.\n\n일반 문장입니다.\n');
+    const added = write(`소개 문단입니다.\n\n${p01}\n`);
+    assert.equal(added.status, 2, added.stderr);
+    assert.match(added.reply.reason, /negation-cluster/);
+    rmSync(file);
+    const fresh = write(`${p01}\n\n일반 문장입니다.\n`);
+    assert.equal(fresh.status, 2, fresh.stderr);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('a repeated-pledge finding is kept when any of its pledges changes, not when a line between them does', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-pledge-repeat-edit-'));
+  try {
+    const file = join(workspace, 'report.md');
+    const edit = (oldString, newString) => guardVerdict({ toolName: 'Edit', toolInput: { path: file, old_string: oldString, new_string: newString } }, workspace);
+    writeFileSync(file, '이 표는 일반화가 아닙니다.\n\n본문.\n');
+    const added = edit('본문.', '결론이 아닙니다.\n\n순위가 아닙니다.');
+    assert.equal(added.status, 2, added.stderr);
+    assert.match(added.reply.reason, /ko-negative-pledge-repeat/);
+    writeFileSync(file, '결론이 아닙니다.\n\n중간 문단입니다.\n\n순위가 아닙니다.\n');
+    const between = edit('중간 문단입니다.', '고친 중간 문단입니다.');
+    assert.equal(between.status, 0, between.stderr);
+    assert.deepEqual(between.reply, { decision: 'allow' });
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test('a deliverable above the reported cwd is still judged; an internal path stays exempt wherever cwd is', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'litgrok-negation-cwd-'));
+  try {
+    const sub = join(workspace, 'sources');
+    mkdirSync(sub);
+    const { positive } = loadNegationCases();
+    const p01 = positive.find((item) => item.id === 'p01-hermes-visits').text;
+    const write = (path) => guardVerdict({ toolName: 'Write', toolInput: { path, content: `${p01}\n` } }, sub);
+    for (const path of ['../report.md', join(workspace, 'report.md')]) {
+      const denied = write(path);
+      assert.equal(denied.status, 2, `${path}: ${denied.stdout}`);
+      assert.match(denied.reply.reason, /negation-cluster/);
+    }
+    for (const path of ['../plans/notes.md', join(workspace, 'plans', 'notes.md'), join(workspace, 'HANDOFF.md')]) {
+      const allowed = write(path);
+      assert.equal(allowed.status, 0, `${path}: ${allowed.stderr}`);
+      assert.deepEqual(allowed.reply, { decision: 'allow' });
+    }
   } finally {
     rmSync(workspace, { recursive: true, force: true });
   }
