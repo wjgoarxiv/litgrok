@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawnSync } from 'node:child_process';
+import proc from '../../lit-pptx/scripts/proc.cjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -31,7 +31,7 @@ export function classifyVersion(output) {
 }
 
 export function probe(environment = process.env) {
-  const result = spawnSync('agent-browser', ['--version'], { encoding: 'utf8', env: environment, timeout: 3000 });
+  const result = proc.run('agent-browser', ['--version'], { encoding: 'utf8', env: environment, timeout: 3000 }, { env: environment });
   if (result.error || result.status !== 0) {
     return { available: false, accepted: false, state: 'unavailable', version: null, source: 'https://github.com/vercel-labs/agent-browser', install: INSTALL_STEPS };
   }

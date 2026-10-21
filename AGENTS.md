@@ -13,11 +13,14 @@ remove the packaged `.grok` tree only at documented project or user paths. The `
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
 user's request, and the opt-in status-line command keeps a per-session context record in the
 temporary HUD state root.
-The current tree contains 38 skills, one project rule, and eleven hook
+The current tree contains 39 skills, one project rule, and eleven hook
 registrations with their commands. Project hooks must surface the
 `/hooks-trust` or `--trust` requirement. Do not add plugins, marketplaces, MCP,
 LSP server config, TUI or skin surfaces, ACP, custom subagents, workflow engines,
-login or runtime probes, or unrelated host configuration.
+login or runtime probes, or unrelated host configuration. The one exception is
+`.cursor-plugin/`: a GitHub-only Cursor manifest and one-entry marketplace that let
+Cursor and Grok Bot load `.grok/skills`. It declares skills only and stays out of
+the npm package; `test/cursor-plugin.test.mjs` holds that shape.
 
 The approved product surface includes `package.json`, the bilingual READMEs,
 license, changelog, repository cover sources and curated npm README assets, `docs/`, `AGENTS.md`, `.gitignore`,

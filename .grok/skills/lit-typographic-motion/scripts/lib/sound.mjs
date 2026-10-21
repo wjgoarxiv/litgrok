@@ -309,7 +309,7 @@ export function prepareTrack({ file, durationSec, ffmpeg, outPath }) {
   if (!file || !existsSync(file)) throw new Error(`SOUND_INVALID: audio file not found (${file})`);
   if (!ffmpeg) throw new Error('SOUND_INVALID: ffmpeg is needed to decode the track');
   const result = decodeWithFfmpeg(ffmpeg, file, 's16le');
-  if (result.status !== 0 || !result.stdout?.length) throw new Error(`SOUND_INVALID: cannot decode ${file}: ${String(result.stderr ?? '').trim().split('\n').at(-1) || 'no audio'}`);
+  if (result.status !== 0 || !result.stdout?.length) throw new Error(`SOUND_INVALID: cannot decode ${file}: ${String(result.stderr ?? '').trim().split(/\r?\n/).at(-1) || 'no audio'}`);
   const source = result.stdout;
   const sourceFrames = Math.floor(source.length / 4);
   const target = Math.round(durationSec * SAMPLE_RATE);

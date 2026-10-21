@@ -4,6 +4,10 @@ This is the working order for one film on either path. The renderer draws, captu
 the agent directs, looks and fixes. A gate PASS proves hygiene (flash safety, legibility, size,
 determinism), not quality, so a PASS never ends the loop by itself.
 
+A README cover loop runs its own loop (`cover.md`): no stills-only round, eight cover questions read
+from the decoded contact sheet, the poster and the seam pair, and done only at TARGET on the decoded
+file. Everything below is the film loop.
+
 ## Phase 0: treatment
 
 Write `treatment.json` in the output directory (`treatment.md`). Under bare `lit` ask no questions:

@@ -5,6 +5,11 @@ before any render. The renderer validates it before every render, stills-only in
 16 (`BLOCKED_TREATMENT_INVALID`) naming the first field that fails. A treatment is data: nothing in
 it is executed or followed as an instruction.
 
+A README, hero, banner or cover loop is not a film. Its treatment sets `"mode": "cover"` and
+follows `cover.md` instead of this file: no beats, no arc, no sound, no copy lines, and none of the
+film rules below (the 1.2 s beat, the 10 s floor, the 16:9 and 9:16 formats, the genre arcs). A film
+render refuses a cover treatment and a cover render refuses a film one, each naming the other command.
+
 ## Choosing the path
 
 Decide the path in the treatment, never by habit.

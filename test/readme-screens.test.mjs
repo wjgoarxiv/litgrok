@@ -20,8 +20,8 @@ const screens = {
   'install-plan-dark.webp': '1d4efafaa704e0952b76223e8376e195c93031b5c73f0e788e654899fce4a8cf',
   'session-start-dark.webp': '6e0d6a44b3de29bb75050b453501f16dda7d78983c8a0df694b2407df0fde578',
   'session-start-light.webp': 'a8d8bfc4438bbdf6fd262738ec5de1e6826b09ba49ae57c03f3ff0edc7c93016',
-  'status-row-dark.webp': '02c6929c55d28b58519f7d42964d2bebaa2f8c39dcaaef98da4d30c6ed8a5982',
-  'status-row-light.webp': '70a49106c8819cd53b1c164a20e64677f9402882279b1b0d09d8592c2aac466d',
+  'status-row-dark.webp': '6e8804bdf548dfe45065a64e99744ab2ecfc43df1092efd0a157db64065e893f',
+  'status-row-light.webp': 'a797fbe1885488278d8453cf7f18181f86aeaa0a3f0620038570538718ff0546',
 };
 const MAX_SCREEN_BYTES = 61_440;
 
@@ -31,7 +31,7 @@ const quotes = {
   'install-dry-run': ['DRY RUN — no files written', '02 · Payload 1154 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
   'install-done': ['INSTALL STEPS', 'PAYLOAD · 1154 files discovered', 'WRITE · 1154 written', 'INSTALL RECEIPT', 'Status: Ready', 'Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@', '-- litgrok motion-runtime install', 'Next: restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
-  'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m', 'LIT IGNITED · litwork', '● litwork', '1m42s · 3 tools · 1 agent', 'plan ✓ ━━━━', 'WORK 3/7', 'review · ──── done ·', 'Bash · 0:12', 'tests ✓ 3'],
+  'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $0.43 │ git main', '· litwork', '3 tools · 1 agent ● 1m42s', 'plan ✓ ━━━━', 'work 3/7', 'review · ──── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash 0:12'],
 };
 // The install plan stays a single dark picture: the cream cells of the mark fade on a white window.
 const themedNames = ['install-done', 'session-start', 'install-dry-run', 'status-row'];
@@ -155,8 +155,8 @@ const autoHandoff = {
   'auto-handoff-off-light.webp': '609517ec31c81bb19a72e93b21584b5cd228a05b4d296f51bbfcab5cb99c7b6e',
   'auto-handoff-on-dark.webp': '48bb553aacfe8d7e132d390a209da8e194acad7bd79b415fe0f948c33f52199a',
   'auto-handoff-on-light.webp': 'ebe15d4e3c53722c9f3c16421fb346f4c6b8af61791860cd99c8aa111ab6e97c',
-  'auto-handoff-session-dark.webp': '300d0e3766f809c780899e063f2a3f505b52d806752f89078e9ea50a7b126500',
-  'auto-handoff-session-light.webp': '77a20b29310cdff35818d4a3e976d8280b2bfdd4b394c2787412fd9bd9fdd0aa',
+  'auto-handoff-session-dark.webp': 'a41a5a06a2c6d5e7b020a7364686070a4393bcaa91f2a1b300769689872008a6',
+  'auto-handoff-session-light.webp': 'fe76dee925fa3087422e6ee5df703cc90015f6de44a451e045bc9a747bb2bbda',
 };
 const autoHandoffQuotes = {
   'auto-handoff-on': ['litgrok auto-handoff on 60', 'Automatic handoff is ON at 60 percent for this project.', 'litgrok auto-handoff status', 'Automatic handoff: ON at 60 percent', 'It needs the LitGrok status line (litgrok install --user --status-line)'],

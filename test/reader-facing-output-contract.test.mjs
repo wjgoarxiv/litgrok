@@ -111,7 +111,7 @@ test('the active meta skill reports shipped surfaces accurately and keeps operat
   assert.match(metaSkill, /root(?:-level)? `plugin\.json`[^\n]*manifest/i);
   assert.match(metaSkill, /11 Grok-native agent definitions[^\n]*\.grok\/agents/i);
   assert.doesNotMatch(metaSkill, /ships no custom `?\.grok\/agents`? definition[^\n]*plugin manifest/i);
-  assert.match(metaSkill, /ships no marketplace[^\n]*MCP server[^\n]*plugin-supplied LSP[^\n]*command catalog[^\n]*output styles?[^\n]*TUI\/skin/i);
+  assert.match(metaSkill, /ships no MCP server[^\n]*plugin-supplied LSP[^\n]*command catalog[^\n]*output styles?[^\n]*TUI\/skin/i);
   assert.match(metaSkill, /By default[^\n]*requested result[^\n]*material trust[^\n]*live-runtime (?:boundary|limit)/i);
   assert.match(metaSkill, /package version[^\n]*payload inventory[^\n]*verification details[^\n]*only when[^\n]*(?:requested|asks)[^\n]*decision-relevant/i);
 });
@@ -164,6 +164,14 @@ test('H reader progress is selective rather than a work diary', () => {
   const rule = installed(join('rules', '00-litgrok.md'));
   assert.match(rule, /progress[^\n]*current result[^\n]*material blocker[^\n]*changed decision[^\n]*required action/i);
   assert.match(skill('start-work'), /reader[^\n]*progress[^\n]*(?:result|blocker|decision|action)[^\n]*not[^\n]*work diary/i);
+});
+
+test('H2 a reader reply uses a table only where rows share fields, and adds no status panel for it', () => {
+  const rule = installed(join('rules', '00-litgrok.md'));
+  const section = rule.slice(rule.indexOf('## Reader-facing communication'), rule.indexOf('## Enforcement boundary'));
+  assert.match(section, /Three or more items that share the same fields, or per-file or per-check results, go in a short table/u);
+  assert.match(section, /the rest stays in sentences or a short list/u);
+  assert.match(section, /a table never adds rows reader mode would omit/u);
 });
 
 test('I structured operational and explicit audit surfaces remain byte/schema shaped', () => {

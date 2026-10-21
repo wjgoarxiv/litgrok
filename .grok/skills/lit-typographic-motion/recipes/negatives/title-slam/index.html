@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- NEGATIVE, never a recipe: the film habit of a title slam, lines that appear one by one and
+     hold, then a crossfade to a settled end card. It must keep failing the cover gate on G2 and G3. -->
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<style>
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: #080c12; color: #f1eee2; font-family: "JetBrains Mono"; }
+  .line { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+  body.mask, body.mask * { background: #000 !important; color: #000 !important; border-color: #000 !important; }
+  body.mask .title { color: #fff !important; }
+</style>
+</head>
+<body>
+<div class="line title" id="title" style="top:150px;font-size:110px;font-weight:800;letter-spacing:6px">LITGROK</div>
+<div class="line" id="l1" style="top:330px;font-size:34px;font-weight:500">Plans before code.</div>
+<div class="line" id="l2" style="top:380px;font-size:34px;font-weight:500">Loops until green.</div>
+<div class="line" id="l3" style="top:430px;font-size:34px;font-weight:500;color:#ff6a3d">Evidence, not claims.</div>
+<div class="line" id="end" style="top:250px;font-size:64px;font-weight:700;opacity:0">KEEP THE WORK <span style="color:#ff6a3d">LIT.</span></div>
+<script>
+const { clamp, ease } = LitLoop, SEC = 10;
+const rise = (s, at, dur) => ease.outCubic(clamp((s - at) / dur));
+window.renderFrame = (t, o = {}) => {
+  document.body.className = o.mask ? 'mask' : '';
+  const s = t * SEC, out = 1 - rise(s, 5.6, 0.4);
+  const title = document.getElementById('title');
+  title.style.opacity = rise(s, 0.2, 0.5) * out;
+  title.style.transform = `scale(${1.25 - 0.25 * rise(s, 0.2, 0.5)})`;
+  [2, 3, 4].forEach((at, i) => { const line = document.getElementById(`l${i + 1}`); line.style.opacity = rise(s, at, 0.3) * out; line.style.transform = `translateY(${12 * (1 - rise(s, at, 0.3))}px)`; });
+  document.getElementById('end').style.opacity = rise(s, 6.1, 0.5) * (1 - rise(s, 9.6, 0.4));
+};
+document.fonts.ready.then(() => { window.ready = true; });
+</script>
+</body>
+</html>

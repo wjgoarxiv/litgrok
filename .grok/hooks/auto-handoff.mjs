@@ -245,7 +245,7 @@ export async function runAutoHandoff(args, { env = process.env, stdout = process
 
   const located = projectRoot(cwd);
   const { root } = located;
-  const notes = rootNotes(located, env.HOME || null);
+  const notes = rootNotes(located, env.HOME || env.USERPROFILE || null);
   const file = `Project file: ${configPath(root)}`;
   const resolved = resolveAutoHandoff({ env, dirs: [root] });
   if (action === 'status') {

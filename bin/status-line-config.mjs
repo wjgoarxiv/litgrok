@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { constants, copyFileSync, lstatSync, linkSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve, win32 } from 'node:path';
 
 const MARKER = '# litgrok-managed-status-line-v1';
 const NOTIFY_MARKER = '# litgrok-managed-notifications-v1';
@@ -157,9 +157,18 @@ function shellQuote(value) {
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
+// The shell Grok runs the command in is cmd.exe or PowerShell on Windows, where single quotes do not
+// quote; forward slashes keep the path valid in both and in a POSIX-style shell.
+export function statusLineCommand(root, platform = process.platform) {
+  if (platform === 'win32') {
+    const script = win32.resolve(root, 'hooks', 'lit-status-line.mjs').replaceAll('\\', '/');
+    return /^[A-Za-z0-9_./:-]+$/u.test(script) ? `node ${script}` : `node "${script}"`;
+  }
+  return `node ${shellQuote(resolve(root, 'hooks', 'lit-status-line.mjs'))}`;
+}
+
 function commandValue(root) {
-  const script = resolve(root, 'hooks', 'lit-status-line.mjs');
-  return `node ${shellQuote(script)}`;
+  return statusLineCommand(root);
 }
 
 function backup(path) {
@@ -168,10 +177,13 @@ function backup(path) {
   return target;
 }
 
-function writeConfig(path, previous, next) {
+// `afterBackup` is a test seam: it runs between the backup and the replace, where a concurrent edit
+// must make the write fail rather than be overwritten.
+function writeConfig(path, previous, next, { afterBackup } = {}) {
   const directory = dirname(path);
   const temporary = join(directory, `.${basename(path)}.${randomUUID()}.tmp`);
   if (previous.exists) backup(path);
+  afterBackup?.();
   try {
     writeFileSync(temporary, next, { flag: 'wx', mode: previous.mode });
     if (previous.exists) {
@@ -209,7 +221,7 @@ function notifySpec() {
   return { marker: NOTIFY_MARKER, header: NOTIFY_HEADER, values: NOTIFY_VALUES };
 }
 
-export function installStatusLine(root) {
+export function installStatusLine(root, options = {}) {
   const path = join(root, 'config.toml');
   const spec = statusLineSpec(root);
   const previous = readConfig(path);
@@ -224,12 +236,12 @@ export function installStatusLine(root) {
     };
   }
   const next = appendBlock(previous.text, MARKER, '[ui.status_line]', spec.values);
-  writeConfig(path, previous, next);
+  writeConfig(path, previous, next, options);
   return { changed: true, detail: 'user status line configured' };
 }
 
 // The opt-in finish alert. Any notification setting of the user's own is left as it is.
-export function installNotifications(root) {
+export function installNotifications(root, options = {}) {
   const path = join(root, 'config.toml');
   const spec = notifySpec();
   const previous = readConfig(path);
@@ -243,7 +255,7 @@ export function installNotifications(root) {
       detail: `finish notification not configured: ${path} sets ${conflict} at the top level, which a [ui.notifications] table cannot extend; add notifications inside your ui setting yourself`,
     };
   }
-  writeConfig(path, previous, appendBlock(previous.text, NOTIFY_MARKER, '[ui.notifications]', NOTIFY_VALUES));
+  writeConfig(path, previous, appendBlock(previous.text, NOTIFY_MARKER, '[ui.notifications]', NOTIFY_VALUES), options);
   return { changed: true, detail: 'finish notification configured' };
 }
 
@@ -264,7 +276,7 @@ function removeManagedBlock(text, block) {
   return kept.filter((line) => line !== null).join('');
 }
 
-function removeBlock(root, spec, name) {
+function removeBlock(root, spec, name, options) {
   const path = join(root, 'config.toml');
   const previous = readConfig(path);
   if (!previous.exists) return { changed: false, detail: 'no user config found' };
@@ -272,14 +284,14 @@ function removeBlock(root, spec, name) {
   if (!found) return { changed: false, detail: `no unchanged LitGrok ${name} value found` };
   const next = removeManagedBlock(previous.text, found);
   if (next === previous.text) return { changed: false, detail: `no LitGrok ${name} value removed` };
-  writeConfig(path, previous, next);
+  writeConfig(path, previous, next, options);
   return { changed: true, detail: `LitGrok ${name} value removed` };
 }
 
-export function removeStatusLine(root) {
-  return removeBlock(root, statusLineSpec(root), 'status-line');
+export function removeStatusLine(root, options = {}) {
+  return removeBlock(root, statusLineSpec(root), 'status-line', options);
 }
 
-export function removeNotifications(root) {
-  return removeBlock(root, notifySpec(), 'notification');
+export function removeNotifications(root, options = {}) {
+  return removeBlock(root, notifySpec(), 'notification', options);
 }

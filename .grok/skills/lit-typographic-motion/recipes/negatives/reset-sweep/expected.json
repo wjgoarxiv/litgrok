@@ -1,0 +1,16 @@
+{
+  "schema": "litgrok.motion-cover-negative/v1",
+  "note": "A slide-like page that must keep failing these decoded-file FLOOR gates (mustFail). No undeclared FLOOR gate may fail either. Never tune a threshold or the page so it passes.",
+  "mustFail": [
+    "G4.floor"
+  ],
+  "treatment": {
+    "loopSec": 8,
+    "fps": 20,
+    "encode": {
+      "q": 78,
+      "edgeQ": 78,
+      "edgeFrames": 0
+    }
+  }
+}

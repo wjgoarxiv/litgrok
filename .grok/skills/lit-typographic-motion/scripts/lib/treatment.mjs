@@ -107,6 +107,7 @@ function coveredSeconds(beats, indices) {
 
 export function validateTreatment(t, { skillRoot = SKILL_ROOT } = {}) {
   if (!t || typeof t !== 'object' || Array.isArray(t)) return bad('treatment', 'treatment.json must hold one JSON object');
+  if (t.mode === 'cover') return bad('mode', 'this is a cover treatment (mode: cover); render it with cover --out <dir> (references/cover.md)');
   const required = ['request', 'genre', 'path', 'pathReason', 'idea', 'audience', 'channel', 'format', 'formatReason', 'durationSec', 'beats', 'subject', 'visualDevices', 'typePlan', 'palette', 'sound', 'copy', 'inventions', 'ambition'];
   for (const field of required) if (!(field in t) || t[field] === null || t[field] === '') return bad(field, `${field} is missing`);
   // The user's own words may contain angle brackets; everything the model wrote may not.

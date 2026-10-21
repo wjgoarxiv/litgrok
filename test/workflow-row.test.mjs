@@ -11,8 +11,9 @@ import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
 import { planProgress } from '../.grok/hooks/plan-progress.mjs';
 import { readWorkflowState, stageFromPrompt, testVerdict, updateWorkflowState, workflowStatePath } from '../.grok/hooks/workflow-stage.mjs';
 
-// The third status line: where the session is in the LIT workflow (interview, plan, work, review,
-// done), the tool in flight with its elapsed time, and the last test run's verdict.
+// The card's stage map and detail line: where the session is in the LIT workflow (interview, plan,
+// work, review, done), the plan's checked tasks with the next one, the tool in flight with its elapsed
+// time, and the last test run's verdict.
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const HOOKS_DIRECTORY = join(PRODUCT_ROOT, '.grok', 'hooks');
@@ -87,7 +88,8 @@ function cells(text) {
   return [...text].reduce((total, character) => total + (/[ᄀ-ᅟ가-힣\u{1f300}-\u{1faff}]/u.test(character) ? 2 : 1), 0);
 }
 
-const workRow = (tail = '') => new RegExp(`^plan ✓ ━━━━ \\[WORK 3/7\\] ──── review · ──── done ·${tail}$`, 'u');
+const WORK_MAP = 'plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·';
+const detail = (tail = '') => new RegExp(`^└ task 3/7 ▮▮▮▯▯▯▯ · tests ✓ 214${tail}$`, 'u');
 
 function planFile(workspace, name, text, mtimeSeconds) {
   mkdirSync(join(workspace, 'plans'), { recursive: true });
@@ -141,12 +143,18 @@ test('plan progress reads the newest plan that has task rows and ignores fenced 
   planFile(workspace, 'old.md', '- [ ] 1. a\n- [ ] 2. b\n', 1_000_000);
   planFile(workspace, 'current.md', `${SEVEN_ROWS}\n\`\`\`\n- [ ] 8. fenced\n\`\`\`\n  - [ ] 9. indented\n`, 2_000_000);
   planFile(workspace, 'notes.md', '# notes without rows\n', 3_000_000);
-  assert.deepEqual(planProgress(workspace), { done: 3, total: 7 });
+  assert.deepEqual(planProgress(workspace), { done: 3, total: 7, next: '4. d' }, 'the first unchecked row is the next task');
   const elsewhere = join(workspace, 'elsewhere.md');
   writeFileSync(elsewhere, '- [x] 1. a\n');
   symlinkSync(elsewhere, join(workspace, 'plans', 'linked.md'));
   utimesSync(elsewhere, 4_000_000, 4_000_000);
-  assert.deepEqual(planProgress(workspace), { done: 3, total: 7 }, 'a symlinked plan is not read');
+  assert.deepEqual(planProgress(workspace), { done: 3, total: 7, next: '4. d' }, 'a symlinked plan is not read');
+  planFile(workspace, 'long.md', `- [x] 1. a\n- [ ] 2. ${'word '.repeat(30)}\u001b[31m\n`, 5_000_000);
+  const long = planProgress(workspace).next;
+  assert.equal([...long].length, 60, 'a long title is cut to sixty characters');
+  assert.ok(long.endsWith('…') && !long.includes('\u001b'), 'with an ellipsis and no control characters');
+  planFile(workspace, 'finished.md', '- [x] 1. a\n- [x] 2. b\n', 6_000_000);
+  assert.deepEqual(planProgress(workspace), { done: 2, total: 2 }, 'a finished plan has no next task');
 });
 
 test('the workflow snapshot keeps the stage path, closes a stage at its stop and reaches done only after a finished review', (t) => {
@@ -184,42 +192,50 @@ test('the workflow snapshot keeps the stage path, closes a stage at its stop and
   assert.equal(readWorkflowState(workflowStatePath(linked), SESSION), null);
 });
 
-test('the row shows the stage path, the tool in flight and the last test run', (t) => {
+test('the card shows the stage path, the tool in flight and the last test run', (t) => {
   const sb = sandbox(t);
   seedLedger(sb.workspace, liveTurn());
   seedWorkflow(sb.workspace, { stage: 'plan' }, { ended: true }, { stage: 'work', plan: { done: 3, total: 7 } }, { test: { verdict: 'pass', count: 214 } });
   const running = runStatus(sb, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' });
-  assert.equal(running.lines.length, 3, 'row, ribbon and workflow row');
-  assert.match(running.plain[2], workRow(`   ${SPIN} Bash · 0:3[1-4]   tests ✓ 214`));
+  assert.equal(running.lines.length, 4, 'title, stage map, detail and figures');
+  assert.equal(running.plain[1], WORK_MAP);
+  assert.match(running.plain[2], detail(` +${SPIN} Bash 0:3[1-4]`));
 
   // Grok Build 1.0.13 sends no turn field; the ledger's unended turn still shows the tool in flight.
   const ledgerOnly = runStatus(sb, { env: PLAIN });
-  assert.equal(ledgerOnly.lines.length, 3);
-  assert.match(ledgerOnly.plain[2], workRow(`   ${SPIN} Bash · 0:3[1-4]   tests ✓ 214`));
+  assert.equal(ledgerOnly.lines.length, 4);
+  assert.match(ledgerOnly.plain[2], detail(` +${SPIN} Bash 0:3[1-4]`));
 
-  // Between turns there is no tool in flight and no ribbon, and the row stays.
+  // Between turns there is no tool in flight, and the map and the verdict stay.
   seedLedger(sb.workspace, [...liveTurn(), ['PostToolUse', 25, { tool: { name: 'run_terminal_command', inputSha256: 'x' } }], ['Stop', 24, { signal: 'turn-ended' }]]);
   const idle = runStatus(sb, { env: PLAIN });
-  assert.equal(idle.lines.length, 2);
-  assert.match(idle.plain[1], workRow('   tests ✓ 214'));
+  assert.equal(idle.lines.length, 4);
+  assert.equal(idle.plain[1], WORK_MAP);
+  assert.match(idle.plain[2], detail());
+
+  // The next task the hooks noted shows after the count while tasks remain.
+  seedWorkflow(sb.workspace, { plan: { done: 3, total: 7, next: '4. README demo GIF' } });
+  assert.equal(runStatus(sb, { env: PLAIN }).plain[2], '└ task 3/7 ▮▮▮▯▯▯▯ · next ▸ 4. README demo GIF · tests ✓ 214');
 });
 
 test('a finished call, an earlier stage path and a finished workflow read correctly', (t) => {
   const sb = sandbox(t);
   seedLedger(sb.workspace, [...liveTurn(), ['PostToolUseFailure', 2, { tool: { name: 'run_terminal_command', inputSha256: 'x' }, test: { verdict: 'fail', count: 2 } }]]);
   seedWorkflow(sb.workspace, { stage: 'interview' }, { stage: 'plan' }, { stage: 'work', plan: { done: 3, total: 7 } }, { test: { verdict: 'fail', count: 2 } });
-  assert.equal(
-    runStatus(sb, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' }).plain[2],
-    'interview ✓ ━━━━ plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   tests ✗ 2',
-    'a completed call shows no live step; a visited interview joins the path',
-  );
+  const result = runStatus(sb, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' });
+  assert.deepEqual(result.plain.slice(1, 3), [
+    'interview ✓ ━━━━ plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·',
+    '└ task 3/7 ▮▮▮▯▯▯▯ · tests ✗ 2',
+  ], 'a completed call shows no live step; a visited interview joins the path');
 
   const done = sandbox(t, null);
   seedWorkflow(done.workspace, { stage: 'work', plan: { done: 7, total: 7 } }, { stage: 'review' }, { ended: true });
-  assert.deepEqual(runStatus(done, { env: PLAIN }).plain.slice(1), ['plan ━━━━ work ✓ ━━━━ review ✓ ━━━━ [DONE ✓]'], 'a skipped stage has no tick');
+  const finished = runStatus(done, { env: PLAIN });
+  assert.match(finished.plain[0], /^\[🔥LIT\] \| \(🔥 LIT\) · workflow +idle$/u, 'a workflow without an active skill still opens the card');
+  assert.deepEqual(finished.plain.slice(1, 3), ['plan ━━━━ work ✓ ━━━━ review ✓ ━━━━ [done ✓]', '└ task 7/7 ▮▮▮▮▮▮▮'], 'a skipped stage has no tick');
 });
 
-test('the row needs a workflow stage, or an active skill with something to show, and LITGROK_HUD_LINES=1 hides it', (t) => {
+test('the card needs a workflow stage or an active skill, and LITGROK_HUD_LINES=1 keeps one row', (t) => {
   const quiet = sandbox(t, null);
   seedLedger(quiet.workspace, liveTurn().map(([event, ago, extra]) => [event, ago, event === 'UserPromptSubmit' ? { promptId: 'p1' } : extra]));
   assert.equal(runStatus(quiet, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' }).lines.length, 1, 'no skill and no stage: one line');
@@ -227,7 +243,8 @@ test('the row needs a workflow stage, or an active skill with something to show,
   const skill = sandbox(t);
   seedLedger(skill.workspace, liveTurn().map(([event, ago, extra]) => [event, ago, event === 'UserPromptSubmit' ? { promptId: 'p1' } : extra]));
   const live = runStatus(skill, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' });
-  assert.match(live.plain.at(-1), new RegExp(`^${SPIN} Bash · 0:3[1-4]$`, 'u'), 'an active skill shows the tool in flight without a stage');
+  assert.equal(live.lines.length, 3, 'no stage: no map');
+  assert.match(live.plain[1], new RegExp(`^└ ${SPIN} Bash 0:3[1-4]$`, 'u'), 'an active skill shows the tool in flight by the elbow');
 
   const sb = sandbox(t);
   seedLedger(sb.workspace, liveTurn());
@@ -235,52 +252,56 @@ test('the row needs a workflow stage, or an active skill with something to show,
   assert.equal(runStatus(sb, { env: { ...PLAIN, LITGROK_HUD_LINES: '1' }, turnAgoMs: 100_000, promptId: 'p1' }).lines.length, 1);
 });
 
-test('narrow rows shorten the rails, then drop the test badge and the tool, and always fit', (t) => {
+test('narrow rows shorten the rails, then drop the stage names, and always fit', (t) => {
   const sb = sandbox(t);
   seedLedger(sb.workspace, liveTurn());
-  seedWorkflow(sb.workspace, { stage: 'interview' }, { stage: 'plan' }, { stage: 'work', plan: { done: 3, total: 7 } }, { test: { verdict: 'pass', count: 214 } });
-  const shown = (columns) => runStatus(sb, { env: { ...PLAIN, COLUMNS: String(columns) }, turnAgoMs: 100_000, promptId: 'p1' }).plain[2];
-  assert.match(shown(79), new RegExp(`^interview ✓ ━━ plan ✓ ━━ \\[WORK 3/7\\] ── review · ── done ·   ${SPIN} Bash · 0:3[1-4]$`, 'u'));
-  assert.match(shown(60), /^interview ✓ ━ plan ✓ ━ \[WORK 3\/7\] ─ review · ─ done ·$/u);
-  assert.equal(shown(30), '✓━✓━[WORK 3/7]─·─·');
+  seedWorkflow(sb.workspace, { stage: 'interview' }, { stage: 'plan' }, { stage: 'work', plan: { done: 3, total: 7, next: '4. a fairly long task title to clip' } }, { test: { verdict: 'pass', count: 214 } });
+  const shown = (columns) => runStatus(sb, { env: { ...PLAIN, COLUMNS: String(columns) }, turnAgoMs: 100_000, promptId: 'p1' }).plain;
+  assert.equal(shown(66)[1], 'interview ✓ ━━━━ plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·');
+  assert.equal(shown(60)[1], 'interview ✓ ━━ plan ✓ ━━ [work 3/7] ━━ review · ── done ·');
+  assert.equal(shown(54)[1], 'interview ✓ ━ plan ✓ ━ [work 3/7] ━ review · ─ done ·');
+  assert.equal(shown(30)[1], '✓━✓━[work 3/7]━·─·');
+  assert.match(shown(79)[2], new RegExp(`^└ task 3/7 ▮▮▮▯▯▯▯ · next ▸ 4\\. a fairly long task… · tests ✓ 214 +${SPIN} Bash 0:3[1-4]$`, 'u'), 'the next task is clipped before anything goes');
+  assert.match(shown(50)[2], new RegExp(`^└ task 3/7 ▮▮▮▯▯▯▯ · tests ✓ 214 +${SPIN} Bash 0:3[1-4]$`, 'u'), 'then it goes');
   for (const columns of [20, 24, 30, 40, 64, 79, 90, 120]) {
-    const line = shown(columns);
-    assert.ok(cells(line) <= columns - 1, `${columns} columns: "${line}" is ${cells(line)} cells`);
-    assert.match(line, /WORK/u, `${columns} columns keep the current stage`);
+    const lines = shown(columns);
+    for (const line of lines) assert.ok(cells(line) <= columns - 1, `${columns} columns: "${line}" is ${cells(line)} cells`);
+    assert.match(lines[1], /work/u, `${columns} columns keep the current stage`);
   }
 });
 
-test('colour: a per-cell gradient rail with a bright head while a turn runs, fallbacks, and no escapes without colour', (t) => {
+test('colour: accent rails with a pink head while a turn runs, fallbacks, and no escapes without colour', (t) => {
   const sb = sandbox(t);
   seedLedger(sb.workspace, liveTurn());
   seedWorkflow(sb.workspace, { stage: 'interview' }, { stage: 'plan' }, { stage: 'work', plan: { done: 3, total: 7 } }, { test: { verdict: 'pass', count: 214 } });
   const run = (env, turn = true) => runStatus(sb, { env, ...(turn ? { turnAgoMs: 100_000, promptId: 'p1' } : {}) });
 
   const truecolor = run({});
-  const row = truecolor.lines[2];
+  const row = truecolor.lines[1];
   const railColours = new Set([...row.matchAll(/\u001b\[38;2;(\d+;\d+;\d+)m━/gu)].map((match) => match[1]));
-  assert.ok(railColours.size >= 4, `the lit rail changes colour cell by cell; got ${[...railColours].join(' ')}`);
-  // The head is the brand cyan rather than white, which vanishes on a light terminal.
-  assert.ok(railColours.has('0;229;255'), 'a cyan head cell rides the rail while the turn runs');
+  assert.deepEqual([...railColours].sort(), ['255;45;149', '255;99;55', '70;80;92'], `rails are the accent into the current stage and grey after it, with the head; got ${[...railColours].join(' ')}`);
+  // The head is the family pink rather than white, which vanishes on a light terminal.
+  assert.ok(railColours.has('255;45;149'), 'a pink head cell rides the rail while the turn runs');
   assert.ok(!railColours.has('255;255;255'), 'no white cell on the rail');
   assert.match(row, /\u001b\[48;2;\d+;\d+;\d+m/u, 'the current stage is a filled pill');
-  assert.match(row, /\u001b\[38;2;255;175;60m/u, 'the live step is amber');
+  assert.match(truecolor.lines[2], /\u001b\[1m\u001b\[38;2;255;99;55m[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Bash/u, 'the live step is the bold accent');
+  assert.match(truecolor.lines[2], /\u001b\[1m\u001b\[38;2;95;175;95mtests ✓ 214/u, 'a passing run is green');
   seedLedger(sb.workspace, [...liveTurn(), ['PostToolUse', 25, { tool: { name: 'run_terminal_command', inputSha256: 'x' } }], ['Stop', 24, { signal: 'turn-ended' }]]);
   const between = run({}, false);
-  assert.equal(between.lines.length, 2);
-  assert.doesNotMatch(between.lines[1], /38;2;0;229;255m━/u, 'no head between turns');
+  assert.equal(between.lines.length, 4);
+  assert.doesNotMatch(between.lines[1], /38;2;255;45;149m━/u, 'no head between turns');
   seedLedger(sb.workspace, liveTurn());
 
   for (const [value, pattern] of [['256', /\u001b\[(?:38|48);5;\d{1,3}m/u], ['16', /\u001b\[(?:3[0-7]|4[0-7]|9[0-7]|10[0-7])m/u]]) {
     const fallback = run({ LITGROK_HUD_COLOR: value });
-    assert.doesNotMatch(fallback.lines[2], /\u001b\[(?:38|48);2;/u, `${value}: no truecolor escapes`);
-    assert.match(fallback.lines[2], pattern, `${value}: its own palette`);
+    assert.doesNotMatch(fallback.lines[1], /\u001b\[(?:38|48);2;/u, `${value}: no truecolor escapes`);
+    assert.match(fallback.lines[1], pattern, `${value}: its own palette`);
   }
 
   for (const env of [{ NO_COLOR: '' }, { LITGROK_HUD_COLOR: '0' }]) {
     const plain = run(env);
     assert.equal(plain.raw.includes('\u001b'), false, `${JSON.stringify(env)}: zero escape bytes`);
-    assert.match(plain.lines[2], /^interview ✓ ━━━━ plan ✓ ━━━━ \[WORK 3\/7\] ──── review · ──── done · {3}/u);
+    assert.equal(plain.lines[1], 'interview ✓ ━━━━ plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·');
   }
 });
 
@@ -335,7 +356,7 @@ test('hooks record the stage, the tool that started and a test verdict, never th
 
   const state = readWorkflowState(workflowStatePath(ledgerFile(workspace)), SESSION);
   assert.equal(state.stage, 'work');
-  assert.deepEqual(state.plan, { done: 3, total: 7 });
+  assert.deepEqual(state.plan, { done: 3, total: 7, next: '4. d' });
   assert.equal(state.test.verdict, 'fail');
   assert.equal(readFileSync(workflowStatePath(ledgerFile(workspace)), 'utf8').includes(secret), false);
 });

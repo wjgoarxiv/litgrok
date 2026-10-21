@@ -180,7 +180,7 @@ test('the guard denies a pledge written to a reader-facing file and passes the n
 test('pledges real models wrote in host runs all block on their expected rule', () => {
   const rules = parseRules(readFileSync(join(SKILL, 'rules.json'), 'utf8'));
   const { pledges_observed: observed } = loadPledgeCases();
-  assert.equal(observed.length, 26);
+  assert.equal(observed.length, 33);
   for (const pledge of observed) {
     const hits = scanText(pledge.text, rules, 'observed.md');
     assert.ok(hits.some((hit) => hit.rule === pledge.rule && hit.severity === 'block'), `observed pledge needs ${pledge.rule}: ${pledge.text}`);

@@ -19,7 +19,7 @@ import {
 } from 'node:fs';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { writeHudRecords } from './litgrok-hud-state.mjs';
-import { stageFromPrompt, testVerdict, updateWorkflowState } from './workflow-stage.mjs';
+import { entryFromPrompt, readWorkflowState, testVerdict, updateWorkflowState, workflowStatePath } from './workflow-stage.mjs';
 
 const MAX_EVENT_BYTES = 1024 * 1024;
 // A ledger past this size moves aside as a numbered segment and a fresh one starts.
@@ -32,7 +32,7 @@ const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
 // A finished call by one of these tools cannot have changed a plan file, so it skips the plan reread.
 const READ_ONLY_TOOLS = /^(?:read_file|grep|list_dir|glob|todo_write|web_search|web_fetch|read|ls)$/iu;
-const HUD_DISCIPLINE_PATTERN = /(?:^|[\s/])(lit-scientific-visualization|lit-handoff|autoconference|autoresearch|lit-plan|litwork|lit)(?=$|[^\w-])/iu;
+const HUD_DISCIPLINE_PATTERN = /(?:^|[\s/])(lit-scientific-visualization|lit-handoff|lit-brainstorm|autoconference|autoresearch|lit-plan|litwork|lit)(?=$|[^\w-])/iu;
 
 function maskCode(text) {
   return text.replace(/[^\r\n]/gu, '\u0000');
@@ -393,13 +393,15 @@ function appendRecord(path, record) {
 // The workflow snapshot is display state for the status line: a failure leaves the ledger record in
 // place, says so on stderr and lets the hook succeed. The plan reader loads only here, because the
 // status line imports this module and must not depend on the lit-plan skill's files.
-async function noteWorkflow(ledgerFile, environment, expectedEvent, record) {
+async function noteWorkflow(ledgerFile, environment, expectedEvent, record, entry, active) {
   if (!['UserPromptSubmit', 'PostToolUse', 'PostToolUseFailure'].includes(expectedEvent)) return;
   try {
     const readsPlan = expectedEvent !== 'PostToolUseFailure' && !READ_ONLY_TOOLS.test(record.tool?.name ?? '');
     const plan = readsPlan ? (await import('./plan-progress.mjs')).planProgress(environment.realWorkspaceRoot) : undefined;
     updateWorkflowState(ledgerFile, environment.sessionId, {
       stage: record.stage,
+      entry,
+      active,
       plan,
       test: record.test,
     });
@@ -429,20 +431,29 @@ export async function recordPassiveEvent(expectedEvent) {
     const tool = toolRecord(event, expectedEvent);
     if (tool) record.tool = tool;
     if (typeof event.promptId === 'string') record.promptId = event.promptId;
+    const entry = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string' ? entryFromPrompt(visiblePromptText(event.prompt)) : null;
+    const ledgerFile = environment.sessionId === null ? null : ledgerPath(environment.realWorkspaceRoot, environment.sessionId);
+    // A bare `lit` continues the discipline the last explicit switch selected, and with it that discipline's gate.
+    const continued = entry?.entry === 'continue' && ledgerFile !== null
+      ? readWorkflowState(workflowStatePath(ledgerFile), environment.sessionId)?.active ?? null
+      : null;
+    const selected = entry === null || entry.entry === 'continue' ? undefined
+      : entry.discipline === 'lit-brainstorm' ? 'lit-brainstorm' : entry.stage === 'plan' ? 'lit-plan' : null;
     const discipline = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string'
-      && /(?:^|[\s/])lit-plan(?:$|[^\w-])/iu.test(event.prompt) ? 'lit-plan' : null;
-    const hudDiscipline = expectedEvent === 'UserPromptSubmit' ? hudDisciplineFromPrompt(event.prompt) : null;
+      && (/(?:^|[\s/])lit-plan(?:$|[^\w-])/iu.test(event.prompt) || entry?.discipline === 'lit-plan' || continued === 'lit-plan') ? 'lit-plan' : null;
+    let hudDiscipline = null;
+    if (expectedEvent === 'UserPromptSubmit') {
+      hudDiscipline = continued ?? (entry?.discipline !== undefined ? entry.discipline : hudDisciplineFromPrompt(event.prompt));
+    }
     if (discipline !== null) record.discipline = discipline;
-    const stage = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string' ? stageFromPrompt(visiblePromptText(event.prompt)) : null;
-    if (stage !== null) record.stage = stage;
+    if (entry?.stage && continued !== 'lit-brainstorm') record.stage = entry.stage;
     // Only the verdict and one count of a test run are kept, never the command or its output.
     const test = TOOL_EVENTS.has(expectedEvent) ? testVerdict(event, expectedEvent === 'PostToolUseFailure') : null;
     if (test !== null) record.test = test;
     if (expectedEvent === 'Stop') record.signal = 'turn-ended';
-    const ledgerFile = environment.sessionId === null ? null : ledgerPath(environment.realWorkspaceRoot, environment.sessionId);
     if (ledgerFile !== null) {
       appendRecord(ledgerFile, record);
-      await noteWorkflow(ledgerFile, environment, expectedEvent, record);
+      await noteWorkflow(ledgerFile, environment, expectedEvent, record, entry?.entry, selected);
     }
     if (expectedEvent === 'UserPromptSubmit') {
       writeHudRecords({

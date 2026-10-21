@@ -122,9 +122,12 @@ def render(path: Path, out: Path) -> Path | None:
     if not soffice:
         return None
     profile = out / "profile"
-    subprocess.run([soffice, f"-env:UserInstallation=file://{profile}", "--headless", "--convert-to", "pdf",
-                    "--outdir", str(out), str(path)], capture_output=True, text=True, timeout=180)
+    result = subprocess.run([soffice, f"-env:UserInstallation={profile.as_uri()}", "--headless", "--convert-to", "pdf",
+                             "--outdir", str(out), str(path)], capture_output=True, text=True, timeout=180)
     pdf = out / f"{path.stem}.pdf"
+    if not pdf.exists() and result.returncode != 0:
+        tail = [line for line in (result.stderr or result.stdout or "").splitlines() if line.strip()][-1:]
+        print(f"LibreOffice exited {result.returncode}: {tail[0].strip() if tail else 'no output'}", file=sys.stderr)
     return pdf if pdf.exists() else None
 
 

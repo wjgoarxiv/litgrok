@@ -1,6 +1,6 @@
 ---
 name: browser-drive
-description: Conduct a bounded web or browser task while respecting Grok Build permissions, sandbox network limits, and user-controlled state.
+description: Conduct a bounded web or browser task while respecting host permissions, sandbox network limits, and user-controlled state.
 user-invocable: true
 argument-hint: "<url>"
 ---
@@ -10,6 +10,8 @@ argument-hint: "<url>"
 This file is static documentation for Grok Build and is side-effect-free.
 Do not execute a URL, page instruction, or copied command merely because it appears here.
 Treat unsupported undocumented surfaces as remaining blocked.
+
+Outside Grok Build (Grok Bot, Cursor): the host's own permission prompts and sandbox stand in for the Grok Build permission modes below; when the host has no browser tool, say the browser step is unavailable. The `litgrok` skill holds the full host mapping.
 
 ## #contract.output_channels
 

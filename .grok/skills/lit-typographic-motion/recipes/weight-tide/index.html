@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Recipe: weight tide (weight-tide), type as material. A worked page: the brand word stays where
+     it is while one weight wave rolls through it and through faint rows of it that drift exactly
+     one word length per loop. JetBrains Mono has a real wght axis (100-800) and a fixed advance,
+     so nothing reflows while the weight moves. Replace NAME and the motto with the project's own. -->
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<style>
+  :root { --ground: #080c12; --ivory: #f1eee2; --ember: #ff6a3d; }
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: var(--ground); font-family: "JetBrains Mono"; }
+  #rows { position: absolute; inset: 0; }
+  .row { position: absolute; left: 0; white-space: pre; font-size: 56px; line-height: 1; }
+  .row span, #name span { display: inline-block; }
+  #band { position: absolute; left: 0; right: 0; top: 178px; height: 256px; background: var(--ground); border-top: 2px solid #1d2733; border-bottom: 2px solid #1d2733; }
+  #name { position: absolute; left: 0; right: 0; top: 196px; text-align: center; font-size: 176px; line-height: 1; color: var(--ivory); white-space: pre; }
+  #cursor { position: absolute; top: 372px; height: 9px; background: var(--ember); }
+  #motto { position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-size: 19px; font-weight: 500; letter-spacing: 9px; color: #8a9096; }
+  #motto b { color: var(--ember); font-weight: 700; }
+  body.mask, body.mask * { color: #000 !important; background: #000 !important; border-color: #000 !important; }
+  body.mask #name, body.mask #name span { color: #fff !important; background: transparent !important; }
+</style>
+</head>
+<body>
+<div id="rows"></div>
+<div id="band"></div>
+<div id="name"></div>
+<div id="cursor"></div>
+<div id="motto">KEEP THE WORK <b>LIT.</b></div>
+<script>
+// One rule: a letter's weight is a swell of the loop phase, shifted by where the letter is on the
+// screen, so the wave appears by itself across hundreds of copies. Slow: the rows drift one word
+// per loop, alternate rows opposite ways (perpetual and linear, so the encoder always sees motion).
+// Mid: the tide. Beat: a terminal cursor dwells under each letter, steps on with an overshoot and
+// returns home on the last stop.
+const { fract, mix, ease, swell, makeNoise, loopNoise, cubicPulse, clamp } = LitLoop;
+const NAME = 'LITGROK', SEP = '·', SIZE = 56, ADV = SIZE * 0.6, ROW = 64;
+const noise = makeNoise(11);
+const offsetAt = (x, y, row) => 0.85 * (x / 1200) + 0.35 * (y / 600) + 0.06 * row;
+const tide = (t, offset) => ease.gain(swell(fract(t - offset)), 2.4); // rests light and bold, turns fast
+
+const rows = [];
+for (let r = 0; r < 10; r += 1) {
+  const node = document.createElement('div');
+  node.className = 'row';
+  node.style.top = `${r * ROW - 18}px`;
+  const spans = [...(NAME + SEP).repeat(7)].map((ch) => { const s = document.createElement('span'); s.textContent = ch; node.appendChild(s); return s; });
+  document.getElementById('rows').appendChild(node);
+  rows.push({ node, spans, y: r * ROW + 10, dir: r % 2 ? 1 : -1, r });
+}
+const name = document.getElementById('name');
+const letters = [...NAME].map((ch) => { const s = document.createElement('span'); s.textContent = ch; name.appendChild(s); return s; });
+const cursor = document.getElementById('cursor');
+const HSIZE = 176, HADV = HSIZE * 0.6, HX0 = (1200 - HADV * NAME.length) / 2;
+const WORD = (NAME.length + 1) * ADV;
+
+window.renderFrame = (t, o = {}) => {
+  document.body.className = o.mask ? 'mask' : '';
+  for (const row of rows) {
+    // Exactly one word of travel per loop keeps the drift seamless; loop noise breathes its phase.
+    const shift = row.dir * WORD * t - WORD * 1.5 + 6 * loopNoise(noise, t, row.r * 3.1, 0.9);
+    row.node.style.transform = `translateX(${shift}px)`;
+    const wobble = 0.05 * loopNoise(noise, t, 40 + row.r, 1.1);
+    row.spans.forEach((s, i) => {
+      const k = tide(t, offsetAt(shift + (i + 0.5) * ADV, row.y, row.r) + wobble);
+      s.style.fontVariationSettings = `"wght" ${Math.round(mix(100, 800, k))}`;
+      s.style.color = `rgb(${Math.round(mix(21, 46, k))},${Math.round(mix(30, 58, k))},${Math.round(mix(41, 74, k))})`;
+    });
+  }
+  // The name takes the same field over a narrower range, so it never thins below a readable weight.
+  letters.forEach((s, i) => {
+    s.style.fontVariationSettings = `"wght" ${Math.round(mix(340, 800, tide(t, offsetAt(HX0 + (i + 0.5) * HADV, 300, 4.5))))}`;
+  });
+  const stops = NAME.length + 1, x = t * stops, slot = Math.floor(x), f = x - slot;
+  const pos = slot < stops - 1 ? slot + ease.outBack(clamp((f - 0.62) / 0.38), 1.4) : NAME.length * (1 - ease.inCubic(clamp(f / 0.45)));
+  cursor.style.left = `${HX0 + Math.min(pos, NAME.length) * HADV + 6}px`;
+  cursor.style.width = `${HADV - 12}px`;
+  cursor.style.opacity = String(1 - 0.75 * (slot === stops - 1 ? 0 : cubicPulse(0.3, 0.12, f)));
+};
+document.fonts.load('400 56px "JetBrains Mono"').then(() => document.fonts.ready).then(() => { window.renderFrame(0); window.ready = true; });
+</script>
+</body>
+</html>

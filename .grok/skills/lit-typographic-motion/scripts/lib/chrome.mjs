@@ -38,6 +38,7 @@ export function resolveChrome(env = process.env) {
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/Applications/Chromium.app/Contents/MacOS/Chromium',
     '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+    ...['ProgramFiles', 'ProgramFiles(x86)', 'LOCALAPPDATA'].filter((name) => env[name]).map((name) => `${env[name]}\\Google\\Chrome\\Application\\chrome.exe`),
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   ];
   return candidates.find((candidate) => existsSync(candidate)) ?? null;
@@ -192,17 +193,26 @@ export async function openRenderer({ executable, profileDir, softwareOnly = fals
 // display rate stays capped: an uncapped compositor starves Page.captureScreenshot.
 export const STAGE_FLAGS = Object.freeze(['--run-all-compositor-stages-before-draw', '--disable-checker-imaging', '--disable-new-content-rendering-timeout', '--disable-threaded-animation', '--disable-threaded-scrolling', '--disable-image-animation-resync', '--disable-lcd-text', '--force-color-profile=srgb', '--hide-scrollbars', '--mute-audio', '--force-device-scale-factor=1', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--no-pings', '--metrics-recording-only']);
 
-export function stageArgs({ profileDir, width, height }) {
-  const args = [...HOUSEKEEPING, `--user-data-dir=${profileDir}`, ...SWIFTSHADER_RUNG, ...COMMON_FLAGS, ...STAGE_FLAGS, `--window-size=${width},${height}`, `--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE ${STAGE.host}`];
+// `scale` is the device scale: 1 for a film; a cover is captured at 2 and shrunk afterwards.
+// `extra` flags ride after the stage set (a cover adds COVER_FLAGS).
+export function stageArgs({ profileDir, width, height, scale = 1, extra = [] }) {
+  const flags = STAGE_FLAGS.map((flag) => (flag === '--force-device-scale-factor=1' ? `--force-device-scale-factor=${scale}` : flag));
+  const args = [...HOUSEKEEPING, `--user-data-dir=${profileDir}`, ...SWIFTSHADER_RUNG, ...COMMON_FLAGS, ...flags, `--window-size=${width},${height}`, `--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE ${STAGE.host}`, ...extra];
   return [...new Set(args), 'about:blank'];
 }
 
 // Launch one stage Chrome and attach a page target. Exit 10 when Chrome is missing or never
 // answers; WebGL is not probed here (exit 11 applies only when the page asks for it).
-export async function launchStage({ executable, profileDir, width, height, timeoutMs = 30000 }) {
+// A cover's frames are compared across fresh browsers and sought out of order. With GPU raster on
+// the software rung, large DOM text came out one level apart on a few pixels between fresh
+// browsers (the still-glow negative: 3 of 3 pairs, 13-115 of 160 frames); CPU raster drew every
+// frame identically in 5 of 5 pairs.
+export const COVER_FLAGS = Object.freeze(['--disable-gpu-rasterization']);
+
+export async function launchStage({ executable, profileDir, width, height, scale = 1, extra = [], timeoutMs = 30000 }) {
   if (!executable) throw new BlockedError(EXIT.NO_CHROME, 'BLOCKED_NO_CHROME: Chrome/Chromium not found; set CHROME_PATH to a Chrome executable');
   mkdirSync(profileDir, { recursive: true });
-  const args = stageArgs({ profileDir, width, height });
+  const args = stageArgs({ profileDir, width, height, scale, extra });
   let stderr = '';
   let proc;
   try { proc = spawn(executable, args, { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] }); } catch (error) { throw new BlockedError(EXIT.NO_CHROME, `BLOCKED_NO_CHROME: ${error.message}`); }

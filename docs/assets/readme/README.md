@@ -26,13 +26,13 @@ npm package. The version and license badges ship in the package so npmjs can
 render them.
 
 The landing pages lead with `../cover-motion.webp`, the looping 960×640 robot
-cover: the five robot panels power on one by one, the LitGrok robot wakes, then
+cover: the seven robot panels power on one by one, the LitGrok robot wakes, then
 LITFAMILY and KEEP THE WORK LIT. light up
-(SHA-256 `e4ff0b0bb4d77d9f7dadcb7110334ec623be6bc04f74753b6f571981a09cd3cd`).
+(SHA-256 `c1829ddcfddc1a725d3db5e72833feecde1ba1e0efeaa515da94bfbaa1c194fa`).
 Readers who prefer reduced motion get `../cover-motion-still.webp`, its fully lit
-hold frame (SHA-256 `29edb07d1584fc9f84b2f243a7f4eb33d1f05ff5a235a46f1b4391824e96a539`).
-`../cover.webp` is the earlier static robot export
-(SHA-256 `0725bed298d34bd5221955fb856b10b4f996b595effc838c9e053954ac49eddd`);
+hold frame (SHA-256 `562001cc45a52062d57c8db0a2f5491e33eba6efe753da1cb3f56df874aa63d5`).
+`../cover.webp` is the static seven-robot export with LitGrok lit
+(SHA-256 `7a1eaf59b2292f1b879ab82d53bd645e5c2cafc83189ced49a84f946d83d58c0`);
 the landing pages no longer show it. The SVG cover remains the editable,
 low-bandwidth fallback. The WebP files ship in the package so the npmjs page can
 load them.

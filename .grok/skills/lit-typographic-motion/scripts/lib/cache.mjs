@@ -53,7 +53,7 @@ export const AUDIO_REQUIREMENTS = join(SKILL_ROOT, 'requirements-audio.txt');
 export function audioPins(pythonVersion = '3.12.0') {
   const pins = new Map();
   const [major, minor] = pythonVersion.split('.').map(Number);
-  for (const line of readFileSync(AUDIO_REQUIREMENTS, 'utf8').split('\n')) {
+  for (const line of readFileSync(AUDIO_REQUIREMENTS, 'utf8').split(/\r?\n/)) {
     const match = line.match(/^([A-Za-z0-9_.-]+)==([^\s;\\]+)\s*(?:;\s*(.*?))?\s*\\?$/);
     if (!match) continue;
     const marker = match[3] ?? '';

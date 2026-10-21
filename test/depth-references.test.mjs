@@ -40,7 +40,7 @@ const REFERENCE_SETS = new Map([
     'tonalities/signal.md',
     'tonalities/studio.md',
   ]],
-  ['lit-typographic-motion', ['complete-contract.md', 'craft-loop.md', 'runtime.md', 'scene-contract.md', 'stage.md', 'style-bible.md', 'treatment.md', 'type-craft.md']],
+  ['lit-typographic-motion', ['complete-contract.md', 'cover.md', 'craft-loop.md', 'runtime.md', 'scene-contract.md', 'stage.md', 'style-bible.md', 'treatment.md', 'type-craft.md']],
   ['autoresearch', [
     'core-principles.md',
     'family-contract.md',
@@ -167,6 +167,12 @@ const REFERENCE_SETS = new Map([
     'integration-lane-contract.md',
     'documentation-lane-contract.md',
     'regression-lane-contract.md',
+  ]],
+  ['lit-brainstorm', [
+    'converge-and-score.md',
+    'handoff-and-notes.md',
+    'idea-lane-packet.md',
+    'idea-lenses.md',
   ]],
   ['lit-team', [
     'general-purpose-packet.md',
@@ -502,6 +508,26 @@ test('review-work owns one complete pass-fail contract per lane', () => {
       assert.match(content, new RegExp(`^## ${heading}$`, 'm'), `${filename} must include ${heading}`);
     }
   }
+});
+
+test('brainstorming references define the lenses, the scoring and convergence, the handoff and the lane packet', () => {
+  const directory = join(SKILLS_DIRECTORY, 'lit-brainstorm', 'references');
+  const lenses = source(join(directory, 'idea-lenses.md'));
+  const converge = source(join(directory, 'converge-and-score.md'));
+  const handoff = source(join(directory, 'handoff-and-notes.md'));
+  const lane = source(join(directory, 'idea-lane-packet.md'));
+
+  assert.ok(tableBodyRows(lenses, 'Lens catalogue') >= 10, 'lens catalogue needs ten lenses');
+  assert.ok(tableBodyRows(converge, 'Scoring decision table') >= 8, 'scoring table needs eight decisions');
+  assert.ok((converge.match(/^## Case /gm) ?? []).length >= 2, 'convergence needs two worked cases');
+  assert.ok((converge.match(/^### Input$/gm) ?? []).length >= 2, 'worked cases need inputs');
+  assert.ok((converge.match(/^### Expected reply excerpt$/gm) ?? []).length >= 2, 'worked cases need outputs');
+  assert.ok(tableBodyRows(handoff, 'Handoff decision table') >= 8, 'handoff needs eight decisions');
+  for (const target of ['lit-plan', 'deep-interview', 'lit-crucible', 'litresearch']) assert.ok(handoff.includes(`\`${target}\``), `handoff routes to ${target}`);
+  assert.match(handoff, /^## Invalid handoff$/m);
+  for (const field of ['TASK:', 'DELIVERABLE:', 'SCOPE:', 'VERIFY:']) assert.ok(lane.includes(field), `lane packet must include ${field}`);
+  assert.match(lane, /^## Worked packet$/m);
+  assert.match(lane, /^## Invalid packet$/m);
 });
 
 test('lit-team owns a bounded packet format for every built-in subagent type', () => {

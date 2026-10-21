@@ -11,6 +11,8 @@ touches the network either; it only prints where to pre-warm.
 must use the same pinned lockfile. The install receipt, `status` and every BLOCKED message print the
 command with that version filled in; copy it from there.
 
+Outside Grok Build (Grok Bot, Cursor): the skill root is wherever the host placed this folder; render there only when the host has Node.js and this pre-warmed cache, write films to a workspace path, and otherwise report the render as BLOCKED with the missing piece. The `litgrok` skill holds the full host mapping.
+
 ## The cache
 
 `${XDG_CACHE_HOME:-~/.cache}/litgrok/motion-runtime/<lock digest>/` for both install scopes,
@@ -26,25 +28,32 @@ never under `.grok/vendor/`. `LITGROK_MOTION_CACHE` (an absolute path) replaces 
   `pip install --require-hashes --only-binary=:all:`;
 - `install.lock` — held while an install runs; a second install started meanwhile stops and says so.
 
-Archivo instances, VT323, Silkscreen and the five EMS stroke fonts ship inside the skill; the
+Archivo instances, VT323, Silkscreen, JetBrains Mono (the variable face cover mode moves by weight)
+and the five EMS stroke fonts ship inside the skill; the
 Hangul body pair is the lit-pptx skill's own Pretendard Regular and Bold, checked against
 LitGrok's recorded hashes.
 
 ## Commands
 
 - `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` — deps and fonts; prints one line per item and the cache path.
-- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --audio` — also the Tier 2 venv (needs `uv` or Python 3.11-3.13).
+- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --audio` — also the Tier 2 venv (needs `uv`, or Python 3.12 or 3.13 on PATH; a newer `python3` such as 3.15 is passed over because the pinned wheels do not cover it).
 - `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install --word-timing` — prints the model table (id, revision,
   licence, size) before any download. While any pin is unverified it fails closed and downloads
   nothing; Tier 3 then stays unavailable.
-- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime status` — the five probes, every time:
+- `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime status` — the six probes, every time:
   1. Chrome path and version;
   2. ffmpeg path, version line and the preview encoder rung (`libwebp_anim`, `img2webp` or GIF);
   3. the WebGL2 renderer string from a real headless probe;
   4. the software-GL warning (SwiftShader, llvmpipe and the rest of the one canonical list), or the
      unknown-renderer warning when the debug extension is unavailable;
   5. pre-warm state: which deps or fonts are missing or hash-mismatched, and the fix command;
+  6. the cover encoder: `img2webp` and `dwebp` from libwebp (cover mode encodes the README loop and
+     the gate decodes it again), else `gifski` as the GIF fallback, else `BLOCKED_NO_COVER_ENCODER`;
   plus the audio venv and word-timing model state.
+
+Cover mode (`cover.md`) needs no pre-warm at all: it uses Chrome, the bundled faces and the host's
+libwebp tools, which are never bundled and never installed by LitGrok. Install libwebp with the
+system package manager (`brew install webp`, `apt install webp`).
 
 ## Exit codes
 
@@ -62,6 +71,8 @@ LitGrok's recorded hashes.
 | 18 | STAGE_NONDETERMINISTIC | a replayed sample frame differs from the master; the message names the frame and the region. Seed the randomness and drop wall-clock reads. |
 | 19 | STAGE_NETWORK_REQUEST | the page reached outside `http://lit.stage/` (a URL, a WebSocket, a peer connection). |
 | 20 | SOUND_INVALID | a planned track is missing from the film, cannot be decoded, or a generated bed opens silent. |
+| 21 | BLOCKED_NO_COVER_ENCODER | cover mode found neither libwebp (`img2webp` and `dwebp`) nor `gifski`; nothing was captured. Install libwebp; a cover is never an MP4. |
+| 22 | BLOCKED_ASSET_MISSING | a cover's `assets.json` lists a file that is not there, or the painted-light recipe lists no base art; nothing was captured. Supply or generate the art, never a drawn stand-in. |
 
 Exit 14 and exit 15 are both fixed by the pre-warm outside the session, never by retrying the render inside it. Name the code and the fix in the reply. Never report one cause as another: a missing cache is exit
 14 even when Chrome is also missing, because the cache is checked first; a WebGL2 failure with

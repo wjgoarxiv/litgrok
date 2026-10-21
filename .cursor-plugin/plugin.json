@@ -1,0 +1,15 @@
+{
+  "name": "litgrok",
+  "displayName": "LitGrok",
+  "version": "1.0.24",
+  "description": "LitGrok's skills for planning, building, reviewing, researching and handing off work, with Korean prose and office-document help.",
+  "author": {
+    "name": "LitGrok contributors"
+  },
+  "homepage": "https://github.com/wjgoarxiv/litgrok",
+  "repository": "https://github.com/wjgoarxiv/litgrok",
+  "license": "MIT",
+  "keywords": ["skills", "planning", "code-review", "research", "handoff", "korean"],
+  "logo": "docs/assets/litgrok-plugin-logo.png",
+  "skills": "./.grok/skills"
+}

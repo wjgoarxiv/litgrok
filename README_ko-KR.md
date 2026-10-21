@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 다섯 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 일곱 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
@@ -42,7 +42,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.24`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
 
-선택 기능인 상태 행을 켜 두면 세션이 어디까지 왔는지 한눈에 보입니다. 프롬프트가 작업 흐름 스킬을 시작하면 `plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   ⠹ Bash · 0:31   tests ✓ 214` 같은 줄이 붙습니다. 지나온 단계, 지금 단계와 계획에서 체크한 작업 수, 지금 돌고 있는 도구와 걸린 시간, 마지막 테스트 결과를 차례로 보여 줍니다. 상태 행은 사용자 설정에 들어가므로 사용자 범위로 설치할 때 켭니다(`litgrok install --user --status-line`). 턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 명령에 `--notify`를 붙이세요. 화면을 보고 있을 때도 알림이 옵니다. 두 기능 모두 직접 켜기 전에는 꺼져 있습니다.
+선택 기능인 상태 행을 켜 두면 세션이 어디까지 왔는지 한눈에 보입니다. 프롬프트가 스킬을 시작하면 상태 행이 작은 LIT 카드로 커집니다. `plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·` 같은 지도가 지나온 단계와 지금 단계, 계획에서 체크한 작업 수를 보여 주고, 그 아래 줄에는 다음에 할 작업, 지금 돌고 있는 도구와 걸린 시간, 마지막 테스트 결과가 나옵니다. 제목은 턴이 도는 중인지, 막 끝났는지, 손봐야 하는지를 알려 주고, 마지막 줄에는 모델, 컨텍스트 게이지, 비용, 브랜치가 남습니다. 상태 행은 사용자 설정에 들어가므로 사용자 범위로 설치할 때 켭니다(`litgrok install --user --status-line`). 턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 명령에 `--notify`를 붙이세요. 화면을 보고 있을 때도 알림이 옵니다. 두 기능 모두 직접 켜기 전에는 꺼져 있습니다.
 
 ### 코딩 에이전트에게 설치 맡기기
 
@@ -88,7 +88,7 @@ xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
 
 ## 무엇을 할 수 있나요
 
-스킬 38개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있습니다. 평소에는 그중 몇 가지만 써도 충분합니다.
+스킬 39개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있습니다. 평소에는 그중 몇 가지만 써도 충분합니다.
 
 ### 작업 하나를 위한 체크리스트
 
@@ -109,7 +109,7 @@ xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
 
 ### 합치기 전에 한 번 더 보기
 
-`/review-work`는 읽기 전용 검토 레인 여섯 개로 변경을 살펴보고, 찾은 문제를 근거에 따라 순서대로 정리합니다. 파일은 고치지 않습니다.
+`/review-work`는 작업을 시작하기 전에는 계획을, 끝난 뒤에는 변경 사항을 검토합니다. 브랜치나 diff, 체크된 계획 항목이 있으면 변경을, 체크된 항목이 없는 계획만 있으면 계획을 검토합니다. `/review-work plan`과 `/review-work work`로 직접 정할 수도 있습니다. 변경 사항은 읽기 전용 검토 레인 여섯 개로 살펴보고, 찾은 문제를 근거에 따라 순서대로 정리합니다. 파일은 고치지 않습니다.
 
 ```text
 /review-work 이 브랜치의 변경 사항
@@ -138,12 +138,13 @@ xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
 | --- | --- |
 | `/litwork` | 범위가 정해진 작업에 쓸 체크리스트를 시작합니다. |
 | `handoff` 또는 `/lit-handoff` | 확인한 결과와 다음 할 일을 다음 세션으로 건넵니다. |
+| `/lit-brainstorm` | 열린 질문을 여러 선택지와 고를 수 있는 짧은 목록으로 펼칩니다. |
 | `/lit-plan` | 확인 기준이 붙은 계획을 씁니다. |
 | `/start-work <승인된 계획>` | 승인한 계획을 실행합니다. |
-| `/review-work` | 변경 사항과 그 근거를 검토합니다. |
+| `/review-work` | 작업 전에는 계획을, 작업 후에는 변경 사항을 근거와 함께 검토합니다. |
 | `/litresearch` | 출처를 따라갈 수 있는 범위 안에서 조사하고, 근거보다 크게 말하지 않습니다. |
 
-[스킬 38개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
+[스킬 39개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
 
 ## 자동 핸드오프
 
@@ -162,9 +163,9 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 ### 세션에서 보이는 것
 
-컨텍스트가 정한 퍼센트의 10포인트 안으로 들어오면 상태 행 아래 리본이 주황색으로 바뀌고 얼마나 가까운지 보여 줍니다. 턴이 끝났을 때 컨텍스트가 정한 퍼센트 이상이면 Stop 훅이 모델을 한 단계 더 일하게 하고, `lit-handoff` 절차대로 인수인계 문서를 쓰라고 한 번 요청합니다. 그러면 리본에 `handoff requested`가 뜹니다. 문서가 저장되면 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리합니다.
+컨텍스트가 정한 퍼센트의 10포인트 안으로 들어오면 상태 행에 노란 경고가 붙어 얼마나 가까운지 보여 줍니다. 턴이 끝났을 때 컨텍스트가 정한 퍼센트 이상이면 Stop 훅이 모델을 한 단계 더 일하게 하고, `lit-handoff` 절차대로 인수인계 문서를 쓰라고 한 번 요청합니다. 그러면 카드에 `⚠ handoff requested`가 뜹니다. 문서가 저장되면 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리합니다.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="782" alt="grok라는 제목의 터미널 창. /litwork 턴 동안의 상태 행 세 개가 있고, 모두 LIT IGNITED · litwork | Grok 4.5 [high]와 컨텍스트 수치를 보여 주며 아래에 주황색 리본이 붙어 있습니다. 54%/2m일 때 리본은 ctx 54% → handoff at 60% · 1m04s · 2 tools, 61%/2m일 때는 ctx 61% ≥ handoff at 60%입니다. Stop 훅이 핸드오프를 요청한 뒤에는 handoff requested · 1m04s · 2 tools가 됩니다." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="845" alt="grok라는 제목의 터미널 창. /litwork 턴 동안의 상태 카드 세 장이 있습니다. 카드마다 제목 줄에 [🔥LIT] | 🔥 LIT · litwork가, 오른쪽 끝에 2 tools와 1m04s가 있고, 그 아래 plan, work, review, done 단계 줄에서는 work가 켜져 있으며, 마지막 줄은 Grok 4.5 [high] │ ctx 54%/2m 또는 61%/2m │ handoff@60%입니다. 54%일 때 경고 줄은 ctx 54% → handoff at 60%, 61%일 때는 ctx 61% ≥ handoff at 60%입니다. Stop 훅이 핸드오프를 요청한 뒤에는 handoff requested가 됩니다." /></picture></p>
 
 이때 `/compact`를 직접 입력하세요. Grok은 훅이 압축을 시작하게 해 주지 않습니다. 압축이 끝나고 다음 턴이 끝날 때, LitGrok은 이 세션이 저장한 인수인계 문서를 모델에게 알려 주고 현재 파일을 확인한 뒤 문서에 적힌 다음 단계부터 이어 가라고 요청합니다. Grok도 설정을 바꾸지 않았다면 85퍼센트에서 스스로 압축하니, 그보다 낮은 퍼센트를 고르세요.
 
@@ -198,6 +199,15 @@ flowchart TD
 
 설치 프로그램은 프로젝트의 `.grok/` 폴더에 일반 파일을 복사할 뿐, 다른 곳은 건드리지 않습니다. 스킬은 부를 때 세션이 읽는 지침이고, 프로젝트 규칙은 언제 어떤 스킬을 쓰면 좋을지 Grok Build에 알려 줍니다. 훅을 신뢰하면 세션을 시작할 때 LIT 마크를 띄우고, 선택 기능인 상태 행을 최신으로 유지하고, 결과물에 들어갈 문장을 쓰기 전에 검사하고, 이벤트 순서를 `.grok/litgrok/session-ledger/`에 기록합니다. 백그라운드에서 따로 도는 작업은 없습니다. 세션이 끝나면 작업은 인수인계 문서 안에서 기다리다가, 사용자나 다음 세션이 이어받습니다. [LitGrok이 상태를 두는 곳](./docs/guide_ko-KR.md#litgrok이-상태를-두는-곳)
 
+## Grok Bot과 Cursor에서 LitGrok 쓰기
+
+Grok Bot과 Cursor는 같은 Cursor 플러그인 형식으로 플러그인을 불러옵니다. 이 저장소의 `.cursor-plugin/plugin.json`이 그 형식의 매니페스트이고, 두 앱 모두에 `.grok/skills`의 스킬 39개를 알려 줍니다. 그래서 `lit-plan`, `litwork`, `review-work` 같은 스킬을 그곳에서도 이름으로 부를 수 있습니다. 훅, 프로젝트 규칙, 상태 행, LIT 마크는 Grok Build 세션에서만 동작합니다. Grok Bot은 플러그인이 가져온 스킬과 커넥터만 보여 주고, 훅은 Grok Build가 직접 실행하기 때문입니다. 슬라이드나 문서 스킬처럼 함께 든 스크립트를 실행하는 스킬은, 그 스킬이 도는 컴퓨터에 Node.js나 Python이 있어야 합니다.
+
+Grok Bot의 **Connect apps**는 Cursor Marketplace를 읽습니다. LitGrok이 그곳에 등록되면 두 앱 어디서든 추가할 수 있습니다. 그전에는 이 저장소에서 바로 추가합니다.
+
+1. Cursor에서 **Customize**를 열고 **Add Marketplace**를 고릅니다. **From GitHub Repository**를 고른 뒤 `https://github.com/wjgoarxiv/litgrok`을 붙여 넣습니다.
+2. 그러면 Cursor에 LitGrok이 든 마켓플레이스 항목이 생깁니다. 거기서 **Add**를 누릅니다. Grok Bot에서는 **Connect apps**를 열고 **Your plugins**에서 LitGrok을 찾아 추가합니다. Bot이 GitHub 연결을 요청하면 연결해 주세요. Grok Bot은 시작할 때 마켓플레이스를 읽으므로, LitGrok이 아직 보이지 않으면 Grok Bot을 다시 시작한 뒤 확인합니다.
+
 ## 필요한 것, 업데이트, 제거
 
 Node.js와 Grok Build가 있으면 됩니다. 이 페이지의 내용은 Grok Build 1.0.13에서 확인했습니다. 슬라이드 작업에는 Node.js 20.9 이상이 필요하고, 문서 스킬은 처음 쓸 때 버전이 고정된 도구를 전용 캐시에 설치합니다.
@@ -216,14 +226,14 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 ## 더 알아보기
 
 - [안내서](./docs/guide_ko-KR.md): LitGrok이 출력하는 화면, 홍보 영상, 설치 옵션과 상태 행, 안전 장치, 자동 핸드오프 세부 동작, 슬라이드와 문서, 자주 겪는 문제 해결.
-- [전체 스킬](./docs/skills_ko-KR.md): 스킬 38개를 한 줄씩 정리했습니다.
+- [전체 스킬](./docs/skills_ko-KR.md): 스킬 39개를 한 줄씩 정리했습니다.
 - [상세 안내](./docs/reference_ko-KR.md): 설치, 훅, 터미널 출력, 패키지 검증, 출처.
 - [프로젝트 규칙](./.grok/rules/00-litgrok.md), [스킬 폴더](./.grok/skills), [변경 이력](./CHANGELOG.md), [개인정보와 로컬 데이터](./docs/privacy.md), [기존 npm 이름에서 옮겨 오기](./docs/reference_ko-KR.md#npm-package-migration).
 - [LitFamily](https://github.com/wjgoarxiv/litfamily): 다른 코딩 에이전트에서도 같은 방식으로 일할 수 있습니다.
 
 ## LITFAMILY
 
-커버의 장갑 로봇 다섯은 LitFamily의 다섯 제품입니다. 각 제품은 자기 호스트에서 따로 동작하니, 쓰는 것 하나만 설치하면 되고 다른 제품은 필요 없습니다.
+커버의 장갑 로봇 일곱은 LitFamily의 일곱 제품입니다. 각 제품은 자기 호스트에서 따로 동작하니, 쓰는 것 하나만 설치하면 되고 다른 제품은 필요 없습니다.
 
 커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다. 편집할 수 있는 벡터 원본은 `docs/assets/cover.svg`에 있고, 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 대신 보입니다.
 

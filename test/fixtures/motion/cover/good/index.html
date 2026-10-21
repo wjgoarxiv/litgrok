@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<style>
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: #0c1117; }
+  canvas { position: absolute; inset: 0; width: 1200px; height: 600px; }
+  #name { position: absolute; left: 70px; top: 228px; padding: 4px 22px; background: #0c1117; font: 900 112px "Archivo"; color: #f1eee2; }
+  body.mask, body.mask * { background: #000 !important; color: #000 !important; }
+  body.mask #name { color: #fff !important; }
+  body.mask canvas { visibility: hidden; }
+</style>
+<body>
+<canvas id="c" width="2400" height="1200"></canvas>
+<div id="name">GROKLOOP</div>
+<script>
+// Test cover with the three layers and nothing else: stripes slide one period per loop (slow), a
+// dot laps its ring twice (mid) and swells as it passes the top (beat). The word never moves.
+const { TAU, fract, cubicPulse } = LitLoop;
+const ctx = document.getElementById('c').getContext('2d');
+ctx.scale(2, 2);
+window.renderFrame = (t, o = {}) => {
+  document.body.className = o.mask ? 'mask' : '';
+  ctx.fillStyle = '#0c1117';
+  ctx.fillRect(0, 0, 1200, 600);
+  if (o.mask) return;
+  ctx.fillStyle = '#1b2836';
+  for (let k = -1; k < 14; k += 1) ctx.fillRect(k * 90 + 90 * t, 0, 36, 600);
+  const p = fract(2 * t);
+  const a = TAU * p - Math.PI / 2;
+  const r = 13 + 11 * Math.max(cubicPulse(0, 0.07, p), cubicPulse(1, 0.07, p));
+  ctx.fillStyle = '#ff6a3d';
+  ctx.beginPath(); ctx.arc(930 + 140 * Math.cos(a), 300 + 140 * Math.sin(a), r, 0, TAU); ctx.fill();
+};
+document.fonts.load('900 112px "Archivo"').then(() => { window.renderFrame(0); window.ready = true; });
+</script>
+</body>

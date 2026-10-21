@@ -19,6 +19,9 @@ Fonts shipped in this skill (paths relative to this directory)
       OFL 1.1: fonts/VT323-OFL.txt
   Silkscreen (Regular, Bold)
       OFL 1.1: fonts/Silkscreen-OFL.txt
+  JetBrains Mono (variable wght 100-800, latin subset, unmodified; cover mode)
+      OFL 1.1: fonts/JetBrainsMono-OFL.txt
+      source: @fontsource-variable/jetbrains-mono 5.3.0, files/jetbrains-mono-latin-wght-normal.woff2
   EMSAllure, EMSFelix, EMSOsmotron, EMSReadability, EMSTech (single-stroke SVG fonts)
       OFL 1.1: fonts/stroke/OFL-1.1.txt
       credits: fonts/stroke/CREDITS

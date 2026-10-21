@@ -18,6 +18,7 @@ from convert_md_to_docx import (
     normalize_double_spaces,
     parse_frontmatter,
 )
+import pdf_fonts
 
 
 def command_path(name: str) -> str | None:
@@ -108,8 +109,7 @@ def short_author_list(frontmatter: dict) -> str:
 
 def template_variables(frontmatter: dict, publisher_name: str, publisher: dict, detected_locale: str, mode: str) -> dict[str, str]:
     latex_cfg = publisher["latex"]
-    cjk_cfg = latex_cfg.get("cjk") or {}
-    body_font = ((publisher.get("docx") or {}).get("font") or {}).get("body") or {}
+    main_font, cjk_font = pdf_fonts.families(publisher, "ko")
     title = str(frontmatter.get("title") or "")
     return {
         "title": title,
@@ -122,8 +122,8 @@ def template_variables(frontmatter: dict, publisher_name: str, publisher: dict, 
         "author-list-short": short_author_list(frontmatter),
         "documentclass": str(latex_cfg.get("documentclass") or "article"),
         "classoptions": ",".join(str(item) for item in latex_cfg.get("classoptions") or []),
-        "mainfont": str(body_font.get("family") or "Times New Roman"),
-        "cjk-main-font": str(cjk_cfg.get("main_font") or "Pretendard"),
+        "mainfont": main_font,
+        "cjk-main-font": cjk_font,
         "publisher-name": publisher_name,
         "detected-locale": detected_locale,
         "mode": mode,
@@ -204,6 +204,9 @@ def preflight_pdf_compile(publisher_name: str, publisher: dict, detected_locale:
         raise SystemExit(
             "Error: xeCJK.sty not found. Korean/CJK PDF output requires xeCJK from TeX Live."
         )
+    missing = pdf_fonts.missing_fonts(pdf_fonts.families(publisher, detected_locale), run_checked)
+    if missing:
+        raise SystemExit(pdf_fonts.blocked_message(missing, publisher_name))
 
 
 def compile_latex_to_pdf(tex_path: Path, pdf_path: Path) -> str:

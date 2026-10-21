@@ -4,6 +4,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import hostProc from '../../../lit-pptx/scripts/proc.cjs';
 import { COLOUR, FLASH, OUTPUT, PASS_CAPS, PERF, SAFE, TIMING, TYPE, DARK } from './constants.mjs';
 import { countUnits, eojeol, readingFloor } from './text.mjs';
 import { transitionsOf, worstWindowLinear, worstWindowLooping } from './flash.mjs';
@@ -540,8 +541,7 @@ function exportInfo(path) {
 }
 
 function probe(path, env = process.env) {
-  const dirs = String(env.PATH ?? '').split(':').filter(Boolean);
-  const tool = dirs.map((d) => join(d, 'ffprobe')).find((p) => existsSync(p));
+  const tool = hostProc.which('ffprobe', { env });
   if (!tool) return { error: 'ffprobe not found on PATH' };
   const result = spawnSync(tool, ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height,pix_fmt,color_space,color_range,color_transfer,color_primaries,r_frame_rate:format=duration', '-of', 'json', path], { encoding: 'utf8' });
   if (result.status !== 0) return { error: result.stderr.trim() };

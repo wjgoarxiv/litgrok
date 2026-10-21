@@ -57,10 +57,22 @@
       "why": "The marketplace scanner manifest reports the package release and enumerates its scanner-visible components."
     },
     {
+      "path": ".cursor-plugin/plugin.json",
+      "kind": "pinned",
+      "occurrences": 1,
+      "why": "The Cursor and Grok Bot manifest, read from the GitHub repository, reports the package release."
+    },
+    {
       "path": "test/installer.test.mjs",
       "kind": "pinned",
       "occurrences": 3,
       "why": "Installer contract tests pin package metadata and a README regular-expression assertion."
+    },
+    {
+      "path": "test/hud-style.test.mjs",
+      "kind": "pinned",
+      "occurrences": 10,
+      "why": "The status-line style contract pins the release shown in the badge and in the fake install manifest."
     },
     {
       "path": "test/plugin-manifest.test.mjs",

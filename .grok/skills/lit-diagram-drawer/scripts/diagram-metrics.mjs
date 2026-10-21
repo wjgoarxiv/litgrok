@@ -202,7 +202,7 @@ function sourceMetrics(source, sourcePath='<stdin>') {
   };
 }
 function detectorFindings(visibleText) {
-  const result=spawnSync('node',[humanizer,'--json','-'],{input:visibleText,encoding:'utf8',maxBuffer:1024*1024});
+  const result=spawnSync(process.execPath,[humanizer,'--json','-'],{input:visibleText,encoding:'utf8',maxBuffer:1024*1024});
   if(result.error) throw result.error;
   let parsed;
   try { parsed=JSON.parse(result.stdout); } catch { throw new Error('Humanizer returned invalid JSON: '+result.stdout+' '+result.stderr); }

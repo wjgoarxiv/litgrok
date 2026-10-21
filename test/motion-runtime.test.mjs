@@ -82,16 +82,23 @@ async function warmCache() {
   return warmed;
 }
 
-test('status on an empty cache prints the five probes and names every missing item', () => {
+test('status on an empty cache prints the six probes and names every missing item', () => {
   const base = scratch('status');
   try {
     const result = spawnSync(process.execPath, [bin, 'motion-runtime', 'status'], { encoding: 'utf8', env: { ...process.env, LITGROK_MOTION_CACHE: base } });
     assert.equal(result.status, 0, result.stderr);
-    for (const probe of ['Chrome:', 'ffmpeg:', 'WebGL2 renderer:', 'Software GL:', 'Pre-warm:']) assert.match(result.stdout, new RegExp(`│ ${probe}`));
+    for (const probe of ['Chrome:', 'ffmpeg:', 'WebGL2 renderer:', 'Software GL:', 'Pre-warm:', 'Cover encoder:']) assert.match(result.stdout, new RegExp(`│ ${probe}`));
+    assert.match(result.stdout, /│ Cover encoder: (?:img2webp and dwebp \(.*\); README cover loops encode as animated WebP and the gate reads the decoded file|gifski .*|BLOCKED_NO_COVER_ENCODER: .*)$/m);
     assert.match(result.stdout, new RegExp(`Pre-warm: MISSING deps opentype\\.js, ws \\(missing\\); Galmuri9 \\(missing\\); MesloLGS NF \\(missing\\) — fix: ${PINNED}`));
     assert.match(result.stdout, /Audio tier: venv absent/);
     assert.deepEqual(readdirSync(base), [], 'status never writes the cache');
   } finally { rmSync(base, { recursive: true, force: true }); }
+});
+
+test('the cover encoder probe names the fallback and the blocked state from what is on PATH', async () => {
+  const { coverEncoderLine } = await import('../.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
+  const empty = scratch('nopath');
+  try { assert.match(coverEncoderLine({ PATH: empty }), /^BLOCKED_NO_COVER_ENCODER: install libwebp \(img2webp, dwebp\) or gifski; cover renders stop with exit 21$/); } finally { rmSync(empty, { recursive: true, force: true }); }
 });
 
 test('every Chrome launch carries the mock keychain and the basic password store', async () => {
@@ -247,6 +254,26 @@ test('Tier 3: --word-timing without models exits 14; install states the pins and
     assert.match(install.stdout, /Korean forced alignment: id UNPINNED, revision UNPINNED, licence UNVERIFIED/);
     assert.deepEqual(readdirSync(base), [], 'nothing downloaded');
   } finally { rmSync(base, { recursive: true, force: true }); cleanup(work); }
+});
+
+test('Tier 2: the audio venv comes from the supported-Python pick, never a python3 outside the pins range', { skip: process.platform === 'win32' ? 'the fake interpreters are sh scripts' : false }, async () => {
+  const { audioVenvPlan } = await import('../.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
+  const dir = scratch('python-pick');
+  try {
+    const fake = (name, version) => writeFileSync(join(dir, name), `#!/bin/sh\necho ${version}\n`, { mode: 0o755 });
+    fake('python3', '3.11.9');
+    fake('python3.11', '3.11.9');
+    assert.throws(() => audioVenvPlan({ PATH: dir }, '/cache/audio-venv'), /no uv and no Python 3\.12 or 3\.13 on PATH; tried .*python3: 3\.11\.9/u);
+    fake('python3', '3.15.0');
+    fake('python3.15', '3.15.0');
+    assert.throws(() => audioVenvPlan({ PATH: dir }, '/cache/audio-venv'), /no uv and no Python 3\.12 or 3\.13 on PATH; tried .*python3: 3\.15\.0/u);
+    fake('python3', '3.12.7');
+    assert.deepEqual(audioVenvPlan({ PATH: dir }, '/cache/audio-venv'), { command: join(dir, 'python3'), args: ['-m', 'venv', '/cache/audio-venv'] }, 'a plain python3 of a supported version builds the venv');
+    fake('python3.13', '3.13.4');
+    assert.equal(audioVenvPlan({ PATH: dir }, '/cache/audio-venv').command, join(dir, 'python3.13'), 'a named supported minor is tried before python3');
+    fake('uv', 'uv 0.9.0');
+    assert.deepEqual(audioVenvPlan({ PATH: dir }, '/cache/audio-venv'), { command: join(dir, 'uv'), args: ['venv', '--seed', '--python', '3.12', '/cache/audio-venv'] }, 'uv brings its own 3.12');
+  } finally { cleanup(dir); }
 });
 
 test('pre-warm fetches only from pinned sources and keeps nothing whose sha256 is wrong', async (t) => {

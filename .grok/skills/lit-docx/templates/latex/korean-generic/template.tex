@@ -3,9 +3,14 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{booktabs}
+$if(tables)$
+\usepackage{longtable,array,calc}
+$endif$
 \usepackage{microtype}
 \usepackage{siunitx}
 \usepackage{csquotes}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
 \usepackage{fontspec}
 $if(has-cjk)$
 \usepackage{xeCJK}

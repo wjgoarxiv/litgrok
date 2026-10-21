@@ -75,6 +75,18 @@ test('GitHub READMEs lead with the motion cover from repository-relative assets 
   }
 });
 
+test('the GitHub and npm pages count the LitFamily as its seven members', () => {
+  for (const name of ['README.md', 'README_ko-KR.md', 'docs/npm/README.md', 'docs/npm/README_ko-KR.md', 'docs/assets/readme/README.md']) {
+    const text = read(name);
+    assert.doesNotMatch(text, /\bfive (?:armored )?robot|\bfive LitFamily|로봇 다섯|다섯 로봇|다섯 제품/u, `${name}: no five-member family count is left`);
+  }
+  for (const name of ['README.md', 'README_ko-KR.md']) {
+    const text = read(name);
+    const section = text.slice(text.indexOf('\n## LITFAMILY\n'));
+    assert.match(section, name === 'README.md' ? /seven armored robots on the cover stand for the seven LitFamily products/u : /장갑 로봇 일곱은 LitFamily의 일곱 제품/u, `${name}: the family section names seven`);
+  }
+});
+
 const DOC_PAGES = ['docs/guide.md', 'docs/guide_ko-KR.md', 'docs/skills.md', 'docs/skills_ko-KR.md'];
 
 test('GitHub README relative links and in-page anchors resolve inside the repository', () => {
@@ -158,11 +170,11 @@ test('README artwork retains approved bytes, notices and static release metadata
     'Lucide-LICENSE.txt': 'b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57',
     'JetBrainsMono-OFL.txt': 'a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697',
   };
-  assert.equal(sha('docs/assets/cover.webp'), '0725bed298d34bd5221955fb856b10b4f996b595effc838c9e053954ac49eddd');
+  assert.equal(sha('docs/assets/cover.webp'), '7a1eaf59b2292f1b879ab82d53bd645e5c2cafc83189ced49a84f946d83d58c0');
   const motionCover = readFileSync(join(ROOT, 'docs/assets/cover-motion.webp'));
   assert.ok(motionCover.length <= 2_621_440, 'motion cover must stay under 2.5 MiB');
-  assert.equal(createHash('sha256').update(motionCover).digest('hex'), 'e4ff0b0bb4d77d9f7dadcb7110334ec623be6bc04f74753b6f571981a09cd3cd');
-  assert.equal(sha('docs/assets/cover-motion-still.webp'), '29edb07d1584fc9f84b2f243a7f4eb33d1f05ff5a235a46f1b4391824e96a539');
+  assert.equal(createHash('sha256').update(motionCover).digest('hex'), 'c1829ddcfddc1a725d3db5e72833feecde1ba1e0efeaa515da94bfbaa1c194fa');
+  assert.equal(sha('docs/assets/cover-motion-still.webp'), '562001cc45a52062d57c8db0a2f5491e33eba6efe753da1cb3f56df874aa63d5');
   for (const [name, hash] of Object.entries(approved)) assert.equal(sha(`${ASSETS}/${name}`), hash, name);
   assert.deepEqual(readdirSync(join(ROOT, ASSETS)).filter((name) => name.startsWith('lucide-')).sort(), ['lucide-book-open.svg', 'lucide-play.svg', 'lucide-shield-check.svg']);
   const svg = read(`${ASSETS}/ascii-readme.svg`);

@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: five armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
@@ -42,7 +42,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.24`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
 
-The optional status row is the quickest way to see where a session stands. Once a prompt starts a workflow skill, it gains a line such as `plan ✓ ━━━━ [WORK 3/7] ──── review · ──── done ·   ⠹ Bash · 0:31   tests ✓ 214`: the stages behind you, the stage you are in with the plan tasks checked so far, the tool running right now and for how long, and how the last test run went. The row lives in your user settings, so it comes with a user install (`litgrok install --user --status-line`). Add `--notify` to that command if you also want Grok's terminal notification each time a turn finishes, even while you are watching. Both stay off until you ask for them.
+The optional status row is the quickest way to see where a session stands. Once a prompt starts a skill, it grows into a small LIT card. Its map, such as `plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·`, shows the stages behind you and the stage you are in with the plan tasks checked so far; the line under it names the next open task, the tool running right now and for how long, and how the last test run went. The title says whether the turn is running, just finished or needs you, and the last line keeps the model, the context gauge, the cost and the branch. The row lives in your user settings, so it comes with a user install (`litgrok install --user --status-line`). Add `--notify` to that command if you also want Grok's terminal notification each time a turn finishes, even while you are watching. Both stay off until you ask for them.
 
 ### Let a coding agent install it
 
@@ -88,7 +88,7 @@ In the next session, give Grok Build the path it returned and ask it to read the
 
 ## What you get
 
-It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Most days you will use a handful of them.
+It ships 39 skills, 11 agents, one project rule, and eleven hook registrations. Most days you will use a handful of them.
 
 ### A checklist for one task
 
@@ -109,7 +109,7 @@ For a larger change, `/lit-plan` writes a plan file with numbered rows and the c
 
 ### A second look before you merge
 
-`/review-work` reviews a change through six read-only lanes and ranks what it finds by the evidence behind each finding. It changes no files.
+`/review-work` reviews a plan before work starts or the finished change after it. It picks the mode from what exists: a branch, a diff or ticked plan rows mean the change, and a plan with no ticked rows means the plan. `/review-work plan` and `/review-work work` force one. A change goes through six read-only lanes, and the findings are ranked by the evidence behind each one. It changes no files.
 
 ```text
 /review-work the changes on this branch
@@ -138,12 +138,13 @@ For a larger change, `/lit-plan` writes a plan file with numbered rows and the c
 | --- | --- |
 | `/litwork` | Starts the shipped work checklist for a bounded task. |
 | `handoff` or `/lit-handoff` | Carries the checked result and the next step into another session. |
+| `/lit-brainstorm` | Opens a question into many options and a short list to pick from. |
 | `/lit-plan` | Writes a plan with concrete checks. |
 | `/start-work <approved-plan>` | Executes a plan you approved. |
-| `/review-work` | Reviews a change and its evidence. |
+| `/review-work` | Reviews a plan before work or a change after it, with its evidence. |
 | `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
 
-[All 38 skills, with a picture of what each one gives you](./docs/skills.md).
+[All 39 skills, with a picture of what each one gives you](./docs/skills.md).
 
 ## Automatic handoff
 
@@ -162,9 +163,9 @@ Run the second line inside the project; from a subfolder it finds the Git root o
 
 ### What you see in a session
 
-Once the context comes within ten points of your percent, the ribbon under the status row turns amber and shows how close it is. When a turn ends at or above your percent, the Stop hook keeps the model going for one more step and asks it, once, to write the handoff with the `lit-handoff` procedure. The ribbon then reads `handoff requested`. When the packet is saved, the model ends with one plain line: "Handoff saved. Run /compact now."
+Once the context comes within ten points of your percent, the status row shows a yellow warning with how close it is. When a turn ends at or above your percent, the Stop hook keeps the model going for one more step and asks it, once, to write the handoff with the `lit-handoff` procedure. The card then reads `⚠ handoff requested`. When the packet is saved, the model ends with one plain line: "Handoff saved. Run /compact now."
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="782" alt="Terminal window titled grok. Three status rows during a /litwork turn, each reading LIT IGNITED · litwork | Grok 4.5 [high] with the context figure, and an amber ribbon under each. At 54%/2m the ribbon reads ctx 54% → handoff at 60% · 1m04s · 2 tools. At 61%/2m it reads ctx 61% ≥ handoff at 60%. After the Stop hook asks for the handoff it reads handoff requested · 1m04s · 2 tools." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="845" alt="Terminal window titled grok. Three status cards during a /litwork turn, each titled [🔥LIT] | 🔥 LIT · litwork with 2 tools and 1m04s at the right, the stage map plan, work, review, done with work lit, and a last line reading Grok 4.5 [high] │ ctx 54%/2m or 61%/2m │ handoff@60%. At 54% the warning line reads ctx 54% → handoff at 60%. At 61% it reads ctx 61% ≥ handoff at 60%. After the Stop hook asks for the handoff it reads handoff requested." /></picture></p>
 
 That is your cue to type `/compact`, since Grok lets no hook start a compaction. After it, the next time a turn ends, LitGrok points the model at the handoff this session saved and asks it to check the current files and continue from the next steps written there. Grok also compacts on its own at 85 percent unless you changed that, so choose a percent below it.
 
@@ -198,6 +199,15 @@ flowchart TD
 
 The installer copies plain files into the project's `.grok/` folder and changes nothing else. Skills are instructions the session reads when you call them, and the project rule tells Grok Build when to reach for them. Once you trust the hooks, they show the LIT mark at session start, keep the optional status row current, check deliverable wording before it is written, and log the order of events in `.grok/litgrok/session-ledger/`. Nothing runs in the background: when the session ends, the work waits in the handoff until you, or the next session, pick it up. [Where LitGrok keeps its state](./docs/guide.md#where-litgrok-keeps-its-state).
 
+## Use LitGrok in Grok Bot and Cursor
+
+Grok Bot and Cursor load plugins in the same Cursor plugin format, and this repository carries one at `.cursor-plugin/plugin.json`. It points both apps at the 39 skills in `.grok/skills`, so `lit-plan`, `litwork`, `review-work` and the rest can be called by name there too. The hooks, the project rule, the status row and the LIT mark stay with Grok Build: Grok Bot shows only the skills and connectors a plugin brings, and the hooks are started by Grok Build itself. Skills that run a bundled script, such as the slide and document skills, need Node.js or Python on the computer that runs them.
+
+Grok Bot's **Connect apps** reads the Cursor Marketplace, so once LitGrok is listed there you can add it from either app. Until then, add it from this repository:
+
+1. In Cursor, open **Customize**, choose **Add Marketplace**, pick **From GitHub Repository** and paste `https://github.com/wjgoarxiv/litgrok`.
+2. Cursor then shows a marketplace section with LitGrok in it; press **Add** there. In Grok Bot, open **Connect apps**, find LitGrok under **Your plugins** and add it; connect GitHub if the Bot asks for it. Grok Bot reads marketplaces when it starts, so if LitGrok is not listed yet, restart Grok Bot and look again.
+
 ## Requirements, update and uninstall
 
 You need Node.js and Grok Build; the notes on this page were checked on Grok Build 1.0.13. Slides need Node.js 20.9 or newer, and the office skills install their pinned tools into their own cache the first time you use them.
@@ -216,14 +226,14 @@ The installer never runs `git init`, trusts hooks, signs in or picks a model for
 ## Learn more
 
 - [Guide](./docs/guide.md): pictures of what LitGrok prints, the promo film, install options and the status row, safety checks, automatic handoff in detail, slides and documents, and fixes for common problems.
-- [All skills](./docs/skills.md): the 38 skills, one row each.
+- [All skills](./docs/skills.md): the 39 skills, one row each.
 - [Operational reference](./docs/reference.md): installation, hooks, terminal output, payload checks and source provenance.
 - [Project rule](./.grok/rules/00-litgrok.md), [skill folders](./.grok/skills), [changelog](./CHANGELOG.md), [privacy and local data](./docs/privacy.md) and [migration from the old npm name](./docs/reference.md#npm-package-migration).
 - [LitFamily](https://github.com/wjgoarxiv/litfamily): the same way of working for other coding agents.
 
 ## LITFAMILY
 
-The five armored robots on the cover stand for the five LitFamily products. Each one works on its own in its own host: install just the one you use, and it needs none of the others.
+The seven armored robots on the cover stand for the seven LitFamily products. Each one works on its own in its own host: install just the one you use, and it needs none of the others.
 
 The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it. The editable vector version is `docs/assets/cover.svg`, and if your system asks for reduced motion, you see a still frame instead.
 

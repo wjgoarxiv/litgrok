@@ -4,12 +4,13 @@
 // licence files by URL + sha256, and (opt-in) the hash-pinned librosa venv. `litgrok install`
 // stays copy-only; a render never installs, fetches or repairs anything.
 import { spawnSync } from 'node:child_process';
+import hostProc from '../../lit-pptx/scripts/proc.cjs';
 import { closeSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { cacheRoot, fontPath, fontState, licencePath, lockHash, LOCKFILE, PINS, sha256, SKILL_ROOT } from './lib/fonts.mjs';
-import { AUDIO_REQUIREMENTS, audioState, audioVenvDir, depsDir, depsState, PREWARM_COMMAND, WORD_TIMING_MODELS, wordTimingState } from './lib/cache.mjs';
+import { AUDIO_REQUIREMENTS, audioPython, audioState, audioVenvDir, depsDir, depsState, PREWARM_COMMAND, WORD_TIMING_MODELS, wordTimingState } from './lib/cache.mjs';
 import { isSoftwareRenderer, openRenderer, resolveChrome, UNKNOWN_RENDERER } from './lib/chrome.mjs';
 import { findTool, previewRung } from './lib/render.mjs';
 
@@ -17,7 +18,8 @@ export const RUNTIME_USAGE = `Usage: litgrok motion-runtime install|status [--au
   install        npm ci the pinned engine deps and fetch the pinned fonts into the motion cache
   install --audio        also build the hash-pinned librosa venv (Tier 2 beat grid)
   install --word-timing  state the model sizes and pins; fails closed while a pin is unverified
-  status         print the five pre-render probes (Chrome, ffmpeg, WebGL2, software GL, pre-warm)
+  status         print the six pre-render probes (Chrome, ffmpeg, WebGL2, software GL, pre-warm,
+                 and the cover encoder that cover mode needs)
 Cache: \${XDG_CACHE_HOME:-~/.cache}/litgrok/motion-runtime (LITGROK_MOTION_CACHE overrides)
 `;
 
@@ -66,8 +68,8 @@ export async function installDeps(env, out = []) {
   try {
     copyFileSync(join(SKILL_ROOT, 'package.json'), join(staging, 'package.json'));
     copyFileSync(LOCKFILE, join(staging, 'package-lock.json'));
-    const npm = spawnSync('npm', ['ci', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund', '--prefix', staging], { encoding: 'utf8', env: { ...env, npm_config_update_notifier: 'false' }, timeout: 300000 });
-    if (npm.error || npm.status !== 0) throw new Error(`npm ci failed: ${(npm.stderr || npm.error?.message || '').trim().split('\n').filter(Boolean).at(-1) ?? npm.status}`);
+    const npm = hostProc.runNpm(['ci', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund', '--prefix', staging], { encoding: 'utf8', env: { ...env, npm_config_update_notifier: 'false' }, timeout: 300000 });
+    if (npm.error || npm.status !== 0) throw new Error(`npm ci failed (${hostProc.describeFailure(npm)})`);
     writeFileSync(join(staging, '.ready'), lockHash());
     rmSync(depsDir(env), { recursive: true, force: true });
     renameSync(staging, depsDir(env));
@@ -91,12 +93,16 @@ async function installFonts(env, out) {
   }
 }
 
-function venvPython(env) {
-  for (const candidate of ['python3.12', 'python3.13', 'python3.11']) {
-    const found = findTool(candidate, env);
-    if (found) return { command: found, args: ['-m', 'venv'] };
-  }
-  return null;
+// The minors the hash-pinned librosa stack has wheels for, preferred first (the lock is compiled for 3.12).
+const AUDIO_PYTHON_MINORS = [12, 13];
+
+// How to create the audio venv: uv with its own 3.12 when uv is on PATH, else the supported-Python pick.
+export function audioVenvPlan(env, dir) {
+  const uv = findTool('uv', env);
+  if (uv) return { command: uv, args: ['venv', '--seed', '--python', '3.12', dir] };
+  const python = hostProc.pickPython(AUDIO_PYTHON_MINORS, { env });
+  if (!python.command) throw new Error(`no uv and no Python 3.12 or 3.13 on PATH; tried ${python.tried.join(', ') || 'nothing'}`);
+  return { command: python.command, args: [...python.args, '-m', 'venv', dir] };
 }
 
 async function installAudio(env, out) {
@@ -104,16 +110,12 @@ async function installAudio(env, out) {
   if (state.state === 'ready') { out.push(`audio venv: ready (${state.dir})`); return; }
   const dir = audioVenvDir(env);
   rmSync(dir, { recursive: true, force: true });
-  const uv = findTool('uv', env);
-  const python = venvPython(env);
-  let created;
-  if (uv) created = spawnSync(uv, ['venv', '--seed', '--python', '3.12', dir], { encoding: 'utf8', env });
-  else if (python) created = spawnSync(python.command, [...python.args, dir], { encoding: 'utf8' });
-  else throw new Error('no uv and no python3.11-3.13 found to create the audio venv');
-  if (created.status !== 0) throw new Error(`venv creation failed: ${(created.stderr || '').trim().split('\n').at(-1)}`);
-  const pip = spawnSync(join(dir, 'bin', 'python'), ['-m', 'pip', 'install', '--disable-pip-version-check', '--require-hashes', '--only-binary=:all:', '-r', AUDIO_REQUIREMENTS], { encoding: 'utf8', timeout: 900000 });
-  if (pip.status !== 0) { rmSync(dir, { recursive: true, force: true }); throw new Error(`pip install --require-hashes failed: ${(pip.stderr || '').trim().split('\n').filter(Boolean).at(-1)}`); }
-  const version = spawnSync(join(dir, 'bin', 'python'), ['-c', 'import platform; print(platform.python_version())'], { encoding: 'utf8' }).stdout.trim();
+  const plan = audioVenvPlan(env, dir);
+  const created = spawnSync(plan.command, plan.args, { encoding: 'utf8', env });
+  if (created.error || created.status !== 0) throw new Error(`venv creation failed (${hostProc.describeFailure(created)})`);
+  const pip = spawnSync(audioPython(env), ['-m', 'pip', 'install', '--disable-pip-version-check', '--require-hashes', '--only-binary=:all:', '-r', AUDIO_REQUIREMENTS], { encoding: 'utf8', timeout: 900000 });
+  if (pip.error || pip.status !== 0) { rmSync(dir, { recursive: true, force: true }); throw new Error(`pip install --require-hashes failed (${hostProc.describeFailure(pip)})`); }
+  const version = spawnSync(audioPython(env), ['-c', 'import platform; print(platform.python_version())'], { encoding: 'utf8' }).stdout.trim();
   writeFileSync(join(dir, '.ready'), JSON.stringify({ requirements: sha256(readFileSync(AUDIO_REQUIREMENTS)), python: version }));
   out.push(`audio venv: librosa installed from ${AUDIO_REQUIREMENTS} with --require-hashes (${dir})`);
 }
@@ -147,14 +149,24 @@ export async function install(args, env = process.env, stdout = process.stdout) 
   return 0;
 }
 
-// MO-A-44: five probes on every run, in the installer's receipt-line style.
+// Cover mode's encoder: img2webp with dwebp (encode, then decode for the gate), else gifski.
+export function coverEncoderLine(env = process.env) {
+  const img2webp = findTool('img2webp', env);
+  const dwebp = findTool('dwebp', env);
+  if (img2webp && dwebp) return `img2webp and dwebp (${img2webp}); README cover loops encode as animated WebP and the gate reads the decoded file`;
+  const gifski = findTool('gifski', env);
+  if (gifski) return `gifski (${gifski}); covers fall back to GIF (${img2webp ? '' : 'img2webp '}${dwebp ? '' : 'dwebp '}missing)`;
+  return 'BLOCKED_NO_COVER_ENCODER: install libwebp (img2webp, dwebp) or gifski; cover renders stop with exit 21';
+}
+
+// MO-A-44: five probes on every run, in the installer's receipt-line style, plus the cover encoder.
 export async function status(args, env = process.env, stdout = process.stdout) {
   const lines = ['  ╭─ MOTION RUNTIME'];
   const chrome = resolveChrome(env);
   const version = chrome ? (spawnSync(chrome, ['--version'], { encoding: 'utf8', timeout: 15000 }).stdout || '').trim() : '';
   lines.push(`  │ Chrome: ${chrome ? `${chrome} (${version || 'version unreadable'})` : 'not found on PATH / not installed (set CHROME_PATH)'}`);
   const ffmpeg = findTool('ffmpeg', env);
-  const ffmpegVersion = ffmpeg ? (spawnSync(ffmpeg, ['-version'], { encoding: 'utf8' }).stdout || '').split('\n')[0] : '';
+  const ffmpegVersion = ffmpeg ? (spawnSync(ffmpeg, ['-version'], { encoding: 'utf8' }).stdout || '').split(/\r?\n/)[0] : '';
   const rung = previewRung(env);
   lines.push(`  │ ffmpeg: ${ffmpeg ? `${ffmpeg} — ${ffmpegVersion}; preview encoder ${rung}` : `not found on PATH (stills and sheet still work${rung === 'img2webp' ? '; img2webp present' : ''})`}`);
   let renderer = null;
@@ -179,6 +191,7 @@ export async function status(args, env = process.env, stdout = process.stdout) {
   const missing = [...(deps.state === 'ready' ? [] : [`deps ${deps.missing.join(', ')} (${deps.state})`]), ...fonts.map((font) => `${PINS.fonts[font.resolved].family} (${font.state})`)];
   lines.push(`  │ Pre-warm: ${missing.length ? `MISSING ${missing.join('; ')} — fix: ${PREWARM_COMMAND}` : `ready (lock ${lockHash().slice(0, 16)}, ${cacheRoot(env)})`}`);
   lines.push(`  │ Audio tier: ${audio.state === 'ready' ? 'librosa venv ready' : `venv ${audio.state}${audio.detail ? ` (${audio.detail})` : ''} — Tier 2 degrades to Tier 1; fix: ${PREWARM_COMMAND} --audio`}`);
+  lines.push(`  │ Cover encoder: ${coverEncoderLine(env)}`);
   lines.push(`  │ Word timing: ${words.state === 'ready' ? 'models ready' : `models absent — ${PREWARM_COMMAND} --word-timing (fails closed while a pin is unverified)`}`);
   lines.push('  ╰─');
   stdout.write(`${lines.join('\n')}\n`);

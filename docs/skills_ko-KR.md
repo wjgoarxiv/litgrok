@@ -2,7 +2,7 @@
 
 [README](../README_ko-KR.md) · [English](./skills.md) · [안내서](./guide_ko-KR.md) · [상세 안내](./reference_ko-KR.md)
 
-스킬 38개를 한 줄씩 정리했습니다. 경로는 각 스킬 문서에 적힌 것이고, 지금 Grok Build 세션이 실제로 불러온 목록은 `/skills`에서 보입니다. 이름이 바뀐 스킬은 한 릴리스 동안 이전 이름을 별칭으로 유지합니다([이름 변경과 호환성](./reference_ko-KR.md#skill-이름-변경과-호환성)). 예전 슬래시 경로는 동작하지 않을 수도 있습니다.
+스킬 39개를 한 줄씩 정리했습니다. 경로는 각 스킬 문서에 적힌 것이고, 지금 Grok Build 세션이 실제로 불러온 목록은 `/skills`에서 보입니다. 이름이 바뀐 스킬은 한 릴리스 동안 이전 이름을 별칭으로 유지합니다([이름 변경과 호환성](./reference_ko-KR.md#skill-이름-변경과-호환성)). 예전 슬래시 경로는 동작하지 않을 수도 있습니다.
 
 <table>
 <tr><th>이렇게 됩니다</th><th>스킬</th><th>얻는 것</th></tr>
@@ -22,14 +22,14 @@
 <td>계획을 한 줄씩 실행합니다. A부터 F까지 관문을 모두 통과해야 체크됩니다.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/review-work.webp" width="240" alt="읽기 전용 리뷰 여섯 갈래가 찾은 문제를 증거 순으로 정리합니다." /></td>
+<td><img src="./assets/skills/review-work.webp" width="240" alt="작업 전에는 계획을, 작업 후에는 결과를 검토하며, 어느 쪽인지는 있는 자료로 고릅니다. 읽기 전용 갈래가 찾은 문제를 증거 순으로 정리합니다." /></td>
 <td><code>review-work</code><br /><sub><code>/review-work &lt;target&gt;</code></sub></td>
-<td>읽기 전용 리뷰 여섯 갈래가 찾은 문제를 증거 순으로 정리합니다.</td>
+<td>작업 전에는 계획을, 작업 후에는 결과를 검토하며, 어느 쪽인지는 있는 자료로 고릅니다. 읽기 전용 갈래가 찾은 문제를 증거 순으로 정리합니다.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/litgoal.webp" width="240" alt="확인 가능한 목표 하나를 다듬어, 직접 실행할 /goal 한 줄을 건넵니다. LitGrok은 목표 상태를 저장하지 않습니다." /></td>
+<td><img src="./assets/skills/litgoal.webp" width="240" alt="확인 가능한 도착 지점 하나를 정해 직접 실행할 /goal 한 줄을 건네고, litwork와 start-work가 그곳을 향해 달립니다. LitGrok은 목표 상태를 저장하지 않습니다." /></td>
 <td><code>litgoal</code><br /><sub><code>/litgoal &lt;request&gt;</code></sub></td>
-<td>확인 가능한 목표 하나를 다듬어, 직접 실행할 <code>/goal</code> 한 줄을 건넵니다. LitGrok은 목표 상태를 저장하지 않습니다.</td>
+<td>확인 가능한 도착 지점 하나를 정해 직접 실행할 <code>/goal</code> 한 줄을 건네고, <code>litwork</code>와 <code>start-work</code>가 그곳을 향해 달립니다. LitGrok은 목표 상태를 저장하지 않습니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-recap.webp" width="240" alt="Grok Build 세션 기록을 바탕으로 증거가 붙은 짧은 요약을 만듭니다." /></td>
@@ -45,6 +45,11 @@
 <td><img src="./assets/skills/deep-interview.webp" width="240" alt="정해진 순서로 한 번에 한 질문씩 물어, 계획을 세울 수 있을 만큼 요청을 분명히 합니다." /></td>
 <td><code>deep-interview</code><br /><sub><code>/deep-interview &lt;request&gt;</code></sub></td>
 <td>정해진 순서로 한 번에 한 질문씩 물어, 계획을 세울 수 있을 만큼 요청을 분명히 합니다.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-brainstorm.webp" width="240" alt="열린 질문을 여러 선택지로 펼친 뒤 묶고 점수를 매겨, 고를 수 있는 짧은 후보 목록으로 마무리합니다. 만들지는 않습니다." /></td>
+<td><code>lit-brainstorm</code><br /><sub><code>/lit-brainstorm &lt;topic&gt;</code></sub></td>
+<td>열린 질문을 여러 선택지로 펼친 뒤 묶고 점수를 매겨, 고를 수 있는 짧은 후보 목록으로 마무리합니다. 만들지는 않습니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/litresearch.webp" width="240" alt="범위를 정한 조사입니다. 모든 주장에 출처를 붙이고, 증거보다 크게 말하지 않습니다." /></td>
@@ -99,7 +104,7 @@
 <tr>
 <td><img src="./assets/skills/lit-typographic-motion.webp" width="240" alt="트리트먼트로 짧은 영상을 완성합니다. LitGrok의 타입 엔진이나 무대 캡처로 렌더링하고, 품질 검사를 거칩니다." /></td>
 <td><code>lit-typographic-motion</code><br /><sub><code>/lit-typographic-motion &lt;request&gt;</code></sub></td>
-<td>트리트먼트로 짧은 영상을 완성합니다. LitGrok의 타입 엔진이나 무대 캡처로 렌더링하고, 품질 검사를 거칩니다.</td>
+<td>트리트먼트로 짧은 영상을 완성합니다. LitGrok의 타입 엔진이나 무대 캡처로 렌더링하고, 품질 검사를 거칩니다. 커버 모드는 소리 없이 끊김 없이 도는 README 커버 루프를 만들고, 디코딩한 파일로 검사합니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-scientific-visualization.webp" width="240" alt="검증된 데이터로 논문용 그림과 캡션을 만듭니다. 그래프 종류는 데이터 성격에 맞춰 고릅니다." /></td>

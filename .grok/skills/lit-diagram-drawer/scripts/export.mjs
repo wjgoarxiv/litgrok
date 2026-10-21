@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import proc from '../../lit-pptx/scripts/proc.cjs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildBlockRegistry } from './block-registry.mjs';
 import { unescapeXmlCharacterReferences, officeCssUrlsAreSafe, officeHrefRefsAreSafe } from './office-safety.mjs';
 import { inspectRenderer } from './renderer-status.mjs';
@@ -67,13 +67,13 @@ if(office){
   officeSvg=officeSvg.replace(/(<svg\b[^>]*>)/i,'$1'+style);
 }
 function run(commandArgs, env={}) {
-  const r=spawnSync('agent-browser',commandArgs,{encoding:'utf8',env:{...process.env,AGENT_BROWSER_ALLOW_FILE_ACCESS:'true',...env},maxBuffer:2*1024*1024});
-  if(r.status!==0) throw new Error((r.stderr||r.stdout||'agent-browser failed').trim());
+  const r=proc.run('agent-browser',commandArgs,{encoding:'utf8',env:{...process.env,AGENT_BROWSER_ALLOW_FILE_ACCESS:'true',...env},maxBuffer:2*1024*1024});
+  if(r.status!==0) throw new Error((r.stderr||r.stdout||r.error?.message||'agent-browser failed').trim());
   return (r.stdout||'').trim();
 }
 fs.mkdirSync(output,{recursive:true});
 const session='lit-diagram-export-'+process.pid+'-'+Date.now();
-const url=resolved.endsWith('.svg')?'file://'+resolved:'file://'+resolved;
+const url=pathToFileURL(resolved).href;
 let opened=false;
 try{
   run(['--session',session,'open',url]);opened=true;
@@ -102,7 +102,7 @@ try{
   process.exitCode=1;
 } finally {
   if(opened) {
-    const close=spawnSync('agent-browser',['--session',session,'close'],{encoding:'utf8'});
+    const close=proc.run('agent-browser',['--session',session,'close'],{encoding:'utf8'});
     if(close.status!==0) console.error('BROWSER_CLOSE_WARNING '+(close.stderr||''));
   }
 }

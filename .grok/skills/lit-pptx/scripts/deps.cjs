@@ -4,8 +4,8 @@ const { createHash } = require('node:crypto');
 const { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
 const Module = require('node:module');
+const proc = require('./proc.cjs');
 
 const skill = path.resolve(__dirname, '..');
 const pythonLock = path.join(skill, 'requirements.lock');
@@ -14,14 +14,21 @@ const digest = createHash('sha256').update(readFileSync(nodeLock)).update(readFi
 const base = process.env.LITGROK_OFFICE_CACHE || path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'litgrok', 'office-docs');
 if (!path.isAbsolute(base)) throw new Error('LITGROK_OFFICE_CACHE must be absolute');
 const root = path.join(base, digest);
+// The minors every pinned package in requirements.lock has wheels for, newest first.
+const OFFICE_PYTHON_MINORS = [14, 13, 12, 11, 10];
 function supportsSlideNode(version = process.versions.node) {
   const [major, minor] = version.split('.').map(Number);
   return major > 20 || (major === 20 && minor >= 9);
 }
 
+// npm and the interpreter run through the shared helper, which handles Windows .cmd shims. stderr is
+// piped so a failure names its exit code and the child's own last line instead of a bare status.
 function command(executable, args, env = process.env) {
-  const result = spawnSync(executable, args, { stdio: 'inherit', env });
-  if (result.error || result.status !== 0) throw new Error(`${executable} failed: ${result.error?.message || result.status}`);
+  const result = executable === 'npm'
+    ? proc.runNpm(args, { stdio: ['ignore', 'inherit', 'pipe'], encoding: 'utf8', env })
+    : proc.run(executable, args, { stdio: ['ignore', 'inherit', 'pipe'], encoding: 'utf8', env });
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.error || result.status !== 0) throw new Error(`${executable} ${args.slice(0, 2).join(' ')} failed (${proc.describeFailure(result)})`);
 }
 
 function install(kind) {
@@ -37,8 +44,10 @@ function install(kind) {
       copyFileSync(nodeLock, path.join(staging, 'package-lock.json'));
       command('npm', ['ci', '--prefix', staging, '--ignore-scripts', '--no-audit', '--no-fund']);
     } else {
-      command('python3', ['-m', 'venv', staging]);
-      command(path.join(staging, 'bin', 'python'), ['-m', 'pip', 'install', '--disable-pip-version-check', '-r', pythonLock]);
+      const system = proc.pickPython(OFFICE_PYTHON_MINORS);
+      if (!system.command) throw new Error(`LitGrok office needs Python 3.10 to 3.14 for its pinned packages; none found on PATH (tried ${system.tried.join(', ') || 'nothing'}). Install Python 3.14 or any of 3.10 to 3.13.`);
+      command(system.command, [...system.args, '-m', 'venv', staging]);
+      command(proc.venvPython(staging), ['-m', 'pip', 'install', '--disable-pip-version-check', '-r', pythonLock]);
     }
     writeFileSync(path.join(staging, '.ready'), digest);
     if (existsSync(target)) {
@@ -66,8 +75,9 @@ function node() {
 function python() {
   if (!ready('python')) process.stderr.write('LitGrok office: installing pinned Python dependencies in cache\n');
   const target = install('python');
-  process.env.PATH = [path.join(target, 'bin'), process.env.PATH].join(path.delimiter);
-  return path.join(target, 'bin', 'python');
+  const interpreter = proc.venvPython(target);
+  process.env.PATH = [path.dirname(interpreter), process.env.PATH].join(path.delimiter);
+  return interpreter;
 }
 
-module.exports = { node, python, ready, root, supportsSlideNode };
+module.exports = { command, node, python, ready, root, supportsSlideNode };

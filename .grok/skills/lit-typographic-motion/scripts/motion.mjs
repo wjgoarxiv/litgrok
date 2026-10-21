@@ -2,7 +2,7 @@
 // lit-typographic-motion render CLI for LitGrok. Run from the installed skill root
 // (.grok/skills/lit-typographic-motion/ in a project, or ~/.grok/skills/... for a user install).
 import { realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BlockedError, EXIT, EXIT_NAMES, ONE_LINE_CREDIT } from './lib/constants.mjs';
 
@@ -25,9 +25,17 @@ Usage: node scripts/motion.mjs <mode> --out <dir> [options]
            record one look round on the latest stills set (look.json); rounds share the render counter
   gate   --out <dir>                     rerun the full QA gate on an existing render (look.json untouched)
   verify --out <dir>                     the done-check: DONE, DONE_UNVIEWED or NOT DONE with the reason
+  cover  --out <dir> [--round 1..3] [--window t0,t1]
+           cover mode (treatment mode: cover, references/cover.md): the silent, seamless README loop
+           drawn by <dir>/cover/index.html, captured at 2x, encoded as cover.webp and gated on the
+           DECODED file; exits 13 until every gate reaches its cover TARGET. --window re-renders and
+           sheets only t0-0.5 s .. t1+0.5 s around a logged defect and never counts as done
+  cover-gate <cover.webp|cover.gif|frame dir> [--frames d --frames2 d --masks d --title x,y,w,h] [--strict] [--json]
+           the cover gate on any cover file; --strict fails on TARGET as well as FLOOR
 Presets: swiss-signal | terminalcore | tidal. Exit codes: 0 OK, 10 no Chrome, 11 no WebGL2,
 12 no ffmpeg for video, 13 gate FAIL, 14 runtime not pre-warmed, 15 font missing or tampered,
-16 treatment invalid, 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid.
+16 treatment invalid, 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid,
+21 no cover encoder (libwebp img2webp + dwebp, or gifski), 22 a listed cover asset is missing.
 --swiftshader forces the SwiftShader rung (the CI determinism setting). Pre-warm outside the session:
 npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install
 ${ONE_LINE_CREDIT}
@@ -41,8 +49,9 @@ function option(args, name) {
 export async function main(args, { env = process.env, stdout = process.stdout, stderr = process.stderr, listenImpl = null } = {}) {
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) { stdout.write(USAGE); return args.length === 0 ? EXIT.USAGE : EXIT.OK; }
   const mode = args[0];
+  if (mode === 'cover-gate') return coverGateCommand(args.slice(1), { env, stdout, stderr });
   const out = option(args, '--out');
-  if (!['stage', 'sound', 'look', 'make', 'stills', 'sheet', 'video', 'perf', 'gate', 'verify'].includes(mode) || !out) { stderr.write(USAGE); return EXIT.USAGE; }
+  if (!['cover', 'stage', 'sound', 'look', 'make', 'stills', 'sheet', 'video', 'perf', 'gate', 'verify'].includes(mode) || !out) { stderr.write(USAGE); return EXIT.USAGE; }
   const outDir = resolve(out);
   try {
     if (mode === 'verify') {
@@ -51,6 +60,7 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
       stdout.write(`${state.status}: ${state.reason}\n`);
       for (const item of state.downgraded) stdout.write(`downgraded: ${item} (say so in the reply)\n`);
       for (const item of state.open) stdout.write(`open look item: ${item} (state it in the reply)\n`);
+      for (const label of state.labels ?? []) stdout.write(`${label}\n`);
       return state.done ? EXIT.OK : 1;
     }
     if (mode === 'look') {
@@ -68,6 +78,7 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
     if (mode === 'gate') {
       const { existsSync, readFileSync } = await import('node:fs');
       const manifest = existsSync(resolve(outDir, 'manifest.json')) ? JSON.parse(readFileSync(resolve(outDir, 'manifest.json'), 'utf8')) : {};
+      if (manifest.path === 'cover') { stderr.write(`gate: this is a cover render; run cover-gate ${join(outDir, manifest.file ?? 'cover.webp')} --strict\n`); return EXIT.USAGE; }
       const { runGate } = await import('./lib/gate.mjs');
       const { regateStage } = await import('./lib/stage.mjs');
       const gate = manifest.path === 'stage' ? regateStage(outDir, JSON.parse(readFileSync(resolve(outDir, 'treatment.json'), 'utf8'))) : runGate(outDir);
@@ -89,6 +100,21 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
     const brief = option(args, '--brief');
     const round = Number(option(args, '--round') ?? 1);
     if (!Number.isInteger(round) || round < 1 || round > 3) { stderr.write('--round must be 1, 2 or 3\n'); return EXIT.USAGE; }
+    if (mode === 'cover') {
+      const cover = await import('./lib/cover.mjs');
+      const log = (line) => stderr.write(`${line}\n`);
+      const span = option(args, '--window');
+      if (span !== null) {
+        const window = String(span).split(',').map(Number);
+        if (window.length !== 2) { stderr.write('--window takes t0,t1 in seconds\n'); return EXIT.USAGE; }
+        const result = await cover.renderCoverWindow({ out: outDir, round, window, env, log });
+        stdout.write(`${result.message}\n`);
+        return result.exitCode;
+      }
+      const result = await cover.renderCover({ out: outDir, round, env, log });
+      stdout.write(`${result.message}\nexit ${result.exitCode} ${EXIT_NAMES[result.exitCode] ?? ''}\n`);
+      return result.exitCode;
+    }
     const { loadTreatment, recordFirstTreatment } = await import('./lib/treatment.mjs');
     const treatment = loadTreatment(outDir);
     recordFirstTreatment(outDir, treatment);
@@ -124,6 +150,22 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
     stderr.write(`lit-typographic-motion: ${error.stack ?? error.message}\n`);
     return 1;
   }
+}
+
+// `cover-gate <file>`: the decoded-file gate alone, on any cover file or PNG frame folder.
+async function coverGateCommand(args, { env, stdout, stderr }) {
+  const target = args.find((arg, i) => !arg.startsWith('--') && !['--frames', '--frames2', '--masks', '--title', '--fps'].includes(args[i - 1]));
+  if (!target) { stderr.write('cover-gate needs the cover file (cover.webp, cover.gif) or a PNG frame folder\n'); return EXIT.USAGE; }
+  const { coverGate, coverReportText } = await import('./lib/cover-gate.mjs');
+  const path = (name) => (option(args, name) ? resolve(option(args, name)) : null);
+  const strict = args.includes('--strict');
+  let report;
+  try {
+    report = coverGate(resolve(target), { frames: path('--frames'), frames2: path('--frames2'), masks: path('--masks'), title: option(args, '--title') ? option(args, '--title').split(',').map(Number) : null, fps: Number(option(args, '--fps') ?? 16), env });
+  } catch (error) { stderr.write(`cover-gate: ${error.message}\n`); return 1; }
+  const { diffs, kept, durations, ...rest } = report;
+  stdout.write(args.includes('--json') ? `${JSON.stringify(rest, null, 1)}\n` : coverReportText(report, { strict }));
+  return report.pass && (!strict || report.target) ? EXIT.OK : EXIT.GATE_FAIL_QA;
 }
 
 // Realpath comparison: under macOS /var -> /private/var a plain string compare would exit silently.

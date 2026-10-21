@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: five armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
@@ -14,7 +14,7 @@ LitGrok gives xAI's Grok Build the habit of planning before it edits, checking w
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.24/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often just means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 38 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
+Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often just means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 39 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
 
 ## Install in 30 seconds
 
@@ -61,12 +61,13 @@ Long sessions can write their own handoff. Turn on automatic handoff with `litgr
 | --- | --- |
 | `/litwork` | Starts the shipped work checklist for a bounded task. |
 | `handoff` or `/lit-handoff` | Carries the checked result and the next step into another session. |
+| `/lit-brainstorm` | Opens a question into many options and a short list to pick from. |
 | `/lit-plan` | Writes a plan with concrete checks. |
 | `/start-work <approved-plan>` | Executes a plan you approved. |
-| `/review-work` | Reviews a change and its evidence. |
+| `/review-work` | Reviews a plan before work or a change after it, with its evidence. |
 | `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
 
-`/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) shows all 38 with a picture of each result.
+`/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) shows all 39 with a picture of each result.
 
 Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (eight for decks, six restrained ones for documents); `/frontend-ui-ux` builds and checks interfaces, `/readme-studio` writes source-checked READMEs, and `lit-humanizer` rewrites stiff English or Korean prose.
 

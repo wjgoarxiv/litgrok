@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import proc from '../../lit-pptx/scripts/proc.cjs';
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
@@ -13,7 +14,7 @@ const scriptDir = fileURLToPath(new URL('.', import.meta.url));
 const arg = (name) => { const i=process.argv.indexOf(name); return i<0?null:process.argv[i+1]; };
 const decode = (out) => { let v=JSON.parse(out); if(typeof v==='string' && /^[\[{]/.test(v))v=JSON.parse(v); return v; };
 function invoke(session,args,input,timeout=LIMITS.viewportMs) {
-  const r=spawnSync('agent-browser',['--session',session,...args],{input,encoding:'utf8',timeout});
+  const r=proc.run('agent-browser',['--session',session,...args],{input,encoding:'utf8',timeout});
   if(r.error||r.status!==0)throw Error((r.stderr||r.stdout||r.error?.message||'browser command failed').trim().slice(-240));
   return r.stdout.trim();
 }

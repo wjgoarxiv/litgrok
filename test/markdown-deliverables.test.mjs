@@ -32,6 +32,14 @@ test('the rule writes a Markdown or plain-text deliverable directly and keeps re
   assert.doesNotMatch(office, /use both skills and keep Markdown source next to both files\./);
 });
 
+// In the same comparison the LitGrok report.md carried every figure in running prose, while a reader
+// scanning for the numbers, their units and periods, and the decisions asked for found them faster in
+// a table and a numbered list.
+test('the rule puts a Markdown report\'s figures in a table and its decisions in a numbered list', () => {
+  const office = section(read('.grok/rules/00-litgrok.md'), 'Office output selection');
+  assert.match(office, /Put figures with units or periods in a table and asked-for decisions in a numbered list\./);
+});
+
 test('the rule asks Korean deliverables for full sentences and keeps noun endings to tables and labels', () => {
   const prose = section(read('.grok/rules/00-litgrok.md'), 'Prose review');
   assert.match(prose, /Korean report and slide prose uses full, natural sentences/);

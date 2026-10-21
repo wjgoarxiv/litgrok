@@ -91,6 +91,16 @@ test("a drifted literal pin fails and names its file", () => withVersionFixture(
   assert.equal(runGuard(root).status, 0, "guard must pass after the literal pin is restored");
 }));
 
+test("a drifted Cursor plugin manifest fails and names its file", () => withVersionFixture((root) => {
+  const target = join(root, ".cursor-plugin", "plugin.json");
+  const original = readFileSync(target, "utf8");
+  assert.ok(original.includes(VERSION), "fixture precondition: the Cursor manifest pins the release");
+  writeFileSync(target, original.replace(VERSION, "0.0.0"), "utf8");
+  const result = runGuard(root);
+  assert.notEqual(result.status, 0, "guard must reject a drifted Cursor manifest");
+  assert.match(`${result.stdout}\n${result.stderr}`, /\.cursor-plugin[\\/]plugin\.json/u);
+}));
+
 test("host versions that extend the release semver are not counted as pins", () => withVersionFixture((root) => {
   const target = join(root, "README.md");
   const original = readFileSync(target, "utf8");

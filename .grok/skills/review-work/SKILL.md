@@ -1,6 +1,6 @@
 ---
 name: review-work
-description: Audit a target with independent read-only lanes and evidence-ranked findings.
+description: Review a plan before work starts, or the finished work after it. Picks plan review or work review from what exists, or takes the mode you name, and reports evidence-ranked findings from read-only lanes.
 user-invocable: true
 argument-hint: <target>
 ---
@@ -43,7 +43,7 @@ Before opening a large diff, write a compact review identity:
 - user objective in one sentence;
 - included files, excluded files, and dirty paths;
 - acceptance criteria and the evidence cutoff;
-- whether the review is a draft-plan review or a completed-work review.
+- the mode, plan review or work review, and whether it was named or picked.
 
 If any of these are ambiguous, resolve them with cheap read-only inspection. Do
 not silently choose a nearby branch, stale checkout, or similarly named file.
@@ -52,34 +52,28 @@ any earlier observation.
 
 ## Review modes
 
-### Completed-work mode
+review-work has two named modes. The first line of the report says which one ran and how it was chosen: `Mode: plan review` or `Mode: work review`, followed by `(named)` or `(picked from <what existed>)`.
 
-Use completed-work mode for a diff, package, implementation, generated artifact,
-or claimed release. Trace the request to observable behavior, then run the six
-review lanes below. A lane is complete only when its question, evidence, and
-verdict are recorded.
+### Plan review
 
-### Plan-review mode
+Use plan review after `lit-plan` and before `start-work`. The question is whether the plan is complete, ordered and verifiable. Do not implement the plan, edit product files, mark its boxes, or pretend that a planned probe already ran. For each task, check scope, trigger, owner, output, dependency, rollback, and a command-verifiable acceptance criterion. Mark the task STARTABLE when a worker can begin from the named inputs; otherwise name the missing trigger or precondition.
 
-Use plan-review mode for a draft plan or a request to make a checklist
-executable. Do not implement the plan, edit product files, mark its boxes, or
-pretend that a planned probe already ran. For each task, check scope, trigger,
-owner, output, dependency, rollback, and a command-verifiable acceptance
-criterion. Mark the task STARTABLE when a worker can begin from the named inputs;
-otherwise name the missing trigger or precondition.
+For every QA scenario, ask three concrete questions: does it name a real tool, does it give executable steps, and does it specify a binary expected result? A NO answer needs one minimal repair rather than a general complaint. Approve a plan when its remaining uncertainty is intentionally gated and the executor can stop safely. Plan review runs the Plan review checklist below in place of the six lanes, and it ends with `PASS` (every task STARTABLE), `FAIL` (a task is not) or `BLOCKED:`.
 
-For every QA scenario, ask three concrete questions: does it name a real tool,
-does it give executable steps, and does it specify a binary expected result? A
-NO answer needs one minimal repair rather than a general complaint. Approve a
-plan when its remaining uncertainty is intentionally gated and the executor can
-stop safely.
+### Work review
 
-### Focused-surface mode
+Use work review after `litwork` or `start-work`, for a diff, branch, package, implementation, generated artifact or claimed release. Trace the request to observable behavior, then run the six review lanes below. A lane is complete only when its question, evidence and verdict are recorded. When the user asks about one hook, script, reference or route, run only the lanes that can falsify the claim, and say which lanes were omitted and why. A narrow review may be shorter; it may not turn an omitted lane into an implied PASS.
 
-Use focused-surface mode when the user asks about one hook, script, reference,
-or route. Run only lanes that can falsify the claim, but say which lanes were
-omitted and why. A narrow review may be shorter; it may not turn an omitted lane
-into an implied PASS.
+### Picking the mode
+
+A mode the user names always wins: `/review-work plan <target>`, `/review-work work <target>`, `lit review plan` and `lit review work`. When the request names none, pick from what exists, in this order:
+
+1. A named PR, diff, commit range or branch: work review.
+2. A plan file with ticked rows (`- [x]`), or other work signals such as changed files in `git status` or a `start-work` receipt: work review. The plan's rows become the claims to check.
+3. A plan with no ticked rows and no diff: plan review.
+4. Neither: ask one question, "Review the plan or the work?", and say which one you would pick.
+
+Say in line one which rule decided. A named mode with nothing to review (plan review without a plan, work review without a diff) returns `BLOCKED:` and names the missing input; it never switches mode silently.
 
 ## Read-only boundary
 
@@ -322,9 +316,9 @@ pushes, tags, publication, credentials, and host-config writes are gated by
 explicit authority. Check that an executor can stop after a failed gate without
 leaving half-applied state.
 
-## Completed-work report
+## Work review report
 
-Use this order for the final audit:
+Use this order for the final audit of a work review:
 
 1. findings, highest severity first;
 2. open questions and evidence limitations;

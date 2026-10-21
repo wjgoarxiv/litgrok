@@ -1,0 +1,13 @@
+{
+  "name": "litgrok-plugins",
+  "owner": {
+    "name": "LitGrok contributors"
+  },
+  "plugins": [
+    {
+      "name": "litgrok",
+      "source": "./",
+      "description": "LitGrok's skills for planning, building, reviewing, researching and handing off work."
+    }
+  ]
+}

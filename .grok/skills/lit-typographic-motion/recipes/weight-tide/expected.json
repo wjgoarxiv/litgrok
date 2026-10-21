@@ -1,0 +1,67 @@
+{
+  "schema": "litgrok.motion-cover-recipe/v1",
+  "note": "The decoded gate row this recipe reached when it shipped. npm run qa:cover-recipes re-renders it through motion.mjs cover and fails when median d or the moving share leaves +-15 % of this row, seamLocal leaves TARGET, the file passes 2 MiB or the render exits non-zero. Measured on headless Chrome's software rung (SwiftShader) and libwebp 1.6.0.",
+  "row": {
+    "medianD": 0.008509,
+    "movingFrac": 1,
+    "longestStillSec": 0.063,
+    "spike": 1.155936,
+    "seamLocal": 1.110791,
+    "bytes": 1525426
+  },
+  "settings": {
+    "size": [
+      1000,
+      500
+    ],
+    "fps": 16,
+    "frames": 128,
+    "encode": {
+      "q": 58,
+      "edgeQ": 58,
+      "edgeFrames": 0,
+      "method": 4
+    }
+  },
+  "treatment": {
+    "mode": "cover",
+    "request": "A README motion cover for LitGrok where the name itself moves.",
+    "idea": "A weight wave rolls through the name and through faint rows of it that drift one word per loop.",
+    "recipe": "weight-tide",
+    "recipeReason": "The name is the material, so the motion happens inside the letters.",
+    "brandWord": "LITGROK",
+    "motto": {
+      "text": "KEEP THE WORK LIT.",
+      "source": "project",
+      "from": "README.md"
+    },
+    "aspect": "2:1",
+    "loopSec": 8,
+    "fps": 16,
+    "layers": {
+      "slow": "Background rows drift one word length per loop, alternate rows opposite ways.",
+      "mid": "A weight swell offset by x and y crosses every letter once per loop.",
+      "beat": "A cursor steps under each letter of the name with an overshoot and returns home."
+    },
+    "system": {
+      "rule": "Letter weight is a gain-shaped swell of the loop phase.",
+      "copies": "About 560 background letters and the seven letters of the name.",
+      "offset": "0.85 x / W + 0.35 y / H plus a little loop noise per row."
+    },
+    "title": {
+      "box": [
+        0.18,
+        0.32,
+        0.64,
+        0.3
+      ],
+      "kind": "live"
+    },
+    "encode": {
+      "q": 58,
+      "edgeQ": 58,
+      "edgeFrames": 0
+    },
+    "ambition": "The tide reads as one wave through many copies and the name never thins below a readable weight."
+  }
+}

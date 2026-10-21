@@ -9,12 +9,19 @@ import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs
 import { STAGES, readWorkflowState } from './workflow-stage.mjs';
 
 const MAX_INPUT_BYTES = 64 * 1024;
-const GRADIENT_STOPS = [[255, 99, 55], [255, 45, 149], [0, 229, 255]];
-const BRAND_COLOR = [255, 99, 55];
+// The family look: ONE LitGrok accent, flame orange (255 99 55, LitGrok's tick in the v7 armory), for all
+// ordinary text and separators. Colour means more only in the context bands (yellow at 70%, red at 90%),
+// the pink 🔥 LIT chip, the current-stage chip, a warning, a test verdict and a finished turn.
+const ROLES = {
+  accent: [255, 99, 55], dim: [138, 138, 138], empty: [68, 68, 68], rail: [70, 80, 92],
+  yellow: [215, 175, 0], red: [215, 95, 95], green: [95, 175, 95], ink: [11, 15, 20], pink: [255, 45, 149],
+};
+// The family mark: L, I and T on pink, violet and cyan.
+const BRAND_STOPS = [[255, 45, 149], [128, 137, 202], [0, 229, 255]];
 // Grok cuts each line at 1024 characters, escapes included.
 const MAX_LINE_CHARACTERS = 1024;
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
-// The ribbon reads only the end of the session ledger, enough for a few hundred records.
+// The card reads only the end of the session ledger, enough for a few hundred records.
 const LEDGER_TAIL_BYTES = 128 * 1024;
 const COMPLETE_SHOWN_MS = 20 * 1000;
 const HANDOFF_NEAR_POINTS = 10;
@@ -22,25 +29,28 @@ const CLOCK_SKEW_MS = 5 * 1000;
 // A turn the ledger has not heard from for this long is no longer shown as running.
 const LEDGER_TURN_QUIET_MS = 10 * 60 * 1000;
 const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
-// [background, foreground] of each pill.
-const PILLS = {
-  brand: [[255, 45, 149], [18, 6, 12]],
-  running: [[10, 166, 194], [0, 19, 24]],
-  complete: [[29, 77, 54], [184, 245, 207]],
-  warning: [[90, 58, 8], [255, 210, 138]],
-};
-const TEXT = { dim: [139, 148, 158], amber: [255, 175, 60], green: [107, 219, 143] };
-const GLYPHS = {
-  basic: { running: '●', complete: '✓', warning: '⚠', timer: '', tools: (n) => `${n} tool${n === 1 ? '' : 's'}`, agents: (n) => `${n} agent${n === 1 ? '' : 's'}` },
-  nerd: { running: '\uf111', complete: '\uf00c', warning: '\uf071', timer: '\uf017 ', tools: (n) => `\uf0ad ${n}`, agents: (n) => `\uf0c0 ${n}` },
-};
 const ANSI_16 = [[0, 0, 0], [205, 0, 0], [0, 205, 0], [205, 205, 0], [0, 0, 238], [205, 0, 205], [0, 205, 205], [229, 229, 229],
   [127, 127, 127], [255, 0, 0], [0, 255, 0], [255, 255, 0], [92, 92, 255], [255, 0, 255], [0, 255, 255], [255, 255, 255]];
-// The workflow row's rail runs orange to pink to a softer cyan than the label.
-const RAIL_STOPS = [[255, 99, 55], [255, 45, 149], [95, 215, 255]];
-// The moving head is the label's cyan: a white cell would vanish on a light terminal.
-const RAIL = { ink: [11, 15, 20], faint: [72, 79, 88], head: [0, 229, 255], red: [255, 95, 95] };
-const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+// Every symbol the card draws, per glyph set. `ascii` is for terminals and fonts without box, braille or emoji.
+const GLYPHS = {
+  basic: {
+    fire: '🔥', tick: '✓', cross: '✗', dot: '·', lit: '━', unlit: '─', run: '●', warn: '⚠', elbow: '└', next: '▸', sep: '│',
+    full: '▮', empty: '▯', rail: '▎', ellipsis: '…', spinner: BRAILLE, bar: ['█', '░', ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉']],
+    timer: '', tools: (n) => plural(n, 'tool'), agents: (n) => plural(n, 'agent'), git: 'git ',
+  },
+  nerd: {
+    fire: '🔥', tick: '', cross: '', dot: '·', lit: '━', unlit: '─', run: '', warn: '', elbow: '└', next: '▸', sep: '│',
+    full: '▮', empty: '▯', rail: '▎', ellipsis: '…', spinner: BRAILLE, bar: ['█', '░', ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉']],
+    timer: ' ', tools: (n) => ` ${n}`, agents: (n) => ` ${n}`, git: ' ',
+  },
+  ascii: {
+    fire: '', tick: '+', cross: 'x', dot: '-', lit: '=', unlit: '-', run: '*', warn: '!', elbow: '`', next: '>', sep: '|',
+    full: '#', empty: '-', rail: '|', ellipsis: '~', spinner: ['|', '/', '-', '\\'], bar: ['#', '-', ['']],
+    timer: '', tools: (n) => plural(n, 'tool'), agents: (n) => plural(n, 'agent'), git: 'git ',
+  },
+};
 // Grok's own tool names, shortened to the words people know them by. Any other name shows as sent.
 const TOOL_LABELS = {
   run_terminal_command: 'Bash', read_file: 'Read', search_replace: 'Edit', write: 'Write', grep: 'Grep', list_dir: 'List',
@@ -95,50 +105,27 @@ function windowSize(value) {
   return `${Math.max(1, Math.round(value / 1000))}k`;
 }
 
-function contextBar(percent) {
-  const exact = (percent * 3) / 100;
-  const filled = Math.floor(exact);
-  const partialBlocks = ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉'];
-  const partial = filled < 3 && exact > filled ? Math.max(1, Math.min(7, Math.round((exact - filled) * 8))) : 0;
-  return `${'█'.repeat(filled)}${partialBlocks[partial]}${'░'.repeat(3 - filled - (partial > 0 ? 1 : 0))}`;
-}
-
-// A percent Grok did not send shows as ?, never as a guess.
-function contextText(contextWindow) {
-  const size = windowSize(contextWindow?.context_window_size);
-  const value = contextWindow?.used_percentage;
-  if (typeof value !== 'number' || !Number.isFinite(value)) return size ? `ctx ?/${size}` : 'ctx ?';
-  const percent = Math.round(Math.max(0, Math.min(100, value)));
-  return `ctx [${contextBar(percent)}] ${percent}%${size ? `/${size}` : ''}`;
+function finitePercent(value) {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.round(Math.max(0, Math.min(100, value))) : null;
 }
 
 function cellWidth(character) {
-  if (/\p{Mark}/u.test(character) || character === '\u200d') return 0;
-  return /[\u1100-\u115f\u2329\u232a\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe10-\ufe19\ufe30-\ufe6f\uff00-\uff60\uffe0-\uffe6\u{1f300}-\u{1faff}\u{20000}-\u{3fffd}]/u.test(character) ? 2 : 1;
+  if (/\p{Mark}/u.test(character) || character === '‍') return 0;
+  return /[ᄀ-ᅟ〈〉⺀-꓏가-힣豈-﫿︐-︙︰-﹯＀-｠￠-￦\u{1f300}-\u{1faff}\u{20000}-\u{3fffd}]/u.test(character) ? 2 : 1;
 }
 
 function width(text) {
   return [...text].reduce((total, character) => total + cellWidth(character), 0);
 }
 
-function clipCells(text, maximum) {
+function clipCells(text, maximum, ellipsis = '…') {
+  if (width(text) <= maximum) return text;
   let result = '';
-  let used = 0;
-  let truncated = false;
   for (const character of text) {
-    const cells = cellWidth(character);
-    if (used + cells > maximum || result.length + character.length > 78) {
-      truncated = true;
-      break;
-    }
+    if (width(result) + cellWidth(character) + width(ellipsis) > maximum) break;
     result += character;
-    used += cells;
   }
-  if (truncated && maximum > 0) {
-    while (result && (width(result) + 1 > maximum || result.length >= 78)) result = [...result].slice(0, -1).join('');
-    result += '…';
-  }
-  return result;
+  return maximum >= width(ellipsis) ? `${result.trimEnd()}${ellipsis}` : '';
 }
 
 function distance(left, right) {
@@ -166,37 +153,49 @@ function sgr(rgb, depth, background = false) {
   return `\u001b[${background ? 48 : 38};2;${rgb.join(';')}m`;
 }
 
-function gradientColor(position, stops = GRADIENT_STOPS) {
-  const stop = position <= 0.5 ? 0 : 1;
-  const fraction = position <= 0.5 ? position * 2 : (position - 0.5) * 2;
-  return stops[stop].map((value, index) => Math.round(value + (stops[stop + 1][index] - value) * fraction));
+// A painter for one colour depth; depth 0 returns the text untouched.
+function painter(depth) {
+  return {
+    depth,
+    fg: (text, role, bold = false) => (depth && text ? `${bold ? '\u001b[1m' : ''}${sgr(ROLES[role], depth)}${text}\u001b[0m` : text),
+  };
 }
 
-// Bold is set once and each letter only changes the colour, so the longest label stays far below the cut.
-function paintLabel(text, depth) {
-  const characters = [...text];
-  return `\u001b[1m${characters.map((character, index) => {
-    if (character === ' ') return character;
-    const position = characters.length === 1 ? 0 : index / (characters.length - 1);
-    return `${sgr(gradientColor(position), depth)}${character}`;
-  }).join('')}\u001b[0m`;
+// A filled chip on the pink (the brand) or the accent (the current stage) with dark text and a space of
+// padding each side; a Nerd Font gives it rounded caps, and without colour it falls back to brackets.
+function chip(text, background, paint, nerd, open = '(', close = ')') {
+  if (!paint.depth) return { plain: `${open}${text}${close}`, painted: `${open}${text}${close}` };
+  const fill = `${sgr(ROLES[background], paint.depth, true)}${sgr(ROLES.ink, paint.depth)}\u001b[1m`;
+  if (!nerd) return { plain: ` ${text} `, painted: `${fill} ${text} \u001b[0m` };
+  const cap = (glyph) => `${sgr(ROLES[background], paint.depth)}${glyph}\u001b[0m`;
+  return { plain: `${text}`, painted: `${cap('')}${fill}${text}\u001b[0m${cap('')}` };
 }
 
-function formatRow({ discipline, model, effort, context, version }, depth, maxCells) {
-  const brand = `[🔥LIT${version ? ` v${version}` : ''}]`;
-  const suffix = `${effort ? ` [${effort}]` : ''} │ ${context}`;
-  let ignition = '';
-  let ignitionText = '';
-  if (discipline) {
-    // The skill name gives way after the model, and the model keeps at least its ellipsis.
-    const room = maxCells - width(`${brand} 🔥 LIT IGNITED ·  🔥 | ${suffix}`) - 1;
-    const maxDisciplineCells = Math.max(1, Math.min(discipline === 'lit-scientific-visualization' ? 32 : 24, room));
-    const label = `LIT IGNITED · ${clipCells(discipline, maxDisciplineCells)}`;
-    ignitionText = ` 🔥 ${label} 🔥`;
-    ignition = ` 🔥 ${depth ? paintLabel(label, depth) : label} 🔥`;
-  }
-  const modelText = clipCells(model, Math.max(1, maxCells - width(`${brand}${ignitionText} | ${suffix}`)));
-  return `${depth ? `\u001b[1m${sgr(BRAND_COLOR, depth)}${brand}\u001b[0m` : brand}${ignition} | ${modelText}${suffix}`;
+// Below 70% a gauge keeps the accent; 70% turns it yellow and 90% red, as the family gauges do.
+function bandOf(percent) {
+  return percent >= 90 ? 'red' : percent >= 70 ? 'yellow' : 'accent';
+}
+
+function blockBar(percent, cells, glyphs) {
+  const [full, empty, partials] = glyphs.bar;
+  const exact = (percent * cells) / 100;
+  const filled = Math.floor(exact);
+  const partial = partials.length > 1 && filled < cells && exact > filled ? Math.max(1, Math.min(partials.length - 1, Math.round((exact - filled) * partials.length))) : 0;
+  return { filled: `${full.repeat(filled)}${partials[partial]}`, empty: empty.repeat(cells - filled - (partial > 0 ? 1 : 0)) };
+}
+
+function duration(ms) {
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m${String(seconds % 60).padStart(2, '0')}s`;
+  return `${Math.floor(seconds / 3600)}h${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}m`;
+}
+
+function clock(ms) {
+  const seconds = Math.floor(Math.max(0, ms) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const rest = String(seconds % 60).padStart(2, '0');
+  return minutes < 60 ? `${minutes}:${rest}` : `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}:${rest}`;
 }
 
 // Automatic handoff needs Grok's context percent, which only the status line receives. Nothing is
@@ -313,25 +312,15 @@ function turnActivity(records, promptId) {
   };
 }
 
-function duration(ms) {
-  const seconds = Math.floor(ms / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m${String(seconds % 60).padStart(2, '0')}s`;
-  return `${Math.floor(seconds / 3600)}h${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}m`;
-}
-
 // Returns [long, short] warning text, or null. A plan-gate hold comes first, then a handoff request,
 // then a context at or near the automatic-handoff percent.
-function warningText(status, activity) {
+function warningText(status, activity, handoff) {
   if (activity?.planGate) return ['plan gate: save plans/<slug>.md', 'plan gate'];
   if (activity?.handoffAsked) return ['handoff requested', 'handoff'];
-  const used = status?.context_window?.used_percentage;
-  if (typeof used !== 'number' || !Number.isFinite(used)) return null;
-  const settings = resolveAutoHandoff({ env: process.env, dirs: statusDirs(status) });
-  if (!settings.active) return null;
-  const percent = Math.round(Math.max(0, Math.min(100, used)));
-  if (percent >= settings.percent) return [`ctx ${percent}% ≥ handoff at ${settings.percent}%`, `ctx ${percent}%≥${settings.percent}%`];
-  if (percent >= settings.percent - HANDOFF_NEAR_POINTS) return [`ctx ${percent}% → handoff at ${settings.percent}%`, `ctx ${percent}%→${settings.percent}%`];
+  const percent = finitePercent(status?.context_window?.used_percentage);
+  if (percent === null || !handoff.active) return null;
+  if (percent >= handoff.percent) return [`ctx ${percent}% ≥ handoff at ${handoff.percent}%`, `ctx ${percent}%≥${handoff.percent}%`];
+  if (percent >= handoff.percent - HANDOFF_NEAR_POINTS) return [`ctx ${percent}% → handoff at ${handoff.percent}%`, `ctx ${percent}%→${handoff.percent}%`];
   return null;
 }
 
@@ -350,208 +339,351 @@ function turnState(status, activity, now) {
   return { running, startedAt: running ? activity.startedAt : null };
 }
 
-function bandState(status, now, activity, turn) {
-  const running = turn.running;
-  const warning = warningText(status, activity);
-  let timer = null;
-  let state = null;
-  if (running) {
-    state = 'running';
-    if (turn.startedAt !== null) timer = duration(Math.max(0, now - turn.startedAt));
-  } else if (activity?.endedAt && !activity.failed && now - activity.endedAt <= COMPLETE_SHOWN_MS && activity.endedAt <= now + CLOCK_SKEW_MS) {
-    state = 'complete';
-    timer = duration(Math.max(0, activity.endedAt - activity.startedAt));
+// running, complete (for twenty seconds after a clean stop) or idle, with the turn's timer.
+function phaseOf(now, activity, turn) {
+  if (turn.running) return { phase: 'running', timer: turn.startedAt === null ? null : duration(Math.max(0, now - turn.startedAt)) };
+  if (activity?.endedAt && !activity.failed && now - activity.endedAt <= COMPLETE_SHOWN_MS && activity.endedAt <= now + CLOCK_SKEW_MS) {
+    return { phase: 'complete', timer: duration(Math.max(0, activity.endedAt - activity.startedAt)) };
   }
-  if (state === null && warning === null) return null;
-  return { state, timer, warning, activity: running || state === 'complete' ? activity : null };
+  return { phase: 'idle', timer: null };
 }
 
-function pill(text, kind, depth, nerd) {
-  if (!depth) return { plain: `(${text})`, painted: `(${text})` };
-  const [background, foreground] = PILLS[kind];
-  if (nerd) {
-    const cap = (glyph) => `${sgr(background, depth)}${glyph}\u001b[0m`;
-    return { plain: `${text}`, painted: `${cap('')}${sgr(background, depth, true)}${sgr(foreground, depth)}\u001b[1m${text}\u001b[0m${cap('')}` };
+/**
+ * A piece of a line. `paint` colours the text it is given. A narrow row works down from the highest
+ * `drop` or `clip` number (0 never): a drop removes the segment, a clip shortens it through
+ * `shrink(cells)`, which returns the text at that width or '' when it cannot get that small. `lead` (and
+ * its coloured form `leadPainted`) is what stands before it, instead of the line's separator.
+ */
+const segment = (text, paint = (value) => value, { drop = 0, clip = 0, shrink = null, lead = null, leadPainted = null, minCells = 1 } = {}) => ({
+  text, paint, drop, clip, shrink, lead, leadPainted, minCells,
+});
+
+// Lays one line out of segments; `right` segments sit flush with the row's right edge.
+function layoutLine({ left, right = [], separator, rail, maxCells, ellipsis }) {
+  const items = [...left.map((item) => ({ ...item, side: 'left' })), ...right.map((item) => ({ ...item, side: 'right' }))];
+  for (;;) {
+    const join = (side, painted) => items.filter((item) => item.side === side).map((item, index) => {
+      // A segment that comes straight after the first one may take its own lead (`|` after the mark).
+      const own = index === 1 && item.firstLead ? item.firstLead : item;
+      const lead = index === 0 ? '' : own.lead ?? separator.plain;
+      const paintedLead = index === 0 ? '' : own.leadPainted ?? own.lead ?? separator.painted;
+      return painted ? `${paintedLead}${item.paint(item.text)}` : `${lead}${item.text}`;
+    }).join('');
+    const leftPlain = `${rail.plain}${join('left', false)}`;
+    const rightPlain = join('right', false);
+    const bare = `${rail.painted}${join('left', true)}${join('right', true)}`;
+    // The padding that pushes the right side to the edge counts toward Grok's cut as well.
+    const gap = rightPlain ? Math.max(2, Math.min(maxCells - width(leftPlain) - width(rightPlain), MAX_LINE_CHARACTERS - bare.length)) : 0;
+    const total = width(leftPlain) + gap + width(rightPlain);
+    const painted = `${rail.painted}${join('left', true)}${' '.repeat(gap)}${join('right', true)}`;
+    if (total <= maxCells && painted.length <= MAX_LINE_CHARACTERS) return painted;
+    // The highest drop or clip number goes first; a clipped segment can still be dropped later.
+    const steps = items.flatMap((item) => [...(item.drop > 0 ? [{ item, at: item.drop, drop: true }] : []), ...(item.clip > 0 ? [{ item, at: item.clip, drop: false }] : [])]);
+    if (steps.length === 0) {
+      // Nothing left to drop or shorten: the last segment goes, and the first is kept to the end.
+      if (items.length > 1) items.pop();
+      else return `${rail.painted}${clipCells(items[0]?.text ?? '', Math.max(0, maxCells - width(rail.plain)), ellipsis)}`;
+      continue;
+    }
+    const step = steps.reduce((best, candidate) => (candidate.at > best.at || (candidate.at === best.at && !candidate.drop) ? candidate : best));
+    const target = step.item;
+    if (step.drop) {
+      items.splice(items.indexOf(target), 1);
+      continue;
+    }
+    // A segment that cannot get small enough shrinks as far as it goes, and the next step follows.
+    const shrink = (cells) => (target.shrink ? target.shrink(cells) : clipCells(target.text, cells, ellipsis));
+    if (total > maxCells) {
+      const shorter = shrink(Math.max(target.minCells, width(target.text) - (total - maxCells)));
+      if (shorter && width(shorter) < width(target.text)) target.text = shorter;
+    } else {
+      // Escapes count toward Grok's cut too, so a row can be too long while it fits its columns: the
+      // segment shrinks until its painted form is short enough.
+      const excess = painted.length - MAX_LINE_CHARACTERS;
+      const length = target.paint(target.text).length;
+      for (let cells = width(target.text) - 1; cells >= target.minCells; cells -= 1) {
+        const shorter = shrink(cells);
+        if (shorter && (length - target.paint(shorter).length >= excess || cells === target.minCells)) {
+          target.text = shorter;
+          break;
+        }
+      }
+    }
+    target.clip = 0;
   }
-  return { plain: ` ${text} `, painted: `${sgr(background, depth, true)}${sgr(foreground, depth)}\u001b[1m ${text} \u001b[0m` };
 }
 
-function renderBand(discipline, band, depth, nerd, { warningIndex = 0, tools = true, agents = true, timer = true, warning = true, brand = 'full', skillCells = Infinity }) {
-  const glyphs = nerd ? GLYPHS.nerd : GLYPHS.basic;
-  const kind = band.warning ? 'warning' : band.state === 'complete' ? 'complete' : 'running';
-  const pills = [pill(brand === 'full' ? '🔥 LIT' : '🔥', 'brand', depth, nerd), pill(`${glyphs[kind]} ${clipCells(discipline, skillCells)}`, kind, depth, nerd)];
-  const items = [];
-  const paint = (text, rgb, bold = false) => (depth ? `${bold ? '\u001b[1m' : ''}${sgr(rgb, depth)}${text}\u001b[0m` : text);
-  if (band.warning && warning) items.push({ plain: band.warning[warningIndex], painted: paint(band.warning[warningIndex], TEXT.amber, true) });
-  if (band.state === 'complete') items.push({ plain: 'complete', painted: paint('complete', TEXT.green, true) });
-  if (band.timer && timer) items.push({ plain: `${glyphs.timer}${band.timer}`, painted: paint(`${glyphs.timer}${band.timer}`, TEXT.dim) });
-  if (band.activity && tools) items.push({ plain: glyphs.tools(band.activity.tools), painted: paint(glyphs.tools(band.activity.tools), TEXT.dim) });
-  if (band.activity && agents && band.state === 'running' && band.activity.agents > 0) {
-    items.push({ plain: glyphs.agents(band.activity.agents), painted: paint(glyphs.agents(band.activity.agents), TEXT.dim) });
+// The figures in the family order: model [effort] │ ctx [█▎░] n%/size, then the automatic handoff percent,
+// the session's cost and the Git branch, each left out when Grok did not send it.
+function figureSegments(status, { glyphs, paint, handoff }) {
+  const model = plainText(status?.model?.display_name, plainText(status?.model?.id, 'grok'));
+  const effort = effortLevel(status?.effort?.level);
+  const percent = finitePercent(status?.context_window?.used_percentage);
+  const size = windowSize(status?.context_window?.context_window_size);
+  const accent = (text) => paint.fg(text, 'accent');
+  // A narrow row clips the model name and keeps the effort beside it; the narrowest give it up for the gauge.
+  const tail = effort ? ` [${effort}]` : '';
+  const segments = [segment(`${model}${tail}`, accent, {
+    drop: 0.5, clip: 2, minCells: width(tail) + 1, shrink: (cells) => `${clipCells(model, Math.max(1, cells - width(tail)), glyphs.ellipsis)}${tail}`,
+  })];
+  if (percent === null) {
+    segments.push(segment(`ctx ?${size ? `/${size}` : ''}`, accent));
+  } else {
+    const band = bandOf(percent);
+    const bar = blockBar(percent, 3, glyphs);
+    const figure = `${percent}%${size ? `/${size}` : ''}`;
+    segments.push(segment(`ctx [${bar.filled}${bar.empty}] ${figure}`, () => (
+      `${accent('ctx [')}${paint.fg(bar.filled, band)}${paint.fg(bar.empty, 'empty')}${accent(']')} ${paint.fg(figure, band)}`)));
   }
-  const separator = { plain: ' · ', painted: paint(' · ', TEXT.dim) };
-  const join = (key) => [pills.map((part) => part[key]).join(' '), items.map((part) => part[key]).join(separator[key])].filter(Boolean).join(' ');
-  return { plain: join('plain'), painted: join('painted') };
-}
-
-// Narrow rows give up tool calls first, then subagents, the timer, the long warning, the warning itself
-// and the brand's name, and last of all clip the skill name.
-function formatBand(discipline, band, depth, nerd, maxCells) {
-  const tiers = [
-    {},
-    { tools: false },
-    { tools: false, agents: false },
-    { tools: false, agents: false, timer: false },
-    { tools: false, agents: false, timer: false, warningIndex: 1 },
-    { tools: false, agents: false, timer: false, warningIndex: 1, brand: 'compact' },
-    { tools: false, agents: false, timer: false, warning: false, brand: 'compact' },
-  ];
-  for (const tier of tiers) {
-    const row = renderBand(discipline, band, depth, nerd, tier);
-    if (width(row.plain) <= maxCells && row.painted.length <= MAX_LINE_CHARACTERS) return row.painted;
+  if (handoff.active) segments.push(segment(`handoff@${handoff.percent}%`, accent, { drop: 4 }));
+  const cost = status?.cost?.total_cost_usd;
+  // Grok's own row hides a cost under half a cent so it never shows a misleading $0.00.
+  if (typeof cost === 'number' && Number.isFinite(cost) && cost >= 0.005) {
+    segments.push(segment(`$${cost < 100 ? cost.toFixed(2) : Math.round(cost)}`, accent, { drop: 3 }));
   }
-  const last = tiers.at(-1);
-  const room = maxCells - width(renderBand('', band, depth, nerd, { ...last, skillCells: 0 }).plain);
-  return renderBand(discipline, band, depth, nerd, { ...last, skillCells: Math.max(1, room) }).painted;
+  const branch = plainText(status?.workspace?.branch, '');
+  if (branch) {
+    const worktree = plainText(status?.workspace?.git_worktree, '');
+    segments.push(segment(`${glyphs.git}${clipCells(branch, 32, glyphs.ellipsis)}${worktree ? ` ${glyphs.dot} ${clipCells(worktree, 20, glyphs.ellipsis)}` : ''}`, accent, { drop: 5 }));
+  }
+  return segments;
 }
 
-function clock(ms) {
-  const seconds = Math.floor(Math.max(0, ms) / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const rest = String(seconds % 60).padStart(2, '0');
-  return minutes < 60 ? `${minutes}:${rest}` : `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}:${rest}`;
+function brandText(version, glyphs) {
+  return `[${glyphs.fire}LIT${version ? ` v${version}` : ''}]`;
 }
 
-// The current stage's pill: its name, the plan's checked tasks while working, and a tick once the
+// The family mark: bold, the fire and the brackets in the terminal's own colour, L, I and T on the
+// gradient, the version in its last stop. 256 colours make it bold magenta and 16 colours bold cyan.
+function brandSegment(version, glyphs, paint, options = {}) {
+  const paintBrand = (text) => {
+    if (!paint.depth) return text;
+    if (paint.depth === 256) return `\u001b[0m\u001b[1m\u001b[38;5;201m${text}\u001b[0m`;
+    if (paint.depth === 16) return `\u001b[0m\u001b[1m\u001b[36m${text}\u001b[0m`;
+    const at = text.indexOf('LIT');
+    const letters = [...'LIT'].map((letter, index) => `${sgr(BRAND_STOPS[index], 24)}${letter}`).join('');
+    return `\u001b[0m\u001b[1m${text.slice(0, at)}${letters}${sgr(BRAND_STOPS[2], 24)}${text.slice(at + 3)}\u001b[0m`;
+  };
+  // A narrow row lets the version go before anything else on the mark.
+  return segment(brandText(version, glyphs), paintBrand, { ...options, shrink: () => brandText('', glyphs) });
+}
+
+// The discipline keeps to 24 cells (32 for the longest skill name) so the line stays far below Grok's
+// 1024-character cut.
+function disciplineName(name, glyphs, cells = Infinity) {
+  return clipCells(name, Math.min(cells, name === 'lit-scientific-visualization' ? 32 : 24), glyphs.ellipsis);
+}
+
+// The ignition mark of the one-line row: the pink 🔥 LIT chip, then IGNITED · <discipline> 🔥 in the accent.
+// Without colour it reads 🔥 LIT IGNITED · <discipline> 🔥. A narrow row clips the discipline, never the frame.
+function ignitionSegment(discipline, glyphs, paint, nerd, options = {}) {
+  const label = glyphs.fire ? `${glyphs.fire} LIT` : 'LIT';
+  const brand = chip(label, 'pink', paint, nerd, '', '');
+  const build = (name) => `${brand.plain} IGNITED ${glyphs.dot} ${name}${glyphs.fire ? ` ${glyphs.fire}` : ''}`;
+  const frame = width(build(''));
+  return segment(build(disciplineName(discipline, glyphs)), (text) => `${brand.painted}${paint.fg(text.slice(brand.plain.length), 'accent', true)}`, {
+    ...options, minCells: frame + 1, shrink: (cells) => build(disciplineName(discipline, glyphs, Math.max(1, cells - frame))),
+  });
+}
+
+// Joins the figures to a line: `|` after the mark, `│` between the rest, all in the accent.
+function figureLeads(figures, glyphs, paint, afterMark) {
+  return figures.map((item, index) => {
+    const lead = ` ${glyphs.sep} `;
+    return { ...item, lead, leadPainted: paint.fg(lead, 'accent'), firstLead: afterMark ? { lead: ' | ', leadPainted: paint.fg(' | ', 'accent') } : null };
+  });
+}
+
+// One row: the mark, model [effort] │ ctx, the ignition mark while a discipline is active, then the
+// handoff percent, cost and branch. It is the whole HUD between workflows and in LITGROK_HUD_LINES=1
+// mode. A narrow row gives up the branch, the handoff percent, the cost and the version, then clips the
+// model name and last the discipline.
+function compactRow({ status, discipline, version, glyphs, paint, nerd, handoff, maxCells }) {
+  const [model, context, ...extras] = figureSegments(status, { glyphs, paint, handoff });
+  const figures = [model, context, ...(discipline ? [ignitionSegment(discipline, glyphs, paint, nerd, { clip: 1 })] : []), ...extras];
+  const left = [brandSegment(version, glyphs, paint, { clip: 3 }), ...figureLeads(figures, glyphs, paint, true)];
+  return layoutLine({ left, separator: { plain: ' ', painted: ' ' }, rail: { plain: '', painted: '' }, maxCells, ellipsis: glyphs.ellipsis });
+}
+
+// The current stage's label: its name, the plan's checked tasks while working, and a tick once the
 // stage's turn has ended (for work, only once every task is checked).
-function stageLabel(workflow) {
-  if (workflow.stage === 'done') return 'DONE ✓';
+function stageLabel(workflow, glyphs) {
+  if (workflow.stage === 'done') return `done ${glyphs.tick}`;
   const plan = workflow.plan;
   const counter = workflow.stage === 'work' && plan?.total > 0 ? ` ${plan.done}/${plan.total}` : '';
   const finished = workflow.ended && (workflow.stage !== 'work' || (plan?.total > 0 && plan.done === plan.total));
-  return `${workflow.stage.toUpperCase()}${counter}${finished ? ' ✓' : ''}`;
+  return `${workflow.stage}${counter}${finished ? ` ${glyphs.tick}` : ''}`;
 }
 
-// The breadcrumb as { text, role, position, rail } pieces. Stage k of n sits at k/(n-1) along the
-// orange-pink-cyan gradient and each rail cell between two stages takes its own step in between.
-// Rails up to the current stage are lit. A stage before it shows a tick when the session went through
-// it; interview shows only when it happened.
-function breadcrumbPieces(workflow, { rail, compact }) {
+// The stage map as the family card draws it: interview ✓ ━━ plan ✓ ━━ [work 3/7] ━━ review · ── done ·.
+// Stages behind are dim with a tick when the session went through them, the current stage is a chip on the
+// accent, the stages ahead are dim with a dot. Rails into a passed or the current stage are accent `━`, the
+// rail leaving the current stage is a grey `━` and the rails further on are grey `─`. Interview shows only
+// when it happened.
+function mapPieces(workflow, { rail, compact }, glyphs) {
   const shown = STAGES.filter((stage) => stage !== 'interview' || workflow.visited.includes('interview') || workflow.stage === 'interview');
   const current = shown.indexOf(workflow.stage);
-  const last = Math.max(1, shown.length - 1);
   const pieces = [];
   shown.forEach((stage, index) => {
     if (index > 0) {
       if (!compact) pieces.push({ text: ' ', role: 'space' });
       for (let cell = 0; cell < rail; cell += 1) {
-        pieces.push({ text: index <= current ? '━' : '─', role: index <= current ? 'lit' : 'dim', position: (index - 1 + (cell + 1) / (rail + 1)) / last, rail: [index, cell] });
+        const role = index <= current ? 'lit' : index === current + 1 ? 'leaving' : 'ahead';
+        pieces.push({ text: role === 'ahead' ? glyphs.unlit : glyphs.lit, role, rail: [index, cell] });
       }
       if (!compact) pieces.push({ text: ' ', role: 'space' });
     }
-    const position = index / last;
-    if (index === current) pieces.push({ text: stageLabel(workflow), role: 'pill', position });
-    else if (index > current) pieces.push({ text: compact ? '·' : `${stage} ·`, role: 'future' });
-    else if (workflow.visited.includes(stage)) pieces.push({ text: compact ? '✓' : `${stage} ✓`, role: 'past', position });
-    else pieces.push({ text: compact ? '-' : stage, role: 'skipped' });
+    if (index === current) pieces.push({ text: stageLabel(workflow, glyphs), role: 'current' });
+    else if (index > current) pieces.push({ text: compact ? glyphs.dot : `${stage} ${glyphs.dot}`, role: 'dim' });
+    else if (workflow.visited.includes(stage)) pieces.push({ text: compact ? glyphs.tick : `${stage} ${glyphs.tick}`, role: 'dim' });
+    else pieces.push({ text: compact ? glyphs.unlit : stage, role: 'dim' });
   });
   return { pieces, current };
 }
 
-// While a turn runs, one bright cell rides the rail into the current stage and moves on at each
-// redraw (Grok redraws about every 300 ms during a turn).
-function renderBreadcrumb(workflow, tier, depth, running, now) {
-  const { pieces, current } = breadcrumbPieces(workflow, tier);
-  const plain = pieces.map(({ text, role }) => (role === 'pill' ? `[${text}]` : text)).join('');
-  if (!depth) return { plain, painted: plain };
+// While a turn runs, one pink cell rides the rail into the current stage and moves on at each redraw
+// (Grok redraws about every 300 ms during a turn).
+function renderMap(workflow, tier, { paint, glyphs, nerd, running, now }) {
+  const { pieces, current } = mapPieces(workflow, tier, glyphs);
+  const pill = (text) => chip(text, 'accent', paint, nerd, '[', ']');
+  const plain = pieces.map(({ text, role }) => (role === 'current' ? pill(text).plain : text)).join('');
+  if (!paint.depth) return { plain, painted: plain };
   const head = running ? [current > 0 ? current : 1, Math.floor(now / 300) % tier.rail] : null;
-  const painted = pieces.map(({ text, role, position, rail }) => {
+  const painted = pieces.map(({ text, role, rail }) => {
     if (role === 'space') return text;
-    if (role === 'future' || role === 'skipped') return `${sgr(TEXT.dim, depth)}${text}`;
-    const rgb = gradientColor(position, RAIL_STOPS);
-    if (role === 'pill') return `${sgr(rgb, depth, true)}${sgr(RAIL.ink, depth)}\u001b[1m ${text} \u001b[0m`;
-    if (role === 'past') return `${sgr(rgb, depth)}${text}`;
-    if (head && rail[0] === head[0] && rail[1] === head[1]) return `${sgr(RAIL.head, depth)}${text}`;
-    return `${sgr(role === 'lit' ? rgb : RAIL.faint, depth)}${text}`;
+    if (role === 'current') return pill(text).painted;
+    if (role === 'dim') return paint.fg(text, 'dim');
+    if (head && rail[0] === head[0] && rail[1] === head[1]) return paint.fg(text, 'pink', true);
+    return paint.fg(text, role === 'lit' ? 'accent' : 'rail');
   }).join('');
-  return { plain, painted: `${painted}\u001b[0m` };
+  return { plain, painted };
+}
+
+// Narrow rows shorten the rails to two cells and one, then drop the stage names, and last of all keep
+// only the current stage.
+function mapLine(workflow, context, rail, maxCells) {
+  const room = maxCells - width(rail.plain);
+  for (const tier of [{ rail: 4 }, { rail: 2 }, { rail: 1 }, { rail: 1, compact: true }]) {
+    const map = renderMap(workflow, tier, context);
+    if (width(map.plain) <= room && map.painted.length + rail.painted.length <= MAX_LINE_CHARACTERS) return `${rail.painted}${map.painted}`;
+  }
+  const label = clipCells(stageLabel(workflow, context.glyphs), Math.max(1, room - 2), context.glyphs.ellipsis);
+  return `${rail.painted}${chip(label, 'accent', context.paint, context.nerd, '[', ']').painted}`;
 }
 
 function toolLabel(name) {
   return Object.hasOwn(TOOL_LABELS, name) ? TOOL_LABELS[name] : clipCells(plainText(name, 'tool'), 20);
 }
 
-function renderWorkflow(workflow, live, running, depth, now, tier) {
-  const paint = (text, rgb) => (depth ? `${sgr(rgb, depth)}${text}\u001b[0m` : text);
-  const parts = [];
-  if (workflow?.stage) parts.push(renderBreadcrumb(workflow, tier, depth, running, now));
-  if (live && tier.live) {
-    const spinner = SPINNER[Math.floor(now / 100) % SPINNER.length];
-    const text = tier.live === 'full' ? `${spinner} ${toolLabel(live.name)} · ${clock(now - live.startedAt)}` : `${spinner} ${clock(now - live.startedAt)}`;
-    parts.push({ plain: text, painted: paint(text, TEXT.amber) });
-  }
-  if (workflow?.test && tier.tests) {
-    const pass = workflow.test.verdict === 'pass';
-    const text = `tests ${pass ? '✓' : '✗'}${workflow.test.count === undefined ? '' : ` ${workflow.test.count}`}`;
-    parts.push({ plain: text, painted: paint(text, pass ? TEXT.green : RAIL.red) });
-  }
-  return { plain: parts.map((part) => part.plain).join('   '), painted: parts.map((part) => part.painted).join('   ') };
+// The card's left edge: one accent bar per line, so the lines read as one card.
+function railFor(paint, glyphs) {
+  if (!paint.depth) return { plain: '', painted: '' };
+  return { plain: `${glyphs.rail} `, painted: `${paint.fg(glyphs.rail, 'accent')} ` };
 }
 
-// Narrow rows shorten the rails, then drop the test badge, the tool's name, the tool and the stage
-// names, and last of all keep only the current stage.
-function formatWorkflow(workflow, live, running, depth, now, maxCells) {
-  const tiers = [
-    { rail: 4, live: 'full', tests: true },
-    { rail: 2, live: 'full', tests: true },
-    { rail: 2, live: 'full', tests: false },
-    { rail: 2, live: 'short', tests: false },
-    { rail: 1, live: false, tests: false },
-    { rail: 1, compact: true, live: false, tests: false },
+// The card's title: the mark, the pink 🔥 LIT chip and the discipline, then at the right edge the turn's
+// tool calls and subagents beside its state, as the family card's corner reads (● 1m42s running,
+// ✓ complete, ⚠ a warning, idle).
+function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, activity, maxCells, rail }) {
+  const brand = chip(glyphs.fire ? `${glyphs.fire} LIT` : 'LIT', 'pink', paint, nerd);
+  const name = discipline ?? 'workflow';
+  const left = [
+    brandSegment(version, glyphs, paint, { clip: 3 }),
+    { ...segment(brand.plain, () => brand.painted), lead: ' | ', leadPainted: paint.fg(' | ', 'accent') },
+    segment(`${glyphs.dot} ${disciplineName(name, glyphs)}`, (text) => `${paint.fg(glyphs.dot, 'dim')} ${paint.fg(text.slice(glyphs.dot.length + 1), discipline ? 'accent' : 'dim', Boolean(discipline))}`, {
+      clip: 0.5, minCells: width(glyphs.dot) + 2, shrink: (cells) => `${glyphs.dot} ${disciplineName(name, glyphs, Math.max(1, cells - width(glyphs.dot) - 1))}`,
+    }),
   ];
-  for (const tier of tiers) {
-    const row = renderWorkflow(workflow, live, running, depth, now, tier);
-    if (width(row.plain) <= maxCells && row.painted.length <= MAX_LINE_CHARACTERS) return row.painted || null;
+  const right = [];
+  if (activity && phase.phase !== 'idle') {
+    const parts = activity.tools > 0 ? [glyphs.tools(activity.tools)] : [];
+    if (phase.phase === 'running' && activity.agents > 0) parts.push(glyphs.agents(activity.agents));
+    if (parts.length > 0) right.push(segment(parts.join(` ${glyphs.dot} `), (text) => paint.fg(text, 'dim'), { drop: 4 }));
   }
-  if (!workflow?.stage) return null;
-  const label = clipCells(stageLabel(workflow), Math.max(1, maxCells - 2));
-  return depth ? `${sgr(RAIL_STOPS[1], depth, true)}${sgr(RAIL.ink, depth)}\u001b[1m ${label} \u001b[0m` : `[${label}]`;
+  if (warning) right.push(segment(`${glyphs.warn} ${warning[1]}`, (text) => paint.fg(text, 'yellow', true), { drop: 1 }));
+  if (phase.phase === 'running') right.push(segment(`${glyphs.run} ${phase.timer ? `${glyphs.timer}${phase.timer}` : 'running'}`, (text) => paint.fg(text, 'accent', true), { drop: 2 }));
+  else if (phase.phase === 'complete') right.push(segment(`${glyphs.tick} complete ${phase.timer}`, (text) => paint.fg(text, 'green', true), { drop: 2 }));
+  else if (!warning) right.push(segment('idle', (text) => paint.fg(text, 'dim'), { drop: 2 }));
+  return layoutLine({ left, right, separator: { plain: ' ', painted: ' ' }, rail, maxCells, ellipsis: glyphs.ellipsis });
 }
 
-const input = await readInput();
-try {
-  recordContextForHandoff(input);
-} catch {
-  // The row must always render; a failed record only means this refresh adds nothing for the handoff.
+// The detail line: checked plan tasks with the next one, the last test verdict and the long form of a
+// warning on the left; the tool in flight with its clock on the right.
+function detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail }) {
+  const left = [];
+  const plan = workflow?.plan;
+  if (plan?.total > 0) {
+    const cells = Math.min(plan.total, 10);
+    const filled = Math.round((plan.done / plan.total) * cells);
+    const bar = `${glyphs.full.repeat(filled)}${glyphs.empty.repeat(cells - filled)}`;
+    left.push(segment(`task ${plan.done}/${plan.total} ${bar}`, () => `${paint.fg('task ', 'dim')}${paint.fg(`${plan.done}/${plan.total}`, 'accent', true)} ${paint.fg(glyphs.full.repeat(filled), 'accent')}${paint.fg(glyphs.empty.repeat(cells - filled), 'empty')}`));
+    if (typeof plan.next === 'string' && plan.next && plan.done < plan.total) {
+      const lead = `next ${glyphs.next} `;
+      const title = plainText(plan.next, '');
+      left.push(segment(`${lead}${title}`, (text) => `${paint.fg(lead, 'dim')}${paint.fg(text.slice(lead.length), 'accent')}`, {
+        drop: 5, clip: 6, minCells: width(lead) + 8, shrink: (cells) => `${lead}${clipCells(title, cells - width(lead), glyphs.ellipsis)}`,
+      }));
+    }
+  }
+  if (workflow?.test) {
+    const pass = workflow.test.verdict === 'pass';
+    left.push(segment(`tests ${pass ? glyphs.tick : glyphs.cross}${workflow.test.count === undefined ? '' : ` ${workflow.test.count}`}`, (text) => paint.fg(text, pass ? 'green' : 'red', true), { drop: 3 }));
+  }
+  if (warning) left.push(segment(`${glyphs.warn} ${warning[0]}`, (text) => paint.fg(text, 'yellow', true), { drop: 2 }));
+  const right = [];
+  if (live) {
+    const spinner = glyphs.spinner[Math.floor(now / 100) % glyphs.spinner.length];
+    // Alone on the line, the tool in flight sits by the elbow rather than across the row.
+    (left.length > 0 ? right : left).push(segment(`${spinner} ${toolLabel(live.name)} ${clock(now - live.startedAt)}`, (text) => paint.fg(text, 'accent', true), { drop: 1 }));
+  }
+  if (left.length === 0 && right.length === 0) return null;
+  const elbow = { plain: `${rail.plain}${glyphs.elbow} `, painted: `${rail.painted}${paint.fg(`${glyphs.elbow} `, 'dim')}` };
+  return layoutLine({ left, right, separator: { plain: ` ${glyphs.dot} `, painted: paint.fg(` ${glyphs.dot} `, 'dim') }, rail: elbow, maxCells, ellipsis: glyphs.ellipsis });
 }
-const cwd = typeof input?.cwd === 'string' ? input.cwd : '';
-let record = null;
-try {
-  record = readHudRecordForCwd(cwd);
-} catch {
-  record = null;
+
+function figuresLine({ status, glyphs, paint, handoff, maxCells, rail }) {
+  return layoutLine({
+    left: figureLeads(figureSegments(status, { glyphs, paint, handoff }), glyphs, paint, false),
+    separator: { plain: ' ', painted: ' ' },
+    rail,
+    maxCells,
+    ellipsis: glyphs.ellipsis,
+  });
 }
-const discipline = record?.discipline ?? null;
-const model = plainText(input?.model?.display_name, 'grok');
-const colorSetting = process.env.LITGROK_HUD_COLOR;
-const depth = colorSetting === '0' || Object.hasOwn(process.env, 'NO_COLOR') ? 0 : colorSetting === '256' ? 256 : colorSetting === '16' ? 16 : 24;
-// Grok sets COLUMNS to the width of the row; without it the row keeps to 79 cells.
-const columns = Number.parseInt(process.env.COLUMNS ?? '', 10);
-const maxCells = Number.isFinite(columns) && columns >= 20 ? Math.min(columns, 1000) - 1 : 79;
-const row = formatRow({
-  discipline,
-  model,
-  effort: effortLevel(input?.effort?.level),
-  context: contextText(input?.context_window),
-  version: installedVersion(),
-}, depth, maxCells);
-// The ribbon is a second line, shown only while a skill is active and a turn runs, has just ended or
-// needs attention. The workflow row follows it once the session has a workflow stage, or while a skill
-// is active and there is a tool in flight or a test verdict to show. LITGROK_HUD_LINES=1 keeps the
-// compact row alone.
-let band = null;
-let workflowLine = null;
-if (process.env.LITGROK_HUD_LINES !== '1') {
+
+function render(input) {
+  try {
+    recordContextForHandoff(input);
+  } catch {
+    // The row must always render; a failed record only means this refresh adds nothing for the handoff.
+  }
+  const cwd = typeof input?.cwd === 'string' ? input.cwd : '';
+  let record = null;
+  try {
+    record = readHudRecordForCwd(cwd);
+  } catch {
+    record = null;
+  }
+  const discipline = record?.discipline ?? null;
+  const colorSetting = process.env.LITGROK_HUD_COLOR;
+  const depth = colorSetting === '0' || Object.hasOwn(process.env, 'NO_COLOR') ? 0 : colorSetting === '256' ? 256 : colorSetting === '16' ? 16 : 24;
+  const paint = painter(depth);
+  const glyphSetting = process.env.LITGROK_HUD_GLYPHS;
+  const glyphs = Object.hasOwn(GLYPHS, glyphSetting ?? '') ? GLYPHS[glyphSetting] : GLYPHS.basic;
+  const nerd = glyphSetting === 'nerd';
+  // Grok sets COLUMNS to the width of the row; without it the row keeps to 79 cells.
+  const columns = Number.parseInt(process.env.COLUMNS ?? '', 10);
+  const maxCells = Number.isFinite(columns) && columns >= 20 ? Math.min(columns, 1000) - 1 : 79;
+  let handoff = { active: false, percent: null };
+  try {
+    handoff = resolveAutoHandoff({ env: process.env, dirs: statusDirs(input) });
+  } catch {
+    handoff = { active: false, percent: null };
+  }
+  const version = installedVersion();
+  const shared = { status: input, discipline, version, glyphs, paint, nerd, handoff, maxCells };
+  if (process.env.LITGROK_HUD_LINES === '1') return [compactRow(shared)];
+
   const now = Date.now();
   let activity = null;
   try {
@@ -559,22 +691,35 @@ if (process.env.LITGROK_HUD_LINES !== '1') {
   } catch {
     activity = null;
   }
-  const turn = turnState(input, activity, now);
-  const { running } = turn;
-  if (discipline) {
-    try {
-      const state = bandState(input, now, activity, turn);
-      if (state) band = formatBand(discipline, state, depth, process.env.LITGROK_HUD_GLYPHS === 'nerd', maxCells);
-    } catch {
-      band = null;
-    }
-  }
+  let workflow = null;
   try {
-    const workflow = readWorkflow(input);
-    const live = running ? activity?.live ?? null : null;
-    if (workflow?.stage || (discipline && (live || workflow?.test))) workflowLine = formatWorkflow(workflow, live, running, depth, now, maxCells);
+    workflow = readWorkflow(input);
   } catch {
-    workflowLine = null;
+    workflow = null;
   }
+  // The card shows while a discipline is active or the session has a workflow stage; otherwise the
+  // HUD is the single row.
+  if (!discipline && !workflow?.stage) return [compactRow(shared)];
+  const turn = turnState(input, activity, now);
+  const phase = phaseOf(now, activity, turn);
+  const warning = warningText(input, activity, handoff);
+  const live = turn.running ? activity?.live ?? null : null;
+  const rail = railFor(paint, glyphs);
+  const lines = [titleLine({ ...shared, phase, warning, activity: phase.phase === 'idle' ? null : activity, rail })];
+  if (workflow?.stage) lines.push(mapLine(workflow, { paint, glyphs, nerd, running: turn.running, now }, rail, maxCells));
+  const detail = detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail });
+  if (detail) lines.push(detail);
+  lines.push(figuresLine({ ...shared, rail }));
+  return lines;
 }
-process.stdout.write(`${[row, band, workflowLine].filter(Boolean).join('\n')}\n`);
+
+
+const input = await readInput();
+let lines;
+try {
+  lines = render(input);
+} catch {
+  // Never a blank row and never a stack trace: the brand alone says the HUD is alive.
+  lines = [`[🔥LIT${installedVersion() ? ` v${installedVersion()}` : ''}] | ${plainText(input?.model?.display_name, 'grok')}`];
+}
+process.stdout.write(`${lines.join('\n')}\n`);

@@ -753,6 +753,9 @@ test('dry-pack preserves runtime and bilingual references while excluding brand 
   );
   assert.equal(paths.some((path) => path.startsWith('test/')), false, 'tests must stay out of the package');
   assert.equal(paths.includes('AGENTS.md'), false, 'agent-only guidance must stay out of the package');
+  assert.equal(existsSync(join(PRODUCT_ROOT, '.cursor-plugin', 'plugin.json')), true, 'precondition: the repository carries the Cursor manifest');
+  assert.equal(paths.some((path) => path.startsWith('.cursor-plugin/')), false, 'the Cursor manifest is read from GitHub and stays out of the npm package');
+  assert.equal(paths.includes('docs/assets/litgrok-plugin-logo.png'), false, 'the plated Cursor logo is read from GitHub and stays out of the npm package');
   assert.equal(paths.includes('generate_cover.py'), false, 'cover generator must stay out of the package');
   assert.equal(paths.includes('cover.png'), false, 'the legacy heavy cover must stay out of the package');
   const landing = [
@@ -869,7 +872,7 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.ok(landing.includes(`${assets}/cover-motion.webp" width="100%"`));
     const heroAlt = landing.match(/<img src="[^"]+cover-motion\.webp" width="100%" alt="([^"]+)" \/>/u)?.[1] ?? '';
     if (english) {
-      assert.equal(heroAlt, 'LitFamily motion cover: five armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up.');
+      assert.equal(heroAlt, 'LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up.');
     } else {
       assert.match(heroAlt, /^LitFamily 모션 커버: .*LitGrok 로봇.*KEEP THE WORK LIT\./u);
     }

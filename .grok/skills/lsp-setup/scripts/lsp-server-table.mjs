@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
+import proc from '../../lit-pptx/scripts/proc.cjs';
 import { lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -167,14 +167,14 @@ function inspectBinary(options, env) {
 
 function runGrokInspect(project, options = {}) {
   const env = options.env ?? process.env;
-  const result = spawnSync(inspectBinary(options, env), ['inspect', '--json'], {
+  const result = proc.run(inspectBinary(options, env), ['inspect', '--json'], {
     cwd: project,
     encoding: 'utf8',
     env,
     maxBuffer: MAX_OUTPUT_BYTES,
     timeout: options.timeout ?? DEFAULT_TIMEOUT_MS,
     windowsHide: true,
-  });
+  }, { env });
   const stdout = boundedOutput(result.stdout);
   const stderr = boundedOutput(result.stderr);
   if (result.error || result.status !== 0 || stdout === undefined) {

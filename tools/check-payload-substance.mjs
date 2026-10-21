@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   cpSync,
@@ -15,6 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import proc from "../.grok/skills/lit-pptx/scripts/proc.cjs";
 
 const PRODUCT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_ROOT_RELATIVE = join(".grok", "skills");
@@ -248,12 +249,10 @@ function npmPack(root) {
     NPM_CONFIG_USERCONFIG: join(sandbox, ".npmrc"),
   };
   try {
-    const command = process.platform === "win32" ? "npm.cmd" : "npm";
-    const result = spawnSync(command, ["pack", "--dry-run", "--json", "--ignore-scripts"], {
+    const result = proc.runNpm(["pack", "--dry-run", "--json", "--ignore-scripts"], {
       cwd: root,
       encoding: "utf8",
       env,
-      shell: false,
       timeout: 180000,
     });
     if (result.error || result.status !== 0) throw new Error(`PACK_FAILED status=${result.status}: ${result.stderr || result.error?.message || ""}`.trim());
@@ -636,14 +635,12 @@ function packProduct(productRoot, { runScripts = false } = {}) {
   try {
     if (runScripts) isolated = isolatePublishedPackage(productRoot);
     const packRoot = isolated?.packageRoot ?? productRoot;
-    const command = process.platform === "win32" ? "npm.cmd" : "npm";
     const args = ["pack", "--dry-run", "--json"];
     if (!runScripts) args.push("--ignore-scripts");
-    const result = spawnSync(command, args, {
+    const result = proc.runNpm(args, {
       cwd: packRoot,
       encoding: "utf8",
       env,
-      shell: false,
       timeout: 180000,
     });
     if (result.error || result.status !== 0) throw new Error(`PACK_FAILED status=${result.status}: ${result.stderr || result.error?.message || ""}`.trim());

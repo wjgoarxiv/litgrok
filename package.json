@@ -30,7 +30,8 @@
     "test": "node --test test/*.test.mjs",
     "probe:browser-drive": "node .grok/skills/browser-drive/scripts/capability-probe.mjs",
     "check:version": "node tools/check-version-lockstep.mjs",
-    "check:npm-readme": "node scripts/readme-for-npm.mjs check"
+    "check:npm-readme": "node scripts/readme-for-npm.mjs check",
+    "qa:cover-recipes": "node scripts/qa-cover-recipes.mjs"
   },
   "files": [
     "plugin.json",

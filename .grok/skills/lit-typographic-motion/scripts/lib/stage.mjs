@@ -119,6 +119,7 @@ export const FACE_KEYS = Object.freeze({
   Silkscreen: ['silkscreen-400', 'silkscreen-700'],
   Galmuri9: ['galmuri9'],
   Meslo: ['meslo'],
+  'JetBrains Mono': ['jetbrains-mono'],
 });
 
 // /lit/fonts.css: every verified face that is ready. A face the treatment lists that is not warm
@@ -146,7 +147,8 @@ export function stageFonts(faces, env = process.env) {
       seen.add(id);
       const route = `/lit/fonts/${state.resolved}${ext}`;
       routes.set(route, { path: fontPath(resolveFontKey(key, env), env), type: CONTENT_TYPES[ext] });
-      rules.push(`@font-face { font-family: '${family}'; src: url('${route}') format('${ext === '.otf' ? 'opentype' : 'truetype'}'); font-weight: ${weight}; font-stretch: ${stretch ?? 100}%; font-style: normal; font-display: block; }`);
+      const format = { '.otf': 'opentype', '.woff2': 'woff2' }[ext] ?? 'truetype';
+      rules.push(`@font-face { font-family: '${family}'; src: url('${route}') format('${format}'); font-weight: ${weight}; font-stretch: ${stretch ?? 100}%; font-style: normal; font-display: block; }`);
     }
   }
   return { css: `${rules.join('\n')}\n`, routes, families: [...new Set(rules.map((r) => r.match(/font-family: '([^']+)'/)[1]))] };

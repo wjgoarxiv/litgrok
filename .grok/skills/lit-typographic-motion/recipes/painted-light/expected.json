@@ -1,0 +1,95 @@
+{
+  "schema": "litgrok.motion-cover-recipe/v1",
+  "note": "The decoded gate row this recipe reached when it shipped. npm run qa:cover-recipes re-renders it through motion.mjs cover and fails when median d or the moving share leaves +-15 % of this row, seamLocal leaves TARGET, the file passes 2 MiB or the render exits non-zero. Measured on headless Chrome's software rung (SwiftShader) and libwebp 1.6.0.",
+  "row": {
+    "medianD": 0.002265,
+    "movingFrac": 1,
+    "longestStillSec": 0.063,
+    "spike": 1.55683,
+    "seamLocal": 1.833145,
+    "bytes": 1982894
+  },
+  "settings": {
+    "size": [
+      1000,
+      500
+    ],
+    "fps": 16,
+    "frames": 128,
+    "encode": {
+      "q": 79,
+      "edgeQ": 95,
+      "edgeFrames": 44,
+      "method": 4
+    }
+  },
+  "base": "test/fixtures/cover-recipes/painted-light-base.png in the LitGrok repository, the five-bay LitFamily painting (1536 x 1024); another painting needs its own PAINTING block",
+  "assets": [
+    {
+      "path": "cover/assets/base.png",
+      "role": "base-art",
+      "source": "user",
+      "box": [
+        0.125,
+        0,
+        0.75,
+        1
+      ],
+      "checkBox": [
+        0.723,
+        0.1445,
+        0.1475,
+        0.778
+      ],
+      "title": true
+    }
+  ],
+  "treatment": {
+    "mode": "cover",
+    "request": "Make the LitFamily README motion cover from the painted robot line-up.",
+    "idea": "A window of work light walks the sleeping bays while the LitGrok robot's lenses wake in turn and a comet laps its frame.",
+    "recipe": "painted-light",
+    "recipeReason": "The painting already carries the brand, so the loop relights it instead of drawing over it.",
+    "brandWord": "LITFAMILY",
+    "aspect": "2:1",
+    "loopSec": 8,
+    "fps": 16,
+    "layers": {
+      "slow": "A comet laps the LitGrok frame and motes rise one screen per loop.",
+      "mid": "A sharp-edged light window walks the four other bays once per loop, with scan bands at two passes.",
+      "beat": "The three lenses light top to bottom twice per loop, one glint crosses the title, and the LIT. accent pulses at t = 0 and 0.5."
+    },
+    "system": {
+      "rule": "One light window and one scan band rule.",
+      "copies": "Five bays, three lenses and forty-eight motes.",
+      "offset": "Each bay's phase comes from its x position; each lens from its height."
+    },
+    "title": {
+      "box": [
+        0.347,
+        0.031,
+        0.31,
+        0.086
+      ],
+      "kind": "painted"
+    },
+    "encode": {
+      "q": 79,
+      "edgeQ": 95,
+      "edgeFrames": 44
+    },
+    "ambition": "Light reads as moving edges that survive the encoder, and the seam disappears under the accent pulse."
+  },
+  "regressions": {
+    "feather-150": {
+      "patch": {
+        "find": "feather: 24,",
+        "replace": "feather: 150,"
+      },
+      "mustFail": [
+        "G1.target"
+      ],
+      "defect": "Light drawn as a soft 150 px wash instead of a travelling 24 px edge. At this recipe's encode the encoder keeps the soft edge, so no motion gate sees it and only the 2 MiB size TARGET trips; the wash itself is caught by look review."
+    }
+  }
+}

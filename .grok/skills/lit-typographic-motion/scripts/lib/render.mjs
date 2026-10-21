@@ -3,6 +3,7 @@
 // -> determinism re-render and perf -> full gate -> promote or withhold (Build 7, MO-C-15/16).
 // Adapted in method from pdoom-video app/scripts/render.ts (MIT, see NOTICE).
 import { createHash } from 'node:crypto';
+import hostProc from '../../../lit-pptx/scripts/proc.cjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, appendFileSync, readdirSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
@@ -28,13 +29,9 @@ export const DELIVERABLES = Object.freeze(['film.mp4', 'preview.webp', 'preview.
 
 const LUT = Float64Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
 
-export function findTool(name, env = process.env) {
-  for (const dir of String(env.PATH ?? '').split(process.platform === 'win32' ? ';' : ':')) {
-    if (!dir) continue;
-    const candidate = join(dir, name);
-    if (existsSync(candidate)) return candidate;
-  }
-  return null;
+// PATH lookup with PATHEXT on win32 (ffmpeg resolves to ffmpeg.exe); options can pose as another host.
+export function findTool(name, env = process.env, options = {}) {
+  return hostProc.which(name, { env, ...options });
 }
 
 export function previewRung(env = process.env) {
@@ -111,7 +108,7 @@ function resolveAudio(brief, treatment, { wordTiming, env, out, runDir, warnings
   const outPath = join(runDir, 'beat-grid.json');
   const result = spawnSync(audioPython(env), [join(SKILL_ROOT, 'scripts', 'beat_grid.py'), audioFile, outPath], { encoding: 'utf8', timeout: 300000 });
   if (result.status !== 0 || !existsSync(outPath)) {
-    warnings.push(`audio analysis failed (${(result.stderr || result.error?.message || '').split('\n').filter(Boolean).at(-1) ?? 'no output'}); Tier 1 reading-time timeline used`);
+    warnings.push(`audio analysis failed (${(result.stderr || result.error?.message || '').split(/\r?\n/).filter(Boolean).at(-1) ?? 'no output'}); Tier 1 reading-time timeline used`);
     return { beats: null, audioFile };
   }
   const grid = JSON.parse(readFileSync(outPath, 'utf8'));
@@ -255,7 +252,7 @@ export async function encodePreview({ runDir, master, encoder, minFontPx, env, l
       continue;
     }
     const decode = spawnSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-i', master, '-vf', `fps=${fps},scale=${width}:${height}:flags=area`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 2 ** 31 });
-    if (decode.status !== 0) throw new Error(`preview decode failed: ${decode.stderr.toString().trim().split('\n').at(-1)}`);
+    if (decode.status !== 0) throw new Error(`preview decode failed: ${decode.stderr.toString().trim().split(/\r?\n/).at(-1)}`);
     const frameBytes = width * height * 3;
     const count = Math.floor(decode.stdout.length / frameBytes);
     const frames = Array.from({ length: count }, (_, i) => decode.stdout.subarray(i * frameBytes, (i + 1) * frameBytes));
@@ -279,13 +276,13 @@ export async function encodePreview({ runDir, master, encoder, minFontPx, env, l
       args.push('-o', out);
       const result = spawnSync(findTool('img2webp', env), args, { encoding: 'utf8', maxBuffer: 1 << 26 });
       rmSync(dir, { recursive: true, force: true });
-      if (result.status !== 0) throw new Error(`img2webp failed: ${(result.stderr || '').trim().split('\n').at(-1)}`);
+      if (result.status !== 0) throw new Error(`img2webp failed: ${(result.stderr || '').trim().split(/\r?\n/).at(-1)}`);
     } else {
       const codec = encoder === 'gif'
         ? ['-filter_complex', 'split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4', '-loop', '0']
         : ['-c:v', 'libwebp_anim', '-lossless', '0', '-q:v', '55', '-loop', '0'];
       const result = spawnSync(ffmpeg, ['-y', '-hide_banner', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', `${width}x${height}`, '-r', String(fps), '-i', 'pipe:0', ...codec, out], { input: decode.stdout.subarray(0, count * frameBytes), maxBuffer: 1 << 26 });
-      if (result.status !== 0) throw new Error(`${encoder} preview encode failed: ${result.stderr.toString().trim().split('\n').at(-1)}`);
+      if (result.status !== 0) throw new Error(`${encoder} preview encode failed: ${result.stderr.toString().trim().split(/\r?\n/).at(-1)}`);
     }
     const bytes = statSync(out).size;
     results.push({ width, fps, bytes, frames: count });

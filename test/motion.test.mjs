@@ -53,13 +53,19 @@ test('motion skill is enrolled on every catalog, listing and pack surface', () =
   assert.match(read('README.md'), new RegExp(`It ships ${count} skills`));
   const files = packFiles();
   for (const path of ['SKILL.md', 'NOTICE', 'THIRD_PARTY_NOTICES', 'package.json', 'package-lock.json', 'requirements-audio.txt', 'fonts/pins.json', 'fonts/stroke/OFL-1.1.txt', 'fonts/stroke/CREDITS', 'scripts/motion.mjs', 'scripts/prewarm.mjs', 'scripts/beat_grid.py', 'scripts/page/engine.js', 'scripts/lib/gate.mjs',
-    'references/treatment.md', 'references/stage.md', 'scripts/stage/stage-kit.js', 'scripts/stage/host.js', 'scripts/stage/qa.js', 'scripts/lib/treatment.mjs', 'scripts/lib/stage.mjs', 'scripts/lib/stage-session.mjs', 'scripts/lib/stage-qa.mjs', 'scripts/lib/stage-gate.mjs', 'scripts/lib/sound.mjs', 'scripts/lib/soundtrack.mjs', 'scripts/lib/look.mjs', 'scripts/lib/stills.mjs', 'scripts/lib/frame-pool.mjs', 'scripts/lib/encode.mjs']) {
+    'references/treatment.md', 'references/stage.md', 'scripts/stage/stage-kit.js', 'scripts/stage/host.js', 'scripts/stage/qa.js', 'scripts/lib/treatment.mjs', 'scripts/lib/stage.mjs', 'scripts/lib/stage-session.mjs', 'scripts/lib/stage-qa.mjs', 'scripts/lib/stage-gate.mjs', 'scripts/lib/sound.mjs', 'scripts/lib/soundtrack.mjs', 'scripts/lib/look.mjs', 'scripts/lib/stills.mjs', 'scripts/lib/frame-pool.mjs', 'scripts/lib/encode.mjs',
+    'references/cover.md', 'scripts/lib/cover.mjs', 'scripts/lib/cover-gate.mjs', 'scripts/lib/cover-webp.mjs', 'scripts/lib/cover-capture.mjs', 'scripts/lib/cover-pool.mjs', 'scripts/lib/cover-image.mjs', 'scripts/lib/cover-sheet.mjs', 'scripts/lib/cover-treatment.mjs', 'scripts/lib/cover-assets.mjs',
+    'scripts/stage/loop-kit.js', 'scripts/stage/cover-init.js', 'fonts/JetBrainsMono-wght-latin.woff2', 'fonts/JetBrainsMono-OFL.txt', 'recipes/painted-light/expected.json', 'recipes/negatives/reset-sweep/expected.json']) {
     assert.ok(files.includes(`.grok/skills/lit-typographic-motion/${path}`), `${path} is not packed`);
   }
   assert.ok(!files.some((file) => file.startsWith('test/')), 'test data must stay out of the pack');
   const skillFiles = files.filter((file) => file.startsWith('.grok/skills/lit-typographic-motion/'));
   assert.ok(!skillFiles.some((file) => /fixtures|treatment-(stage|type)\.json/.test(file)), 'no stage or treatment fixture ships');
-  assert.ok(!skillFiles.some((file) => /\.(html|wav|mp4)$/.test(file)), 'the kit ships no scene page, sound or film');
+  assert.ok(!skillFiles.some((file) => /\.(wav|mp4)$/.test(file)), 'the kit ships no sound or film, recipes included');
+  assert.ok(!skillFiles.some((file) => file.endsWith('.html') && !file.includes('/recipes/')), 'the kit ships no scene page outside recipes/');
+  // The one exception is cover mode's worked pages: three recipes and four negatives, each a single page.
+  const pages = skillFiles.filter((file) => file.endsWith('.html')).map((file) => file.replace('.grok/skills/lit-typographic-motion/', '')).sort();
+  assert.deepEqual(pages, ['recipes/negatives/card-scenes/index.html', 'recipes/negatives/reset-sweep/index.html', 'recipes/negatives/still-glow/index.html', 'recipes/negatives/title-slam/index.html', 'recipes/orbit-loop/index.html', 'recipes/painted-light/index.html', 'recipes/weight-tide/index.html']);
 });
 
 test('SKILL.md stays lean, loads the treatment first, routes every reference, and names the director order', () => {
@@ -97,6 +103,7 @@ test('references are dense and cover the required operating sections', () => {
     'complete-contract.md': ['#contract.output_channels', 'verify', 'DONE_UNVIEWED', 'no internal names'],
     'treatment.md': ['announcement:', 'brand-mood:', 'event:', 'explainer:', 'motion-graphics:', 'type-led:', 'Show the subject; do not only name it.', 'Length comes from the arc', 'inventions', '```json'],
     'stage.md': ['LitStage.define', '/lit/stage-kit.js', '/lit/fonts.css', 'COPY', 'LitStage.text', 'exit 17', 'exit 18', 'exit 19', 'morph', '600 s'],
+    'cover.md': ['## What changes from a film', '## Page contract', '## The cover treatment', '## Assets (`assets.json`)', '## Craft rules, ranked', '## Recipes', '## Loop kit', '## Encode', '## Gate (decoded file)', '## Review', '## Defects and window re-renders', '## Rounds and done', '## Recipe rows and negatives', 'renderFrame(t', '/lit/loop-kit.js', 'BLOCKED_ASSET_MISSING', 'BLOCKED_NO_COVER_ENCODER', 'PASS+TARGET', '--window', 'qa:cover-recipes', 'image viewing'],
   };
   for (const [name, needles] of Object.entries(required)) {
     const body = read(`.grok/skills/lit-typographic-motion/references/${name}`);

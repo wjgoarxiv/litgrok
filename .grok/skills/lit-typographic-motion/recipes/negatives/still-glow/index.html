@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- NEGATIVE, never a recipe: a still picture with a faint breathing glow, which the lossy encoder
+     drops. It must keep failing the cover gate on G2 and G3. -->
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<style>
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: #080c12; color: #f1eee2; font-family: "JetBrains Mono"; }
+  .line { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+  body.mask, body.mask * { background: #000 !important; color: #000 !important; border-color: #000 !important; }
+  body.mask .title { color: #fff !important; }
+</style>
+</head>
+<body>
+<div class="line" id="glow" style="top:0;height:600px;background:radial-gradient(ellipse at 50% 45%, #ff6a3d22, transparent 60%)"></div>
+<div class="line title" style="top:210px;font-size:110px;font-weight:800;letter-spacing:6px">LITGROK</div>
+<div class="line" style="top:360px;font-size:28px;font-weight:500">KEEP THE WORK <span style="color:#ff6a3d">LIT.</span></div>
+<script>
+window.renderFrame = (t, o = {}) => { document.body.className = o.mask ? 'mask' : ''; document.getElementById('glow').style.opacity = 0.75 + 0.25 * Math.sin(LitLoop.TAU * t); };
+document.fonts.ready.then(() => { window.ready = true; });
+</script>
+</body>
+</html>

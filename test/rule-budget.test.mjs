@@ -10,13 +10,19 @@ import { run } from '../bin/litgrok.mjs';
 // Grok Build loads every installed `.grok/rules/*.md` file in full on every turn, and it discards
 // the stdout of an allowing UserPromptSubmit hook. So the per-turn text LitGrok adds is the rule
 // file plus nothing from the prompt hook, whatever the prompt says. The ceiling keeps the rule
-// from growing back; raise it only together with a measured reason.
-const RULE_BUDGET_BYTES = 15_500;
+// from growing back; raise it only together with a measured reason. 15,600 held the Re-entry
+// section, which stops a repeated `lit` from reloading and restarting an active mode; 15,800 adds the
+// brainstorm route and the `lit review plan|work` spelling (199 bytes), with the depth kept in the skills;
+// 15,880 adds the film section's pointer to the README cover loop commands (73 bytes); 15,960 adds
+// the line that puts a Markdown report's figures in a table and its decisions in a numbered list (89 bytes);
+// 16,160 adds the reader-facing line on when a reply's results belong in a short table (195 bytes).
+const RULE_BUDGET_BYTES = 16_160;
 const ROUTES = {
   'lit, English': 'lit fix the failing date parser',
   'lit, Korean': 'lit 날짜 파서 버그 고쳐줘',
   'lit-loop': 'lit-loop finish the migration',
   'lit-plan': 'lit-plan plan the cache rewrite',
+  'lit-brainstorm': 'lit brainstorm a name for my app',
   'plain, English': 'what does this function return?',
   'plain, Korean': '이 함수는 무엇을 반환하나요?',
   'slash': '/lit-plan plan the cache rewrite',

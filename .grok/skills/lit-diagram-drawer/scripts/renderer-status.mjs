@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import proc from '../../lit-pptx/scripts/proc.cjs';
 
 const MINIMUM = [0, 38, 1];
 
@@ -11,7 +11,7 @@ function atLeast(version, floor) {
 }
 
 export function inspectRenderer(env = process.env) {
-  const versionResult = spawnSync('agent-browser', ['--version'], { encoding: 'utf8', env, maxBuffer: 1024 * 1024 });
+  const versionResult = proc.run('agent-browser', ['--version'], { encoding: 'utf8', env, maxBuffer: 1024 * 1024 }, { env });
   const versionText = (versionResult.stdout || versionResult.stderr || '').trim();
   const found = versionText.match(/(?:^|\s)v?(\d+)\.(\d+)\.(\d+)(?:\b|$)/);
   if (versionResult.status !== 0 || !found) {
@@ -29,7 +29,7 @@ export function inspectRenderer(env = process.env) {
       setup: 'Upgrade agent-browser yourself to >=0.38.1 with: npm install -g agent-browser',
     };
   }
-  const doctor = spawnSync('agent-browser', ['doctor', '--json'], { encoding: 'utf8', env, maxBuffer: 1024 * 1024 });
+  const doctor = proc.run('agent-browser', ['doctor', '--json'], { encoding: 'utf8', env, maxBuffer: 1024 * 1024 }, { env });
   let report = null;
   try { report = JSON.parse(doctor.stdout); } catch {}
   const check = report?.checks?.find((item) => item.id === 'chrome.installed');

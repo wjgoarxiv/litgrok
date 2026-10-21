@@ -149,10 +149,10 @@ test('HUD discipline follows bounded visible prompt tokens and clears code or no
     const records = readHudRecords(stateRoot);
     assert.ok(records.every((record) => record.discipline === discipline), `${prompt}: HUD records should be ${discipline}`);
 
-    const status = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0', COLUMNS: '120' } });
+    const status = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0', COLUMNS: '120', LITGROK_HUD_LINES: '1' } });
     assert.equal(status.status, 0, `${prompt}: ${status.stderr}`);
     const expected = discipline
-      ? `[🔥LIT] 🔥 LIT IGNITED · ${discipline} 🔥 | grok-4 │ ctx [█▎░] 42%`
+      ? `[🔥LIT] | grok-4 │ ctx [█▎░] 42% │ 🔥 LIT IGNITED · ${discipline} 🔥`
       : '[🔥LIT] | grok-4 │ ctx [█▎░] 42%';
     assert.equal(stripVTControlCharacters(status.stdout).trim(), expected, prompt);
     assert.equal(status.stdout.includes('\u001b'), false, 'the plain HUD row emits zero escape bytes');
@@ -184,44 +184,39 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const hook = runPromptHook({ home, workspace, stateRoot });
   assert.equal(hook.status, 0, hook.stderr);
+  const ONE = { LITGROK_HUD_LINES: '1' };
 
-  const plain = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0' } });
+  const plain = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, LITGROK_HUD_COLOR: '0' } });
   assert.equal(plain.status, 0, plain.stderr);
-  assert.equal(stripVTControlCharacters(plain.stdout).trim(), '[🔥LIT] 🔥 LIT IGNITED · lit-plan 🔥 | grok-4 │ ctx [█▎░] 42%');
+  assert.equal(stripVTControlCharacters(plain.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42% │ 🔥 LIT IGNITED · lit-plan 🔥');
   assert.equal(plain.stdout.includes('\u001b'), false, 'LITGROK_HUD_COLOR=0 emits zero escape bytes');
+
+  // While a discipline is active the default HUD is the card: its title and the figures.
+  const card = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '0' } });
+  const cardLines = stripVTControlCharacters(card.stdout).trimEnd().split('\n');
+  assert.equal(cardLines.length, 2);
+  assert.match(cardLines[0], /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2,}idle$/u, 'the state sits at the right edge');
+  assert.equal([...cardLines[0]].length + 2, 79, 'without COLUMNS the card keeps to 79 cells (each of the two flames is two)');
+  assert.equal(cardLines[1], 'grok-4 │ ctx [█▎░] 42%');
 
   const otherWorkspace = join(root, 'other-workspace');
   mkdirSync(otherWorkspace);
   const idle = runStatus({ home, stateRoot, cwd: otherWorkspace, env: { LITGROK_HUD_COLOR: '0' } });
   assert.equal(idle.status, 0, idle.stderr);
-  assert.equal(stripVTControlCharacters(idle.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42%');
+  assert.equal(stripVTControlCharacters(idle.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42%', 'with nothing active the HUD stays one row');
   const coloredIdle = runStatus({ home, stateRoot, cwd: otherWorkspace });
   assert.equal(coloredIdle.status, 0, coloredIdle.stderr);
   assert.equal(stripVTControlCharacters(coloredIdle.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42%');
-  assert.match(coloredIdle.stdout, /^\u001b\[1m\u001b\[38;2;255;99;55m\[🔥LIT\]\u001b\[0m \| /u, 'the brand keeps its orange style');
+  assert.ok(coloredIdle.stdout.startsWith('\u001b[0m\u001b[1m[🔥\u001b[38;2;255;45;149mL\u001b[38;2;128;137;202mI\u001b[38;2;0;229;255mT\u001b[38;2;0;229;255m]\u001b[0m'), 'the family mark');
+  assert.match(coloredIdle.stdout, /\u001b\[38;2;255;99;55m\[?█/u, 'a context below 70% is the accent');
 
-  const colored = runStatus({ home, stateRoot, cwd: workspace });
+  const colored = runStatus({ home, stateRoot, cwd: workspace, env: ONE });
   assert.equal(colored.status, 0, colored.stderr);
-  const visible = stripVTControlCharacters(colored.stdout).trim();
-  const label = 'LIT IGNITED · lit-plan';
-  const coloredLine = colored.stdout.trimEnd();
-  assert.equal(visible, '[🔥LIT] 🔥 LIT IGNITED · lit-plan 🔥 | grok-4 │ ctx [█▎░] 42%');
-  assert.ok(coloredLine.startsWith('\u001b[1m\u001b[38;2;255;99;55m[🔥LIT]\u001b[0m 🔥 \u001b[1m\u001b[38;2;255;99;55mL'), 'color is enabled while stdout is a pipe');
-  assert.ok(coloredLine.includes('\u001b[38;2;0;229;255mn\u001b[0m 🔥 |'), 'the label ends at cyan before the unpainted flame');
-  assert.match(coloredLine, /mT \u001b\[38;2;\d+;\d+;\d+mI/u, 'the space after LIT is unpainted');
-  assert.match(coloredLine, /m· \u001b\[38;2;\d+;\d+;\d+ml/u, 'the space after the separator is unpainted');
-  // Bold is set once for the label and each letter changes only the colour, which keeps the row under Grok's 1024-character cut.
-  const labelStart = coloredLine.indexOf('🔥 \u001b[1m') + '🔥 \u001b[1m'.length;
-  const labelText = coloredLine.slice(labelStart, coloredLine.indexOf('\u001b[0m', labelStart));
-  const painted = [...labelText.matchAll(/\u001b\[38;2;(\d+;\d+;\d+)m([^\u001b ])/gu)];
-  assert.equal(painted.map((match) => match[2]).join(''), [...label].filter((character) => character !== ' ').join(''));
-  assert.equal(stripVTControlCharacters(labelText), label);
-  assert.ok(coloredLine.includes('\u001b[0m 🔥 \u001b'), 'the leading flame and space are unpainted');
-  const secondFlame = coloredLine.indexOf('🔥 | ');
-  assert.notEqual(secondFlame, -1, 'the trailing flame remains present');
-  assert.doesNotMatch(coloredLine.slice(secondFlame), /\u001b/u, 'the trailing flame and model/context segment are unpainted');
+  const visible = '[🔥LIT] | grok-4 │ ctx [█▎░] 42% │ 🔥 LIT IGNITED · lit-plan 🔥';
+  assert.equal(stripVTControlCharacters(colored.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42% │  🔥 LIT  IGNITED · lit-plan 🔥', 'in colour the 🔥 LIT of the mark is a padded chip');
+  assert.ok(colored.stdout.includes('\u001b[48;2;255;45;149m\u001b[38;2;11;15;20m\u001b[1m 🔥 LIT \u001b[0m\u001b[1m\u001b[38;2;255;99;55m IGNITED · lit-plan 🔥\u001b[0m'), 'a pink chip, then the bold accent');
 
-  const noColor = runStatus({ home, stateRoot, cwd: workspace, env: { NO_COLOR: '1' } });
+  const noColor = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, NO_COLOR: '1' } });
   assert.equal(noColor.status, 0, noColor.stderr);
   assert.equal(stripVTControlCharacters(noColor.stdout).trim(), visible);
   assert.equal(noColor.stdout.includes('\u001b'), false, 'NO_COLOR emits zero escape bytes');
@@ -234,18 +229,18 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
     workspaceRoot: workspace,
     discipline: longDiscipline,
   });
-  const clippedDiscipline = runStatus({ home, stateRoot, cwd: workspace });
+  const clippedDiscipline = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, COLUMNS: '60' } });
   assert.equal(clippedDiscipline.status, 0, clippedDiscipline.stderr);
-  assert.match(stripVTControlCharacters(clippedDiscipline.stdout), /🔥 LIT IGNITED · [^\n]*… 🔥/u);
-  assert.match(clippedDiscipline.stdout, /\u001b\[38;2;\d+;\d+;\d+m…\u001b\[0m/u, 'the clipped ellipsis is painted after plain-text clipping');
+  assert.match(stripVTControlCharacters(clippedDiscipline.stdout).trimEnd(), /^\[🔥LIT\] \| … │ ctx \[█▎░\] 42% │ {2}🔥 LIT {2}IGNITED · [^\n]*… 🔥$/u, 'the model is clipped first, then the discipline');
+  assert.match(clippedDiscipline.stdout, /\u001b\[38;2;255;99;55m IGNITED · [^\u001b]*… 🔥\u001b\[0m/u, 'the clipped ellipsis is painted after plain-text clipping');
 
-  const long = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), extra: { effort: { level: 'high' }, context_window: { used_percentage: 42, context_window_size: 256000 } } });
+  const long = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), env: ONE, extra: { effort: { level: 'high' }, context_window: { used_percentage: 42, context_window_size: 256000 } } });
   assert.equal(long.status, 0, long.stderr);
   const bounded = stripVTControlCharacters(long.stdout).trim();
   assert.equal(bounded.split(/\r?\n/u).length, 1);
   assert.ok(bounded.length < 80, 'the row must be trimmed below 80 cells');
-  assert.match(bounded, /… \[high\] │ ctx \[█▎░\] 42%\/256k$/u, 'only the model name is clipped');
-  const wide = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), env: { COLUMNS: '200' } });
+  assert.match(bounded, /^\[🔥LIT\] \| … \[high\] │ ctx \[█▎░\] 42%\/256k │ /u, 'the model name is clipped and the effort and gauge stay');
+  const wide = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), env: { ...ONE, COLUMNS: '200' } });
   assert.ok(stripVTControlCharacters(wide.stdout).trim().length > 80, 'a wider row from Grok COLUMNS keeps more of the model');
 });
 
@@ -510,6 +505,40 @@ test('the finish notification leaves the user\'s own notification settings and c
   writeFileSync(config, edited.replace('condition = "unfocused"', 'condition = "always"'));
   assert.equal(removeNotifications(root).changed, true);
   assert.equal(readFileSync(config, 'utf8'), 'a = 1', 'the newline LitGrok added goes too');
+});
+
+test('a config.toml edited between the backup and the replace is kept, not overwritten', (t) => {
+  const { root, home } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const grokRoot = join(home, '.grok');
+  mkdirSync(grokRoot);
+  const config = join(grokRoot, 'config.toml');
+  const original = '[model]\nname = "grok-4"\n';
+  const edited = '[model]\nname = "grok-4-heavy"\n';
+  const cases = [
+    ['status line', (options) => installStatusLine(grokRoot, options)],
+    ['notification', (options) => installNotifications(grokRoot, options)],
+  ];
+  for (const [name, install] of cases) {
+    writeFileSync(config, original);
+    let raced = 0;
+    const afterBackup = () => {
+      raced += 1;
+      writeFileSync(config, edited);
+    };
+    assert.throws(() => install({ afterBackup }), { code: 'STATUS_CONFIG_CHANGED' }, name);
+    assert.equal(raced, 1, `${name}: the seam runs once, after the backup`);
+    assert.equal(readFileSync(config, 'utf8'), edited, `${name}: the concurrent edit survives`);
+    const left = readdirSync(grokRoot);
+    assert.equal(left.filter((entry) => entry.endsWith('.tmp')).length, 0, `${name}: no temporary file is left`);
+    const backups = left.filter((entry) => entry.startsWith('config.toml.litgrok-backup-'));
+    assert.ok(backups.some((entry) => readFileSync(join(grokRoot, entry), 'utf8') === original), `${name}: the backup holds the pre-edit bytes`);
+  }
+  writeFileSync(config, original);
+  assert.equal(installStatusLine(grokRoot).changed, true);
+  const managed = readFileSync(config, 'utf8');
+  assert.throws(() => removeStatusLine(grokRoot, { afterBackup: () => writeFileSync(config, `${managed}# mine\n`) }), { code: 'STATUS_CONFIG_CHANGED' });
+  assert.equal(readFileSync(config, 'utf8'), `${managed}# mine\n`, 'removal keeps a concurrent edit too');
 });
 
 test('status-line install refuses a symlinked config.toml and leaves its target alone', (t) => {

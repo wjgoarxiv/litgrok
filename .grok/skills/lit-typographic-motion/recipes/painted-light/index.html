@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Recipe: painted base + travelling light (painted-light, the default cover recipe). A worked page,
+     not a template to ship as is: the PAINTING block holds every number that belongs to one picture
+     (the LitFamily line-up, 1536 x 1024, listed in assets.json as cover/assets/base.png). Measure
+     your own painting into it and keep the rules. The painting is scaled into its box, never
+     cropped; at 2:1 a 3:2 painting is pillarboxed and the side wings stay quiet. Any bay can be the
+     hero: set PAINTING.hero, give that machine its own lenses, and point the base art's checkBox in
+     assets.json at the same bay. -->
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<style>
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: #04070c; }
+  #wings, #motes { position: absolute; left: 0; top: 0; width: 1200px; height: 600px; }
+  #motes { mix-blend-mode: screen; }
+  .art { position: absolute; left: 150px; top: 0; width: 1536px; height: 1024px; transform: scale(0.5859375); transform-origin: 0 0; }
+  .art > canvas, .art > svg { position: absolute; left: 0; top: 0; width: 1536px; height: 1024px; }
+  #mask { display: none; }
+  body.mask, body.mask * { background: #000 !important; }
+  body.mask canvas, body.mask svg { visibility: hidden; }
+  body.mask #mask { display: block; visibility: visible; }
+</style>
+</head>
+<body>
+<canvas id="wings" width="2400" height="1200"></canvas>
+<div class="art">
+  <canvas id="paint" width="1536" height="1024"></canvas>
+  <canvas id="mask" width="1536" height="1024"></canvas>
+  <svg viewBox="0 0 1536 1024"><defs><linearGradient id="dim" gradientUnits="userSpaceOnUse" y1="0" y2="0"></linearGradient><clipPath id="poolClip"></clipPath></defs><rect id="pool" fill="url(#dim)" clip-path="url(#poolClip)"/></svg>
+  <svg viewBox="0 0 1536 1024" style="mix-blend-mode: screen">
+    <defs id="defs">
+      <filter id="haze" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+      <radialGradient id="ember"><stop offset="0" stop-color="#fff2dc" stop-opacity="0.9"/><stop offset="0.35" stop-color="#ff6a30" stop-opacity="0.5"/><stop offset="1" stop-color="#ff6a30" stop-opacity="0"/></radialGradient>
+      <radialGradient id="spark"><stop offset="0" stop-color="#fff3e2"/><stop offset="0.45" stop-color="#ffb070" stop-opacity="0.5"/><stop offset="1" stop-color="#ff7840" stop-opacity="0"/></radialGradient>
+    </defs>
+    <g id="bands"></g>
+    <g id="lenses"></g>
+    <g id="comet" fill="none" stroke-linecap="round"></g>
+    <ellipse id="flare" fill="url(#ember)" opacity="0"/>
+  </svg>
+  <svg viewBox="0 0 1536 1024" style="mix-blend-mode: overlay"><defs><filter id="soft"><feGaussianBlur stdDeviation="6"/></filter></defs><polygon id="glint" fill="#ffffff" opacity="0" filter="url(#soft)"/></svg>
+</div>
+<canvas id="motes" width="2400" height="1200"></canvas>
+<script>
+// ---- PAINTING: every coordinate here belongs to one picture, in its own pixels ----
+const PAINTING = {
+  src: 'assets/base.png', width: 1536, height: 1024,
+  bays: [[13, 303], [320, 607], [623, 906], [921, 1208], [1224, 1526]], // robot panels, left to right
+  top: 148, bottom: 945,
+  hero: 4, // index into bays: the machine that stays lit, carries the lenses and the comet (here the LitGrok robot)
+  title: { box: [455, 32, 635, 88], level: 60 }, // the painted LITFAMILY; level separates letters from plate
+  // Lenses per bay index, measured on that machine: x, y, radius of each eye lens. Only the hero's entry
+  // lights. A hero with no entry stops the page; [] runs it with no lenses.
+  lenses: { 4: [[1304, 336, 15], [1308, 375, 15], [1317, 418, 14]] },
+  accent: { cx: 902, cy: 987, rx: 60, ry: 22 }, // the LIT. at the end of the painted motto
+};
+const LEFT = 150, SCALE = 0.5859375;
+
+// Three speed layers, all drawn from t:
+// slow  - a comet laps the hero frame once per loop; motes rise one screen per loop.
+// mid   - a window of work light walks the dim bays once per loop. It is a moving EDGE (24 px
+//         feather), never an in-place fade: lossy animated WebP skips pixels that change by a few
+//         levels per frame, so a slow fade goes stale and snaps at the next keyframe. Each bay also
+//         gets a scan band twice per loop, offset by its position.
+// beat  - the hero's lenses light top to bottom twice per loop, a glint crosses the title once,
+//         and the LIT. accent pulses at t = 0 and t = 0.5 (a symmetric pulse, so the seam lands
+//         under motion).
+const { TAU, clamp, fract, mix, ease, cubicPulse, cdist, rng, makeNoise, loopNoise } = LitLoop;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (id) => document.getElementById(id);
+const el = (parent, tag, attrs) => { const node = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v)); parent.appendChild(node); return node; };
+const set = (node, attrs) => { for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v)); };
+
+if (!PAINTING.bays[PAINTING.hero]) throw new Error(`PAINTING.hero ${PAINTING.hero} is not a bay index (0 to ${PAINTING.bays.length - 1})`);
+const heroLenses = PAINTING.lenses[PAINTING.hero];
+if (!Array.isArray(heroLenses)) throw new Error(`PAINTING.lenses has no entry for the hero bay ${PAINTING.hero}: measure that machine's eye lenses, or set lenses[${PAINTING.hero}] = [] to run with no lenses`);
+const [hx0, hx1] = PAINTING.bays[PAINTING.hero];
+
+// The dim pool spans the first to the last dim bay and is clipped around the hero, so a hero in the
+// middle stays lit; the window is a flat lit span with a sharp feather that walks every bay.
+const sleepers = PAINTING.bays.filter((_, i) => i !== PAINTING.hero);
+const span = [Math.min(...sleepers.map((b) => b[0])), Math.max(...sleepers.map((b) => b[1]))];
+const POOL = { feather: 24, half: 220, dark: 0.66, lit: 0.04 };
+set($('pool'), { x: span[0], y: PAINTING.top, width: span[1] - span[0], height: PAINTING.bottom - PAINTING.top });
+set($('dim'), { x1: span[0], x2: span[1] });
+if (hx0 > span[0]) el($('poolClip'), 'rect', { x: span[0], y: PAINTING.top, width: hx0 - span[0], height: PAINTING.bottom - PAINTING.top });
+if (hx1 < span[1]) el($('poolClip'), 'rect', { x: hx1, y: PAINTING.top, width: span[1] - hx1, height: PAINTING.bottom - PAINTING.top });
+const stops = Array.from({ length: 6 }, () => el($('dim'), 'stop', { 'stop-color': '#02050a' }));
+const windowAt = (t) => mix(span[0] - 320, span[1] + 320, fract(t + 0.2));
+const lightAt = (t, x) => 1 - ease.smooth(clamp((Math.abs(x - windowAt(t)) - POOL.half) / POOL.feather));
+
+// Scan bands: a 3 px leading line over a two-step flat afterglow, clipped to the bay. Flat steps
+// change pixels only where an edge passes, by more than the encoder's threshold.
+const BAND = 60, AFTERGLOW = [0.1, 0.05];
+const bands = PAINTING.bays.map(([x0, x1], i) => {
+  el(el($('defs'), 'clipPath', { id: `bay${i}` }), 'rect', { x: x0 + 2, y: PAINTING.top, width: x1 - x0 - 4, height: PAINTING.bottom - PAINTING.top });
+  const g = el($('bands'), 'g', { 'clip-path': `url(#bay${i})` });
+  const steps = AFTERGLOW.map((a) => el(g, 'rect', { x: x0 + 2, y: 0, width: x1 - x0 - 4, height: BAND / AFTERGLOW.length, fill: '#ffb27a', opacity: a }));
+  const lead = el(g, 'rect', { x: x0 + 2, y: 0, width: x1 - x0 - 4, height: 3, fill: '#ffcaa2', opacity: 0.32 });
+  return { g, steps, lead };
+});
+const lenses = heroLenses.map(([cx, cy, r]) => el($('lenses'), 'circle', { cx, cy, r: r + 26, fill: 'url(#ember)', opacity: 0 }));
+set($('flare'), PAINTING.accent);
+
+// The hero frame as one chamfered path; the comet's tail is stacked dashes of falling opacity.
+const L = hx0 + 0.5, R = hx1 + 0.5, T = PAINTING.top + 0.5, B = PAINTING.bottom + 0.5, C = 10;
+const frame = `M${L} ${T + C}L${L + C} ${T}H${R - C}L${R} ${T + C}V${B - C}L${R - C} ${B}H${L + C}L${L} ${B - C}Z`;
+const tail = Array.from({ length: 6 }, (_, s) => el($('comet'), 'path', { d: frame, stroke: '#ff7a46', 'stroke-width': 9 - s, opacity: 0.55 * (1 - s / 6), filter: s < 2 ? 'url(#haze)' : '' }));
+const head = el($('comet'), 'path', { d: frame, stroke: '#ffd4b2', 'stroke-width': 3 });
+const tip = el($('comet'), 'circle', { r: 22, fill: 'url(#spark)' });
+const LAP = head.getTotalLength();
+const [tx, ty, tw, th] = PAINTING.title.box;
+set($('glint'), { points: `0,${ty - 8} 60,${ty - 8} 25,${ty + th + 8} -35,${ty + th + 8}` });
+
+// Motes: few, mostly on the plain wings (each one over the painting makes the encoder re-send the
+// textured blocks around it).
+const seeded = rng(29), noise = makeNoise(13);
+const motes = Array.from({ length: 48 }, (_, i) => {
+  const onWing = seeded() < 0.7;
+  const x = onWing ? (seeded() < 0.5 ? seeded() * (LEFT - 12) : 1200 - LEFT + 12 + seeded() * (LEFT - 12)) : LEFT + seeded() * 900;
+  return { x, y0: seeded() * 600, laps: 1 + (seeded() < 0.3 ? 1 : 0), size: 0.7 + seeded() * 1.3, alpha: 0.25 + seeded() * 0.45, i };
+});
+const wings = $('wings').getContext('2d'); wings.scale(2, 2);
+const sparks = $('motes').getContext('2d'); sparks.scale(2, 2);
+
+window.renderFrame = (t, o = {}) => {
+  document.body.className = o.mask ? 'mask' : '';
+  if (o.mask) return;
+  const centre = windowAt(t), along = (x) => clamp((x - span[0]) / (span[1] - span[0]));
+  [[span[0], POOL.dark], [centre - POOL.half - POOL.feather, POOL.dark], [centre - POOL.half, POOL.lit], [centre + POOL.half, POOL.lit], [centre + POOL.half + POOL.feather, POOL.dark], [span[1], POOL.dark]]
+    .forEach(([x, a], j) => set(stops[j], { offset: j === 0 ? 0 : along(x), 'stop-opacity': a }));
+  PAINTING.bays.forEach(([x0, x1], i) => {
+    const y = mix(PAINTING.top - BAND, PAINTING.bottom, fract(2 * t - 0.13 * i));
+    bands[i].steps.forEach((step, j) => set(step, { y: y + BAND - (j + 1) * (BAND / AFTERGLOW.length) }));
+    set(bands[i].lead, { y: y + BAND - 3 });
+    set(bands[i].g, { opacity: i === PAINTING.hero ? 0.8 : 0.35 + 0.65 * lightAt(t, (x0 + x1) / 2) });
+  });
+  // Lenses light top to bottom twice per loop, each with a symmetric pulse; between pulses they idle.
+  lenses.forEach((lens, k) => {
+    const p = fract(2 * t - k / 9);
+    set(lens, { opacity: 0.42 + 0.5 * Math.max(cubicPulse(0, 0.08, p), cubicPulse(1, 0.08, p)) });
+  });
+  const lead = fract(t) * LAP, length = 0.16 * LAP;
+  tail.forEach((path, s) => { const l = length * (1 - s / 7); set(path, { 'stroke-dasharray': `${l} ${LAP - l}`, 'stroke-dashoffset': -(lead - l) }); });
+  set(head, { 'stroke-dasharray': `${length * 0.35} ${LAP - length * 0.35}`, 'stroke-dashoffset': -(lead - length * 0.35) });
+  const point = head.getPointAtLength(lead);
+  set(tip, { cx: point.x, cy: point.y });
+  // One fast skewed glint across the title in overlay blend: the plate stays dark, only the letters
+  // brighten (screen lights a visible box; colour-dodge turns coloured letters into a red block).
+  const g = LitLoop.window(t, 0.62, 0.11);
+  set($('glint'), { transform: `translate(${mix(tx - 40, tx + tw + 40, g < 0 ? 0 : ease.smooth(g))} 0)`, opacity: g < 0 ? 0 : 0.9 * Math.sin(Math.PI * g) });
+  set($('flare'), { opacity: 0.18 + 0.5 * Math.max(cubicPulse(0, 0.03, cdist(t, 0)), cubicPulse(0.5, 0.03, t)) });
+  wings.clearRect(0, 0, 1200, 600);
+  const spill = (x, w, a) => { const grad = wings.createLinearGradient(x, 0, x + w, 0); grad.addColorStop(0, `rgba(255,118,64,${a})`); grad.addColorStop(1, 'rgba(255,118,64,0)'); wings.fillStyle = grad; wings.fillRect(Math.min(x, x + w), 0, Math.abs(w), 600); };
+  spill(LEFT, -LEFT, 0.03);
+  spill(1200 - LEFT, LEFT, 0.08);
+  sparks.clearRect(0, 0, 1200, 600);
+  for (const m of motes) {
+    const y = 620 - fract(m.y0 / 600 + m.laps * t) * 640;
+    const x = m.x + 12 * loopNoise(noise, t, m.i * 1.9, 1.1);
+    const inside = x >= LEFT && x <= 1200 - LEFT;
+    sparks.fillStyle = `rgba(255,212,168,${m.alpha * (inside ? 0.3 + 0.7 * lightAt(t, (x - LEFT) / SCALE) : 0.4)})`;
+    sparks.beginPath(); sparks.arc(x, y, m.size, 0, TAU); sparks.fill();
+  }
+};
+
+// The painting is drawn once. The mask pass shows the painted title's letters white on black (the
+// pixels above the plate's level), so the contrast and size gates measure the real letters.
+const picture = new Image();
+picture.src = PAINTING.src;
+picture.decode().then(() => {
+  const paint = $('paint').getContext('2d', { willReadFrequently: true });
+  paint.drawImage(picture, 0, 0, PAINTING.width, PAINTING.height);
+  const letters = paint.getImageData(tx, ty, tw, th);
+  const mask = new ImageData(tw, th);
+  for (let p = 0; p < tw * th; p += 1) {
+    const o = p * 4;
+    const Y = 0.2126 * letters.data[o] + 0.7152 * letters.data[o + 1] + 0.0722 * letters.data[o + 2];
+    mask.data[o] = mask.data[o + 1] = mask.data[o + 2] = Y > PAINTING.title.level ? 255 : 0;
+    mask.data[o + 3] = 255;
+  }
+  const m = $('mask').getContext('2d');
+  m.fillStyle = '#000'; m.fillRect(0, 0, PAINTING.width, PAINTING.height);
+  m.putImageData(mask, tx, ty);
+  window.renderFrame(0);
+  window.ready = true;
+});
+</script>
+</body>
+</html>

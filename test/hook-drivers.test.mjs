@@ -613,6 +613,64 @@ test('bare lit and litwork do not add ledger discipline or arm the lit-plan Stop
   assert.equal(allPromptRecords.at(-1).discipline, 'lit-plan');
 });
 
+function disciplineSession(label) {
+  const workspaceRoot = planGateWorkspace(label);
+  const hudRoot = mkdtempSync(join(tmpdir(), 'litgrok-hud-continue-'));
+  test.after(() => rmSync(hudRoot, { recursive: true, force: true }));
+  const hudEnvironment = { LITGROK_HUD_STATE_ROOT: join(hudRoot, 'state') };
+  let count = 0;
+  return {
+    workspaceRoot,
+    hud: async () => (await import(join(HOOKS_DIRECTORY, 'litgrok-hud-state.mjs'))).readHudRecordForCwd(workspaceRoot, hudEnvironment)?.discipline,
+    turn(prompt, beforeStop = () => {}) {
+      const promptId = `prompt-${count += 1}`;
+      const event = turnEvent('UserPromptSubmit', workspaceRoot, { prompt, promptId });
+      const started = runHook(join(HOOKS_DIRECTORY, 'user-prompt-submit.mjs'), event, { ...passiveEnvironment(event, 'user-prompt-submit'), ...hudEnvironment });
+      assert.equal(started.status, 0, started.stderr);
+      beforeStop();
+      const stop = turnEvent('Stop', workspaceRoot, { reason: 'end_turn', promptId });
+      return runHook(join(HOOKS_DIRECTORY, 'stop.mjs'), stop, passiveEnvironment(stop, 'stop'));
+    },
+    persistPlan() {
+      writePlan(workspaceRoot, 'demo.md', '# demo\n\n## Todos\n- [ ] 1. First task\n');
+    },
+    agePlan() {
+      const past = new Date(Date.now() - 60_000);
+      utimesSync(join(workspaceRoot, 'plans', 'demo.md'), past, past);
+    },
+  };
+}
+
+test('bare lit after lit plan continues lit-plan: the Stop gate and the HUD keep it', async () => {
+  const session = disciplineSession('bare-lit-continues-plan');
+  assert.equal(session.turn('lit plan the refactor', () => session.persistPlan()).stdout, '', 'a persisted plan passes the gate');
+  assert.equal(await session.hud(), 'lit-plan');
+  session.agePlan();
+  assert.equal(JSON.parse(session.turn('lit').stdout).decision, 'block', 'bare lit must keep the plan gate armed');
+  assert.equal(await session.hud(), 'lit-plan', 'bare lit must not flip the HUD to litwork');
+  assert.equal(session.turn('lit new').stdout, '', 'lit new starts over and leaves the plan discipline');
+  assert.equal(await session.hud(), 'litwork');
+});
+
+test('lit continue after lit plan then lit brainstorm continues lit-brainstorm, with no plan gate', async () => {
+  const session = disciplineSession('bare-lit-continues-brainstorm');
+  assert.equal(session.turn('lit plan the refactor', () => session.persistPlan()).stdout, '');
+  session.agePlan();
+  assert.equal(session.turn('lit brainstorm a name').stdout, '', 'a brainstorm turn arms no plan gate');
+  assert.equal(await session.hud(), 'lit-brainstorm');
+  assert.equal(session.turn('lit continue').stdout, '', 'the last explicit switch was brainstorm, not plan');
+  assert.equal(await session.hud(), 'lit-brainstorm', 'a bare lit never switches the discipline');
+  assert.equal(session.turn('lit plan again').stdout.includes('block'), true, 'an explicit lit plan selects the plan again');
+  assert.equal(await session.hud(), 'lit-plan');
+});
+
+test('a bare lit right after lit brainstorm, with nothing else running, continues lit-brainstorm', async () => {
+  const session = disciplineSession('brainstorm-first');
+  assert.equal(session.turn('lit brainstorm a name').stdout, '');
+  assert.equal(session.turn('lit').stdout, '');
+  assert.equal(await session.hud(), 'lit-brainstorm');
+});
+
 test('Stop plan gate stays out of the way outside plan mode and for session-end or subagent fires', () => {
   const workspaceRoot = planGateWorkspace('inert');
   assert.equal(runTurn(workspaceRoot).stdout, '', 'default mode with no plan write must pass');

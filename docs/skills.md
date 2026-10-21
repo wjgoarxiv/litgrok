@@ -2,7 +2,7 @@
 
 [README](../README.md) · [한국어](./skills_ko-KR.md) · [Guide](./guide.md) · [Reference](./reference.md)
 
-All 38 skills, one row each. The routes are the ones each skill documents, and `/skills` shows what your Grok Build session actually loaded. A renamed skill still answers to its old name for one release ([rename compatibility](./reference.md#skill-rename-compatibility)); an old slash route may not carry over.
+All 39 skills, one row each. The routes are the ones each skill documents, and `/skills` shows what your Grok Build session actually loaded. A renamed skill still answers to its old name for one release ([rename compatibility](./reference.md#skill-rename-compatibility)); an old slash route may not carry over.
 
 <table>
 <tr><th>What it looks like</th><th>Skill</th><th>What you get</th></tr>
@@ -22,14 +22,14 @@ All 38 skills, one row each. The routes are the ones each skill documents, and `
 <td>Runs a plan row by row. A row is checked only after gates A to F pass.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/review-work.webp" width="240" alt="Six read-only review lanes rank what they find by evidence." /></td>
+<td><img src="./assets/skills/review-work.webp" width="240" alt="Reviews a plan before work starts or the work after it, picking the mode from what exists. Read-only lanes rank what they find by evidence." /></td>
 <td><code>review-work</code><br /><sub><code>/review-work &lt;target&gt;</code></sub></td>
-<td>Six read-only review lanes rank what they find by evidence.</td>
+<td>Reviews a plan before work starts or the work after it, picking the mode from what exists. Read-only lanes rank what they find by evidence.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/litgoal.webp" width="240" alt="Shapes one checkable goal and hands you a native /goal line to run. LitGrok stores no goal state." /></td>
+<td><img src="./assets/skills/litgoal.webp" width="240" alt="Sets one checkable finish line and hands you a native /goal line to run; litwork and start-work run toward it. LitGrok stores no goal state." /></td>
 <td><code>litgoal</code><br /><sub><code>/litgoal &lt;request&gt;</code></sub></td>
-<td>Shapes one checkable goal and hands you a native <code>/goal</code> line to run. LitGrok stores no goal state.</td>
+<td>Sets one checkable finish line and hands you a native <code>/goal</code> line to run; <code>litwork</code> and <code>start-work</code> run toward it. LitGrok stores no goal state.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-recap.webp" width="240" alt="A short account with evidence, rebuilt from Grok Build session history." /></td>
@@ -45,6 +45,11 @@ All 38 skills, one row each. The routes are the ones each skill documents, and `
 <td><img src="./assets/skills/deep-interview.webp" width="240" alt="One question at a time, in a fixed order, until the request is clear enough to plan." /></td>
 <td><code>deep-interview</code><br /><sub><code>/deep-interview &lt;request&gt;</code></sub></td>
 <td>One question at a time, in a fixed order, until the request is clear enough to plan.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-brainstorm.webp" width="240" alt="Turns an open question into many options, groups and scores them, and ends on a short list for you to pick from. Nothing is built." /></td>
+<td><code>lit-brainstorm</code><br /><sub><code>/lit-brainstorm &lt;topic&gt;</code></sub></td>
+<td>Turns an open question into many options, groups and scores them, and ends on a short list for you to pick from. Nothing is built.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/litresearch.webp" width="240" alt="Bounded research with every claim traced to a source and no evidence overstated." /></td>
@@ -99,7 +104,7 @@ All 38 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/lit-typographic-motion.webp" width="240" alt="A finished short film from a treatment, rendered by LitGrok's own type engine or stage capture and checked by its QA gate." /></td>
 <td><code>lit-typographic-motion</code><br /><sub><code>/lit-typographic-motion &lt;request&gt;</code></sub></td>
-<td>A finished short film from a treatment, rendered by LitGrok's own type engine or stage capture and checked by its QA gate.</td>
+<td>A finished short film from a treatment, rendered by LitGrok's own type engine or stage capture and checked by its QA gate. Cover mode makes a silent, seamless README cover loop and gates the decoded file.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-scientific-visualization.webp" width="240" alt="A publication-ready figure and caption from verified data. The chart type follows the data." /></td>

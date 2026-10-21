@@ -20,6 +20,8 @@ artifact_genre: working_note
 limitations_channel: inline
 ```
 
+Plan a concrete objective. An open "what could we do" ask, with no chosen direction yet, goes to `lit-brainstorm` first, and a request with unresolved choices goes to `deep-interview`.
+
 ## Route into the shared references
 
 Load `references/plan-schema.md` when drafting, validating, or revising the executable plan record.

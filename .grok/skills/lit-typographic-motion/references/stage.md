@@ -27,7 +27,8 @@ Allowed files: html, js, mjs, css, svg, png, jpg, webp, gif, wav, woff, woff2, t
 
 `/lit/fonts.css` declares the verified faces with `font-display: block`: `Archivo` (weights 400,
 700, 900; `font-stretch` 75 %, 100 %, 125 %), `Pretendard` (Hangul, 400 and 700), `VT323`,
-`Silkscreen` (400, 700), `Galmuri9` and `Meslo` (both need the pre-warm). A face listed in
+`Silkscreen` (400, 700), `Galmuri9` and `Meslo` (both need the pre-warm), and `JetBrains Mono`
+(a variable face, `wght` 100 to 800 with a fixed advance, bundled for cover mode's weight motion). A face listed in
 `typePlan.faces` that is not warm exits 14; a tampered one exits 15. Set Hangul copy in
 `Pretendard` (for example `font-family: Archivo, Pretendard`) so no system font fills a gap.
 

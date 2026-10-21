@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- NEGATIVE, never a recipe: the film habit of card scenes that fade in, hold and fade out, ending
+     on a static card. It must keep failing the cover gate on G2. -->
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<style>
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: #080c12; color: #f1eee2; font-family: "JetBrains Mono"; }
+  .line { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+  body.mask, body.mask * { background: #000 !important; color: #000 !important; border-color: #000 !important; }
+  body.mask .title { color: #fff !important; }
+</style>
+<style>.card { position: absolute; inset: 0; opacity: 0; } .frame { position: absolute; left: 160px; top: 180px; width: 260px; height: 240px; border: 3px solid #ff6a3d; border-radius: 10px; }</style>
+</head>
+<body>
+<div class="card" id="c0"><div class="line title" style="top:200px;font-size:96px;font-weight:800">LITGROK</div><div class="line" style="top:340px;font-size:30px">A workflow family for Grok Build</div></div>
+<div class="card" id="c1"><div class="frame"></div><div style="position:absolute;left:480px;top:240px;font-size:44px;font-weight:700">1. Plan</div><div style="position:absolute;left:480px;top:310px;font-size:26px">Decision-complete steps.</div></div>
+<div class="card" id="c2"><div class="frame" style="border-color:#c8e65a"></div><div style="position:absolute;left:480px;top:240px;font-size:44px;font-weight:700">2. Loop</div><div style="position:absolute;left:480px;top:310px;font-size:26px">Test first, then green.</div></div>
+<div class="card" id="c3"><div class="line" style="top:250px;font-size:64px;font-weight:700">KEEP THE WORK <span style="color:#ff6a3d">LIT.</span></div></div>
+<script>
+const { clamp, ease } = LitLoop, SEC = 10, SCENES = [[0, 2.6], [2.6, 5], [5, 7.4], [7.4, 10]];
+window.renderFrame = (t, o = {}) => {
+  document.body.className = o.mask ? 'mask' : '';
+  const s = t * SEC;
+  SCENES.forEach(([a, b], i) => {
+    const card = document.getElementById(`c${i}`);
+    card.style.opacity = ease.smooth(clamp((s - a) / 0.4)) * (1 - ease.smooth(clamp((s - (b - 0.4)) / 0.4)));
+    card.style.transform = `translateX(${20 * (1 - ease.outCubic(clamp((s - a) / 0.5)))}px)`;
+  });
+};
+document.fonts.ready.then(() => { window.ready = true; });
+</script>
+</body>
+</html>

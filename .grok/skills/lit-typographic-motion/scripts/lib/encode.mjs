@@ -23,7 +23,7 @@ export function startEncode(ffmpeg, options) {
   const proc = spawn(ffmpeg, masterArgs(options), { stdio: ['pipe', 'ignore', 'pipe'] });
   let stderr = '';
   proc.stderr.on('data', (chunk) => { if (stderr.length < 65536) stderr += chunk; });
-  const done = new Promise((resolveDone, reject) => proc.on('close', (code) => (code === 0 ? resolveDone() : reject(new Error(`ffmpeg master encode failed (${code}): ${stderr.trim().split('\n').at(-1)}`)))));
+  const done = new Promise((resolveDone, reject) => proc.on('close', (code) => (code === 0 ? resolveDone() : reject(new Error(`ffmpeg master encode failed (${code}): ${stderr.trim().split(/\r?\n/).at(-1)}`)))));
   done.catch(() => {});
   return {
     write: (bytes) => new Promise((resolveWrite, reject) => { proc.stdin.write(bytes, (error) => (error ? reject(error) : resolveWrite())); }),
