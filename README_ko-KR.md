@@ -1,5 +1,7 @@
 <p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 일곱 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
 
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/mascot-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/readme/mascot.webp" /><img src="./docs/assets/readme/mascot.webp" width="320" alt="LitGrok 마스코트 반복 영상: 기울어진 하얀 눈 두 개를 가진 둥근 검은 캐릭터가 lit 흐름을 빠르게 따라가요. 쉴 때 눈을 깜빡이고, 계획할 때 위를 흘끗 보고, 작업할 때 눈을 좁히며 머리 위에 작은 주황 불꽃이 켜지고, 검토할 때 눈을 가늘게 뜨고, 끝나면 웃는 눈으로 폴짝 뛰며 불꽃이 커져요." /></picture></p>
+
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
@@ -22,7 +24,9 @@ Grok Build는 시작이 빠릅니다. 한 줄만 입력하면 바로 일을 시�
 
 LitGrok은 세션마다 따라갈 순서를 줍니다. 큰 변경은 첫 수정 전에 계획부터 글로 남깁니다. 작업은 그 계획에 비추어 확인하고, 아무도 확인하지 못한 부분은 미확인으로 표시합니다. 멈추기 전에는 무엇을 만들었고, 무엇을 확인했고, 무엇이 남았는지 인수인계 문서에 적어 두어서 다음 세션이 그 문서를 읽고 이어 갈 수 있습니다. 세션을 돌리고 모델을 고르는 일은 여전히 Grok Build가 하고, LitGrok은 일하는 방식을 더합니다.
 
-위 영상은 실제 세션 하나를 담았습니다. 세 줄로 줄이면 이렇습니다.
+### 세션이 흘러가는 모습
+
+위 영상은 실제 세션 하나를 담았습니다. 첫 줄은 여러분이 입력하고, 둘째 줄은 훅이 답하고, 셋째 줄은 상태 행이 작업과 함께 걸어갑니다. 세 줄로 줄이면 이렇습니다.
 
 ```text
 입력      lit add a --shout flag that prints the greeting in capitals, with a test
@@ -30,7 +34,9 @@ LitGrok은 세션마다 따라갈 순서를 줍니다. 큰 변경은 첫 수정 
 끝        node greet.js --shout Ada가 HELLO, ADA!를 출력   litwork complete · 35s · 2 tools
 ```
 
-한 번 앉은 자리에서 끝나지 않는 일을 Grok Build로 하는 분을 위해 만들었습니다. 며칠에 걸쳐 만드는 기능, 테스트로 수정을 증명하고 싶은 버그, 다른 사람이 읽을 보고서나 발표자료 같은 일에 맞습니다. 프로젝트 안에 일반 파일로 들어가고, LitGrok 자체에는 계정도 로그인도 필요 없습니다.
+### 누구에게 맞는지
+
+한 번 앉은 자리에서 끝나지 않는 일을 Grok Build로 하는 분께 맞습니다. 며칠에 걸쳐 만드는 기능, 테스트로 수정을 증명하고 싶은 버그, 다른 사람이 읽을 보고서나 발표자료 같은 일에 맞습니다. 프로젝트 안에 일반 파일로 들어가고, LitGrok 자체에는 계정도 로그인도 필요 없습니다.
 
 ## 30초 설치
 
@@ -41,6 +47,14 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.25`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
+
+같은 패키지를 이 프로젝트에 두거나, 사용자 계정에 두거나, Cursor를 거쳐 Grok Bot에서 열 수 있습니다.
+
+| 두는 곳 | 추가하는 방법 | 파일이 있는 곳 |
+| --- | --- | --- |
+| Grok Build, 이 프로젝트 | `npm exec --yes --package @litfamily/litgrok@latest -- litgrok install` | `<project>/.grok/` |
+| Grok Build, 사용자 계정 | `litgrok install --user` | `~/.grok/`. 상태 행은 이 명령에 `--status-line`을 붙여 켭니다. |
+| Grok Bot, Cursor를 통해 | Add Marketplace, From GitHub Repository, 그다음 Connect apps | 이 저장소의 `.cursor-plugin/plugin.json` |
 
 선택 기능인 상태 행을 켜 두면 세션이 어디까지 왔는지 한눈에 보입니다. 프롬프트가 스킬을 시작하면 상태 행이 작은 LIT 카드로 커집니다. `plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·` 같은 지도가 지나온 단계와 지금 단계, 계획에서 체크한 작업 수를 보여 주고, 그 아래 줄에는 다음에 할 작업, 지금 돌고 있는 도구와 걸린 시간, 마지막 테스트 결과가 나옵니다. 제목은 턴이 도는 중인지, 막 끝났는지, 손봐야 하는지를 알려 주고, 마지막 줄에는 모델, 컨텍스트 게이지, 비용, 브랜치가 남습니다. 상태 행은 사용자 설정에 들어가므로 사용자 범위로 설치할 때 켭니다(`litgrok install --user --status-line`). 턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 명령에 `--notify`를 붙이세요. 화면을 보고 있을 때도 알림이 옵니다. 두 기능 모두 직접 켜기 전에는 꺼져 있습니다.
 
@@ -86,9 +100,26 @@ xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
 
 다음 세션에서는 돌려받은 경로를 Grok Build에 알려 주고, 그 문서를 읽은 뒤 현재 파일 상태부터 확인하라고 요청하세요. 새 Git 프로젝트라면 `.handoff/HANDOFF.md`에 저장됩니다. [인수인계 문서가 저장되는 곳](./.grok/skills/lit-handoff/SKILL.md)
 
+## LIT 상태 행
+
+작업하는 동안 Grok이 LitGrok 한 줄을 화면에 계속 보여 줍니다. 마지막 프롬프트가 시작한 스킬, 모델과 추론 수준, 컨텍스트 사용량, 세션 비용, Git 브랜치가 보여서 세션이 어디까지 왔는지 한눈에 알 수 있습니다.
+
+LitGrok 스킬을 부르는 프롬프트가 나오기 전까지는 조용한 한 줄로 있습니다. 프롬프트가 스킬을 시작하면(여기서는 `/litwork`) 작은 LIT 카드로 커집니다. 제목에는 스킬과 지금까지의 도구 호출, 턴의 경과 시간이 나오고, 단계 지도에는 지나온 단계에 체크가, 지금 단계에는 불이 들어오며, 계획의 작업이 끝날 때마다 수가 셉니다. 그 아래 줄에는 다음 작업, 지금 돌고 있는 도구와 걸린 시간, 마지막 테스트 결과가 나오고, 마지막 줄에는 모델, 컨텍스트 게이지, 비용, 브랜치가 남습니다. 턴이 끝나면 카드는 다시 한 줄로 접히고, 작업이 어디까지 왔는지는 그대로 남습니다.
+
+상태 행은 사용자 설정에 들어가므로 직접 켜기 전에는 꺼져 있습니다(`litgrok install --user --status-line`). 턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 명령에 `--notify`를 붙이세요. [가만히 있을 때와 일할 때의 모습](./docs/guide_ko-KR.md#화면에-나오는-모습)
+
 ## 무엇을 할 수 있나요
 
 스킬 39개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있습니다. 평소에는 그중 몇 가지만 써도 충분합니다.
+
+이 네 가지는 세션에서 맡은 일이 하나씩 있습니다.
+
+| 구성 | 수 | 하는 일 |
+| --- | --- | --- |
+| 스킬 | 39 | 이름으로 부를 때 세션이 읽는 지침입니다. |
+| 에이전트 | 11 | `.grok/agents`에 있으며, 계획이나 검토처럼 범위가 정해진 일을 맡습니다. |
+| 훅 | 등록 열한 개 | LIT 마크를 띄우고, 상태 행을 갱신하고, 결과물 문장을 검사하고, 이벤트를 기록합니다. |
+| 프로젝트 규칙 | 1 | `.grok/rules/00-litgrok.md`가 언제 스킬을 쓸지 Grok Build에 알려 줍니다. |
 
 ### 작업 하나를 위한 체크리스트
 
@@ -201,12 +232,32 @@ flowchart TD
 
 ## Grok Bot과 Cursor에서 LitGrok 쓰기
 
-Grok Bot과 Cursor는 같은 Cursor 플러그인 형식으로 플러그인을 불러옵니다. 이 저장소의 `.cursor-plugin/plugin.json`이 그 형식의 매니페스트이고, 두 앱 모두에 `.grok/skills`의 스킬 39개를 알려 줍니다. 그래서 `lit-plan`, `litwork`, `review-work` 같은 스킬을 그곳에서도 이름으로 부를 수 있습니다. 훅, 프로젝트 규칙, 상태 행, LIT 마크는 Grok Build 세션에서만 동작합니다. Grok Bot은 플러그인이 가져온 스킬과 커넥터만 보여 주고, 훅은 Grok Build가 직접 실행하기 때문입니다. 슬라이드나 문서 스킬처럼 함께 든 스크립트를 실행하는 스킬은, 그 스킬이 도는 컴퓨터에 Node.js나 Python이 있어야 합니다.
+Grok Build를 따로 설치하지 않아도, Grok Bot 안에서 같은 계획과 검토 습관을 쓸 수 있습니다. 플러그인이 스킬 본문을 건네고, 폴더 이름으로 스킬을 부릅니다.
 
-Grok Bot의 **Connect apps**는 Cursor Marketplace를 읽습니다. LitGrok이 그곳에 등록되면 두 앱 어디서든 추가할 수 있습니다. 그전에는 이 저장소에서 바로 추가합니다.
+이 저장소의 `.cursor-plugin/plugin.json`이 Cursor 형식의 매니페스트입니다. Grok Bot과 Cursor가 이 파일을 읽고, `.grok/skills`의 스킬 39개를 불러옵니다. 메시지에 이름과 할 일을 같이 적으면 됩니다. 예를 들어 "lit-plan으로 이 변경의 계획을 잡아 줘"나 "litwork로 할 일 목록을 만들어 줘"처럼요. Bot은 그 스킬을 읽고, 이미 가진 도구로 일을 진행합니다. 이름은 다음과 같습니다.
+
+`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-handoff`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
+
+슬라이드나 문서 스킬처럼 함께 든 스크립트를 실행하는 스킬은, 그 스킬이 도는 컴퓨터에 Node.js나 Python이 있어야 합니다.
+
+훅, 프로젝트 규칙, 상태 행, LIT 마크는 Grok Build 세션에서만 동작합니다. Grok Bot은 플러그인이 가져온 스킬과 커넥터만 보여 주고, 훅은 Grok Build가 직접 실행하기 때문입니다.
+
+같은 구성을 어느 쪽에서 만나는지 한 줄씩 보면 이렇습니다.
+
+| 구성 | Grok Build | Grok Bot |
+| --- | --- | --- |
+| 스킬 | 설치가 폴더 39개를 `.grok/skills`에 두고, 이름으로 부릅니다. | 플러그인이 그 폴더를 가리키고, 메시지에 폴더 이름을 적어 부릅니다. |
+| 에이전트 | `.grok/agents`의 정의 열한 개가 계획이나 검토처럼 범위가 정해진 일을 맡습니다. | 메시지에 스킬 이름을 적으면, Bot이 이미 가진 도구로 일을 진행합니다. |
+| 훅 | `/hooks-trust`로 프로젝트를 신뢰하면 등록 열한 개가 실행됩니다. | 훅 명령은 Grok Build가 시작합니다. |
+| 프로젝트 규칙 | `.grok/rules/00-litgrok.md`가 세션이 읽는 지침입니다. | Bot이 따르는 작업 습관은 스킬 본문에 적혀 있습니다. |
+| 상태 행과 LIT 마크 | 사용자 설치에 `--status-line`을 붙이면 상태 행이 생기고, 신뢰한 세션은 LIT 마크로 시작합니다. | Connect apps에 플러그인의 스킬과 커넥터가 나옵니다. |
+
+Grok Bot의 **Connect apps**는 Cursor Marketplace를 읽습니다. 이 저장소에서 LitGrok을 추가합니다.
 
 1. Cursor에서 **Customize**를 열고 **Add Marketplace**를 고릅니다. **From GitHub Repository**를 고른 뒤 `https://github.com/wjgoarxiv/litgrok`을 붙여 넣습니다.
 2. 그러면 Cursor에 LitGrok이 든 마켓플레이스 항목이 생깁니다. 거기서 **Add**를 누릅니다. Grok Bot에서는 **Connect apps**를 열고 **Your plugins**에서 LitGrok을 찾아 추가합니다. Bot이 GitHub 연결을 요청하면 연결해 주세요. Grok Bot은 시작할 때 마켓플레이스를 읽으므로, LitGrok이 아직 보이지 않으면 Grok Bot을 다시 시작한 뒤 확인합니다.
+
+2026년 10월 22일에 Grok Bot이 불러온 버전은 LitGrok 1.0.25. 이 공개 저장소의 Cursor 마켓플레이스 항목이었고, 스킬 39개가 목록에 올랐습니다. xAI 카탈로그 pull request인 xai-org #1619는 아직 열려 있습니다. 지금 추가하는 항목은 이 저장소에 들어 있는 마켓플레이스 항목입니다.
 
 ## 필요한 것, 업데이트, 제거
 

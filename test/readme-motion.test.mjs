@@ -353,7 +353,10 @@ test('the guide pages place the promo after the screen captures with a reduced-m
     assert.doesNotMatch(landing, /assets\/promo\//u, `${readme}: the film lives in the guide`);
     assert.ok(landing.includes(`href="./${name}#${slug(heading.slice(3))}"`), `${readme}: the top nav links the film`);
     const handoffPictures = [...landing.matchAll(/<picture><source media="\(prefers-color-scheme: dark\)" srcset="\.\/docs\/assets\/auto-handoff\//gu)].length;
-    assert.equal([...landing.matchAll(/<picture>/gu)].length - handoffPictures, 1, `${readme}: besides the automatic-handoff captures, the cover is the only picture; the demo slot plays the session film`);
+    assert.equal([...landing.matchAll(/<picture>/gu)].length - handoffPictures, 2, `${readme}: besides the automatic-handoff captures, the pictures are the cover and the mascot under it; the demo slot plays the session film`);
+    const mascot = landing.indexOf('<picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/mascot-still.webp" />');
+    assert.ok(mascot > landing.indexOf('cover-motion.webp') && mascot < landing.indexOf('<h1 '), `${readme}: the mascot loop sits directly under the cover, still first`);
+    assert.match(landing.slice(mascot, landing.indexOf('</picture>', mascot)), /<img src="\.\/docs\/assets\/readme\/mascot\.webp" width="(\d{3})" alt="[^"]{60,}" \/>/u, `${readme}: mascot img with a fixed width and a descriptive alt`);
     assert.equal([...landing.matchAll(/width="100%"/gu)].length, 1, `${readme}: the cover stays the only full-width image`);
   }
   for (const [name] of NPM_PAGES) assert.doesNotMatch(read(name), /docs\/assets\/promo|promo(?:-ko)?\.mp4/u, `${name}: the npm card does not embed the promo`);

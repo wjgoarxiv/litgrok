@@ -1,5 +1,7 @@
 <p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
 
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/mascot-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/readme/mascot.webp" /><img src="./docs/assets/readme/mascot.webp" width="320" alt="LitGrok mascot loop: a round black character with two slanted white eyes walks the lit loop in quick beats. It blinks while idle, glances up to plan, narrows its eyes as a small orange flame pops on its head during work, squints to review, and hops with happy eyes and a bigger flame when the work is done." /></picture></p>
+
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
@@ -22,7 +24,9 @@ Grok Build is quick to start. You type a line and it gets to work. The trouble c
 
 LitGrok gives each session a routine to follow. A bigger change gets a written plan before the first edit. The work is checked against that plan, and anything nobody could check is marked as unverified. Before you stop, a handoff file records what was built, what was checked and what is left, so the next session can read it and carry on. Grok Build still runs the session and picks the model; LitGrok adds the way of working.
 
-The film above is one real session. Stripped down to three lines, it goes like this:
+### What a session looks like
+
+The film above is one real session. You type the first line, the hooks answer with the second, and the status row walks the third as the work happens. Stripped down to three lines, it goes like this:
 
 ```text
 you typed   lit add a --shout flag that prints the greeting in capitals, with a test
@@ -30,7 +34,9 @@ it did      wrote the test first, changed greet.js, re-ran the tests and the CLI
 it ended    node greet.js --shout Ada prints HELLO, ADA!   litwork complete · 35s · 2 tools
 ```
 
-LitGrok is for anyone whose Grok Build work runs longer than one sitting: a feature spread over a few days, a bug you want a test to prove fixed, a report or a deck that someone else will read. It lives in your project as plain files, and LitGrok itself needs no account or sign-in.
+### Who it's for
+
+LitGrok suits people whose Grok Build work runs longer than one sitting: a feature spread over a few days, a bug you want a test to prove fixed, a report or a deck that someone else will read. It lives in your project as plain files, and LitGrok itself needs no account or sign-in.
 
 ## Install in 30 seconds
 
@@ -41,6 +47,14 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.25`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
+
+The same package can sit in the project, in your user account, or be opened from Grok Bot through Cursor.
+
+| Place | How you add it | Where it lives |
+| --- | --- | --- |
+| Grok Build, this project | `npm exec --yes --package @litfamily/litgrok@latest -- litgrok install` | `<project>/.grok/` |
+| Grok Build, your user account | `litgrok install --user` | `~/.grok/`. Add `--status-line` on that command when you want the status row. |
+| Grok Bot, through Cursor | Add Marketplace, From GitHub Repository, then Connect apps | `.cursor-plugin/plugin.json` in this repository |
 
 The optional status row is the quickest way to see where a session stands. Once a prompt starts a skill, it grows into a small LIT card. Its map, such as `plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·`, shows the stages behind you and the stage you are in with the plan tasks checked so far; the line under it names the next open task, the tool running right now and for how long, and how the last test run went. The title says whether the turn is running, just finished or needs you, and the last line keeps the model, the context gauge, the cost and the branch. The row lives in your user settings, so it comes with a user install (`litgrok install --user --status-line`). Add `--notify` to that command if you also want Grok's terminal notification each time a turn finishes, even while you are watching. Both stay off until you ask for them.
 
@@ -86,9 +100,26 @@ Before you stop for the day, ask for a handoff:
 
 In the next session, give Grok Build the path it returned and ask it to read the handoff and check the current files before continuing. A new Git project keeps it at `.handoff/HANDOFF.md`. [Where handoffs go](./.grok/skills/lit-handoff/SKILL.md).
 
+## The LIT status row
+
+While you work, Grok keeps one LitGrok line on screen. It shows which skill your last prompt started, the model with its effort, how much of the context is used, the session's cost and the Git branch, so you can see where a session stands at a glance.
+
+Until a prompt names a LitGrok skill, the row stays a single quiet line. Once a prompt starts one, here `/litwork`, it grows into a small LIT card. Its title names the skill with the tool calls so far and the turn's time; the stage map shows the stages behind you checked and the one you are in lit, with the plan's tasks counted as they get ticked; the line under it names the next open task, the tool running right now and how the last test run went; and the last line keeps the model, the context gauge, the cost and the branch. When the turn ends, the card folds back into the single line, keeping where the work got to.
+
+The row lives in your user settings and stays off until you ask for it (`litgrok install --user --status-line`). Add `--notify` to that command if you also want Grok's terminal notification each time a turn finishes. [Pictures of the row idle and at work](./docs/guide.md#what-you-will-see-on-screen).
+
 ## What you get
 
 It ships 39 skills, 11 agents, one project rule, and eleven hook registrations. Most days you will use a handful of them.
+
+Each of those four has one job in the session.
+
+| Piece | How many | What it does |
+| --- | --- | --- |
+| Skills | 39 | Instructions the session reads when you call them by name. |
+| Agents | 11 | Helpers in `.grok/agents` for a bounded job, such as a plan, a review, or a prose pass. |
+| Hooks | Eleven registrations | They show the LIT mark, keep the status row current, check deliverable wording, and log events. |
+| Project rule | 1 | `.grok/rules/00-litgrok.md` tells Grok Build when to reach for a skill. |
 
 ### A checklist for one task
 
@@ -201,12 +232,32 @@ The installer copies plain files into the project's `.grok/` folder and changes 
 
 ## Use LitGrok in Grok Bot and Cursor
 
-Grok Bot and Cursor load plugins in the same Cursor plugin format, and this repository carries one at `.cursor-plugin/plugin.json`. It points both apps at the 39 skills in `.grok/skills`, so `lit-plan`, `litwork`, `review-work` and the rest can be called by name there too. The hooks, the project rule, the status row and the LIT mark stay with Grok Build: Grok Bot shows only the skills and connectors a plugin brings, and the hooks are started by Grok Build itself. Skills that run a bundled script, such as the slide and document skills, need Node.js or Python on the computer that runs them.
+You can use the same planning and review habits inside Grok Bot, without a separate Grok Build install. The plugin gives the bot the skill text, and you call a skill by its folder name.
 
-Grok Bot's **Connect apps** reads the Cursor Marketplace, so once LitGrok is listed there you can add it from either app. Until then, add it from this repository:
+This repository carries that plugin at `.cursor-plugin/plugin.json`. Grok Bot and Cursor both read this Cursor-format manifest, and it points them at the 39 skills in `.grok/skills`. Ask with the name and the job, for example "lit-plan this change" or "litwork the to-do list". The bot reads that skill and does the work with the tools it already has. These are the names:
+
+`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-handoff`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
+
+Skills that run a bundled script, such as the slide and document skills, need Node.js or Python on the computer that runs them.
+
+The hooks, the project rule, the status row and the LIT mark stay with Grok Build. Grok Bot shows only the skills and connectors a plugin brings, and the hooks are started by Grok Build itself.
+
+Here is that split, one piece at a time.
+
+| Piece | Grok Build | Grok Bot |
+| --- | --- | --- |
+| Skills | The install copies the 39 folders into `.grok/skills`, and you call one by name. | The plugin points at those folders, and you call one by its folder name in the message. |
+| Agents | Eleven definitions in `.grok/agents` take a bounded job, such as a plan or a review. | You name the skill, and the bot does the work with the tools it already has. |
+| Hooks | The eleven registrations run after you trust the project with `/hooks-trust`. | Grok Build starts the hook commands. |
+| Project rule | `.grok/rules/00-litgrok.md` is the guidance the session reads. | The working habit the bot follows is written in the skill files. |
+| Status row and LIT mark | `--status-line` on a user install draws the row, and a trusted session opens with the LIT mark. | Connect apps lists the plugin's skills and connectors. |
+
+Grok Bot's **Connect apps** reads the Cursor Marketplace. Add LitGrok from this repository:
 
 1. In Cursor, open **Customize**, choose **Add Marketplace**, pick **From GitHub Repository** and paste `https://github.com/wjgoarxiv/litgrok`.
 2. Cursor then shows a marketplace section with LitGrok in it; press **Add** there. In Grok Bot, open **Connect apps**, find LitGrok under **Your plugins** and add it; connect GitHub if the Bot asks for it. Grok Bot reads marketplaces when it starts, so if LitGrok is not listed yet, restart Grok Bot and look again.
+
+On 22 October 2026, Grok Bot loaded LitGrok 1.0.25. It came from this public repository through that Cursor marketplace and listed 39 skills. The xAI catalog pull request, xai-org #1619, is still open, so this is the repository's own marketplace entry.
 
 ## Requirements, update and uninstall
 
