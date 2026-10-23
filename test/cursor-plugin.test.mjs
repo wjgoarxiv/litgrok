@@ -102,6 +102,28 @@ test('every skill under the Cursor skills path passes Cursor\'s name and descrip
   }
 });
 
+// cursor.directory's repository scan ignores the manifest's `skills` path. It looks for `skills/*/SKILL.md`
+// at the root and in each folder that holds a `.cursor-plugin/plugin.json`, so `.grok/` carries a marker
+// manifest. The root manifest stays the one that names the release.
+test('the .grok marker manifest points the directory scan at the same skills', () => {
+  const markerPath = join(PRODUCT_ROOT, '.grok', '.cursor-plugin', 'plugin.json');
+  assert.equal(existsSync(markerPath), true, '.grok/.cursor-plugin/plugin.json must exist');
+  const marker = readJson(markerPath);
+  const root = readJson(PLUGIN_PATH);
+  for (const key of Object.keys(marker)) {
+    assert.ok(ALLOWED_PLUGIN_KEYS.has(key), `unexpected marker manifest key ${key}`);
+  }
+  assert.equal(marker.name, root.name);
+  assert.equal(marker.description, root.description);
+  assert.equal(Object.hasOwn(marker, 'version'), false, 'only the root manifest pins the release');
+  assert.equal(marker.skills, './skills');
+  assert.equal(join(PRODUCT_ROOT, '.grok', marker.skills), join(PRODUCT_ROOT, root.skills));
+  for (const key of ['rules', 'hooks', 'agents', 'commands', 'mcpServers', 'variables']) {
+    assert.equal(Object.hasOwn(marker, key), false, `${key} is not part of the marker manifest`);
+  }
+  assert.equal(PACKAGE.files.some((entry) => entry === '.grok' || entry.startsWith('.grok/.cursor-plugin')), false, 'the marker stays out of the npm package');
+});
+
 test('the Cursor marketplace lists LitGrok from the repository root', () => {
   assert.equal(existsSync(MARKETPLACE_PATH), true, '.cursor-plugin/marketplace.json must exist');
   const marketplace = readJson(MARKETPLACE_PATH);

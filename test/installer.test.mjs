@@ -747,10 +747,12 @@ test('dry-pack preserves runtime and bilingual references while excluding brand 
     paths.filter((path) => path.startsWith('.grok/')).sort(),
     regularFilesBelow(join(PRODUCT_ROOT, '.grok'))
       .filter((path) => !/(^|\/)__pycache__\/|\.pyc$/u.test(path))
+      .filter((path) => !path.startsWith('.cursor-plugin/'))
       .map((path) => `.grok/${path}`)
       .sort(),
     'dry-pack must contain the complete .grok tree',
   );
+  assert.equal(paths.some((path) => path.startsWith('.grok/.cursor-plugin/')), false, 'the directory-scan marker is read from GitHub and stays out of the npm package');
   assert.equal(paths.some((path) => path.startsWith('test/')), false, 'tests must stay out of the package');
   assert.equal(paths.includes('AGENTS.md'), false, 'agent-only guidance must stay out of the package');
   assert.equal(existsSync(join(PRODUCT_ROOT, '.cursor-plugin', 'plugin.json')), true, 'precondition: the repository carries the Cursor manifest');
@@ -797,7 +799,7 @@ test('dry-pack preserves runtime and bilingual references while excluding brand 
     'the pack carries exactly one README skill snapshot per packaged skill',
   );
   assert.equal(paths.some((path) => /(?:^|\/)(?:RELEASE_CHECKLIST|release-checklist)\.md$/u.test(path)), false, 'release-only checklists must stay out of the package');
-  for (const expected of ['bin/litgrok.mjs', ...regularFilesBelow(join(PRODUCT_ROOT, '.grok')).map((path) => `.grok/${path}`)]) {
+  for (const expected of ['bin/litgrok.mjs', ...regularFilesBelow(join(PRODUCT_ROOT, '.grok')).filter((path) => !path.startsWith('.cursor-plugin/')).map((path) => `.grok/${path}`)]) {
     const packed = pack.files.find((file) => file.path === expected);
     assert.equal(packed.size, statSync(join(PRODUCT_ROOT, expected)).size, `packed byte length changed for ${expected}`);
   }
