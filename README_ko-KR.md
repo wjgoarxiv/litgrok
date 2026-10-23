@@ -1,6 +1,9 @@
 <p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 일곱 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
 
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/mascot-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/readme/mascot.webp" /><img src="./docs/assets/readme/mascot.webp" width="320" alt="LitGrok 마스코트 반복 영상: 기울어진 하얀 눈 두 개를 가진 둥근 검은 캐릭터가 lit 흐름을 빠르게 따라가요. 쉴 때 눈을 깜빡이고, 계획할 때 위를 흘끗 보고, 작업할 때 눈을 좁히며 머리 위에 작은 주황 불꽃이 켜지고, 검토할 때 눈을 가늘게 뜨고, 끝나면 웃는 눈으로 폴짝 뛰며 불꽃이 커져요." /></picture></p>
+<div align="center"><table>
+<tr><th colspan="2">LitGrok Bot · Grok Bot 커버</th></tr>
+<tr><td align="center" width="240"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/mascot-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/readme/mascot.webp" /><img src="./docs/assets/readme/mascot.webp" width="220" alt="LitGrok 마스코트 반복 영상: 기울어진 크림색 눈 두 개를 가진 둥근 자두색 캐릭터가 lit 흐름을 빠르게 따라가요. 쉴 때 눈을 깜빡이고, 계획할 때 위를 흘끗 보고, 작업할 때 눈을 좁히며 머리 위에 작은 주황 불꽃이 켜지고, 검토할 때 눈을 가늘게 뜨고, 끝나면 웃는 눈으로 폴짝 뛰며 불꽃이 커져요." /></picture></td><td>이 동그란 친구가 Grok Bot 커버입니다. lit 흐름을 빠르게 따라갑니다. 쉴 때 눈을 깜빡이고, 계획할 때 위를 흘끗 보고, 작업할 때 작은 불꽃을 켜고, 검토할 때 눈을 가늘게 뜨고, 끝나면 폴짝 뜁니다.<br /><br />같은 스킬을 Cursor를 거쳐 Grok Bot에서도 쓸 수 있습니다. <a href="#grok-bot과-cursor에서-litgrok-쓰기">Grok Bot에서 LitGrok 쓰기 →</a></td></tr>
+</table></div>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>

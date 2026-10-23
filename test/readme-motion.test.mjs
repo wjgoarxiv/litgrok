@@ -356,6 +356,9 @@ test('the guide pages place the promo after the screen captures with a reduced-m
     assert.equal([...landing.matchAll(/<picture>/gu)].length - handoffPictures, 2, `${readme}: besides the automatic-handoff captures, the pictures are the cover and the mascot under it; the demo slot plays the session film`);
     const mascot = landing.indexOf('<picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/mascot-still.webp" />');
     assert.ok(mascot > landing.indexOf('cover-motion.webp') && mascot < landing.indexOf('<h1 '), `${readme}: the mascot loop sits directly under the cover, still first`);
+    const card = landing.lastIndexOf('<table>', mascot);
+    assert.ok(card > landing.indexOf('cover-motion.webp') && landing.indexOf('</table>', card) > mascot, `${readme}: the mascot sits in a table card under the cover`);
+    assert.match(landing.slice(card, mascot), /<th colspan="2">LitGrok Bot · (the )?Grok Bot (cover|커버)<\/th>/u, `${readme}: the card names the mascot as the Grok Bot cover`);
     assert.match(landing.slice(mascot, landing.indexOf('</picture>', mascot)), /<img src="\.\/docs\/assets\/readme\/mascot\.webp" width="(\d{3})" alt="[^"]{60,}" \/>/u, `${readme}: mascot img with a fixed width and a descriptive alt`);
     assert.equal([...landing.matchAll(/width="100%"/gu)].length, 1, `${readme}: the cover stays the only full-width image`);
   }
