@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.0.26 — 2026-10-26
+
+- The motion skill's pinned dependencies pick up upstream fixes: `certifi` 2026.10.19 for the audio environment, and newer `hono` and `fast-uri` in the HyperFrames and Remotion template lockfiles. A fresh motion setup installs these versions; nothing else about how the skill runs changes.
+- The README explains how LitGrok works inside Grok Bot, describes each state of the LIT status row, adds tables for install paths and supported hosts, and shows the LitGrok mascot under the cover.
+- The repository now lets a Cursor directory scan find the same 39 skills. This marker stays out of the npm package, so an `npx` install is unchanged.
+
 ## 1.0.25 — 2026-10-22
 
 - Grok Bot and Cursor can load the 39 LitGrok skills through the repository’s Cursor plugin and marketplace entry. Their setup is described in both READMEs. Grok Build continues to run the hooks, project rule and status line.
