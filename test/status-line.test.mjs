@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -8,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { run } from '../bin/litgrok.mjs';
 import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
+import { updateWorkflowState, workflowStatePath } from '../.grok/hooks/workflow-stage.mjs';
 import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from '../bin/status-line-config.mjs';
 
 const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
@@ -156,6 +158,40 @@ test('HUD discipline follows bounded visible prompt tokens and clears code or no
       : '[🔥LIT] | grok-4 │ ctx [█▎░] 42%';
     assert.equal(stripVTControlCharacters(status.stdout).trim(), expected, prompt);
     assert.equal(status.stdout.includes('\u001b'), false, 'the plain HUD row emits zero escape bytes');
+  }
+});
+
+test('the rewind look paints each cell of its text through the hue wheel', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const hook = runPromptHook({ home, workspace, stateRoot, sessionId: 'rewind-rainbow', prompt: 'lit adhd' });
+  assert.equal(hook.status, 0, hook.stderr);
+  const status = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '24', LITGROK_HUD_MOTION: 'off', LITGROK_HUD_LINES: '1', COLUMNS: '120' } });
+  assert.equal(status.status, 0, status.stderr);
+  const row = status.stdout.split('\n')[0];
+  // Every painted cell is an SGR code plus one character, so the word never appears literally:
+  // decode the (character, hue) pairs and find the mark in them.
+  const pairs = [...row.matchAll(/\u001b\[38;2;(\d+;\d+;\d+)m(.)/gu)].map((match) => ({ hue: match[1], ch: match[2] }));
+  const at = pairs.map((pair) => pair.ch).join('').indexOf('IGNITED · lit-adhd');
+  assert.ok(at !== -1, 'the ignition mark renders');
+  const hues = new Set(pairs.slice(at, at + 'IGNITED · lit-adhd'.length).map((pair) => pair.hue));
+  assert.ok(hues.size >= 8, `each cell rides the wheel (found ${hues.size} hues)`);
+});
+
+test('every HUD row fits its columns with the rewind look on', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const hook = runPromptHook({ home, workspace, stateRoot, sessionId: 'rewind-width', prompt: 'lit adhd' });
+  assert.equal(hook.status, 0, hook.stderr);
+  const cells = (line) => [...line].reduce((n, ch) => n + (/\p{Extended_Pictographic}/u.test(ch) ? 2 : 1), 0);
+  for (const columns of [60, 80, 120, 160]) {
+    for (const lines of [{ LITGROK_HUD_LINES: '1' }, {}]) {
+      const status = runStatus({ home, stateRoot, cwd: workspace, env: { LITGROK_HUD_COLOR: '24', LITGROK_HUD_MOTION: 'off', COLUMNS: String(columns), ...lines } });
+      assert.equal(status.status, 0, status.stderr);
+      for (const row of stripVTControlCharacters(status.stdout).trimEnd().split('\n')) {
+        assert.ok(cells(row) <= columns - 1, `columns=${columns} lines=${lines.LITGROK_HUD_LINES ?? 'card'}: ${cells(row)} cells fit`);
+      }
+    }
   }
 });
 
@@ -539,6 +575,139 @@ test('a config.toml edited between the backup and the replace is kept, not overw
   const managed = readFileSync(config, 'utf8');
   assert.throws(() => removeStatusLine(grokRoot, { afterBackup: () => writeFileSync(config, `${managed}# mine\n`) }), { code: 'STATUS_CONFIG_CHANGED' });
   assert.equal(readFileSync(config, 'utf8'), `${managed}# mine\n`, 'removal keeps a concurrent edit too');
+});
+
+function ledgerFile(workspace, sessionId) {
+  const name = `${createHash('sha256').update(sessionId).digest('hex').slice(0, 32)}.jsonl`;
+  return join(workspace, '.grok', 'litgrok', 'session-ledger', name);
+}
+
+function writeLedger(workspace, sessionId, records) {
+  const file = ledgerFile(workspace, sessionId);
+  mkdirSync(join(workspace, '.grok', 'litgrok', 'session-ledger'), { recursive: true });
+  writeFileSync(file, `${records.map((record) => JSON.stringify({ schema: 'litgrok.hook-event/v1', sessionId, ...record })).join('\n')}\n`);
+}
+
+function statusWithSession({ home, stateRoot, workspace, sessionId, promptId = 'p1', env = {}, extra = {} }) {
+  return runStatus({
+    home, stateRoot, cwd: workspace, env,
+    extra: { session_id: sessionId, prompt_id: promptId, workspace: { repo_root: workspace }, ...extra },
+  });
+}
+
+test('review-work selects the lanes look on every route; other disciplines stay plain', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const ONE = { LITGROK_HUD_COLOR: '0', LITGROK_HUD_LINES: '1' };
+  for (const prompt of ['review-work', '/review-work', 'lit review']) {
+    const sessionId = `lanes-${prompt.replaceAll(/[^a-z]/gu, '')}`;
+    const hook = runPromptHook({ home, workspace, stateRoot, sessionId, prompt });
+    assert.equal(hook.status, 0, `${prompt}: ${hook.stderr}`);
+    const status = statusWithSession({ home, stateRoot, workspace, sessionId, env: ONE });
+    assert.equal(status.status, 0, status.stderr);
+    assert.match(stripVTControlCharacters(status.stdout), /REVIEW 0\/6/u, `${prompt}: the one-line row counts reported lanes`);
+  }
+  runPromptHook({ home, workspace, stateRoot, sessionId: 'lanes-review-work', prompt: 'review-work' });
+  const card = statusWithSession({
+    home, stateRoot, workspace, sessionId: 'lanes-review-work', env: { LITGROK_HUD_COLOR: '0', COLUMNS: '200' },
+  });
+  const title = stripVTControlCharacters(card.stdout).split('\n')[0];
+  for (const lane of ['behavior', 'test', 'safety', 'integration', 'documentation', 'regression']) {
+    assert.ok(title.includes(lane), `the card names the ${lane} lane`);
+  }
+  const narrow = statusWithSession({
+    home, stateRoot, workspace, sessionId: 'lanes-review-work', env: { LITGROK_HUD_COLOR: '0', COLUMNS: '60' },
+  });
+  for (const row of stripVTControlCharacters(narrow.stdout).trimEnd().split('\n')) {
+    assert.ok([...row].length <= 59, `narrow lanes card fits: ${row}`);
+  }
+  assert.ok(stripVTControlCharacters(narrow.stdout).includes('REVIEW'), 'the narrow card keeps the lanes label');
+  writeHudRecords({
+    env: { ...baseEnvironment(home), LITGROK_HUD_STATE_ROOT: stateRoot },
+    sessionId: 'lanes-lit-plan', cwd: workspace, workspaceRoot: workspace, discipline: 'lit-plan',
+  });
+  const rerun = statusWithSession({ home, stateRoot, workspace, sessionId: 'lanes-lit-plan', env: ONE });
+  assert.ok(!stripVTControlCharacters(rerun.stdout).includes('REVIEW'), 'a plain discipline shows no lanes');
+  assert.ok(!stripVTControlCharacters(rerun.stdout).includes('YOUR TURN'), 'a plain discipline shows no waiting label');
+});
+
+test('a held plan gate and a live question show YOUR TURN in amber until the user types', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const now = new Date().toISOString();
+  const sessionId = 'waiting-session';
+  const held = [
+    { event: 'UserPromptSubmit', promptId: 'p1', recordedAt: now },
+    { event: 'Stop', recordedAt: now, signal: 'plan-gate-block', reason: 'save plans/x.md' },
+  ];
+  writeLedger(workspace, sessionId, held);
+  const amber = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '24' } });
+  assert.equal(amber.status, 0, amber.stderr);
+  assert.ok(amber.stdout.includes('YOUR TURN'), 'the held turn names the wait');
+  assert.match(amber.stdout, /\u001b\[1m\u001b\[38;2;215;175;0m[^\u001b]*YOUR TURN/u, 'the wait is bold amber');
+  const asking = [
+    { event: 'UserPromptSubmit', promptId: 'p2', recordedAt: now },
+    { event: 'PreToolUse', recordedAt: now, tool: { name: 'ask_user_question' } },
+  ];
+  writeLedger(workspace, 'asking-session', asking);
+  const question = statusWithSession({ home, stateRoot, workspace, sessionId: 'asking-session', promptId: 'p2', env: { LITGROK_HUD_COLOR: '0' } });
+  assert.ok(stripVTControlCharacters(question.stdout).includes('YOUR TURN'), 'a live question waits on the user');
+  const answered = [
+    ...asking,
+    { event: 'UserPromptSubmit', promptId: 'p3', recordedAt: now },
+  ];
+  writeLedger(workspace, 'asking-session', answered);
+  const settled = statusWithSession({ home, stateRoot, workspace, sessionId: 'asking-session', promptId: 'p3', env: { LITGROK_HUD_COLOR: '0' } });
+  assert.ok(!stripVTControlCharacters(settled.stdout).includes('YOUR TURN'), 'the wait stops when the user types');
+});
+
+test('the test lane follows the workflow verdict; lanes without a report stay dim', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const sessionId = 'lanes-verdict';
+  const file = ledgerFile(workspace, sessionId);
+  mkdirSync(join(workspace, '.grok', 'litgrok', 'session-ledger'), { recursive: true });
+  writeFileSync(file, '');
+  updateWorkflowState(file, sessionId, { stage: 'review', test: { verdict: 'pass', count: 3 } });
+  writeHudRecords({
+    env: { ...baseEnvironment(home), LITGROK_HUD_STATE_ROOT: stateRoot },
+    sessionId, cwd: workspace, workspaceRoot: workspace, discipline: 'review-work',
+  });
+  const coloured = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '24', COLUMNS: '200' } });
+  assert.equal(coloured.status, 0, coloured.stderr);
+  assert.match(coloured.stdout, /\u001b\[38;2;95;175;95mtest\u001b/u, 'a passing test lane is green');
+  assert.match(coloured.stdout, /\u001b\[38;2;138;138;138mbehavior\u001b/u, 'a lane with no report stays dim');
+  updateWorkflowState(file, sessionId, { test: { verdict: 'fail', count: 3 } });
+  const failed = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '24', COLUMNS: '200' } });
+  assert.match(failed.stdout, /\u001b\[38;2;215;95;95mtest\u001b/u, 'a failing test lane is red');
+});
+
+test('a finished done stage bursts once, then settles', (t) => {
+  const { root, home, workspace, stateRoot } = sandbox();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const sessionId = 'burst-session';
+  const now = new Date().toISOString();
+  const file = ledgerFile(workspace, sessionId);
+  mkdirSync(join(workspace, '.grok', 'litgrok', 'session-ledger'), { recursive: true });
+  writeFileSync(file, '');
+  updateWorkflowState(file, sessionId, { stage: 'review', plan: { done: 2, total: 2, next: '' }, ended: true });
+  writeLedger(workspace, sessionId, [
+    { event: 'UserPromptSubmit', promptId: 'p1', recordedAt: now },
+    { event: 'Stop', recordedAt: now },
+  ]);
+  writeHudRecords({
+    env: { ...baseEnvironment(home), LITGROK_HUD_STATE_ROOT: stateRoot },
+    sessionId, cwd: workspace, workspaceRoot: workspace, discipline: 'litwork',
+  });
+  const burst = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '0' } });
+  assert.ok(stripVTControlCharacters(burst.stdout).includes('★ complete'), 'the done turn bursts');
+  const old = new Date(Date.now() - 120_000).toISOString();
+  writeLedger(workspace, sessionId, [
+    { event: 'UserPromptSubmit', promptId: 'p1', recordedAt: old },
+    { event: 'Stop', recordedAt: old },
+  ]);
+  const settled = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '0' } });
+  assert.ok(!stripVTControlCharacters(settled.stdout).includes('★'), 'the burst settles after the complete window');
 });
 
 test('status-line install refuses a symlinked config.toml and leaves its target alone', (t) => {

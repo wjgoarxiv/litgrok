@@ -4,6 +4,7 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, sep } from 'node:path';
 import { findTool } from './render.mjs';
+import { writeScore } from './score.mjs';
 import { audioGate, prepareTrack, writeBed } from './sound.mjs';
 
 export function soundFile(out, treatment) {
@@ -14,6 +15,10 @@ export function soundFile(out, treatment) {
 export function prepareSound({ out, treatment, fps, frameCount, cutTimes = [], ffmpeg, tempo = null }) {
   const mode = treatment.sound.mode;
   if (mode === 'none') return null;
+  if (mode === 'score') {
+    const score = writeScore({ treatment, frameCount, fps, cutTimes, dir: out });
+    return { mode, path: score.file, score };
+  }
   if (mode === 'generated') {
     const bed = writeBed(out, treatment, { frameCount, fps, cutTimes, tempo });
     return { mode, path: bed.wavPath, bed };
@@ -30,8 +35,12 @@ export function prepareSound({ out, treatment, fps, frameCount, cutTimes = [], f
 
 export function muxGate({ mp4, durationSec, treatment, env = process.env, track }) {
   const mode = treatment.sound.mode;
-  const gate = audioGate({ mp4, videoDurationSec: durationSec, mode, ffmpeg: findTool('ffmpeg', env), ffprobe: findTool('ffprobe', env) });
-  const bed = track?.bed;
-  const summary = { mode, label: mode === 'generated' ? 'generated sound bed' : mode === 'none' ? 'silent by request' : `${mode} track`, ...(bed ? { timbre: bed.timbre, key: bed.key, tempo: bed.tempo, lufs: bed.lufs, peakDbfs: bed.peakDbfs, method: bed.method, sha256: bed.sha256 } : {}), ...(track?.prepared ? { sourceSec: track.prepared.sourceSec, padded: track.prepared.padded, trimmed: track.prepared.trimmed } : {}) };
+  // A score is built here to the loudness target like the generated bed: a quiet opening is a
+  // failure, not a warning.
+  const built = mode === 'score' ? 'generated' : mode;
+  const gate = audioGate({ mp4, videoDurationSec: durationSec, mode: built, ffmpeg: findTool('ffmpeg', env), ffprobe: findTool('ffprobe', env) });
+  const bed = track?.bed, score = track?.score;
+  const label = mode === 'score' && score ? `score, ${score.genre} in ${score.key}, ${score.tempo} BPM` : mode === 'generated' ? 'generated sound bed' : mode === 'none' ? 'silent by request' : `${mode} track`;
+  const summary = { mode, label, ...(bed ? { timbre: bed.timbre, key: bed.key, tempo: bed.tempo, lufs: bed.lufs, peakDbfs: bed.peakDbfs, method: bed.method, sha256: bed.sha256 } : {}), ...(score ? { genre: score.genre, key: score.key, tempo: score.tempo, lufs: score.lufs, peakDbfs: score.peakDbfs, method: score.loudnessMethod, sidechainDb: score.sidechainDb, sha256: score.sha256 } : {}), ...(track?.prepared ? { sourceSec: track.prepared.sourceSec, padded: track.prepared.padded, trimmed: track.prepared.trimmed } : {}) };
   return { results: gate.results, exit20: gate.exit20, stats: { ...gate.stats, ...summary }, summary };
 }

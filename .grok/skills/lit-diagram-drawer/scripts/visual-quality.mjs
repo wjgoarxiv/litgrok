@@ -68,7 +68,7 @@ function segmentHitsText(s,t,pad=1){
 function textOverlapsNode(text,node,pad=1){return text.x<node.x+node.w+pad&&text.x+text.w>node.x-pad&&text.y<node.y+node.h+pad&&text.y+text.h>node.y-pad;}
 function gap(a,b){const dx=Math.max(0,a.x-(b.x+b.w),b.x-(a.x+a.w)),dy=Math.max(0,a.y-(b.y+b.h),b.y-(a.y+a.h));return Math.hypot(dx,dy);}
 
-const OFFICE_LIMITS={groupRatio:2,accentFamiliesHigh:4,accentFamiliesMedium:3,hueBand:20,latinShare:.8,titleShare:.6,inset:4};
+const OFFICE_LIMITS={groupRatio:2,accentFamiliesHigh:6,hueBand:20,latinShare:.8,titleShare:.6,inset:4};
 function officeQuality(svg,nodes,texts,outlines){
   const issues=[];
   if(outlines.length>=2){
@@ -79,7 +79,7 @@ function officeQuality(svg,nodes,texts,outlines){
   }
   const hues=[];
   for(const n of nodes){const m=n.fill.match(/^#([\da-f]{6})$/i);if(!m)continue;const rgb=[0,2,4].map((i)=>parseInt(m[1].slice(i,i+2),16)/255),max=Math.max(...rgb),min=Math.min(...rgb),d=max-min,light=(max+min)/2,sat=d===0?0:d/(1-Math.abs(2*light-1));if(sat<.12||light<.12||light>.93)continue;let h=0;if(d){const k=rgb.indexOf(max);h=60*((k===0?(rgb[1]-rgb[2])/d:k===1?(rgb[2]-rgb[0])/d+2:(rgb[0]-rgb[1])/d+4)+6)%360;}if(!hues.some((v)=>Math.min(Math.abs(v-h),360-Math.abs(v-h))<=OFFICE_LIMITS.hueBand))hues.push(h);}
-  if(hues.length>=OFFICE_LIMITS.accentFamiliesMedium)issues.push('OF-202 ACCENT_COUNT '+hues.length+' '+(hues.length>=OFFICE_LIMITS.accentFamiliesHigh?'HIGH':'MEDIUM'));
+  if(hues.length>=OFFICE_LIMITS.accentFamiliesHigh)issues.push('OF-202 ACCENT_COUNT '+hues.length+' HIGH; keep three to five families, each tied to a named role');
   for(const t of texts){
     const letters=[...t.label].filter((c)=>/[A-Za-z0-9]/.test(c)).length,share=letters/Math.max(1,t.label.length);
     if(share>=OFFICE_LIMITS.latinShare&&t.label!==t.label.toUpperCase()){const all=t.label.split(/\s+/),words=all.filter((w)=>/^[A-Za-z]{4,}$/.test(w)),caps=words.filter((w)=>/^[A-Z][a-z]+$/.test(w));if(caps.length>=2&&caps.length/Math.max(1,words.length)>OFFICE_LIMITS.titleShare&&all.some((w)=>/^(Of|And|The|To|For|In)$/.test(w)))issues.push('OF-203 LABEL_CASE '+t.label);}

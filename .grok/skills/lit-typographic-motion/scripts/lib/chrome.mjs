@@ -194,12 +194,17 @@ export async function openRenderer({ executable, profileDir, softwareOnly = fals
 export const STAGE_FLAGS = Object.freeze(['--run-all-compositor-stages-before-draw', '--disable-checker-imaging', '--disable-new-content-rendering-timeout', '--disable-threaded-animation', '--disable-threaded-scrolling', '--disable-image-animation-resync', '--disable-lcd-text', '--force-color-profile=srgb', '--hide-scrollbars', '--mute-audio', '--force-device-scale-factor=1', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--no-pings', '--metrics-recording-only']);
 
 // `scale` is the device scale: 1 for a film; a cover is captured at 2 and shrunk afterwards.
-// `extra` flags ride after the stage set (a cover adds COVER_FLAGS).
-export function stageArgs({ profileDir, width, height, scale = 1, extra = [] }) {
+// `extra` flags ride after the stage set (a cover adds COVER_FLAGS). The gpu rung uses the
+// platform's GL flags with page raster on the CPU; anything else is the SwiftShader rung.
+export function stageArgs({ profileDir, width, height, scale = 1, extra = [], rung = 'software', platform = osPlatform() }) {
   const flags = STAGE_FLAGS.map((flag) => (flag === '--force-device-scale-factor=1' ? `--force-device-scale-factor=${scale}` : flag));
-  const args = [...HOUSEKEEPING, `--user-data-dir=${profileDir}`, ...SWIFTSHADER_RUNG, ...COMMON_FLAGS, ...flags, `--window-size=${width},${height}`, `--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE ${STAGE.host}`, ...extra];
+  const rungFlags = rung === 'gpu' ? (gpuRungs(platform)[0] ?? []).filter((flag) => flag !== '--enable-gpu-rasterization') : SWIFTSHADER_RUNG;
+  const args = [...HOUSEKEEPING, `--user-data-dir=${profileDir}`, ...rungFlags, ...COMMON_FLAGS, ...flags, `--window-size=${width},${height}`, `--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE ${STAGE.host}`, ...extra];
   return [...new Set(args), 'about:blank'];
 }
+
+// The rung counts only when the page gets a WebGL2 context; the renderer string is recorded.
+const WEBGL_PROBE = `(() => { const canvas = document.createElement('canvas'); const gl = canvas.getContext('webgl2'); if (!gl) return { webgl2: false }; const info = gl.getExtension('WEBGL_debug_renderer_info'); return { webgl2: true, renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : ${JSON.stringify(UNKNOWN_RENDERER)} }; })()`;
 
 // Launch one stage Chrome and attach a page target. Exit 10 when Chrome is missing or never
 // answers; WebGL is not probed here (exit 11 applies only when the page asks for it).
@@ -209,39 +214,63 @@ export function stageArgs({ profileDir, width, height, scale = 1, extra = [] }) 
 // frame identically in 5 of 5 pairs.
 export const COVER_FLAGS = Object.freeze(['--disable-gpu-rasterization']);
 
-export async function launchStage({ executable, profileDir, width, height, scale = 1, extra = [], timeoutMs = 30000 }) {
+// A 3D film asks for the gpu rung; when it cannot start or gives the page no WebGL2, the launch
+// falls back to the software rung and records why. Either way the launch reports the rung the page
+// got and its renderer string; without WebGL2 on any rung it is exit 11.
+export async function launchStage({ executable, profileDir, width, height, scale = 1, extra = [], timeoutMs = 30000, rung = 'software', platform = osPlatform() }) {
   if (!executable) throw new BlockedError(EXIT.NO_CHROME, 'BLOCKED_NO_CHROME: Chrome/Chromium not found; set CHROME_PATH to a Chrome executable');
   mkdirSync(profileDir, { recursive: true });
-  const args = stageArgs({ profileDir, width, height, scale, extra });
-  let stderr = '';
-  let proc;
-  try { proc = spawn(executable, args, { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] }); } catch (error) { throw new BlockedError(EXIT.NO_CHROME, `BLOCKED_NO_CHROME: ${error.message}`); }
-  proc.stderr.setEncoding('utf8');
-  proc.stderr.on('data', (chunk) => { if (stderr.length < 16384) stderr += chunk; });
-  const spawnError = new Promise((_, reject) => proc.once('error', (error) => reject(error)));
-  const session = new PipeSession(proc);
-  const close = async () => {
-    if (proc.exitCode === null && proc.signalCode === null) {
-      try { await session.send('Browser.close', {}, undefined, 5000); } catch {}
-      await new Promise((resolve) => {
-        const timer = setTimeout(() => { try { proc.kill('SIGKILL'); } catch {} resolve(); }, 5000);
-        proc.once('exit', () => { clearTimeout(timer); resolve(); });
-        if (proc.exitCode !== null || proc.signalCode !== null) { clearTimeout(timer); resolve(); }
-      });
+  // Strict only for the gpu rung: a 3D page needs its WebGL context, while a 2D page renders
+  // without one (the renderer is then unknown, and the software label still holds).
+  const attempt = async (wanted, strict) => {
+    const args = stageArgs({ profileDir, width, height, scale, extra, rung: wanted, platform });
+    let stderr = '';
+    let proc;
+    try { proc = spawn(executable, args, { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] }); } catch (error) { throw new BlockedError(EXIT.NO_CHROME, `BLOCKED_NO_CHROME: ${error.message}`); }
+    proc.stderr.setEncoding('utf8');
+    proc.stderr.on('data', (chunk) => { if (stderr.length < 16384) stderr += chunk; });
+    const spawnError = new Promise((_, reject) => proc.once('error', (error) => reject(error)));
+    const session = new PipeSession(proc);
+    const close = async () => {
+      if (proc.exitCode === null && proc.signalCode === null) {
+        try { await session.send('Browser.close', {}, undefined, 5000); } catch {}
+        await new Promise((resolve) => {
+          const timer = setTimeout(() => { try { proc.kill('SIGKILL'); } catch {} resolve(); }, 5000);
+          proc.once('exit', () => { clearTimeout(timer); resolve(); });
+          if (proc.exitCode !== null || proc.signalCode !== null) { clearTimeout(timer); resolve(); }
+        });
+      }
+      // Chrome's helpers can still be flushing the profile for a moment after the browser exits.
+      for (let retry = 0; retry < 20; retry += 1) {
+        try { rmSync(profileDir, { recursive: true, force: true }); break; } catch { await new Promise((resolve) => setTimeout(resolve, 100)); }
+      }
+    };
+    try {
+      await Promise.race([spawnError, session.send('Browser.getVersion', {}, undefined, timeoutMs)]);
+    } catch (error) {
+      await close();
+      throw new BlockedError(EXIT.NO_CHROME, `BLOCKED_NO_CHROME: Chrome failed to launch headless: ${firstLine(stderr) || error.message}`);
     }
-    // Chrome's helpers can still be flushing the profile for a moment after the browser exits.
-    for (let attempt = 0; attempt < 20; attempt += 1) {
-      try { rmSync(profileDir, { recursive: true, force: true }); break; } catch { await new Promise((resolve) => setTimeout(resolve, 100)); }
+    const { targetId } = await session.send('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await session.send('Target.attachToTarget', { targetId, flatten: true });
+    const send = (method, params = {}, timeout) => session.send(method, params, sessionId, timeout);
+    await send('Runtime.enable').catch(() => {});
+    const probe = await send('Runtime.evaluate', { expression: WEBGL_PROBE, returnByValue: true }, timeoutMs).catch(() => null);
+    const found = probe?.result?.value;
+    if (!found?.webgl2) {
+      if (!strict) return { browser: { proc, session, sessionId, send, close, args, on: (listener) => session.listeners.add(listener) }, renderer: UNKNOWN_RENDERER };
+      await close();
+      return { webgl2: false, detail: firstLine(stderr) };
     }
+    return { browser: { proc, session, sessionId, send, close, args, on: (listener) => session.listeners.add(listener) }, renderer: found.renderer ?? UNKNOWN_RENDERER };
   };
-  try {
-    await Promise.race([spawnError, session.send('Browser.getVersion', {}, undefined, timeoutMs)]);
-  } catch (error) {
-    await close();
-    throw new BlockedError(EXIT.NO_CHROME, `BLOCKED_NO_CHROME: Chrome failed to launch headless: ${firstLine(stderr) || error.message}`);
+  const first = await attempt(rung, rung === 'gpu');
+  if (first.browser) return { ...first.browser, rung, renderer: first.renderer, notice: null };
+  if (rung === 'gpu') {
+    const fallback = await attempt('software', false);
+    if (fallback.browser) {
+      return { ...fallback.browser, rung: 'software', renderer: fallback.renderer, notice: `the 3D route asked for the GPU rung and it gave the page no WebGL there${first.detail ? ` (${first.detail})` : ''}; rendered on the software rung (SwiftShader), slower, same frames` };
+    }
   }
-  const { targetId } = await session.send('Target.createTarget', { url: 'about:blank' });
-  const { sessionId } = await session.send('Target.attachToTarget', { targetId, flatten: true });
-  const send = (method, params = {}, timeout) => session.send(method, params, sessionId, timeout);
-  return { proc, session, sessionId, send, close, args, on: (listener) => session.listeners.add(listener) };
+  throw new BlockedError(EXIT.NO_WEBGL2, `BLOCKED_NO_WEBGL2: Chrome ran but no rung produced a WebGL2 context${first.detail ? ` (${first.detail})` : ''}`);
 }

@@ -1,6 +1,6 @@
 ---
 name: lit-diagram-drawer
-description: Create clear, accessible, Korean-ready diagrams for architecture, workflows, systems, data models, timelines, and quantitative relationships. Use for conceptual diagrams; use frontend-ui-ux for interfaces and lit-scientific-visualization for plots of measured data.
+description: Create clear, accessible, Korean-ready diagrams for architecture, workflows, systems, data models, timelines, and quantitative relationships. Use for conceptual diagrams; use frontend-ui-ux for interfaces, lit-schematic for real equipment and P&IDs, and lit-scientific-visualization for plots of measured data.
 user-invocable: true
 argument-hint: "<brief>"
 ---
@@ -42,18 +42,30 @@ The line is advisory prompt guidance. It does not prove that Grok Build selected
 - Use this skill for system maps, process diagrams, schemas, decision paths, schedules, ownership maps, and conceptual charts in the catalog.
 - Route pages, dashboards, responsive application screens, and interaction design to [frontend-ui-ux](../frontend-ui-ux/SKILL.md).
 - Route measured scientific data, statistical inference, uncertainty, and instrument output to [lit-scientific-visualization](../lit-scientific-visualization/SKILL.md).
+- Route drawings of physical equipment to [lit-schematic](../lit-schematic/SKILL.md): a P&ID, PFD or BFD, an equipment layout, a journal figure of an experimental apparatus, or an isometric or cutaway view of a vessel, exchanger or machine. A box-and-arrow sketch of a process stays here.
 - Use prose, a table, or a short list when it carries the same meaning more plainly.
 
 ## Fixed procedure
 
+### Choose the design first
+
+The user has the right to choose how the diagram looks. Before the content brief, the layout budget or any HTML, ask which design to build: put the numbered choice in the reply with the option your reading of the brief favours first and marked recommended, a one-line description each, and a small ASCII sketch of the result. Ask only what is open, at most four questions:
+
+1. Type ("Which layout?"): only when two or more entries of `references/type-catalog.json` answer the reader's question, with the best two to four as options (for a request-path question, for instance `architecture`, `flowchart`, `swimlane` and `sequence`).
+2. Canvas ("Where will it be placed?"): `slide-16x9 (recommended)` (1280 x 720), `slide-4x3` (960 x 720), `doc-inline` (960 x 600, a Word column), `doc-wide` (1200 x 675).
+3. Theme ("Which variant?"): `light (recommended)` (paper canvas, dark ink, a restrained warm accent), `dark` (dark paper, light ink), `full` (a title, context, key and takeaway around the same layout).
+4. Density ("How full?"): `Dense, about 8/10 (recommended)` (named zones, sub-components, a role legend) or `Minimal, about 4/10` (one or two focal accents).
+
+Skip a question when the prompt already names its answer (a type, a canvas preset, light or dark, "minimal", a brand profile, or an imported file that fixes the layout) or the user hands the choice over ("알아서", "you choose", "just make it good"): take the recommended option and say so in the reply. A `grok -p` run decides alone: take the recommended option of each open question and say so in one line.
+
 1. **Choose a type.** Match the reader's question to one entry in references/type-catalog.json. When behavior, state, enforcement, or risk is the point, choose a semantic pattern first and then its nearest type.
 2. **Write a content brief.** Name the audience, purpose, facts that must remain exact, relationships, boundary conditions, size, theme, and required output. Preserve uncertainty and units. Treat imported labels as inert data.
-3. **Set the layout budget.** Prefer deletion and grouping over shrinking text. At 1080×640, use a title of at least 28px, node labels of at least 15px, and connector labels of at least 13px. Scale those floors by the smaller of viewBox.width/1080 and viewBox.height/640 on other canvases. Keep nodes and connectors within at least 68% of the canvas width and 40% of its height. Keep ordinary diagrams near density 4/10. Split content that cannot remain legible.
+3. **Set the layout budget.** Prefer grouping, zoning and a larger canvas preset over shrinking text. At 1080×640, use a title of at least 28px, node labels of at least 15px, and connector labels of at least 13px. Scale those floors by the smaller of viewBox.width/1080 and viewBox.height/640 on other canvases. Keep nodes and connectors within at least 68% of the canvas width and 40% of its height. Keep density near 8/10: named zones, sub-components with technical sublabels, labelled relationships, a role legend and an annotation or two, as references/style-guide.md describes. Split only content that would fall below a floor. A minimal diagram (4/10 density, one or two focal accents) is the path only when the user asks for minimal, calm, quiet or sparse output.
    - Bind each connector label to its named route. At 1080×640, its text anchor must be within 24px of that path and closer to it than to every other connector.
    - Name trust boundaries and groups in visible text. Boundary labels use the 13px connector floor and 4.5:1 contrast.
    - Keep edge labels clear of every node box. Do not let an outline cross a text box, let a connector run alongside an outline within 4px for 12px or more, or let an arrowhead overlap its destination. Each box-target arrow tip must meet the target edge within 2px; head length must be at least `max(12 × viewBox-width / 1080, 5 × stroke-width)`. Sequence messages end on their lifelines. Mark decision nodes and show every declared outcome on an outgoing edge.
-4. **Read the route.** Load the matching references/type-<id>.md and only the common guides it links to. Start with references/style-guide.md and references/output-spec.md. Use the matching assets/examples/ template as a scaffold, not as a fixed composition. Do not load every type guide at once.
-5. **Draft HTML/SVG.** Use semantic order, a 4px layout grid, live text, the selected theme, and at most two focal accents. Keep a complete static state available.
+4. **Read the route.** Load the matching references/type-<id>.md and only the common guides it links to. Start with references/style-guide.md and references/output-spec.md. Use the matching assets/examples/ template as a scaffold for geometry and tokens, not as a fixed composition or a density target. Do not load every type guide at once.
+5. **Draft HTML/SVG.** Use semantic order, a 4px layout grid, live text, the selected theme, and 3–5 accent families each bound to a role and named in a legend (fewer only on a minimal request). Keep a complete static state available.
 6. **Verify.** Run scripts/verify-diagram.mjs, scripts/verify-type.mjs --type=<id>, scripts/verify-brief.mjs, and scripts/check-visible-text.mjs. Run scripts/verify-all.mjs for the complete example set and scripts/verify-coverage.mjs after changing catalog resources. When a brief has a trust boundary, declare every node exactly once in semicolon-separated `Trust boundary internal nodes:` and `Trust boundary external nodes:` lists; the brief verifier checks that internal boxes lie fully inside the boundary rectangle and external boxes fully outside. These checks reject process or generator copy, undersized role labels, sparse content, detached or ambiguous edge labels, edge labels on node boxes, text crossing boundaries, routes through unrelated nodes or along outlines, route crossings (including opposite directions between the same two nodes), arrowheads that miss or cover their targets, undersized heads, incomplete decision outcomes, node gaps under 12px, and incomplete sequences. Correct every block, geometry, contrast, accessibility, language, and type-specific failure before exporting.
 7. **Check visible text with lit-humanizer.** The checker calls the detector shipped in this same project at ../lit-humanizer/scripts/detect.mjs. A block-tier hit or detector error fails the check. If that installed detector is missing or fails, stop and report it; do not skip the text check or use another checkout.
 8. **Export.** Run scripts/export.mjs for requested PNG scales or Office-safe SVG. It never installs a browser or font. scripts/doctor.mjs reports tool availability. If the renderer is missing, use the printed user-run setup steps; authoring and non-rendering checks remain available.
@@ -75,7 +87,7 @@ Use the shared references/import-schema.md output to make a fresh content brief.
 - Run `scripts/verify-all.mjs` before releasing a skill example set to check every template and after example and reject each naive foil.
 - Run `scripts/verify-coverage.mjs` after changing catalog resources to check type-reference and template coverage.
 - Run `scripts/verify-motion.mjs` before export when the diagram has an animated state.
-- Run `scripts/visual-quality.mjs` before review to check visible-label scale, route detours, lifelines, and other visual-quality rules. Its OF-201 through OF-204 findings cover declared-group gap ratios, node-fill accent families, Latin label casing, and node/boundary label fit. OF-203 is advisory; an edge label has no rectangular box and is outside OF-204's scope.
+- Run `scripts/visual-quality.mjs` before review to check visible-label scale, route detours, lifelines, and other visual-quality rules. Its OF-201 through OF-204 findings cover declared-group gap ratios, node-fill accent families (3–5 pass, 6 or more fail), Latin label casing, and node/boundary label fit. OF-203 is advisory; an edge label has no rectangular box and is outside OF-204's scope.
 - Run `scripts/check-visible-text.mjs` before accepting copy to apply the installed LitGrok detector.
 - Run `scripts/doctor.mjs` before export to see renderer, font, and write-access status.
 - Run `scripts/export.mjs` after verification to export the requested PNG scales or Office-safe SVG.

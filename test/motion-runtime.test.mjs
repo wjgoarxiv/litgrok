@@ -37,13 +37,16 @@ function treatmentFor(briefPath) {
   const brief = JSON.parse(readFileSync(briefPath, 'utf8'));
   const lines = [...new Set([brief.title, ...(brief.lines ?? []), brief.end?.title].filter(Boolean))];
   const durationSec = Math.max(4, lines.length * 2);
-  const step = durationSec / lines.length;
+  // A story turn needs a shot to land in after the opening: one line still gets two beats.
+  const count = Math.max(2, lines.length);
+  const step = durationSec / count;
   return {
     request: `${lines.map((line) => `"${line}"`).join(' ')} 이 문장으로 키네틱 타이포 영상 만들어줘, 소리 없이 lit`,
     genre: 'type-led', path: 'type', pathReason: 'The user supplied the words and asked for kinetic type.',
     idea: 'Each supplied phrase gets its own breath on a steady pulse.', audience: 'Test viewers', channel: 'Local playback',
     format: '16:9', formatReason: 'Local playback is landscape.', durationSec,
-    beats: lines.map((line, i) => ({ t0: i * step, t1: (i + 1) * step, purpose: `breath ${i + 1}`, onScreen: 'the supplied phrase', motion: 'reveal word by word', sound: 'none' })),
+    story: { expect: 'Viewers expect the words to arrive all at once.', turn: 'Each phrase gets its own breath instead.', beat: 1, payoff: 'The last phrase holds past the pulse.' },
+    beats: Array.from({ length: count }, (_, i) => ({ t0: i * step, t1: (i + 1) * step, purpose: `breath ${i + 1}`, onScreen: 'the supplied phrase', motion: 'reveal word by word', sound: 'none' })),
     subject: { name: lines[0], source: 'user', specifics: [] }, visualDevices: [],
     typePlan: { faces: ['Archivo', 'Pretendard'], hierarchy: 'one phrase at a time', maxWordsOnScreen: 6, ...(brief.annotations ? { index: true } : {}) },
     palette: [{ hex: '#111111', role: 'ground' }, { hex: '#EEEEEE', role: 'type' }, { hex: '#2BB3A3', role: 'accent' }],

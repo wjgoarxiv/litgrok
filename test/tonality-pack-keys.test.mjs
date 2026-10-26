@@ -22,10 +22,16 @@ const DECK_READS = {
   version: ['lib/template-registry.js', /version: pack\.version,/],
   intent: ['compile-deck.js', /\$\{p\.intent\}/],
   canvas: ['lib/template-registry.js', /options\.canvas \|\| pack\.canvas\[0\]/],
-  'faces.*': ['lib/render-pack.js', /G\.faceWidth\(pack\.faces\[role\]\)/],
-  'palette.*': ['lib/render-pack.js', (role) => new RegExp(`"${role}"|P\\.${role}\\b|P\\["${role}"\\]`)],
-  ramp: ['lib/template-registry.js', /densityTokens\(density, pack\.ramp\)/],
+  'faces.*': ['lib/template-registry.js', /FACES\[faceMap\[role\]\]/],
+  'faces-a2z.*': ['lib/template-registry.js', /pack\["faces-a2z"\]/],
+  'palette.*': ['lib/render-pack.js', /S\.colour\(/],
+  ramp: ['lib/template-registry.js', /pack\.register === "bold" \? pack\.ramp/],
+  register: ['lib/template-registry.js', /pack\.register === "bold"/],
   hero: ['lib/render-pack.js', /S\.pack\.hero \?/],
+  'edge-weight': ['lib/render-pack.js', /S\.pack\["edge-weight"\]/],
+  'edge-colour': ['lib/render-pack.js', /S\.pack\["edge-colour"\]/],
+  'shadow.*': ['lib/render-pack.js', /S\.pack\.shadow/],
+  'qa.*': ['craft_extras.py', /pack_allowances/],
   'type-voice.title-tracking': ['lib/render-pack.js', /voice\["title-tracking"\]/],
   'type-voice.display-tracking': ['lib/render-pack.js', /voice\["display-tracking"\]/],
   density: ['lib/template-registry.js', /options\.density : pack\.density/],
@@ -122,12 +128,16 @@ function unread(files, reads, labels, scriptDir) {
   return problems;
 }
 
+const DECK_LABELS = {
+  // Writer guidance on the sheet; the gate enforces the craft floor, not the avoid list.
+  avoid: 'the pitfalls a writer checks a deck against; the tonality sheet repeats them under "Avoid"',
+};
 test('every key a deck look sets is read by the engine', () => {
   const registry = require(join(pptx, 'scripts/lib/template-registry.js'));
   const ids = registry.listTonalities();
-  assert.equal(ids.length, 8);
+  assert.equal(ids.length, 13);
   const packs = ids.map((id) => [`${id}/pack.yaml`, registry.loadPack(id)]);
-  assert.deepEqual(unread(packs, { map: DECK_READS, depth: 2 }, {}, join(pptx, 'scripts')), []);
+  assert.deepEqual(unread(packs, { map: DECK_READS, depth: 2 }, DECK_LABELS, join(pptx, 'scripts')), []);
 });
 
 test('every key a document look sets is read by the engine', () => {

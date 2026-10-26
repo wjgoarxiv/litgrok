@@ -1,84 +1,51 @@
-A reference shows one state at one width, produced by a stack you do not control. Rebuild it as
-real markup with real semantics; never close the gap with a screenshot.
+# Visual reconstruction from references
 
-## Claim classes
+A reference image shows one state at one viewport, rendered by a stack you may not know.
+Rebuild semantic, responsive markup and tune it toward the reference. Never use a screenshot
+as the page background or as a substitute for real content.
 
-Use observed, inferred, and unknown as internal working categories while measuring.
-Keep those labels in the design notes; reader-facing copy should state supported
-measurements normally and ask for missing input directly. State a material
-reconstruction gap once in the reply.
+## Measure the frame
 
-- Observed: measurable in the image — a pixel distance, a sampled hex value, a glyph.
-- Inferred: a reading the image does not prove, such as a scale behind three gaps.
-- Unknown: not depicted — hover, focus, error, empty, loading, any other width.
+Record the image dimensions and device scale. Measure the main content width, outer margins,
+columns, type sizes, baseline spacing, and large color regions before coding. Sample flat
+interior pixels, not edges or gradients. Use the smallest spacing scale that explains the
+measured gaps; do not choose values only because they look close.
 
-Only observed claims are criteria; inferred claims need an owner, unknowns are user questions.
+Keep an internal note that separates direct observations from responsive or behavior
+assumptions and states that other states are not shown. A reference does not establish
+hover, focus, error, loading, or narrower layouts. Add those states from the product's
+interaction contract or ask about a material unknown. Do not place observation labels on
+the interface itself.
 
-## Measurement pass
+## Rebuild meaning and assets
 
-Measure before writing code. Guessed numbers cost the most to unwind.
+- Use heading elements in outline order, real navigation lists, and selectable text.
+- Do not reproduce contrast failures or suppress visible keyboard focus.
+- Recreate permitted geometry, rules, simple icons, and gradients.
+- Extract only assets the project is allowed to use; preserve their source resolution.
+- Substitute an unavailable permitted asset at the same dimensions, or omit decoration
+  that carries no information. Never recreate a logo, wordmark, or licensed photograph.
 
-1. Record pixel dimensions and device scale; divide the scale out before quoting.
-2. Sample color at flat interior pixels, never on an edge or in a gradient.
-3. Measure cap height and baseline-to-baseline distance per size; derive line height.
-4. Fit every gap, gutter, and outer margin to the smallest plausible scale.
+When the reference font is unavailable or unlicensed, choose a metric-compatible fallback.
+Compare cap height, x-height, and advance width; adjust line-box metrics only when needed;
+then verify that the longest real label still fits.
 
-## Semantic reconstruction
+## Infer responsive behavior
 
-Build the structure the content deserves, then style it toward the reference.
+One frame proves one width. Classify regions as fixed rail, fluid column, or centered max
+width. Set breakpoints where measured content stops fitting. Decide what wraps, stacks,
+collapses, or scrolls, and inspect the narrowest supported width plus one width around each
+breakpoint. Keep these assumptions in the Design Contract until the user or another source
+confirms them.
 
-- Headings become heading elements in outline order; large and bold is not an `h1`.
-- A row of links becomes a navigation list, not a flex row of `div`s.
-- Text baked into the image becomes real, selectable, translatable text.
-- Contrast failures and suppressed focus in the reference are not reproduced.
+## Iterate against the capture
 
-## Asset decisions
+Capture the build at the reference dimensions and device scale. Compare structure, spacing,
+type, then color. Fix the largest measured mismatch and recapture. Stop after three passes
+that do not reduce the overall difference. A fidelity review record can retain per-region
+measurements, source and output paths, unconfirmed states, and asset decisions; the normal
+reader reply needs only the result and a material limitation once.
 
-Decide per asset and record the decision.
-
-- Recreate: geometric shapes, rules, dividers, simple icons, gradients.
-- Extract: only assets you are permitted to use, at source resolution.
-- Substitute: a placeholder at identical dimensions, marked as a placeholder.
-- Omit: decoration carrying no information; record it in `omissions`.
-
-Never recreate a logo, wordmark, or licensed photograph. Substitute and raise a hard stop.
-
-## Metric-compatible font fallback
-
-When the reference face is unavailable or unlicensed, choose the fallback by metrics.
-
-1. Match units-per-em, cap height, x-height, and default advance width.
-2. Hold line boxes with `size-adjust`, `ascent-override`, `descent-override`.
-3. Verify the longest real label still fits at the fallback's advance.
-4. Record the substitution and its metric delta as an owned inferred claim.
-
-## Responsive inference from one frame
-
-One frame proves one width. State every adaptation as an assumption until confirmed.
-
-- Classify each region: fixed rail, fluid column, or centered maximum width.
-- Break where your measured content breaks, not at the reference's width.
-- Name what wraps, stacks, collapses, or scrolls below that width.
-- Check the narrowest supported width and one width above each break.
-
-## Iteration loop
-
-Iterate on measured deltas, never on impressions.
-
-1. Capture your build at the reference's exact dimensions and device scale.
-2. Compare region by region in order: structure, spacing, type, then color.
-3. Fix the single largest measured delta and recapture.
-4. Stop after three passes that do not reduce total delta; report the remainder.
-
-## Internal comparison record
-
-Keep region deltas, capture paths, assumptions, unknown states, asset decisions, and verdict in
-internal task notes or the verification receipt. Bind independent review to the design-contract
-hash. In the reply, state the result plainly and name a material fidelity gap once.
-
-## “Pixel perfect” gate
-
-Use this phrase only when both captures share dimensions and device scale; measured differences
-are resolved; assumptions and unknown states are closed; fonts and assets are authorized; and
-every declared state was compared. Otherwise keep numeric comparisons internal and describe
-fidelity in ordinary language.
+Use “pixel perfect” only when dimensions and scale match, every visible state is compared,
+no unexplained measured gap remains, and the typeface and assets are approved. Otherwise
+describe the measured result and the remaining mismatch plainly.

@@ -14,6 +14,7 @@
     { "t0": 4, "t1": 8, "purpose": "second breath and pause", "onScreen": "the second phrase", "motion": "slower reveal, hold on the last word", "sound": "closing cadence" }
   ],
   "subject": { "name": "오늘의 걸음", "source": "user", "specifics": [] },
+  "story": { "expect": "Viewers expect the quote to appear all at once, read and gone.", "turn": "Each phrase lands like a footstep, and the last word opens the frame.", "beat": 1, "payoff": "The walker keeps going after the words stop." },
   "visualDevices": [ { "kind": "shape", "role": "support", "beats": [0, 1] } ],
   "typePlan": { "faces": ["Pretendard"], "hierarchy": "one phrase at a time, the last word heaviest", "maxWordsOnScreen": 3 },
   "palette": [

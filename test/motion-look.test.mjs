@@ -23,6 +23,9 @@ function stageTreatment() {
     idea: 'A red disc bobs gently while two short lines take turns.', audience: 'Test viewers', channel: 'Local playback',
     format: '16:9', formatReason: 'Local playback is landscape.', durationSec: 6, fps: 30,
     beats: [[0, 2], [2, 4], [4, 6]].map(([t0, t1], i) => ({ t0, t1, purpose: ['open', 'develop', 'land'][i], onScreen: 'the disc and a line', motion: 'bobbing', sound: 'none' })),
+    register: 'minimal',
+    story: { expect: 'Viewers expect the disc to bob without meaning.', turn: 'The disc bobs exactly when each line lands.', beat: 1, payoff: 'The loop closes on the same bob it opened with.' },
+    protagonist: { name: '둥근 도형', kind: 'object', look: 'A red disc on near-black, fist-sized in frame.', acts: [{ beat: 0, action: 'Bobs alone.' }, { beat: 1, action: 'Bobs with the lines.' }, { beat: 2, action: 'Bobs back to rest.' }] },
     subject: { name: '둥근 도형', source: 'user', specifics: [] },
     visualDevices: [{ kind: 'shape', role: 'subject', beats: [0, 1, 2] }, { kind: 'path', role: 'support', beats: [1] }],
     typePlan: { faces: ['Archivo', 'Pretendard'], hierarchy: 'one line at a time', maxWordsOnScreen: 5 },
@@ -93,6 +96,11 @@ test('look flow: refusals, not-done states, a full receipt, downgrade, DONE_UNVI
     assert.equal(cli(['look', '--out', partial, '--round', '2', '--answers', answers(partial, { round: 2, drop: ['stills/poster.png'] })], env).status, 0);
     assert.match(cli(['verify', '--out', partial], env).stdout, /NOT DONE: the last look did not view stills\/poster\.png/);
 
+    const noboard = join(work, 'noboard');
+    cpSync(out, noboard, { recursive: true });
+    assert.equal(cli(['look', '--out', noboard, '--round', '2', '--answers', answers(noboard, { round: 2, drop: ['stills/board.png'] })], env).status, 0);
+    assert.match(cli(['verify', '--out', noboard], env).stdout, /NOT DONE: the last look did not view stills\/board\.png/, 'the final storyboard must be viewed');
+
     assert.equal(cli(['look', '--out', out, '--round', '2', '--answers', answers(out, { round: 2 })], env).status, 0);
     const done = cli(['verify', '--out', out], env);
     assert.equal(done.status, 0, done.stdout);
@@ -114,6 +122,26 @@ test('look flow: refusals, not-done states, a full receipt, downgrade, DONE_UNVI
     const again = cli(['stage', '--out', out, '--round', '3'], env);
     assert.equal(again.status, 0, again.stderr);
     assert.match(cli(['verify', '--out', out], env).stdout, /NOT DONE: the last look was not on the final full render/, 'a last round on an old stills hash is not done');
+  } finally { cleanup(work); cleanup(cache); }
+});
+
+test('preview is done at its board: a stills-only storyboard, looked at, no full render', { skip: NO_TOOLS }, () => {
+  const work = mkdtempSync(join(tmpdir(), 'lgm-look-preview-'));
+  const cache = mkdtempSync(join(tmpdir(), 'lgm-look-preview-cache-'));
+  const env = { LITGROK_MOTION_CACHE: cache };
+  try {
+    const out = join(work, 'out');
+    mkdirSync(out);
+    cpSync(join(root, 'test/fixtures/motion/stage/qa-good'), join(out, 'stage'), { recursive: true });
+    const treatment = { ...stageTreatment(), preview: true, request: `${stageTreatment().request} 스토리보드` };
+    writeFileSync(join(out, 'treatment.json'), JSON.stringify(treatment));
+    assert.equal(cli(['stage', '--out', out, '--stills-only'], env).status, 0);
+    assert.match(cli(['verify', '--out', out], env).stdout, /NOT DONE: no look round on the board/);
+    assert.equal(cli(['look', '--out', out, '--round', '1', '--answers', answers(out, { round: 1, change: 'moved the second line lower', weakestBeat: 1 })], env).status, 0);
+    const done = cli(['verify', '--out', out], env);
+    assert.equal(done.status, 0, done.stdout);
+    assert.match(done.stdout, /^DONE: the board passed its check and was looked at/);
+    assert.match(done.stdout, /this is the storyboard preview .*stills\/board\.png.*not rendered yet/);
   } finally { cleanup(work); cleanup(cache); }
 });
 

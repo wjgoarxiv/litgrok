@@ -8,11 +8,45 @@ import { join } from 'node:path';
 import { SKILL_ROOT } from './fonts.mjs';
 import { measureContrast } from './gate.mjs';
 import { measureFrame } from './frame-pool.mjs';
+import { LAYOUTS, ZONE_TOLERANCE, readStyle, scaleStep, styleFamilies, styleTextColors } from './styles.mjs';
+
+const readStyleSafe = (id) => {
+  try {
+    return readStyle(id);
+  } catch {
+    return null;
+  }
+};
 import { openStage } from './stage-session.mjs';
 import { readingFloor } from './text.mjs';
 import { normalize } from './treatment.mjs';
 
 export const INTERNAL_TERMS = Object.freeze(['path', 'preset', 'gate', 'beat', 'treatment']);
+
+// Thresholds for the text and fill rules: visible opacity, ink pixels, overlap share of the smaller
+// box, RGB distance for "the same colour", empty regions per beat midpoint.
+export const TEXT_QA = Object.freeze({ visibleOpacity: 0.6, minInkPx: 12, overlapShare: 0.08, colourDistance: 12, emptyRegion: 0.15, emptyRegionsMax: 2 });
+
+/** [r, g, b] of a CSS colour string (rgb(), rgba() or #hex), or null. */
+export function parseCssColour(value) {
+  const text = String(value ?? '').trim();
+  const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/u.exec(text);
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  const hex = /^#([0-9a-f]{6})$/iu.exec(text);
+  if (hex) return [0, 2, 4].map((i) => Number.parseInt(hex[1].slice(i, i + 2), 16));
+  return null;
+}
+
+/** Classify a run against the treatment's copy: "copy" | "other" (decor is never copy here). */
+export function runClass(run, copyNorms) {
+  const n = run.norm;
+  if (!n) return 'other';
+  return copyNorms.some((line) => line.includes(n) || n.includes(line)) ? 'copy' : 'other';
+}
+
+const boxArea = (b) => Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
+const boxOverlap = (a, b) => boxArea([Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])]);
+const unionOf = (rects) => (rects.length ? [Math.min(...rects.map((r) => r[0])), Math.min(...rects.map((r) => r[1])), Math.max(...rects.map((r) => r[2])), Math.max(...rects.map((r) => r[3]))] : null);
 const QA_SCRIPT = join(SKILL_ROOT, 'scripts', 'stage', 'qa.js');
 const LUT = Float64Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
 const pass = (id, detail = '') => ({ id, status: 'PASS', detail });
@@ -107,11 +141,17 @@ function rgb3(rgba) {
   return out;
 }
 
-export async function runStageQa({ executable, out, stageDir, width, height, fps, seed, fonts, treatment, totalFrames, log = () => {}, stepOrThrow, captureChecked, stop = { aborted: false } }) {
+export async function runStageQa({ executable, out, stageDir, width, height, fps, seed, fonts, treatment, totalFrames, log = () => {}, stepOrThrow, captureChecked, rung = 'software', stop = { aborted: false } }) {
   const plan = qaPlan(treatment.beats, fps, totalFrames);
   const allowedFonts = new Set();
   for (const route of fonts.routes.values()) for (const name of fontNames(new Uint8Array(readFileSync(route.path)))) allowedFonts.add(name);
-  const session = await openStage({ executable, outDir: out, stageDir, width, height, fps, seed, fonts, label: 'q', log });
+  let style = null;
+  if (treatment.style) {
+    const { readStyle, styleCss, styleScript } = await import('./styles.mjs');
+    const declared = readStyle(treatment.style);
+    style = { css: styleCss(declared, treatment.format), js: styleScript(declared, treatment.format, treatment) };
+  }
+  const session = await openStage({ executable, outDir: out, stageDir, width, height, fps, seed, fonts, style, label: 'q', rung, log });
   const grid = [];
   const samples = [];
   let canvasTextCalls = 0;
@@ -157,7 +197,7 @@ export async function runStageQa({ executable, out, stageDir, width, height, fps
           } catch { /* the node left the document between reads */ }
         }
       }
-      samples.push({ frame: f, beat: sample.beat, kind: sample.kind, runs: measured, texts, moved: stats.moved, nonTextStd: stats.nonTextStd, fonts: fontsUsed });
+      samples.push({ frame: f, beat: sample.beat, kind: sample.kind, runs: measured, texts, moved: stats.moved, nonTextStd: stats.nonTextStd, fonts: fontsUsed, regions: a.regions ?? null });
     }
   } finally { await session.close().catch(() => {}); }
   const fileNames = ['index.html', 'treatment.json', 'stage-kit.js', 'fonts.css', 'gate-report.txt'];
@@ -165,6 +205,92 @@ export async function runStageQa({ executable, out, stageDir, width, height, fps
 }
 
 function wordHit(text, term) { return new RegExp(`(?<![\\p{L}\\p{N}])${term}(?![\\p{L}\\p{N}])`, 'iu').test(text); }
+
+/**
+ * The text rules on the collected samples: text over text (any visible runs), and — when the
+ * treatment declares a house style — the style's colours, faces and type scale for copy, plus the
+ * shot's type zone for settled copy runs on beats that name a layout. Pure, so tests drive it.
+ */
+export function judgeTextRules({ treatment, width, height, samples, settled, copyNorms }) {
+  const format = width >= height ? '16:9' : '9:16';
+  const style = treatment.style ? readStyleSafe(treatment.style) : null;
+  const colours = style ? styleTextColors(style).map(parseCssColour) : [];
+  const families = style ? styleFamilies(style) : new Set();
+  const overlaps = [];
+  const offColour = [];
+  const offFace = [];
+  const offScale = [];
+  const offScaleOther = [];
+  const offZone = [];
+  const tolX = width * ZONE_TOLERANCE;
+  const tolY = height * ZONE_TOLERANCE;
+  for (const s of samples) {
+    const visible = s.runs
+      .map((run) => ({ run, box: unionOf(run.rects) }))
+      .filter(({ run, box }) => box && !run.decor && run.opacity >= TEXT_QA.visibleOpacity && run.ink >= TEXT_QA.minInkPx);
+    for (let i = 0; i < visible.length; i++) {
+      for (let j = i + 1; j < visible.length; j++) {
+        const a = visible[i];
+        const b = visible[j];
+        const shared = boxOverlap(a.box, b.box);
+        if (shared > TEXT_QA.overlapShare * Math.min(boxArea(a.box), boxArea(b.box))) overlaps.push(`"${a.run.text.slice(0, 24)}" × "${b.run.text.slice(0, 24)}"@${s.frame}`);
+      }
+    }
+    const beat = treatment.beats[s.beat];
+    const layout = beat?.layout ? LAYOUTS[format][beat.layout] : null;
+    for (const { run, box } of visible) {
+      if (!settled(s, run)) continue;
+      const copy = !run.decor && runClass(run, copyNorms) === 'copy';
+      const where = `"${run.text.slice(0, 32)}"@${s.frame}`;
+      if (copy && style) {
+        const rgb = parseCssColour(run.color);
+        if (!run.gradient && rgb && !colours.some((c) => Math.hypot(c[0] - rgb[0], c[1] - rgb[1], c[2] - rgb[2]) <= TEXT_QA.colourDistance)) offColour.push(`${where} ${run.color}`);
+        if (run.family && ![...families].some((f) => run.family === f || run.family.startsWith(`${f} `))) offFace.push(`${where} ${run.family}`);
+      }
+      if (style) {
+        const fontPx = run.fontSizePx * (run.scale ?? 1);
+        if (!scaleStep(style, format, fontPx)) (copy ? offScale : offScaleOther).push(`${where} ${Math.round(fontPx)}px`);
+      }
+      if (copy && layout) {
+        const z = layout.type;
+        if (!z) offZone.push(`${where} in a full shot (no copy zone)`);
+        else {
+          const [zx, zy, zw, zh] = [z[0] * width, z[1] * height, z[2] * width, z[3] * height];
+          if (box[0] < zx - tolX || box[1] < zy - tolY || box[2] > zx + zw + tolX || box[3] > zy + zh + tolY) offZone.push(`${where} outside the ${beat.layout} type zone`);
+        }
+      }
+    }
+  }
+  const rules = [];
+  rules.push(overlaps.length ? fail('TEXT-OVERLAP', `text over text: ${overlaps.slice(0, 4).join(', ')}`) : pass('TEXT-OVERLAP', 'no two visible text runs overlap'));
+  if (style) {
+    const steps = Object.entries(style.scale[format]).map(([k, v]) => `${k} ${v}`).join(', ');
+    const styleFails = [
+      offColour.length ? `colour off the ${style.id} text roles (${style.textRoles.join(', ')}): ${offColour.slice(0, 3).join(', ')}` : null,
+      offFace.length ? `face outside the style (${[...families].join(', ')}): ${offFace.slice(0, 3).join(', ')}` : null,
+      offScale.length ? `size off the type scale (${steps} px, ±4 %): ${offScale.slice(0, 3).join(', ')}` : null,
+    ].filter(Boolean);
+    rules.push(styleFails.length ? fail('TEXT-ON-STYLE', styleFails.join('; '))
+      : offScaleOther.length ? warn('TEXT-ON-STYLE', `copy is on the ${style.id} style; other text off the scale: ${offScaleOther.slice(0, 3).join(', ')}`)
+        : pass('TEXT-ON-STYLE', `copy uses the ${style.id} colours, faces and type scale`));
+  }
+  const zoned = samples.some((s) => treatment.beats[s.beat]?.layout);
+  if (zoned) rules.push(offZone.length ? fail('TEXT-ZONE', offZone.slice(0, 4).join(', ')) : pass('TEXT-ZONE', "every settled copy run sits in its shot's type zone"));
+  return rules;
+}
+
+// A rich film fills its frame the way a dense reference does: at each beat midpoint at most two of
+// the 12 regions may sit empty (busy share under 0.15). The end card may breathe, so one beat may miss.
+export function richFill({ treatment, samples }) {
+  if (treatment.register === 'minimal') return { id: 'RICH-FILL', status: 'N/A', detail: 'minimal register: negative space is the point' };
+  const mids = samples.filter((s) => s.kind === 'mid' && Array.isArray(s.regions));
+  if (!mids.length) return { id: 'RICH-FILL', status: 'N/A', detail: 'region fill not measured' };
+  const thin = mids
+    .map((s) => ({ beat: s.beat, empty: s.regions.filter((v) => v < TEXT_QA.emptyRegion).length }))
+    .filter((x) => x.empty > TEXT_QA.emptyRegionsMax);
+  if (thin.length <= 1) return { id: 'RICH-FILL', status: 'PASS', detail: `${mids.length - thin.length} of ${mids.length} beat midpoints fill the frame (at most ${TEXT_QA.emptyRegionsMax} of 12 regions empty)` };
+  return { id: 'RICH-FILL', status: 'FAIL', detail: `${thin.length} of ${mids.length} beat midpoints leave the frame empty: ${thin.map((x) => `beat ${x.beat + 1} has ${x.empty} of 12 regions empty`).join(', ')}` };
+}
 
 export function evaluateQa({ grid, samples, plan, treatment, width, height, fps, canvasTextCalls = 0, allowedFonts = new Set(), fileNames = [] }) {
   const copy = treatment.copy.lines.map(normalize).filter(Boolean);
@@ -262,6 +388,9 @@ export function evaluateQa({ grid, samples, plan, treatment, width, height, fps,
   results.push(decorCopy || decorShare ? fail('QA-DECOR', decorCopy ?? decorShare) : pass('QA-DECOR', 'decor text carries no copy and stays under 25 % of the text area'));
   results.push(meta ? warn('QA-META', `a meta label may be on screen: ${meta}; the look must answer it`) : pass('QA-META', 'no request text, idea, file name or internal term on screen'));
   results.push(fontIssue ? (fontIssue.copy ? fail('QA-FONTS', `${fontIssue.text}; set copy in a product face`) : warn('QA-FONTS', fontIssue.text)) : pass('QA-FONTS', 'only product faces at beat midpoints'));
+  results.push(...judgeTextRules({ treatment, width, height, samples, settled, copyNorms: copy, families: null }));
+  const rich = richFill({ treatment, samples });
+  results.push(rich);
   const registered = grid.some((g) => g.texts.length);
   results.push(canvasTextCalls > 0 && !registered ? warn('QA-CANVAS', 'canvas text not measured: the page draws text on a canvas without LitStage.text registrations; the look must answer it') : pass('QA-CANVAS', registered ? 'canvas text registered' : 'no canvas text'));
   const drawn = presence.filter(Boolean).length;

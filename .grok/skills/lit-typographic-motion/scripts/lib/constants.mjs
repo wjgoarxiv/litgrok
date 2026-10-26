@@ -171,11 +171,13 @@ export const DIRECTOR = Object.freeze({
   durationRange: Object.freeze([4, 90]),
   minBeatSec: 1.2,
   maxGapSec: 0.25,
-  deviceKinds: Object.freeze(['illustration', 'diagram', 'chart', 'icon', 'shape', 'path', 'mask', 'depth3d', 'particles', 'grid', 'gradient', 'photo-texture']),
+  deviceKinds: Object.freeze(['illustration', 'diagram', 'chart', 'icon', 'shape', 'path', 'mask', 'depth3d', 'screen', 'particles', 'grid', 'gradient', 'photo-texture']),
+  protagonistKinds: Object.freeze(['character', 'object']),
+  assetRoles: Object.freeze(['logo', 'wordmark', 'icon', 'photo', 'screenshot', 'ui', 'readme-image']),
   textureKinds: Object.freeze(['grid', 'gradient', 'particles', 'photo-texture']),
   subjectCoverage: 0.5,
   faces: Object.freeze(['Archivo', 'Pretendard', 'VT323', 'Silkscreen', 'Galmuri9', 'Meslo']),
-  soundModes: Object.freeze(['generated', 'supplied', 'authored', 'none']),
+  soundModes: Object.freeze(['score', 'generated', 'supplied', 'authored', 'none']),
   timbres: Object.freeze(['glass', 'felt', 'pulse']),
 });
 

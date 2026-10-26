@@ -250,3 +250,26 @@ test('without a host, text registrations queue on window and define still sets l
   LitStage.define(spec);
   assert.equal(window.litStage, spec);
 });
+
+test('plate shows the plate frame for t and swaps the element on frame change', () => {
+  const { LitStage } = loadKit();
+  const parent = fakeElement();
+  parent.children = [];
+  parent.prepend = (el) => { parent.children.unshift(el); };
+  const doc = parent.ownerDocument;
+  const created = doc.createElement;
+  doc.createElement = (tag) => {
+    const el = created(tag);
+    el.replaceWith = (next) => { const i = parent.children.indexOf(el); if (i >= 0) parent.children[i] = next; };
+    return el;
+  };
+  const update = LitStage.plate({ parent, fps: 30, count: 120 });
+  assert.equal(update(0), 0);
+  assert.equal(parent.children.length, 1);
+  assert.match(parent.children[0].src, /plate\/000001\.png/);
+  assert.equal(update(0.5), 15);
+  assert.equal(parent.children.length, 1, 'the next frame replaces the element instead of stacking');
+  assert.match(parent.children[0].src, /plate\/000016\.png/);
+  assert.equal(update(0.5), 15, 'the same frame reuses the element');
+  assert.throws(() => LitStage.plate({ parent, fps: 30, count: 0 }), /count/);
+});

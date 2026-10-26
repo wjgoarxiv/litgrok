@@ -372,3 +372,146 @@ export function audioGate({ mp4, videoDurationSec, mode, ffmpeg, ffprobe }) {
   const detail = `${mode} track ${stats.durationSec} s, peak ${stats.peakDbfs} dBFS, quiet opening ${stats.quietOpeningSec} s${problems.length ? `; ${problems.join('; ')}` : ''}`;
   return done(status, detail, exit20, stats);
 }
+
+// ---- layered score primitives ------------------------------------------------------------
+
+// A normalized single-cycle table of additive partials (TABLE + 1 samples, wrapped).
+const TABLE = 4096;
+export { TABLE as WAVETABLE_SIZE };
+export function wavetable(harmonics) {
+  const table = new Float32Array(TABLE + 1);
+  let peak = 0;
+  for (let i = 0; i < TABLE; i += 1) {
+    let v = 0;
+    harmonics.forEach((a, k) => { if (a) v += a * Math.sin((2 * Math.PI * (k + 1) * i) / TABLE); });
+    table[i] = v;
+    peak = Math.max(peak, Math.abs(v));
+  }
+  for (let i = 0; i < TABLE; i += 1) table[i] /= peak || 1;
+  table[TABLE] = table[0];
+  return table;
+}
+
+export function samplePeakDbfs(channels) {
+  let peak = 0;
+  for (const ch of channels) for (let i = 0; i < ch.length; i += 1) {
+    const v = Math.abs(ch[i]);
+    if (v > peak) peak = v;
+  }
+  return dbfs(peak);
+}
+
+// Sounds an on-screen event can make: a tap, a hit, a whoosh and a chime.
+export const EVENT_SOUNDS = Object.freeze(['tap', 'hit', 'whoosh', 'chime']);
+
+const CUE_WORDS = Object.freeze([
+  ['hit', /\b(?:hits?|impacts?|cuts?|stabs?|accents?)\b|타격|히트|컷|강세/iu],
+  ['rise', /\b(?:rises?|rising|risers?|swells?|swelling|builds?|building|build-?ups?|lifts?|lifting)\b|상승|고조|빌드업/iu],
+  ['cadence', /\b(?:cadences?|resolves?|resolving|resolution|close|closing|ending|final chord)\b|종지|마무리|해결/iu],
+]);
+
+// Accent kinds a beat's free-text `sound` field asks for; none when nothing matches.
+export function cueKindsFor(soundText) {
+  const text = String(soundText ?? '');
+  return CUE_WORDS.filter(([, re]) => re.test(text)).map(([kind]) => kind);
+}
+
+const nearestTime = (times, t, within) => {
+  let best = null;
+  for (const c of times) if (Math.abs(c - t) <= within && (best === null || Math.abs(c - t) < Math.abs(best - t))) best = c;
+  return best;
+};
+
+const round4 = (x) => Math.round(x * 10000) / 10000;
+
+// Accent cues measured against the beat boundary or cut they serve, plus one `event` cue per
+// on-screen event at its own time (an event never snaps to a cut: it follows the picture).
+export function planCues({ beats = [], durationSec, cutTimes = [], events = [] }) {
+  const cues = [];
+  const clampT = (t) => Math.min(durationSec, Math.max(0, t));
+  beats.forEach((beat, beatIndex) => {
+    const t0 = clampT(Number(beat.t0)), t1 = clampT(Number(beat.t1));
+    for (const kind of cueKindsFor(beat.sound)) {
+      if (kind === 'hit') {
+        const cut = nearestTime(cutTimes, t0, 0.5);
+        const target = cut ?? t0;
+        cues.push({ kind, t: round4(target), beatIndex, target: round4(target), delta: 0 });
+      } else if (kind === 'rise') {
+        const cut = nearestTime(cutTimes, t1, 0.5);
+        const end = cut ?? t1;
+        const start = Math.max(t0, end - 1.0);
+        cues.push({ kind, t: round4(end), start: round4(start), beatIndex, target: round4(end), delta: 0 });
+      } else {
+        const t = t0 + 0.6 * (t1 - t0);
+        cues.push({ kind, t: round4(t), beatIndex, target: round4(t), delta: 0, end: round4(beatIndex === beats.length - 1 ? durationSec : t1) });
+      }
+    }
+  });
+  for (const e of Array.isArray(events) ? events : []) {
+    if (!EVENT_SOUNDS.includes(e?.kind) || !(e.t >= 0 && e.t < durationSec)) continue;
+    const beatIndex = Math.max(0, beats.findIndex((b) => e.t >= Number(b.t0) && e.t < Number(b.t1)));
+    const cut = nearestTime(cutTimes, e.t, Infinity);
+    cues.push({ kind: 'event', sound: e.kind, t: round4(e.t), beatIndex, target: round4(e.t), delta: 0, on: String(e.on ?? ''), fromCut: cut === null ? null : round4(Math.abs(e.t - cut)) });
+  }
+  cues.sort((a, b) => a.t - b.t || a.beatIndex - b.beatIndex);
+  return cues;
+}
+
+// The master stage every built track ends in: loudness to -16 LUFS through a lookahead limiter
+// under -2 dBFS, quantized as the WAV will be. The limiter turns the gain down smoothly before a
+// peak (5 ms lookahead, both channels linked, 80 ms release) instead of bending the waveform:
+// a waveshaper adds harmonics the AAC encode turns into overshoot.
+export function masterTo(L, R) {
+  const sampleCount = L.length;
+  const ceiling = 10 ** (-2.1 / 20);
+  const ahead = Math.round(0.005 * SAMPLE_RATE);
+  const release = 1 - Math.exp(-1 / (0.08 * SAMPLE_RATE));
+  const q = (v) => Math.round(Math.max(-1, Math.min(1, v)) * 32767) / 32767;
+  const render = (gain) => {
+    // need[s]: the gain that keeps sample s under the ceiling; held[s]: the lowest need in the
+    // next `ahead` samples (a monotonic deque); then the release lets it rise slowly; then a
+    // moving average over `ahead` samples reaches every held value before its peak.
+    const need = new Float32Array(sampleCount);
+    for (let s = 0; s < sampleCount; s += 1) {
+      const a = Math.max(Math.abs(L[s]), Math.abs(R[s])) * gain;
+      need[s] = a > ceiling ? ceiling / a : 1;
+    }
+    const held = new Float32Array(sampleCount);
+    const deque = new Int32Array(sampleCount + ahead + 1);
+    let head = 0, tail = 0, next = 0;
+    for (let s = 0; s < sampleCount; s += 1) {
+      for (; next < Math.min(sampleCount, s + ahead + 1); next += 1) {
+        while (tail > head && need[deque[tail - 1]] >= need[next]) tail -= 1;
+        deque[tail] = next; tail += 1;
+      }
+      while (deque[head] < s) head += 1;
+      held[s] = need[deque[head]];
+    }
+    let env = 1;
+    const smooth = new Float32Array(sampleCount);
+    for (let s = 0; s < sampleCount; s += 1) {
+      env = Math.min(held[s], env + (1 - env) * release);
+      smooth[s] = env;
+    }
+    const left = new Float32Array(sampleCount), right = new Float32Array(sampleCount);
+    // The averaging window starts full of unity gain; the hard ceiling below catches the first 5 ms.
+    let win = ahead;
+    for (let s = 0; s < sampleCount; s += 1) {
+      win += smooth[s] - (s >= ahead ? smooth[s - ahead] : 1);
+      const g = win / ahead;
+      left[s] = q(Math.max(-ceiling, Math.min(ceiling, L[s] * gain * g)));
+      right[s] = q(Math.max(-ceiling, Math.min(ceiling, R[s] * gain * g)));
+    }
+    return [left, right];
+  };
+  const raw = integratedLoudness([Float32Array.from(L), Float32Array.from(R)]);
+  let gain = Number.isFinite(raw) ? 10 ** ((TARGET_LUFS - raw) / 20) : 1;
+  let [left, right] = render(gain);
+  let lufs = integratedLoudness([left, right]);
+  for (let i = 0; i < 8 && Number.isFinite(lufs) && Math.abs(lufs - TARGET_LUFS) > 0.2; i += 1) {
+    gain *= 10 ** ((TARGET_LUFS - lufs) / 20);
+    [left, right] = render(gain);
+    lufs = integratedLoudness([left, right]);
+  }
+  return { left, right, gain, lufs };
+}

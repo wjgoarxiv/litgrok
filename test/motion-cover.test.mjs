@@ -162,10 +162,23 @@ test('every loop-kit helper closes the loop and is seeded or pure', () => {
 });
 
 test('the cover init script makes every clock and entropy source throw and records each call', () => {
-  class Performance { now() { return 1; } }
-  const ctx = { Math: Object.create(Math), Date, Performance, performance: new Performance(), requestAnimationFrame: (cb) => cb(), crypto: { getRandomValues: () => 1 }, document: { documentElement: null, addEventListener() {} } };
-  ctx.window = ctx;
+  const freshCtx = () => {
+    // Each context models another browser, with its own Performance class: cover-init
+    // replaces Performance.prototype.now, so sharing one class would let the second
+    // context steal the first context's recorder.
+    class Performance { now() { return 1; } }
+    const ctx = { Math: Object.create(Math), Date, Performance, performance: new Performance(), requestAnimationFrame: (cb) => cb(), crypto: { getRandomValues: () => 1 }, document: { documentElement: null, addEventListener() {} } };
+    ctx.window = ctx;
+    return ctx;
+  };
+  const ctx = freshCtx();
   vm.runInNewContext(readFileSync(join(skill, 'scripts/stage/cover-init.js'), 'utf8'), ctx);
+  // Building the scene may draw ids from Math.random: a fixed-seed sequence, the same in every browser.
+  const other = freshCtx();
+  vm.runInNewContext(readFileSync(join(skill, 'scripts/stage/cover-init.js'), 'utf8'), other);
+  assert.deepEqual([ctx.Math.random(), ctx.Math.random()], [other.Math.random(), other.Math.random()]);
+  // Once the page is ready, frames are drawn in any order, so a call then is misuse.
+  ctx.window.ready = true;
   assert.throws(() => ctx.Math.random(), /Math\.random is not available/u);
   assert.throws(() => ctx.window.Date.now(), /Date\.now is not available/u);
   assert.throws(() => new ctx.window.Date(), /Date is not available/u);
@@ -581,7 +594,8 @@ async function quickGate(dir, treatment) {
   mkdirSync(frames, { recursive: true });
   const pool = new CoverPool();
   try {
-    const page = await openCover({ dir, fonts: stageFonts(['JetBrains Mono']), width: t.page[0], height: t.page[1], scale: COVER.captureScale, profileRoot: work });
+    // A 3D hero is captured where it renders: the GPU rung, software when the GPU has no WebGL.
+    const page = await openCover({ dir, fonts: stageFonts(['JetBrains Mono']), width: t.page[0], height: t.page[1], scale: COVER.captureScale, profileRoot: work, rung: t.recipe === 'hero-3d' ? 'gpu' : 'software' });
     try { await capturePass({ page, pool, times: loopTimes(t.frames), dir: frames, width: t.out[0], height: t.out[1] }); } finally { await page.close(); }
   } finally { await pool.close(); }
   const files = readdirSync(frames).sort().map((f) => join(frames, f));
@@ -597,7 +611,7 @@ for (const name of NEGATIVES) {
   });
 }
 
-for (const name of ['weight-tide', 'orbit-loop']) {
+for (const name of ['hero-3d', 'weight-tide', 'orbit-loop']) {
   test(`C017: the ${name} recipe still reaches TARGET on its decoded file`, { skip: NO_RENDER }, async () => {
     const expected = JSON.parse(readFileSync(join(skill, 'recipes', name, 'expected.json'), 'utf8'));
     const r = await quickGate(join(skill, 'recipes', name), expected.treatment);

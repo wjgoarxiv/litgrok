@@ -14,7 +14,7 @@ LitGrok은 xAI Grok Build가 코드를 고치기 전에 계획부터 세우고, 
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 39개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
+Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
 
 ## 30초 설치
 
@@ -67,9 +67,9 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 | `/review-work` | 작업 전에는 계획을, 작업 후에는 변경 사항을 근거와 함께 검토합니다. |
 | `/litresearch` | 출처를 따라갈 수 있는 범위 안에서 조사하고, 근거보다 크게 말하지 않습니다. |
 
-세션이 불러온 전체 목록은 `/skills`에서 보입니다. [GitHub의 스킬 갤러리](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md)에서는 39개 스킬을 결과 그림과 함께 볼 수 있습니다.
+세션이 불러온 전체 목록은 `/skills`에서 보입니다. [GitHub의 스킬 갤러리](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md)에서는 42개 스킬을 결과 그림과 함께 볼 수 있습니다.
 
-코드 밖의 일도 있습니다. `lit-pptx`는 발표자료를, `lit-docx`는 보고서와 Word 문서를 그 일에 맞게 고른 디자인 방향으로 만들고(답변에 다른 두 방향도 함께 알려 줍니다), `/frontend-ui-ux`는 화면을 만들어 확인하며, `/readme-studio`는 저장소 사실에 근거한 README를 씁니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 씁니다.
+코드 밖의 일도 있습니다. `lit-pptx`는 발표자료를, `lit-docx`는 보고서와 Word 문서를 그 일에 맞게 고른 디자인 방향으로 만들고(답변에 다른 두 방향도 함께 알려 줍니다), `/frontend-ui-ux`는 화면을 만들어 확인하며, `/readme-studio`는 저장소 사실에 근거한 README를 씁니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 쓰고, `lit-schematic`은 검사된 P&ID, 설비 배치도, 아이소메트릭 단면도를 그리며, `lit-hijack`은 공개된 기법을 출처 기록과 라이선스 검사, 동등성 증명과 함께 가져오고, `lit-adhd`는 최근 세션 전체를 읽기 전용 한 화면으로 브리핑합니다.
 
 ## 설치하면 달라지는 것
 

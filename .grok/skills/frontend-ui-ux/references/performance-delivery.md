@@ -3,16 +3,12 @@ Performance is an inventory item with a number attached. Declare it in the Desig
 
 ## Measurement environment
 
-Fix one profile and reuse it. Numbers from two profiles cannot be compared.
-
 - CPU throttled 4x; network 1.6 Mbps down, 750 kbps up, 150 ms round trip.
 - Cold cache, cleared storage, no extensions, declared locale.
 - Median of five runs at `compact` 360x800; repeat at `expanded` 1440x900.
 - Record profile, `source_hash`, and route fixture beside every number.
 
 ## Declared budgets
-
-Write each as a number the contract can carry. Tighten per project; never loosen silently.
 
 - LCP 2.5 s, FCP 1.8 s, INP 200 ms, CLS 0.10, each at p75 on the profile above.
 - Initial route JavaScript 170 KB compressed; total critical-path transfer 500 KB.
@@ -62,14 +58,10 @@ Virtualize only after measuring. Under ~200 rows or 5 ms per update, paginate or
 
 ## Perceived versus measured
 
-Record both. Neither substitutes for the other.
-
 - Under 200 ms show nothing; to 1 s an inline indicator; past 1 s determinate progress.
 - A skeleton must match the final box, or it trades layout shift for shimmer.
 
 ## Audit protocol
-
-Run in order and end in a verdict.
 
 1. Reproduce on the declared profile with a cold cache.
 2. Capture one load trace and one interaction trace; save both paths.
@@ -80,3 +72,14 @@ Run in order and end in a verdict.
 7. Report `PASS` when every declared budget holds, `FAIL` with the violated number and artifact
    path, or `BLOCKED` with the missing profile or capture capability. Escalate after three
    iterations that cross no budget.
+
+## Failure patterns
+
+Reject:
+
+- A budget written as "fast" or "lightweight" with no number.
+- Optimization argued from source reading with no trace attached.
+- Virtualizing a 40-row table because long lists "should" be virtualized.
+- A perceived-performance win offered as closure on a measured budget.
+- A performance claim entering the independent review pass with no trace bound to the design
+  contract hash.

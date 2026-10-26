@@ -38,8 +38,8 @@ flowchart TD
 
 ## 무엇을 제공하나요?
 
-- `.grok/skills/<name>/SKILL.md`에 Grok-native skill 문서 39개
-- `lit-pptx`와 `lit-docx`에는 문서 엔진, 템플릿, 첫 사용 시 고정된 의존성을 캐시에 설치하는 도구와 품질 검사 안내가 포함됩니다. 맨 끝의 `lit` 선택은 project rule 안내이며 실제 Grok 세션에서 확인해야 합니다.
+- `.grok/skills/<name>/SKILL.md`에 Grok-native skill 문서 42개
+- `lit-pptx`와 `lit-docx`에는 문서 엔진, 템플릿, 첫 사용 시 고정된 의존성을 캐시에 설치하는 도구와 품질 검사 안내가 포함됩니다. `lit-schematic`에는 의존성 없는 Node 엔진(직교 라우터, ISA-5.1 태그, 아이소메트릭 카메라, QA 게이트)과 P&ID·논문 그림·단면도 예제가 들어 있습니다. `lit-hijack`은 남의 글에 공개된 기법을 출처 기록, 라이선스 검사, 동등성 증명과 함께 가져옵니다. `lit-adhd`는 최근 세션 전체를 한 화면으로 브리핑하고 아무것도 고치지 않습니다. 맨 끝의 `lit` 선택은 project rule 안내이며 실제 Grok 세션에서 확인해야 합니다.
 - `.grok/rules/00-litgrok.md` project rule
 - 설치된 payload를 짧게 알리는 `SessionStart` hook
 - reader-facing write의 hedge 표현을 차단하되 quoted state enum, JSON/YAML scalar, fenced code, status table은 제외하는 `PreToolUse` hook. Host는 명시적인 deny와 exit 2만 차단으로 처리합니다. exit 0은 허용이고 timeout, crash, malformed output은 fail-open이므로 write가 진행됩니다.
@@ -67,10 +67,10 @@ flowchart LR
     HK --> PLAN --> LEDGER
     HK --> HEDGE
     RL --> LG
-    LG --> S["39 skills · 11 agents"]
+    LG --> S["40 skills · 11 agents"]
 ```
 
-> **Host 경계는 좁고 명확합니다.** `plugin.json`이 package를 노출하고, hook은 plan gate와 hedge guard로 연결되며, rule은 project guidance가 됩니다. session ledger에는 bounded state를 기록하고, 이 표면들이 39개 skill과 11개 agent를 Grok Build에서 사용할 수 있게 합니다.
+> **Host 경계는 좁고 명확합니다.** `plugin.json`이 package를 노출하고, hook은 plan gate와 hedge guard로 연결되며, rule은 project guidance가 됩니다. session ledger에는 bounded state를 기록하고, 이 표면들이 42개 skill과 11개 agent를 Grok Build에서 사용할 수 있게 합니다.
 
 ## 설치
 

@@ -38,8 +38,8 @@ flowchart TD
 
 ## What it is
 
-- 39 Grok-native skill documents at `.grok/skills/<name>/SKILL.md`.
-- `lit-pptx` and `lit-docx` include packaged document engines, templates, pinned first-use cache installers, and QA guidance. Bare `lit` selection uses the project rule and requires a live Grok session to verify.
+- 42 Grok-native skill documents at `.grok/skills/<name>/SKILL.md`.
+- `lit-pptx` and `lit-docx` include packaged document engines, templates, pinned first-use cache installers, and QA guidance. `lit-schematic` brings a dependency-free Node engine (orthogonal router, ISA-5.1 tags, isometric camera, QA gate) with worked P&ID, journal-figure and cutaway examples. `lit-hijack` ports someone else's published technique clean-room with provenance, a licence gate and parity proof. `lit-adhd` briefs every recent session on one screen (one card each, the roadmap, one next step) and never edits anything. Bare `lit` selection uses the project rule and requires a live Grok session to verify.
 - A project rule at `.grok/rules/00-litgrok.md`.
 - A bounded `SessionStart` hook that prints the standard mark once per validated session and announces the installed payload.
 - A `PreToolUse` hook that rejects hedge phrasing in pending reader-facing writes while skipping quoted state enums, JSON/YAML scalars, fenced code, and status tables. The host treats only an explicit deny with exit 2 as blocking; exit 0 allows, while timeouts, crashes, and malformed output fail-open and the write proceeds.
@@ -66,10 +66,10 @@ flowchart LR
     HK --> PLAN --> LEDGER
     HK --> HEDGE
     RL --> LG
-    LG --> S["39 skills · 11 agents"]
+    LG --> S["40 skills · 11 agents"]
 ```
 
-> **A narrow host boundary.** `plugin.json` exposes the package, hooks feed the plan gate and hedge guard, and rules provide project guidance while the session ledger records bounded state. Together these surfaces carry LitGrok’s 39 skills and 11 agents into Grok Build.
+> **A narrow host boundary.** `plugin.json` exposes the package, hooks feed the plan gate and hedge guard, and rules provide project guidance while the session ledger records bounded state. Together these surfaces carry LitGrok’s 40 skills and 11 agents into Grok Build.
 
 ## Install
 

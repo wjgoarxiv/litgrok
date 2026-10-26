@@ -13,6 +13,48 @@ const pass = (id, detail = '') => ({ id, status: 'PASS', detail });
 const fail = (id, detail) => ({ id, status: 'FAIL', detail });
 const warn = (id, detail) => ({ id, status: 'WARN', detail });
 
+// An empty frame of any colour: almost every pixel within 0.02 of one luminance (0.5-99.5 %).
+// A cream or white frame with nothing on it is as empty as a black one; MO-D-03 sees only black.
+const FLAT = Object.freeze({ spread: 0.02, holdSec: 1, edgeSec: 1 });
+// A near-empty frame: fewer than 2.5 % of its 48 px cells carry anything. A run longer than 0.5 s
+// fails; the opening may build from nothing for 0.4 s more, the close may fade for 0.6 s more.
+const DEAD = Object.freeze({ busy: 0.025, holdSec: 0.5, openSec: 0.4, closeSec: 0.6 });
+
+const worstRun = (flags, { limit, allowance }) => {
+  let worst = null;
+  let start = -1;
+  for (let f = 0; f <= flags.length; f++) {
+    if (f < flags.length && flags[f]) {
+      if (start < 0) start = f;
+      continue;
+    }
+    if (start >= 0) {
+      const length = f - start;
+      if (length > limit + allowance(start === 0, f === flags.length) && (!worst || length > worst.length)) worst = { length, from: start };
+      start = -1;
+    }
+  }
+  return worst;
+};
+
+export function checkFlatFrames(frames, fps) {
+  if (!frames.length || frames.some((f) => typeof f.lumP005 !== 'number' || typeof f.lumP995 !== 'number')) return { id: 'FLAT-FRAME', status: 'N/A', detail: 'per-frame spread not recorded' };
+  const flat = frames.map((f) => f.lumP995 - f.lumP005 < FLAT.spread);
+  const worst = worstRun(flat, { limit: FLAT.holdSec * fps, allowance: (atStart, atEnd) => (atStart || atEnd ? FLAT.edgeSec * fps : 0) });
+  return worst
+    ? fail('FLAT-FRAME', `${(worst.length / fps).toFixed(2)} s of empty frames from ${(worst.from / fps).toFixed(2)} s (nothing but one flat colour; limit ${FLAT.holdSec} s)`)
+    : pass('FLAT-FRAME', `no run of empty frames longer than ${FLAT.holdSec} s`);
+}
+
+export function checkDeadAir(frames, fps) {
+  if (!frames.length || frames.some((f) => typeof f.busy !== 'number')) return { id: 'DEAD-AIR', status: 'N/A', detail: 'per-frame busy share not recorded' };
+  const dead = frames.map((f) => f.busy < DEAD.busy);
+  const worst = worstRun(dead, { limit: DEAD.holdSec * fps, allowance: (atStart, atEnd) => (atStart ? DEAD.openSec * fps : 0) + (atEnd ? DEAD.closeSec * fps : 0) });
+  return worst
+    ? fail('DEAD-AIR', `${(worst.length / fps).toFixed(2)} s of near-empty frames from ${(worst.from / fps).toFixed(2)} s (under ${DEAD.busy * 100} % of the frame carries anything; limit ${DEAD.holdSec} s)`)
+    : pass('DEAD-AIR', `no near-empty run longer than ${DEAD.holdSec} s`);
+}
+
 function exportInfo(path) {
   return existsSync(path) ? { present: true, bytes: statSync(path).size, path, name: path.split('/').pop() } : { present: false };
 }
@@ -66,6 +108,8 @@ export function evaluateStage({ manifest, frames, previewRecords, determinism, p
   const still = exportInfo(join(exportsDir, 'reduced-motion.png'));
   results.push(still.present ? pass('MO-C-14', `present Y: the final beat's midpoint frame ${stillFrame}`) : fail('MO-C-14', 'present N: reduced-motion still missing'));
   results.push(checkDarkRuns({ fps: manifest.fps, bpm: manifest.sound?.tempo ?? 100, timeline: [] }, frames));
+  results.push(checkFlatFrames(frames, manifest.fps));
+  results.push(checkDeadAir(frames, manifest.fps));
   results.push(...(sound?.results ?? [fail('SOUND', 'sound gate not run')]));
   results.push(...(qa?.results ?? []));
   results.push(manifest.round >= 1 && manifest.round <= 3 ? pass('MO-C-15/16', `round ${manifest.round} of 3`) : fail('MO-C-15/16', `round ${manifest.round} outside 1..3`));

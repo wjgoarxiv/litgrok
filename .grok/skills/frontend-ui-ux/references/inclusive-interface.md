@@ -21,14 +21,10 @@ Measure contrast against the pixels actually painted behind the text, in every t
 
 ## Cognitive access
 
-Cut what the user must remember, infer, or type twice.
-
 - one primary action per view, everything else visibly subordinate
 - say what happened, what it means now, and what to do next, in that order
 
 ## Names, errors, and announcements
-
-Write names and messages that survive being heard alone, with no screen.
 
 - the accessible name contains the visible label; on conflict the visible label wins
 - an error names the field, the problem, and the correction
@@ -46,7 +42,7 @@ Assume translation and mirroring from the first commit.
 
 ## CJK and IME checklist
 
-Latin-only testing hides these defects. Exercise Korean, Japanese, and Chinese copy.
+Exercise Korean, Japanese, and Chinese copy.
 
 - Korean prose: `word-break: keep-all` with `overflow-wrap: anywhere` for long tokens
 - declare a per-script font stack; check for tofu, synthetic bold, shifted baselines
@@ -80,3 +76,13 @@ Triage by what the user can no longer do, then order the queue.
 - S2: the task finishes with wrong or missing information. Fix before merge.
 - S3: finishes at unreasonable cost. Record in `accepted_exceptions` with an owner.
 - S4: cosmetic or preference-level. Record in `omissions` with a reason and owner.
+
+## Failure patterns
+
+Reject:
+
+- an overlay widget or audit score offered in place of evidence
+- `outline: none` with no replacement indicator reaching 3:1
+- `aria-hidden` on anything focusable, or a role restating the native element
+- a positive `tabindex`, or focus order diverging from reading order
+- validation fired mid-composition, or CJK copy verified only with Latin strings

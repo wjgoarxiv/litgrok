@@ -50,7 +50,7 @@ host configuration still needs explicit authority for that action.
 The executor owns product files named by the plan. The plan owner owns task
 checkboxes, umbrella status, ledgers, and any cross-product summary unless the
 user assigns those paths explicitly. Never update an umbrella plan to make a
-failed local task look complete. When the plan answers to a finish line set by `litgoal`, the final verification checks that finish line's criteria and start-work never moves it.
+failed local task look complete. When the plan answers to a finish line set by `litgoal`, the final verification checks that finish line's criteria and start-work never moves it. A clean-room port builds from the `lit-hijack` brief (the spec plus the target root) and never from the captured sources.
 
 ## Load the handoff contract
 

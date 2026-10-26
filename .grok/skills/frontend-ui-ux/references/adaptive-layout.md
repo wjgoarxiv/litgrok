@@ -3,8 +3,6 @@ in real content. Register every width you cover as an `inventory.viewports` entr
 
 ## Signals the layout answers to
 
-Width is one axis among several. Enumerate every signal the surface reacts to.
-
 - container inline size rather than window width; prefer a container query
 - viewport height, including a 375px-tall landscape phone
 - user font size and page zoom at 200% and 400%
@@ -49,8 +47,6 @@ Rank content once per route and apply that ranking at every width. Carry it on
 
 ## Type and spacing across widths
 
-Scale by role. Multiplying every value by one factor destroys rhythm.
-
 - body copy holds at 16px at every width and on every platform
 - headings may use `clamp()`; write out minimum, preferred, and maximum
 - line length 45-75 characters for Latin, 30-45 for CJK
@@ -80,3 +76,13 @@ in the verification receipt.
 | Input mode | touch, pointer, keyboard |
 | Content | empty, single, typical, maximum, longest translated label |
 | Preference | dark, forced colors, reduced motion |
+
+## Failure patterns
+
+Reject:
+
+- boundary values inherited from a framework default with no measurement behind them
+- content that disappears below a boundary with no named place it stays reachable
+- page-level horizontal scrolling at 320px, or a scroll region with no visible edge
+- `100vh` on a surface that browser chrome or the soft keyboard overlays
+- a density increase that pushes targets under 44px or suppresses the focus ring

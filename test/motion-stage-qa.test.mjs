@@ -21,9 +21,13 @@ const CACHE = mkdtempSync(join(tmpdir(), 'lgm-qa-cache-'));
 function treatment(lines, duration = 6) {
   return {
     request: '작은 도형이 움직이는 영상 만들어줘, 소리 없이 lit', genre: 'other', path: 'stage', pathReason: 'The film draws shapes, not only words.',
+    // The fixture pages draw no world, so they take the minimal register like the source test helper.
+    register: 'minimal',
     idea: 'A plain shape keeps its place while a few words come and go.', audience: 'Test viewers', channel: 'Local playback',
     format: '16:9', formatReason: 'Local playback is landscape.', durationSec: duration, fps: 30,
     beats: [[0, 2], [2, 4], [4, duration]].map(([t0, t1], i) => ({ t0, t1, purpose: ['open', 'develop', 'land'][i], onScreen: 'the shape and a line', motion: 'steady', sound: 'none' })),
+    story: { expect: 'Viewers expect the words to carry the film.', turn: 'The shape answers each line with a small move.', beat: 1, payoff: 'The words leave and the shape settles.' },
+    protagonist: { name: '도형', kind: 'object', look: 'A flat round shape, ember orange on near-black, fist-sized in frame.', acts: [{ beat: 0, action: 'Sits still while the first line reads.' }, { beat: 1, action: 'Nods at the second line.' }, { beat: 2, action: 'Settles back to rest.' }] },
     subject: { name: '도형', source: 'user', specifics: [] },
     visualDevices: [{ kind: 'shape', role: 'subject', beats: [0, 1, 2] }, { kind: 'path', role: 'support', beats: [1] }],
     typePlan: { faces: ['Archivo', 'Pretendard'], hierarchy: 'one line', maxWordsOnScreen: 5 },

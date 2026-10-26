@@ -60,21 +60,24 @@ const SPACED_PLAN_PATTERN = /^\s*\/?lit\s+plan(?=$|[^\w-])/iu;
 const SPACED_REVIEW_PATTERN = /^\s*\/?lit\s+review(?=$|[^\w-])/iu;
 // Open brainstorming is no workflow stage: it names its own discipline and leaves the row where it was.
 const BRAINSTORM_PATTERN = /^\s*\/?(?:lit-brainstorm|lit\s+(?:brainstorm|brainstorming|ideation|ideate|idea|ideas))(?=$|[^\w-])/iu;
+// Catch-up is no workflow stage either: it names its own discipline and leaves the row where it was.
+const ADHD_PATTERN = /^\s*\/?(?:lit-adhd|lit-rewind|lit\s+(?:adhd|rewind))(?=$|[^\w-])/iu;
 
 /**
  * The stage a prompt names and how it enters it: 'switch' for a named skill (`discipline` is 'lit-plan' for the
  * spaced `lit plan`, null for the spaced `lit review`), 'continue' or 'restart' for lit. A brainstorm prompt
- * carries the discipline 'lit-brainstorm' and no stage.
+ * carries the discipline 'lit-brainstorm' and no stage; a catch-up prompt carries 'lit-adhd' and no stage.
  */
 export function entryFromPrompt(visibleText) {
   if (typeof visibleText !== 'string') return null;
   if (BRAINSTORM_PATTERN.test(visibleText)) return { stage: null, entry: 'switch', discipline: 'lit-brainstorm' };
+  if (ADHD_PATTERN.test(visibleText)) return { stage: null, entry: 'switch', discipline: 'lit-adhd' };
   const match = STAGE_PATTERN.exec(visibleText);
   if (!match) return null;
   const token = match[1].toLowerCase();
   if (token !== 'lit') return { stage: STAGE_OF[token], entry: 'switch' };
   if (SPACED_PLAN_PATTERN.test(visibleText)) return { stage: STAGE_OF['lit-plan'], entry: 'switch', discipline: 'lit-plan' };
-  if (SPACED_REVIEW_PATTERN.test(visibleText)) return { stage: STAGE_OF['review-work'], entry: 'switch', discipline: null };
+  if (SPACED_REVIEW_PATTERN.test(visibleText)) return { stage: STAGE_OF['review-work'], entry: 'switch', discipline: 'review-work' };
   return { stage: STAGE_OF.lit, entry: RESTART_PATTERN.test(visibleText) ? 'restart' : 'continue' };
 }
 

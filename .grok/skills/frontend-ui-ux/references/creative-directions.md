@@ -2,15 +2,11 @@ Explore direction only after the critical task, success signals, and surface lis
 
 ## Close the brief before exploring
 
-Write the fixed constraints first so exploration terminates.
-
 - Critical task, the two frequent secondary tasks, and return frequency.
 - Immovable inputs: existing tokens, approved marks, locales, viewport bands.
 - Direction count: 3, never more than 4.
 
 ## Read the archetype set
-
-Each archetype is neutral. Pick by which risk this product can absorb, not by taste.
 
 1. Editorial grid — modular columns, visible rules, one restrained accent. Risk: every block weighs the same; no focal point.
 2. Reduced utility — near-monochrome, one accent, large gutters, few borders. Risk: interactive and static elements look alike.
@@ -22,8 +18,6 @@ Each archetype is neutral. Pick by which risk this product can absorb, not by ta
 8. Geometric system — geometric sans, square corners, flat fills. Risk: states hard to separate without hue; tone reads cold.
 
 ## Blend with one base and one guest
-
-Two archetypes at equal weight produce mush. Subordinate one of them explicitly.
 
 - The base owns grid, spacing scale, radius, and density; it is not renegotiated.
 - The guest contributes exactly one dimension: type, color, or surface treatment.
@@ -69,3 +63,12 @@ Selection ends exploration. Rejected work stays readable so the decision is not 
 - Keep each rejected `direction_id` with a one-line reason.
 - Freeze before token work; a later change needs an `accepted_exceptions` entry with owner and expiry.
 - Record the design contract hash the independent review pass binds its receipt to.
+
+## Failure patterns
+
+Reject:
+
+- Directions differing only in accent hue or corner radius.
+- A blend with two imported dimensions and no owning base.
+- "Modern", "clean", or "premium" standing in for a decision.
+- A direction with no kill condition, which can never be wrong.

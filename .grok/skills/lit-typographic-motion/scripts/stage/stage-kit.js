@@ -256,6 +256,30 @@
     return el;
   }
 
+  // The Blender plate (render3d: "blender"): a full-frame <img> behind the type showing the plate
+  // frame for t. The element is replaced on every frame change, so the renderer waits for its decode
+  // before the capture. Returns update(t); call it from render(t).
+  function plate(opts) {
+    var parent = opts && opts.parent, fps = (opts && opts.fps) || 30, count = opts && opts.count, dir = (opts && opts.dir) || 'plate';
+    if (!parent || !(count > 0)) throw new TypeError('LitStage.plate: pass { parent, count } (count: the frames in plate/plate.json)');
+    var doc = parent.ownerDocument || root.document;
+    var shown = -1, el = null;
+    return function (t) {
+      var i = Math.min(count - 1, Math.max(0, Math.floor(t * fps + 1e-6)));
+      if (i === shown) return i;
+      var next = doc.createElement('img');
+      next.src = dir + '/' + String(i + 1).padStart(6, '0') + '.png';
+      next.alt = '';
+      next.style.position = 'absolute'; next.style.inset = '0';
+      next.style.width = '100%'; next.style.height = '100%'; next.style.objectFit = 'cover';
+      if (el) el.replaceWith(next);
+      else parent.prepend(next);
+      el = next;
+      shown = i;
+      return i;
+    };
+  }
+
   function rgb(hex) {
     var h = String(hex).replace('#', '');
     if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
@@ -447,6 +471,7 @@
     morph: morph,
     clip: clip,
     circle: circle,
+    plate: plate,
     mix: mix,
     rgb: rgb,
     hex: hex,

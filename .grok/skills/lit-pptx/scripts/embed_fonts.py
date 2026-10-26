@@ -6,7 +6,8 @@ python-pptx has no font-embedding API, so this post-processes the OOXML package
 directly: it adds /ppt/fonts/*.fntdata parts, a fntdata content-type default,
 presentation relationships, and a <p:embeddedFontLst> in ppt/presentation.xml.
 
-Only families with a bundled OTF are embedded; unknown families (e.g. an unbundled
+Only families with a bundled font file (pretendard-font/public/static, fonts/a2z-font,
+fonts/jetbrains-mono) are embedded; unknown families (e.g. an unbundled
 family, whose binaries stay in BrandBay and are not bundled here) are warned
 about and skipped — never corrupting the file.
 
@@ -42,6 +43,11 @@ def _a2z(weight):
     return p if os.path.exists(p) else None
 
 
+def _mono(weight):
+    p = os.path.join(ROOT, "fonts", "jetbrains-mono", f"JetBrainsMono-{weight}.ttf")
+    return p if os.path.exists(p) else None
+
+
 def resolve_family(typeface):
     """Return {slot: otf_path} for a typeface, or {} if no bundled file.
 
@@ -54,6 +60,13 @@ def resolve_family(typeface):
             slots["regular"] = _pretendard("Regular")
         if _pretendard("Bold"):
             slots["bold"] = _pretendard("Bold")
+        return slots
+    if tf == "JetBrains Mono":
+        slots = {}
+        if _mono("Regular"):
+            slots["regular"] = _mono("Regular")
+        if _mono("Bold"):
+            slots["bold"] = _mono("Bold")
         return slots
     # Per-weight families: "에이투지체 7 Bold", "에이투지체 4 Regular", ...
     last = tf.split()[-1] if tf.split() else ""

@@ -6,14 +6,14 @@ This root is an independent package for Grok Build guidance. Runtime code is
 limited to the dependency-free `bin/litgrok.mjs` installer, documented,
 package-owned hook commands under `.grok/hooks/`, and explicitly invoked skill
 scripts. The `lit-pptx` and `lit-docx` scripts install pinned first-use dependencies
-only into a LitGrok office cache. The `lit-typographic-motion` runtime installs only through the explicit
+only into a LitGrok office cache. The `lit-schematic` scripts render through the user's own Chrome, ffmpeg and img2webp and never install or fetch. The `lit-typographic-motion` runtime installs only through the explicit
 `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` pre-warm into `${XDG_CACHE_HOME:-~/.cache}/litgrok/motion-runtime`;
 its renders never install or fetch. The installer may copy or
 remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
 user's request, and the opt-in status-line command keeps a per-session context record in the
 temporary HUD state root.
-The current tree contains 39 skills, one project rule, and eleven hook
+The current tree contains 42 skills, one project rule, and eleven hook
 registrations with their commands. Project hooks must surface the
 `/hooks-trust` or `--trust` requirement. Do not add plugins, marketplaces, MCP,
 LSP server config, TUI or skin surfaces, ACP, custom subagents, workflow engines,

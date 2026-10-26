@@ -1,0 +1,62 @@
+{
+  "schema": "litgrok.motion-cover-recipe/v1",
+  "note": "The decoded gate row this recipe reached when it shipped. npm run qa:cover-recipes re-renders it through motion.mjs cover and fails when median d or the moving share leaves +-15 % of this row, seamLocal leaves TARGET, the file passes 2 MiB or the render exits non-zero. Measured on the GPU rung (Apple ANGLE Metal on Apple silicon; the software rung fallback renders the same frames more slowly) and libwebp 1.6.0.",
+  "row": {
+    "medianD": 0.002038,
+    "movingFrac": 1,
+    "longestStillSec": 0.05,
+    "spike": 1.631053,
+    "seamLocal": 1.141655,
+    "bytes": 621220
+  },
+  "settings": {
+    "size": [
+      1000,
+      500
+    ],
+    "fps": 20,
+    "frames": 160,
+    "encode": {
+      "q": 86,
+      "edgeQ": 97,
+      "edgeFrames": 15,
+      "method": 4
+    }
+  },
+  "treatment": {
+    "mode": "cover",
+    "request": "A README motion cover for LitGrok with a hero you can turn in your head.",
+    "idea": "One rounded hero turns once per loop under a key light while the brand word sits live over it.",
+    "recipe": "hero-3d",
+    "recipeReason": "The subject has a back and an inside, so the loop is an object, not a drawing.",
+    "brandWord": "LITGROK",
+    "motto": {
+      "text": "KEEP THE WORK LIT.",
+      "source": "project",
+      "from": "README.md"
+    },
+    "aspect": "2:1",
+    "loopSec": 8,
+    "fps": 20,
+    "layers": {
+      "slow": "The shadow slides under the turning hero once per loop.",
+      "mid": "The hero turns once per loop, showing every side.",
+      "beat": "The brand word holds still over the turn."
+    },
+    "system": {
+      "rule": "One full turn per loop, eased at neither end.",
+      "copies": "One hero and the brand word.",
+      "offset": "The turn is the loop phase itself."
+    },
+    "title": {
+      "box": [
+        0.1,
+        0.55,
+        0.8,
+        0.32
+      ],
+      "kind": "live"
+    },
+    "ambition": "The turn reads as one object and the seam is invisible in the decoded file."
+  }
+}

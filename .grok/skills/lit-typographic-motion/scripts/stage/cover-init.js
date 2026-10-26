@@ -1,12 +1,15 @@
 // Cover init: installed with Page.addScriptToEvaluateOnNewDocument before any cover page script.
 // A cover frame is a function of t alone and the renderer seeks frames out of order, so nothing a
-// page could read to tell one capture from another may answer: Math.random, Date.now, new Date()
-// with no arguments, performance.now, requestAnimationFrame, setInterval and
-// crypto.getRandomValues all throw. Each refused call is kept by name so the renderer can name it
-// (exit 18) even when the page caught the error. CSS animations and transitions would run on the
-// wall clock, so they are switched off. (The film path's host.js virtualizes time instead; a cover
-// has no time to virtualize.) The renderer alone keeps the native animation frame, to let two
-// frames settle after each renderFrame(t) so a capture never races the rasterizer.
+// page could read to tell one capture from another may answer: Date.now, new Date() with no
+// arguments, performance.now, requestAnimationFrame, setInterval and crypto.getRandomValues all
+// throw. Building a scene before window.ready may draw ids from Math.random (three.js names every
+// object it makes): that phase answers from a fixed seed, the same in every browser. Once the page
+// is ready, frames are drawn in any order, so a call then is misuse. Each refused call is kept by
+// name so the renderer can name it (exit 18) even when the page caught the error. CSS animations
+// and transitions would run on the wall clock, so they are switched off. (The film path's host.js
+// virtualizes time instead; a cover has no time to virtualize.) The renderer alone keeps the
+// native animation frame, to let two frames settle after each renderFrame(t) so a capture never
+// races the rasterizer.
 (() => {
   'use strict';
   if (window.__litCoverMisuse) return;
@@ -18,7 +21,16 @@
   const FROM_T = 'draw every frame from t';
   const nativeFrame = window.requestAnimationFrame.bind(window);
   Object.defineProperty(window, '__litCoverSettle', { value: () => new Promise((done) => nativeFrame(() => nativeFrame(done))) });
-  Math.random = refuse('Math.random', 'use LitLoop.rng(seed) for layout and t for motion');
+  let seed = 0x9e3779b9;
+  const forbiddenRandom = refuse('Math.random', 'use LitLoop.rng(seed) for layout and t for motion');
+  Math.random = function random() {
+    if (window.ready === true) return forbiddenRandom();
+    seed = (seed + 0x6d2b79f5) >>> 0;
+    let x = seed;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
   const RealDate = Date;
   function CoverDate(...args) {
     if (!new.target || args.length === 0) return refuse('Date', FROM_T)();

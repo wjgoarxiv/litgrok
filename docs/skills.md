@@ -2,7 +2,7 @@
 
 [README](../README.md) · [한국어](./skills_ko-KR.md) · [Guide](./guide.md) · [Reference](./reference.md)
 
-All 39 skills, one row each. The routes are the ones each skill documents, and `/skills` shows what your Grok Build session actually loaded. A renamed skill still answers to its old name for one release ([rename compatibility](./reference.md#skill-rename-compatibility)); an old slash route may not carry over.
+All 42 skills, one row each. The routes are the ones each skill documents, and `/skills` shows what your Grok Build session actually loaded. A renamed skill still answers to its old name for one release ([rename compatibility](./reference.md#skill-rename-compatibility)); an old slash route may not carry over.
 
 <table>
 <tr><th>What it looks like</th><th>Skill</th><th>What you get</th></tr>
@@ -40,6 +40,16 @@ All 39 skills, one row each. The routes are the ones each skill documents, and `
 <td><img src="./assets/skills/lit-handoff.webp" width="240" alt="Type handoff for a resume file the next session can read. Secrets stay out." /></td>
 <td><code>lit-handoff</code><br /><sub><code>handoff</code> · <code>/lit-handoff</code></sub></td>
 <td>Type <code>handoff</code> for a resume file the next session can read. Secrets stay out.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-hijack.webp" width="240" alt="Port someone else's published technique into your skill, clean-room: capture with provenance, gate the licence, prove parity." /></td>
+<td><code>lit-hijack</code><br /><sub><code>/lit-hijack &lt;urls or files&gt;</code></sub></td>
+<td>Ports someone else's published technique into your skill, clean-room: capture with provenance, gate the licence, prove parity on the real surface.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-adhd.webp" width="240" alt="A one-screen brief of every recent session: one card each, the roadmap, one recommended next step." /></td>
+<td><code>lit-adhd</code><br /><sub><code>lit adhd</code> · <code>lit rewind</code></sub></td>
+<td>Answers "where was I" across recent sessions: one card per session, the roadmap gauge, one recommended next step. Read-only.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/deep-interview.webp" width="240" alt="One question at a time, in a fixed order, until the request is clear enough to plan." /></td>
@@ -80,6 +90,11 @@ All 39 skills, one row each. The routes are the ones each skill documents, and `
 <td><img src="./assets/skills/lit-diagram-drawer.webp" width="240" alt="A checked, editable diagram for slides and documents, with PNG and Office-safe SVG exports." /></td>
 <td><code>lit-diagram-drawer</code><br /><sub><code>/lit-diagram-drawer &lt;brief&gt;</code></sub></td>
 <td>A checked, editable diagram for slides and documents, with PNG and Office-safe SVG exports.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-schematic.webp" width="240" alt="A checked P&ID, equipment layout, journal apparatus figure or isometric cutaway as editable SVG with PDF and 600 dpi PNG." /></td>
+<td><code>lit-schematic</code><br /><sub><code>/lit-schematic &lt;equipment or apparatus brief&gt;</code></sub></td>
+<td>A checked P&ID, equipment layout, journal apparatus figure or isometric cutaway as editable SVG with PDF and 600 dpi PNG.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-pptx.webp" width="240" alt="An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present." /></td>

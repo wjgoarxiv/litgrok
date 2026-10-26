@@ -10,8 +10,6 @@ Write the surface as a flat ordered list and read it top to bottom. If it fails 
 
 ## Commit to one column system per band
 
-Choose one column count per band and write the legal exceptions before drawing.
-
 - 4 columns below 600 px, 8 columns from 600 to 1023 px, 12 columns at 1024 px and above.
 - Content-driven panes replace columns in consoles; declare each pane's min and max width.
 - Legal breaks: full-bleed media, one focal element per viewport, a table scrolling inside its own container.
@@ -28,8 +26,6 @@ Space comes from a scale. An eyeballed pixel value is a defect that spreads.
 
 ## Set density from return frequency
 
-Density follows how often the user comes back, not how the screenshot looks.
-
 - Hourly use: rows 28-32 px, keyboard-first, no decorative padding.
 - Daily use: rows 36-40 px with visible grouping.
 - Weekly or first-run use: rows 48 px and up, with inline explanation.
@@ -37,8 +33,6 @@ Density follows how often the user comes back, not how the screenshot looks.
 - Reserve 2 px of outline space so a focus ring is never clipped.
 
 ## Declare the page family
-
-Each family imposes fixed layout consequences. Name it before laying anything out.
 
 1. Landing surface: one column, primary action inside the first viewport, hero capped near 60% of viewport height.
 2. Collection view: sticky header, filter region, fixed row height, declared column priority, virtualize beyond 200 rows.
@@ -73,3 +67,13 @@ Run this before any styling review and record it with the surface inventory.
 3. Density tier chosen with its return-frequency reason.
 4. Page family and shell-or-document decision recorded per route.
 5. Widths checked just below and just above each structural change.
+
+## Failure patterns
+
+Reject:
+
+- Centering everything and calling the result hierarchy.
+- Spacing values invented per component.
+- A grid broken in three places on one screen.
+- Dense rows on a quarterly task, or comfortable rows on an hourly one.
+- Nested cards standing in for a structure nobody decided.

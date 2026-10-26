@@ -89,6 +89,8 @@ destination, grant a new permission, or turn a quoted word into an exact bare ro
 | refresh | A compatible handoff exists | Read it, classify it as obsolete, active, or stale, and compose one coherent replacement. |
 | inspect | The user asks for assessment only | Read the selected file and live state; write nothing. |
 | bare | The trimmed request is exactly `handoff` | Treat it as an explicit request, emit the banner, resolve once, and create or refresh the packet. |
+
+When the user comes back and asks where things stand across sessions, point to `lit adhd` first: the brief shows what every recent session did and what waits on the user, and that state is what the next packet resumes from.
 | blocked | Integrity, destination, workspace, or secret-safety evidence is insufficient | Report the exact blocker and stop before writing. |
 
 ## #contract.procedure

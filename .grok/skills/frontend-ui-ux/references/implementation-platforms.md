@@ -3,16 +3,12 @@ the repository, then apply the universal rules plus that lane's rules.
 
 ## Universal rules
 
-These hold in every lane. A stack constraint never justifies dropping one.
-
 - the platform's native control before any custom composite
 - tokens for color, space, type, and radius; no raw values inside components
 - behavior separate from decoration; state lives outside the styling layer
 - every async boundary declares its pending, empty, and error branch
 
 ## Rendering lanes
-
-Name the rendering boundary first; it decides where state and escaping live.
 
 ### Server-rendered
 
@@ -31,8 +27,6 @@ Name the rendering boundary first; it decides where state and escaping live.
 - keep personalized or auth-dependent content out of prerendered HTML
 
 ## Styling lanes
-
-Keep one token layer whichever styling system the repository uses.
 
 ### Utility CSS
 
@@ -97,3 +91,13 @@ Verify the lane from the repository, not from the prompt and not from memory.
 4. Run the repository's build and its package-native validation checks.
 5. For a Grok skill surface, verify the `.grok/skills/` path and run the package's documented
    integrity checks; do not infer a host route from an unrelated harness.
+
+## Failure patterns
+
+Reject:
+
+- a stack claim taken from the prompt with no manifest or lockfile check
+- a client-rendered route with no pending or error branch
+- utility classes carrying raw hex or arbitrary pixel values
+- component-kit internals overridden by descendant selectors
+- one platform verified, parity asserted for the rest

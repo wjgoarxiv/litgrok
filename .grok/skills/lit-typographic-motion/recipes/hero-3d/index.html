@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Recipe: 3D hero (hero-3d), the loop as an object. A worked page: one rounded hero turns once
+     per loop under a key light while the brand word sits live over it. The hero is built once and
+     only posed from t, so a fresh capture draws the same pixels; replace the RoundedBox with the
+     product modelled from its real logo and keep the turn to one loop. -->
+<link rel="stylesheet" href="/lit/fonts.css">
+<script src="/lit/loop-kit.js"></script>
+<script type="importmap">{ "imports": { "three": "/lit/three/three.module.js", "three/addons/": "/lit/three/addons/" } }</script>
+<style>
+  :root { --ground: #0c0e12; --ivory: #f1eee2; --ember: #ff6a3d; }
+  html, body { margin: 0; width: 1200px; height: 600px; overflow: hidden; background: var(--ground); font-family: "JetBrains Mono"; }
+  #world { position: absolute; left: 0; top: 0; width: 1200px; height: 600px; }
+  #name { position: absolute; left: 0; right: 0; top: 356px; text-align: center; font-size: 120px; line-height: 1; color: var(--ivory); white-space: pre; letter-spacing: 2px; }
+  #motto { position: absolute; left: 0; right: 0; top: 500px; text-align: center; font-size: 19px; font-weight: 500; letter-spacing: 9px; color: #8a9096; }
+  #motto b { color: var(--ember); font-weight: 700; }
+  body.mask, body.mask * { color: #000 !important; background: #000 !important; border-color: #000 !important; }
+  body.mask #world { visibility: hidden; }
+  body.mask #name { color: #fff !important; background: transparent !important; }
+</style>
+</head>
+<body>
+<canvas id="world" width="1200" height="600"></canvas>
+<div id="name">LITGROK</div>
+<div id="motto">KEEP THE WORK <b>LIT.</b></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// One scene for the whole loop. The hero is built once; renderFrame only poses it from t, so the
+// seam (t = 1 is t = 0 rebuilt) is exact and a fresh page draws the same frame.
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('world'), antialias: true });
+renderer.setPixelRatio(1);
+renderer.setSize(1200, 600, false);
+renderer.setClearColor(0x0c0e12, 1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const cam = new THREE.PerspectiveCamera(30, 2, 0.1, 100);
+cam.position.set(0, 1.9, 7.2);
+cam.lookAt(0, 0.7, 0);
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(3, 6, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 4;
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.03;
+scene.add(key, new THREE.HemisphereLight(0xf4f1ea, 0x101418, 0.6));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.18 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+const HERO = new THREE.Group();
+const block = new THREE.Mesh(
+  new RoundedBoxGeometry(2.6, 1.3, 1.3, 4, 0.3),
+  new THREE.MeshStandardMaterial({ color: 0x0f7a82, roughness: 0.35, metalness: 0.15 }),
+);
+block.position.y = 1.05;
+block.castShadow = true;
+HERO.add(block);
+scene.add(HERO);
+
+window.renderFrame = (t, o = {}) => {
+  document.body.className = o.mask ? 'mask' : '';
+  // The one beat: a full turn per loop, eased at neither end, so the seam cannot slip.
+  HERO.rotation.y = t * Math.PI * 2;
+  renderer.render(scene, cam);
+};
+// One warm-up frame before ready: one-time allocations (the shadow map's target, three.js object
+// ids) happen in the seeded build phase, so no frame ever reads unseeded entropy.
+window.renderFrame(0);
+window.ready = true;
+</script>
+</body>
+</html>

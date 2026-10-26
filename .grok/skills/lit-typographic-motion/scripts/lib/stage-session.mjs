@@ -1,7 +1,7 @@
 // One stage Chrome: the page is served from the synthetic origin http://lit.stage/ through CDP
 // Fetch interception (no listening socket), the host script virtualizes time before any page
 // script, and the renderer drives frames with step() + capture() (brief sections 6c-6e).
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { extname, join, sep } from 'node:path';
 import { STAGE } from './constants.mjs';
@@ -17,6 +17,37 @@ export const CONTENT_TYPES = Object.freeze({
 export const EPOCH_MS = Date.UTC(2026, 0, 1);
 export const KIT_PATH = join(SKILL_ROOT, 'scripts', 'stage', 'stage-kit.js');
 const HOST_PATH = join(SKILL_ROOT, 'scripts', 'stage', 'host.js');
+
+// The pinned three.js build and its two addons (scripts/lib/vendor/three, MIT), served at /lit/three/
+// for 3D films and 3D heroes; never a CDN. Any other path under /lit/three/ is a missing file.
+// The hashes below are the bytes of upstream three@0.170.0
+// (registry.npmjs.org/three/-/three-0.170.0.tgz: build/three.module.js and the two examples/jsm
+// files), checked byte for byte: a swapped vendored file and a regenerated notice cannot pass
+// together, because the pin lives in code and is rechecked every time a file is served.
+export const THREE_DIR = join(SKILL_ROOT, 'scripts', 'lib', 'vendor', 'three');
+export const THREE_HASHES = Object.freeze({
+  'three.module.js': 'ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb',
+  'addons/environments/RoomEnvironment.js': '85869bdd22f7cf0b22e68dcefe6cb710480af0f5c901a76f7a7764fd07fc8014',
+  'addons/geometries/RoundedBoxGeometry.js': 'd20aeaf7077c459a8d952d215738d7b44fba028440bb862d84b622a34f0c80bb',
+});
+
+/** Resolve a /lit/three/... path against the vendored build: { file, type }, { missing } or { refused }. */
+export function resolveThree(pathname) {
+  let decoded;
+  try { decoded = decodeURIComponent(pathname); } catch { return { refused: `undecodable path ${pathname}` }; }
+  const rel = decoded.slice('/lit/three/'.length);
+  if (rel.split('/').includes('..') || rel.includes('\\')) return { refused: `path traversal ${pathname}` };
+  if (!rel.endsWith('.js')) return { missing: rel };
+  const file = join(THREE_DIR, rel);
+  if (!existsSync(file)) return { missing: rel };
+  try {
+    const hash = createHash('sha256').update(readFileSync(file)).digest('hex');
+    if (THREE_HASHES[rel] !== hash) return { refused: `changed vendored file ${rel}` };
+  } catch {
+    return { refused: `unreadable vendored file ${rel}` };
+  }
+  return { file, type: CONTENT_TYPES['.js'] };
+}
 
 export function hostScript({ seed, fps }) {
   return readFileSync(HOST_PATH, 'utf8').replace('const CFG = __LIT_CFG__;', `const CFG = ${JSON.stringify({ seed: seed >>> 0, fps, epochMs: EPOCH_MS })};`);
@@ -41,9 +72,9 @@ export function resolveStagePath(stageDir, pathname) {
   return { file: real, type };
 }
 
-export async function openStage({ executable, outDir, stageDir, width, height, fps, seed, fonts, label = 'm', log = () => {} }) {
+export async function openStage({ executable, outDir, stageDir, width, height, fps, seed, fonts, style = null, label = 'm', rung = 'software', log = () => {} }) {
   const profileDir = join(outDir, '.run', `s${label}-${randomBytes(3).toString('hex')}`);
-  const browser = await launchStage({ executable, profileDir, width, height });
+  const browser = await launchStage({ executable, profileDir, width, height, rung });
   const network = [];
   const refused = [];
   const served = new Set();
@@ -64,7 +95,23 @@ export async function openStage({ executable, outDir, stageDir, width, height, f
       return;
     }
     if (url.pathname === '/lit/stage-kit.js') { served.add('/lit/stage-kit.js'); await respond(requestId, 200, kit, CONTENT_TYPES['.js']); return; }
+    if (url.pathname.startsWith('/lit/three/')) {
+      const resolved = resolveThree(url.pathname);
+      if (resolved.refused) { refused.push(resolved.refused); await respond(requestId, 403, 'refused'); return; }
+      if (resolved.missing) { await respond(requestId, 404, 'not a vendored three.js file'); return; }
+      served.add(url.pathname);
+      await respond(requestId, 200, readFileSync(resolved.file), resolved.type);
+      return;
+    }
     if (url.pathname === '/lit/fonts.css') { served.add('/lit/fonts.css'); await respond(requestId, 200, fonts.css, CONTENT_TYPES['.css']); return; }
+    if (url.pathname === '/lit/style.css') {
+      if (style) { served.add('/lit/style.css'); await respond(requestId, 200, style.css, CONTENT_TYPES['.css']); } else await respond(requestId, 404, 'no style bound');
+      return;
+    }
+    if (url.pathname === '/lit/style.js') {
+      if (style) { served.add('/lit/style.js'); await respond(requestId, 200, style.js, CONTENT_TYPES['.js']); } else await respond(requestId, 404, 'no style bound');
+      return;
+    }
     if (url.pathname.startsWith('/lit/fonts/')) {
       const route = fonts.routes.get(url.pathname);
       if (route) { served.add(url.pathname); await respond(requestId, 200, readFileSync(route.path), route.type); } else await respond(requestId, 404, 'no such face');
@@ -95,6 +142,7 @@ export async function openStage({ executable, outDir, stageDir, width, height, f
 
   return {
     network, refused, served, args: browser.args, send, evaluate,
+    rung: browser.rung, renderer: browser.renderer, notice: browser.notice,
     async load() {
       const loaded = new Promise((resolve) => browser.on((message) => { if (message.method === 'Page.loadEventFired' && message.sessionId === browser.sessionId) resolve(); }));
       await send('Page.navigate', { url: `${STAGE.origin}/index.html` });

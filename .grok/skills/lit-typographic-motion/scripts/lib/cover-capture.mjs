@@ -1,17 +1,17 @@
-// Cover capture: one stage Chrome (the software rung and every stage flag, so a mismatch is always
-// the page's doing) laid out at the cover's CSS size and captured at device scale 2. The page is
-// served from <out>/cover/ on the synthetic stage origin through CDP Fetch interception, beside the
-// /lit/ routes (fonts, the loop kit), and the cover init script runs before any page script. The
-// renderer SEEKS: it calls window.renderFrame(t, { mask }) for any t in [0, 1) in any order, so the
-// master pass, the replay in a fresh browser, the seek-order pass and a window re-render each open
-// their own page here.
+// Cover capture: one stage Chrome (the rung the recipe asks for, every stage flag, so a mismatch is
+// always the page's doing) laid out at the cover's CSS size and captured at device scale 2. The
+// page is served from <out>/cover/ on the synthetic stage origin through CDP Fetch interception,
+// beside the /lit/ routes (fonts, the loop kit, the vendored three.js), and the cover init script
+// runs before any page script. The renderer SEEKS: it calls window.renderFrame(t, { mask }) for any
+// t in [0, 1) in any order, so the master pass, the replay in a fresh browser, the seek-order pass
+// and a window re-render each open their own page here.
 import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BlockedError, EXIT, STAGE } from './constants.mjs';
 import { COVER_FLAGS, launchStage, resolveChrome } from './chrome.mjs';
 import { SKILL_ROOT } from './fonts.mjs';
-import { CONTENT_TYPES, resolveStagePath } from './stage-session.mjs';
+import { CONTENT_TYPES, resolveStagePath, resolveThree } from './stage-session.mjs';
 
 export const LOOP_KIT_PATH = join(SKILL_ROOT, 'scripts', 'stage', 'loop-kit.js');
 export const COVER_INIT_PATH = join(SKILL_ROOT, 'scripts', 'stage', 'cover-init.js');
@@ -19,11 +19,12 @@ export const COVER_INIT_PATH = join(SKILL_ROOT, 'scripts', 'stage', 'cover-init.
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
 // Open one cover page and wait for window.ready. `dir` is the folder served as the site root
-// (<out>/cover for a render; the sheet's own folder for the contact sheet).
-export async function openCover({ dir, fonts, width, height, scale, profileRoot, env = process.env, label = 'c', log = () => {} }) {
+// (<out>/cover for a render; the sheet's own folder for the contact sheet). A hero-3d cover asks
+// for the GPU rung; anything else renders on software, where a mismatch is always the page's doing.
+export async function openCover({ dir, fonts, width, height, scale, profileRoot, env = process.env, label = 'c', rung = 'software', log = () => {} }) {
   const executable = resolveChrome(env);
   if (!executable) throw new BlockedError(EXIT.NO_CHROME, 'BLOCKED_NO_CHROME: Chrome/Chromium not found; set CHROME_PATH to a Chrome executable');
-  const browser = await launchStage({ executable, profileDir: join(profileRoot, `${label}-${randomBytes(3).toString('hex')}`), width, height, scale, extra: COVER_FLAGS });
+  const browser = await launchStage({ executable, profileDir: join(profileRoot, `${label}-${randomBytes(3).toString('hex')}`), width, height, scale, extra: COVER_FLAGS, rung });
   const network = [];
   const refused = [];
   const errors = [];
@@ -46,6 +47,13 @@ export async function openCover({ dir, fonts, width, height, scale, profileRoot,
       return;
     }
     if (url.pathname === '/lit/loop-kit.js') { await respond(requestId, 200, kit, CONTENT_TYPES['.js']); return; }
+    if (url.pathname.startsWith('/lit/three/')) {
+      const resolved = resolveThree(url.pathname);
+      if (resolved.refused) { refused.push(resolved.refused); await respond(requestId, 403, 'refused'); return; }
+      if (resolved.missing) { await respond(requestId, 404, 'not a vendored three.js file'); return; }
+      await respond(requestId, 200, readFileSync(resolved.file), resolved.type);
+      return;
+    }
     if (url.pathname === '/lit/fonts.css') { await respond(requestId, 200, fonts.css, CONTENT_TYPES['.css']); return; }
     if (url.pathname.startsWith('/lit/fonts/')) {
       const route = fonts.routes.get(url.pathname);
@@ -103,6 +111,7 @@ export async function openCover({ dir, fonts, width, height, scale, profileRoot,
 
   return {
     width, height, scale,
+    rung: browser.rung, renderer: browser.renderer, notice: browser.notice,
     // Draw loop time t (or its title mask), then wait for fonts and two native frames.
     async frame(t, { mask = false } = {}) {
       try {

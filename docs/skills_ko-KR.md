@@ -2,7 +2,7 @@
 
 [README](../README_ko-KR.md) · [English](./skills.md) · [안내서](./guide_ko-KR.md) · [상세 안내](./reference_ko-KR.md)
 
-스킬 39개를 한 줄씩 정리했습니다. 경로는 각 스킬 문서에 적힌 것이고, 지금 Grok Build 세션이 실제로 불러온 목록은 `/skills`에서 보입니다. 이름이 바뀐 스킬은 한 릴리스 동안 이전 이름을 별칭으로 유지합니다([이름 변경과 호환성](./reference_ko-KR.md#skill-이름-변경과-호환성)). 예전 슬래시 경로는 동작하지 않을 수도 있습니다.
+스킬 42개를 한 줄씩 정리했습니다. 경로는 각 스킬 문서에 적힌 것이고, 지금 Grok Build 세션이 실제로 불러온 목록은 `/skills`에서 보입니다. 이름이 바뀐 스킬은 한 릴리스 동안 이전 이름을 별칭으로 유지합니다([이름 변경과 호환성](./reference_ko-KR.md#skill-이름-변경과-호환성)). 예전 슬래시 경로는 동작하지 않을 수도 있습니다.
 
 <table>
 <tr><th>이렇게 됩니다</th><th>스킬</th><th>얻는 것</th></tr>
@@ -40,6 +40,16 @@
 <td><img src="./assets/skills/lit-handoff.webp" width="240" alt="handoff라고 치면 다음 세션이 읽을 인수인계 파일을 만듭니다. 비밀 값은 넣지 않습니다." /></td>
 <td><code>lit-handoff</code><br /><sub><code>handoff</code> · <code>/lit-handoff</code></sub></td>
 <td><code>handoff</code>라고 치면 다음 세션이 읽을 인수인계 파일을 만듭니다. 비밀 값은 넣지 않습니다.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-hijack.webp" width="240" alt="남의 글에 공개된 기법을 내 스킬로 가져옵니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다." /></td>
+<td><code>lit-hijack</code><br /><sub><code>/lit-hijack &lt;urls or files&gt;</code></sub></td>
+<td>남의 글에 공개된 기법을 내 스킬로 가져옵니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-adhd.webp" width="240" alt="최근 세션 전체를 한 화면으로 브리핑합니다. 세션별 카드, 로드맵, 추천 다음 단계." /></td>
+<td><code>lit-adhd</code><br /><sub><code>lit adhd</code> · <code>lit rewind</code></sub></td>
+<td>"어디까지 했지"에 답합니다. 세션별 카드, 로드맵 게이지, 추천 다음 단계 하나. 읽기 전용.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/deep-interview.webp" width="240" alt="정해진 순서로 한 번에 한 질문씩 물어, 계획을 세울 수 있을 만큼 요청을 분명히 합니다." /></td>
@@ -80,6 +90,11 @@
 <td><img src="./assets/skills/lit-diagram-drawer.webp" width="240" alt="슬라이드와 문서에 넣을 다이어그램을 편집 가능한 형태로 그리고, 검사한 뒤 PNG와 SVG로 내보냅니다." /></td>
 <td><code>lit-diagram-drawer</code><br /><sub><code>/lit-diagram-drawer &lt;brief&gt;</code></sub></td>
 <td>슬라이드와 문서에 넣을 다이어그램을 편집 가능한 형태로 그리고, 검사한 뒤 PNG와 SVG로 내보냅니다.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/lit-schematic.webp" width="240" alt="P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도를 검사된 편집 가능 SVG와 PDF, 600 dpi PNG로 만듭니다." /></td>
+<td><code>lit-schematic</code><br /><sub><code>/lit-schematic &lt;equipment or apparatus brief&gt;</code></sub></td>
+<td>P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도를 검사된 편집 가능 SVG와 PDF, 600 dpi PNG로 만듭니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-pptx.webp" width="240" alt="편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다." /></td>

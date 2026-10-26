@@ -2,8 +2,6 @@ Visual language is a closed set of named roles with fixed values. What a compone
 
 ## Name type by role, not by family
 
-Decide the roles the product needs, bind values to each, and choose a family last.
-
 - Cap at 7 roles: display, page title, section title, body, body-strong, meta, label. Add mono only for code.
 - Every role fixes size, weight, line height, tracking, and wrapping behavior.
 - Line height 1.5 for body, 1.2-1.3 for headings, 1.6 for CJK body copy.
@@ -39,8 +37,6 @@ One geometry, one weight, one metaphor vocabulary. An icon sharpens a label; it 
 
 ## Treat imagery as tokens
 
-Imagery inherits system values. Undecided imagery becomes layout instability at load.
-
 - Aspect-ratio tokens, a declared focal point, and a reserved box before the asset lands.
 - Never bake text into an image; it cannot translate, zoom, or be announced.
 - Text over imagery needs a scrim that restores the measured contrast minimum.
@@ -72,3 +68,13 @@ Drift is mechanically detectable. Run these before the independent review pass.
 2. Count type roles, elevation levels, and radius values against the direction card.
 3. Re-measure contrast in light theme, dark theme, and forced colors.
 4. Record every accepted deviation in `accepted_exceptions` with an owner and expiry.
+
+## Failure patterns
+
+Reject:
+
+- A component importing a palette scale directly.
+- Status carried by hue alone.
+- Contrast reported as "looks fine" with no ratio.
+- Two icon families on one surface.
+- A pie chart with seven slices, or a chart where a table answers the question.

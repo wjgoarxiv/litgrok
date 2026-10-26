@@ -20,7 +20,7 @@ artifact_genre: working_note
 limitations_channel: inline
 ```
 
-Plan a concrete objective. An open "what could we do" ask, with no chosen direction yet, goes to `lit-brainstorm` first, and a request with unresolved choices goes to `deep-interview`.
+Plan a concrete objective. An open "what could we do" ask, with no chosen direction yet, goes to `lit-brainstorm` first, and a request with unresolved choices goes to `deep-interview`. A port of someone else's published technique into a skill or system goes to `lit-hijack`; plan only the spec it hands you.
 
 ## Route into the shared references
 

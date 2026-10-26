@@ -5,6 +5,7 @@ import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, real
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
+import { rewindCellRgb } from './lit-mark.mjs';
 import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
 import { STAGES, readWorkflowState } from './workflow-stage.mjs';
 
@@ -38,17 +39,17 @@ const GLYPHS = {
   basic: {
     fire: '🔥', tick: '✓', cross: '✗', dot: '·', lit: '━', unlit: '─', run: '●', warn: '⚠', elbow: '└', next: '▸', sep: '│',
     full: '▮', empty: '▯', rail: '▎', ellipsis: '…', spinner: BRAILLE, bar: ['█', '░', ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉']],
-    timer: '', tools: (n) => plural(n, 'tool'), agents: (n) => plural(n, 'agent'), git: 'git ',
+    timer: '', burst: '★', tools: (n) => plural(n, 'tool'), agents: (n) => plural(n, 'agent'), git: 'git ',
   },
   nerd: {
     fire: '🔥', tick: '', cross: '', dot: '·', lit: '━', unlit: '─', run: '', warn: '', elbow: '└', next: '▸', sep: '│',
     full: '▮', empty: '▯', rail: '▎', ellipsis: '…', spinner: BRAILLE, bar: ['█', '░', ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉']],
-    timer: ' ', tools: (n) => ` ${n}`, agents: (n) => ` ${n}`, git: ' ',
+    timer: ' ', burst: '★', tools: (n) => ` ${n}`, agents: (n) => ` ${n}`, git: ' ',
   },
   ascii: {
     fire: '', tick: '+', cross: 'x', dot: '-', lit: '=', unlit: '-', run: '*', warn: '!', elbow: '`', next: '>', sep: '|',
     full: '#', empty: '-', rail: '|', ellipsis: '~', spinner: ['|', '/', '-', '\\'], bar: ['#', '-', ['']],
-    timer: '', tools: (n) => plural(n, 'tool'), agents: (n) => plural(n, 'agent'), git: 'git ',
+    timer: '', burst: '*', tools: (n) => plural(n, 'tool'), agents: (n) => plural(n, 'agent'), git: 'git ',
   },
 };
 // Grok's own tool names, shortened to the words people know them by. Any other name shows as sent.
@@ -158,7 +159,15 @@ function painter(depth) {
   return {
     depth,
     fg: (text, role, bold = false) => (depth && text ? `${bold ? '\u001b[1m' : ''}${sgr(ROLES[role], depth)}${text}\u001b[0m` : text),
+    hue: (text, rgb, bold = false) => (depth && text ? `${bold ? '\u001b[1m' : ''}${sgr(rgb, depth)}${text}\u001b[0m` : text),
   };
+}
+
+// The rewind look's motion: 'full' cycles the hue, 'subtle' drifts it slowly, 'off' holds one still
+// rainbow frame. Anything else is 'full'.
+function hudMotion(env = process.env) {
+  const motion = (env.LITGROK_HUD_MOTION ?? 'full').toLowerCase();
+  return motion === 'off' || motion === 'subtle' ? motion : 'full';
 }
 
 // A filled chip on the pink (the brand) or the accent (the current stage) with dark text and a space of
@@ -474,13 +483,68 @@ function disciplineName(name, glyphs, cells = Infinity) {
   return clipCells(name, Math.min(cells, name === 'lit-scientific-visualization' ? 32 : 24), glyphs.ellipsis);
 }
 
+// The look registry: a discipline maps to one look, and every route that runs a skill goes through
+// the collector's discipline, so bare words, slash commands, skill loads and aliases all select it.
+// Grok's one line can only tint and label, so a look is a tint plus a label (the card adds the pill).
+const LOOKS = { 'lit-adhd': 'rewind', 'review-work': 'lanes' };
+function lookOf(discipline, stage = null) {
+  if (typeof discipline === 'string' && Object.hasOwn(LOOKS, discipline)) return LOOKS[discipline];
+  if (stage === 'review') return 'lanes';
+  return 'plain';
+}
+
+// review-work's six lanes. Progress is real only: the test lane follows the workflow test verdict
+// and a lane with no report stays dim, never a fake fill.
+const REVIEW_LANES = ['behavior', 'test', 'safety', 'integration', 'documentation', 'regression'];
+function laneStates(workflow) {
+  const verdict = workflow?.test?.verdict;
+  return REVIEW_LANES.map((name) => ({
+    name,
+    state: name === 'test' && (verdict === 'pass' || verdict === 'fail') ? verdict : 'unreported',
+  }));
+}
+
+// Waiting on the user: a held plan gate (the typed start-work boundary) or a live Ask tool call.
+// The next UserPromptSubmit starts a new turn, so the label stops the moment the user types.
+function waitingOf(activity) {
+  if (!activity) return null;
+  if (activity.planGate) return { reason: 'plan gate' };
+  if (activity.live?.name === 'ask_user_question') return { reason: 'question' };
+  return null;
+}
+
 // The ignition mark of the one-line row: the pink 🔥 LIT chip, then IGNITED · <discipline> 🔥 in the accent.
 // Without colour it reads 🔥 LIT IGNITED · <discipline> 🔥. A narrow row clips the discipline, never the frame.
+// While lit-adhd is the discipline the mark keeps its shape but the discipline rides a hue that turns
+// (one still rainbow frame when the HUD motion is off): the tint, never a flash.
 function ignitionSegment(discipline, glyphs, paint, nerd, options = {}) {
   const label = glyphs.fire ? `${glyphs.fire} LIT` : 'LIT';
   const brand = chip(label, 'pink', paint, nerd, '', '');
   const build = (name) => `${brand.plain} IGNITED ${glyphs.dot} ${name}${glyphs.fire ? ` ${glyphs.fire}` : ''}`;
   const frame = width(build(''));
+  const ignitionLook = options.look ?? lookOf(discipline);
+  if (ignitionLook === 'rewind') {
+    // Each cell of the mark past the brand rides its own step round the wheel (one still rainbow
+    // frame when the HUD motion is off): the tint, never a flash.
+    const motion = hudMotion();
+    const when = options.now ?? Date.now();
+    const rainbow = (text) => {
+      const cells = [...text];
+      return cells.map((cell, index) => paint.hue(cell, rewindCellRgb(when, motion, index, cells.length), true)).join('');
+    };
+    return segment(build(disciplineName(discipline, glyphs)), (text) => `${brand.painted}${rainbow(text.slice(brand.plain.length))}`, {
+      ...options, minCells: frame + 1, shrink: (cells) => build(disciplineName(discipline, glyphs, Math.max(1, cells - frame))),
+    });
+  }
+  if (ignitionLook === 'lanes') {
+    const lanes = options.lanes ?? laneStates(null);
+    const reported = lanes.filter((lane) => lane.state !== 'unreported').length;
+    const full = build(`REVIEW ${reported}/${lanes.length}`);
+    return segment(full, (text) => `${brand.painted}${paint.fg(text.slice(brand.plain.length), 'accent', true)}`, {
+      ...options, minCells: frame + 1,
+      shrink: (cells) => (cells < width(full) ? clipCells(full, Math.max(1, cells), glyphs.ellipsis) : full),
+    });
+  }
   return segment(build(disciplineName(discipline, glyphs)), (text) => `${brand.painted}${paint.fg(text.slice(brand.plain.length), 'accent', true)}`, {
     ...options, minCells: frame + 1, shrink: (cells) => build(disciplineName(discipline, glyphs, Math.max(1, cells - frame))),
   });
@@ -498,11 +562,23 @@ function figureLeads(figures, glyphs, paint, afterMark) {
 // handoff percent, cost and branch. It is the whole HUD between workflows and in LITGROK_HUD_LINES=1
 // mode. A narrow row gives up the branch, the handoff percent, the cost and the version, then clips the
 // model name and last the discipline.
-function compactRow({ status, discipline, version, glyphs, paint, nerd, handoff, maxCells }) {
+function compactRow({ status, discipline, version, glyphs, paint, nerd, handoff, maxCells, looks = null, phase = null }) {
   const [model, context, ...extras] = figureSegments(status, { glyphs, paint, handoff });
-  const figures = [model, context, ...(discipline ? [ignitionSegment(discipline, glyphs, paint, nerd, { clip: 1 })] : []), ...extras];
+  const figures = [model, context];
+  if (discipline) {
+    figures.push(looks?.look === 'lanes'
+      ? ignitionSegment(discipline, glyphs, paint, nerd, { clip: 1, lanes: looks.lanes, look: looks.look })
+      : ignitionSegment(discipline, glyphs, paint, nerd, { clip: 1 }));
+  }
+  figures.push(...extras);
   const left = [brandSegment(version, glyphs, paint, { clip: 3 }), ...figureLeads(figures, glyphs, paint, true)];
-  return layoutLine({ left, separator: { plain: ' ', painted: ' ' }, rail: { plain: '', painted: '' }, maxCells, ellipsis: glyphs.ellipsis });
+  const right = [];
+  if (looks?.waiting) right.push(segment(`YOUR TURN · ${looks.waiting.reason}`, (text) => paint.fg(text, 'yellow', true), {
+    drop: 0.6, clip: 3, minCells: width('YOUR TURN'),
+    shrink: (cells) => (cells < width(`YOUR TURN · ${looks.waiting.reason}`) ? clipCells('YOUR TURN', Math.max(1, cells), glyphs.ellipsis) : `YOUR TURN · ${looks.waiting.reason}`),
+  }));
+  if (looks?.burst) right.push(segment(`${glyphs.burst} complete${phase?.timer ? ` ${phase.timer}` : ''}`, (text) => paint.fg(text, 'pink', true), { drop: 1 }));
+  return layoutLine({ left, right, separator: { plain: ' ', painted: ' ' }, rail: { plain: '', painted: '' }, maxCells, ellipsis: glyphs.ellipsis });
 }
 
 // The current stage's label: its name, the plan's checked tasks while working, and a tick once the
@@ -584,14 +660,50 @@ function railFor(paint, glyphs) {
 // The card's title: the mark, the pink 🔥 LIT chip and the discipline, then at the right edge the turn's
 // tool calls and subagents beside its state, as the family card's corner reads (● 1m42s running,
 // ✓ complete, ⚠ a warning, idle).
-function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, activity, maxCells, rail }) {
+function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, activity, maxCells, rail, now, looks = null }) {
   const brand = chip(glyphs.fire ? `${glyphs.fire} LIT` : 'LIT', 'pink', paint, nerd);
   const name = discipline ?? 'workflow';
+  const look = looks?.look ?? lookOf(discipline);
+  const lanes = look === 'lanes' ? (looks?.lanes ?? laneStates(null)) : null;
+  const reported = lanes ? lanes.filter((lane) => lane.state !== 'unreported').length : 0;
+  // The rewind pill rides the wheel cell by cell, like the ignition mark below. The lanes pill
+  // names review-work's six lanes; a lane with a verdict takes its colour, the rest stay dim.
+  const nameText = look === 'rewind' ? `✺ REWIND ${disciplineName(name, glyphs)}`
+    : lanes ? `REVIEW ${lanes.map((lane) => lane.name).join(' · ')}` : `${glyphs.dot} ${disciplineName(name, glyphs)}`;
+  const paintLane = (laneName) => {
+    const state = lanes.find((lane) => lane.name === laneName)?.state;
+    if (state === 'pass') return paint.fg(laneName, 'green', true);
+    if (state === 'fail') return paint.fg(laneName, 'red', true);
+    return paint.fg(laneName, 'dim');
+  };
+  const namePaint = look === 'rewind'
+    ? (text) => {
+      const motion = hudMotion();
+      const when = now ?? Date.now();
+      const cells = [...text];
+      return cells.map((cell, index) => paint.hue(cell, rewindCellRgb(when, motion, index, cells.length), true)).join('');
+    }
+    : lanes
+      ? (text) => {
+        const prefix = 'REVIEW ';
+        if (!text.startsWith(prefix)) return paint.fg(text, 'accent', true);
+        const names = text.slice(prefix.length).split(' · ');
+        const painted = names.map((laneName) => (lanes.some((lane) => lane.name === laneName)
+          ? paintLane(laneName) : paint.fg(laneName, 'accent', true)));
+        return `${paint.fg(prefix, 'accent', true)}${painted.join(paint.fg(' · ', 'dim'))}`;
+      }
+      : (text) => `${paint.fg(glyphs.dot, 'dim')} ${paint.fg(text.slice(glyphs.dot.length + 1), discipline ? 'accent' : 'dim', Boolean(discipline))}`;
+  const shrinkName = lanes
+    ? (cells) => {
+      const short = `REVIEW ${reported}/${lanes.length}`;
+      return cells < width(nameText) ? clipCells(short, Math.max(1, cells), glyphs.ellipsis) : nameText;
+    }
+    : (cells) => `${glyphs.dot} ${disciplineName(name, glyphs, Math.max(1, cells - width(glyphs.dot) - 1))}`;
   const left = [
     brandSegment(version, glyphs, paint, { clip: 3 }),
     { ...segment(brand.plain, () => brand.painted), lead: ' | ', leadPainted: paint.fg(' | ', 'accent') },
-    segment(`${glyphs.dot} ${disciplineName(name, glyphs)}`, (text) => `${paint.fg(glyphs.dot, 'dim')} ${paint.fg(text.slice(glyphs.dot.length + 1), discipline ? 'accent' : 'dim', Boolean(discipline))}`, {
-      clip: 0.5, minCells: width(glyphs.dot) + 2, shrink: (cells) => `${glyphs.dot} ${disciplineName(name, glyphs, Math.max(1, cells - width(glyphs.dot) - 1))}`,
+    segment(nameText, namePaint, {
+      clip: 0.5, minCells: lanes ? width(`REVIEW ${reported}/${lanes.length}`) : width(glyphs.dot) + 2, shrink: shrinkName,
     }),
   ];
   const right = [];
@@ -600,10 +712,16 @@ function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, a
     if (phase.phase === 'running' && activity.agents > 0) parts.push(glyphs.agents(activity.agents));
     if (parts.length > 0) right.push(segment(parts.join(` ${glyphs.dot} `), (text) => paint.fg(text, 'dim'), { drop: 4 }));
   }
-  if (warning) right.push(segment(`${glyphs.warn} ${warning[1]}`, (text) => paint.fg(text, 'yellow', true), { drop: 1 }));
+  if (looks?.waiting) right.push(segment(`YOUR TURN · ${looks.waiting.reason}`, (text) => paint.fg(text, 'yellow', true), {
+    drop: 0.6, clip: 3, minCells: width('YOUR TURN'),
+    shrink: (cells) => (cells < width(`YOUR TURN · ${looks.waiting.reason}`) ? clipCells('YOUR TURN', Math.max(1, cells), glyphs.ellipsis) : `YOUR TURN · ${looks.waiting.reason}`),
+  }));
+  else if (warning) right.push(segment(`${glyphs.warn} ${warning[1]}`, (text) => paint.fg(text, 'yellow', true), { drop: 1 }));
   if (phase.phase === 'running') right.push(segment(`${glyphs.run} ${phase.timer ? `${glyphs.timer}${phase.timer}` : 'running'}`, (text) => paint.fg(text, 'accent', true), { drop: 2 }));
-  else if (phase.phase === 'complete') right.push(segment(`${glyphs.tick} complete ${phase.timer}`, (text) => paint.fg(text, 'green', true), { drop: 2 }));
-  else if (!warning) right.push(segment('idle', (text) => paint.fg(text, 'dim'), { drop: 2 }));
+  else if (phase.phase === 'complete') {
+    if (looks?.burst) right.push(segment(`${glyphs.burst} complete ${phase.timer}`, (text) => paint.fg(text, 'pink', true), { drop: 2 }));
+    else right.push(segment(`${glyphs.tick} complete ${phase.timer}`, (text) => paint.fg(text, 'green', true), { drop: 2 }));
+  } else if (!warning && !looks?.waiting) right.push(segment('idle', (text) => paint.fg(text, 'dim'), { drop: 2 }));
   return layoutLine({ left, right, separator: { plain: ' ', painted: ' ' }, rail, maxCells, ellipsis: glyphs.ellipsis });
 }
 
@@ -681,10 +799,8 @@ function render(input) {
     handoff = { active: false, percent: null };
   }
   const version = installedVersion();
-  const shared = { status: input, discipline, version, glyphs, paint, nerd, handoff, maxCells };
-  if (process.env.LITGROK_HUD_LINES === '1') return [compactRow(shared)];
-
   const now = Date.now();
+  const shared = { status: input, discipline, version, glyphs, paint, nerd, handoff, maxCells, now };
   let activity = null;
   try {
     activity = turnActivity(readLedgerTail(input), input?.prompt_id);
@@ -697,15 +813,22 @@ function render(input) {
   } catch {
     workflow = null;
   }
-  // The card shows while a discipline is active or the session has a workflow stage; otherwise the
-  // HUD is the single row.
-  if (!discipline && !workflow?.stage) return [compactRow(shared)];
   const turn = turnState(input, activity, now);
   const phase = phaseOf(now, activity, turn);
+  const looks = {
+    look: lookOf(discipline, workflow?.stage ?? null),
+    lanes: laneStates(workflow),
+    waiting: waitingOf(activity),
+    burst: phase.phase === 'complete' && workflow?.stage === 'done',
+  };
+  if (process.env.LITGROK_HUD_LINES === '1') return [compactRow({ ...shared, looks, phase })];
+  // The card shows while a discipline is active or the session has a workflow stage; otherwise the
+  // HUD is the single row.
+  if (!discipline && !workflow?.stage) return [compactRow({ ...shared, looks, phase })];
   const warning = warningText(input, activity, handoff);
   const live = turn.running ? activity?.live ?? null : null;
   const rail = railFor(paint, glyphs);
-  const lines = [titleLine({ ...shared, phase, warning, activity: phase.phase === 'idle' ? null : activity, rail })];
+  const lines = [titleLine({ ...shared, phase, warning, activity: phase.phase === 'idle' ? null : activity, rail, looks })];
   if (workflow?.stage) lines.push(mapLine(workflow, { paint, glyphs, nerd, running: turn.running, now }, rail, maxCells));
   const detail = detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail });
   if (detail) lines.push(detail);

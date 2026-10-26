@@ -167,7 +167,7 @@ test('without a turn field, an unended recent turn in the ledger runs, and a sto
   assert.match(title(runStatus(sb, { env: PLAIN })), / idle$/u, 'a turn whose ledger has been quiet for ten minutes is not shown as running');
   seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }], ['Stop', 30, { signal: 'plan-gate-block' }]]);
   const held = runStatus(sb, { env: PLAIN });
-  assert.match(title(held), / ⚠ plan gate ● 1m4\ds$/u, 'a held stop keeps the turn running');
+  assert.match(title(held), / YOUR TURN · plan gate ● 1m4\ds$/u, 'a held stop keeps the turn running and names the wait');
   assert.equal(held.plain[1], '└ ⚠ plan gate: save plans/<slug>.md');
 });
 
@@ -208,7 +208,7 @@ test('amber warnings: a plan-gate block this turn and a context nearing the auto
   const sb = sandbox(t, 'lit-plan');
   seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }], ['Stop', 30, { signal: 'plan-gate-block' }]]);
   const gate = runStatus(sb, { env: PLAIN, turnAgoMs: 100_000, promptId: 'p1' });
-  assert.match(title(gate), /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2}3 tools · 1 agent ⚠ plan gate ● 1m4\ds$/u);
+  assert.match(title(gate), /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2}3 tools · 1 agent YOUR TURN · plan gate ● 1m4\ds$/u);
   assert.equal(gate.plain[1], '└ ⚠ plan gate: save plans/<slug>.md');
 
   seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }], ['Stop', 30, { signal: 'auto-handoff-directive', percent: 80 }]]);
@@ -233,9 +233,9 @@ test('narrow rows give up the counts, then the timer, then the warning chip, and
   const sb = sandbox(t, 'lit-plan');
   seedLedger(sb.workspace, [...busyTurn(), ['Stop', 30, { signal: 'turn-ended' }], ['Stop', 30, { signal: 'plan-gate-block' }]]);
   const shown = (columns) => runStatus(sb, { env: { ...PLAIN, COLUMNS: String(columns) }, turnAgoMs: 100_000, promptId: 'p1' });
-  assert.match(title(shown(80)), /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2}3 tools · 1 agent ⚠ plan gate ● 1m4\ds$/u);
-  assert.match(title(shown(56)), /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2}⚠ plan gate ● 1m4\ds$/u);
-  assert.equal(title(shown(44)), '[🔥LIT] | (🔥 LIT) · lit-plan  ⚠ plan gate');
+  assert.match(title(shown(80)), /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2}3 tools · 1 agent YOUR TURN · plan gate ● 1m4\ds$/u);
+  assert.match(title(shown(56)), /^\[🔥LIT\] \| \(🔥 LIT\) · lit-plan {2}YOUR TURN ● 1m4\ds$/u);
+  assert.equal(title(shown(44)), '[🔥LIT] | (🔥 LIT) · lit-plan  YOUR TURN');
   assert.equal(title(shown(31)), '[🔥LIT] | (🔥 LIT) · lit-plan', 'the chips go before the skill name is clipped');
   assert.equal(title(shown(26)), '[🔥LIT] | (🔥 LIT) · lit…', 'and the skill name is clipped last');
   for (const columns of [20, 22, 24, 30, 45, 64, 90, 120]) {

@@ -108,6 +108,24 @@ test('the stage map uses LitGrok\'s own stages as the family card draws them', (
   assert.equal(lines.length, 4);
 });
 
+test('teammates never read blocked: a live subagent is a corner count, never a lane row', (t) => {
+  const sb = sandbox(t, {});
+  const now = Date.now();
+  const iso = (ms) => new Date(ms).toISOString();
+  const ledger = join(sb.workspace, '.grok', 'litgrok', 'session-ledger', `${createHash('sha256').update(SESSION).digest('hex').slice(0, 32)}.jsonl`);
+  mkdirSync(dirname(ledger), { recursive: true });
+  const record = (event, at, extra = {}) => ({ schema: 'litgrok.hook-event/v1', event, sessionId: SESSION, cwd: sb.workspace, recordedAt: iso(at), ...extra });
+  writeFileSync(ledger, [
+    record('UserPromptSubmit', now - 60_000),
+    record('PreToolUse', now - 30_000, { tool: { name: 'run_terminal_command' } }),
+    record('SubagentStart', now - 20_000),
+  ].map((line) => `${JSON.stringify(line)}\n`).join(''));
+  const { plain } = run(sb);
+  const card = plain.join('\n');
+  assert.match(card, /1 agent/u, 'the running teammate is a count in the corner');
+  assert.doesNotMatch(card, /blocked|stalled|quiet for|wake it/iu, 'no lane is ever marked blocked or asked to wake');
+});
+
 test('the one-line row keeps the family order and lights the ignition mark after the gauge', (t) => {
   const sb = sandbox(t);
   const { lines, plain } = run(sb, { env: { LITGROK_HUD_LINES: '1' } });

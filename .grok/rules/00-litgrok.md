@@ -122,10 +122,23 @@ Exclusions are checked before the trigger and route away even when a video noun 
 - (iii) an Office deliverable other than a bare 발표 — 발표자료, 슬라이드, PPT, 덱, 보고서, 문서, slides, deck, pptx, report, document — with 넣, 삽입, embed or insert: that Office skill;
 - (iv) a text or image about a video — 스크립트, 대본, 썸네일, 요약, 기획안, script, transcript, thumbnail, summary, storyboard: its own task;
 - (v) motion on an interface with no video noun — 버튼, 호버, button, hover, motion tokens, reduced motion: `frontend-ui-ux`.
+- (vi) a drawing of real equipment, even as an HTML page or a loop: `lit-schematic`.
 
 Film context: this is a film request. Load `lit-typographic-motion` from `.grok/skills/lit-typographic-motion/` (project) or `~/.grok/skills/lit-typographic-motion/` (user) and write `treatment.json` in the run's output directory first. Path rule: the type path when the words themselves are the film; the stage path for every other film, including anything with shapes, drawn objects, diagrams or imagery; a 9:16 film always takes the stage path. Every frame and track passes through the skill's renderer; hand-encoded films are not the deliverable. Never claim a hook routed the prompt.
 
 Film commands, run from the skill root: `node scripts/motion.mjs` with `make`, `stage`, `sound`, `look`, `gate`, `verify` (each takes `--out <dir>`); a README cover loop uses `cover` and `cover-gate` (references/cover.md); pre-warm outside the session with `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install`.
+
+## Equipment drawings
+
+For an authorized bare `lit` request to draw real process or lab equipment, or `/lit-schematic`, load `lit-schematic` from `.grok/skills/lit-schematic/` (project) or `~/.grok/skills/lit-schematic/` (user). Triggers: P&ID, PFD, BFD, 공정도, 계장도, 장치도, 모식도, 배치도, 계통도, 단면도, apparatus, isometric cutaway, equipment layout. Measured-data plots go to `lit-scientific-visualization`, software or business diagrams to `lit-diagram-drawer`, a report or deck about a drawing to its Office skill, an interface that shows one to `frontend-ui-ux`.
+
+## Brief over sessions
+
+For an authorized bare `lit` request to catch up on every recent session of the repository, or `/lit-adhd` or `/lit-rewind`, load `lit-adhd` from `.grok/skills/lit-adhd/` (project) or `~/.grok/skills/lit-adhd/` (user). Triggers: adhd, rewind, where was I, catch up, 어디까지, 브리핑. It runs read-only and prints the drawn brief; it never edits plans or files. One session's own state is `lit-recap`; many sessions' state is this skill.
+
+## Mechanism ports
+
+For an authorized bare `lit` request to port someone else's published technique into a skill or system, or `/lit-hijack`, load `lit-hijack` from `.grok/skills/lit-hijack/` (project) or `~/.grok/skills/lit-hijack/` (user). Triggers: hijack, hijacking, 하이재킹, 하이잭. The route words directly after `lit` win over trigger or owner words later in the prompt. Finding sources first goes to `litresearch`, planning the port to `lit-plan`, executing it to `start-work`, and reviewing the diff to `review-work`. A request that only draws equipment goes to `lit-schematic` even when it names a port; a topic with no sources goes to `litresearch` first.
 
 ## Office output selection
 

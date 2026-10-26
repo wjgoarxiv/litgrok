@@ -104,6 +104,48 @@ export function lockup(productName) {
   return standard.map((row, index) => row.padEnd(28) + (index === 5 ? `  ${label}` : ''));
 }
 
+// The psychedelic rewind hue for the lit-adhd card and ignition mark: one hue at a time at a
+// steady lightness, so the card never flashes. `motion` is 'full' (a 24-second hue cycle),
+// 'subtle' (a slow 96-second drift) or 'off' (one still rainbow frame). Returns [r, g, b].
+export function rewindHue(nowMs, motion = 'full') {
+  return hueToRgb(rewindBaseAngle(nowMs, motion));
+}
+
+// One full wheel across a run of `total` cells, so each cell of a pill or mark takes its own
+// step round the wheel at the same steady lightness. Colour moves only on fixed glyphs.
+export function rewindCellRgb(nowMs, motion, index, total) {
+  const base = rewindBaseAngle(nowMs, motion);
+  const step = total > 1 ? 360 / total : 0;
+  return hueToRgb((((base + step * index) % 360) + 360) % 360);
+}
+
+function rewindBaseAngle(nowMs, motion = 'full') {
+  if (motion !== 'subtle' && motion !== 'off' && motion !== 'full') motion = 'full';
+  const time = Number.isFinite(nowMs) ? nowMs : 0;
+  const hue = motion === 'off' ? 280 : (((time % 96_000) + 96_000) % 96_000) / 96_000 * 360;
+  const period = motion === 'subtle' ? 1 : 4;
+  return (((hue * period) % 360) + 360) % 360;
+}
+
+function hueToRgb(angle) {
+  const saturation = 0.85;
+  const lightness = 0.62;
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const part = chroma * (1 - Math.abs(((angle / 60) % 2) - 1));
+  const match = lightness - chroma / 2;
+  let red;
+  let green;
+  let blue;
+  if (angle < 60) [red, green, blue] = [chroma, part, 0];
+  else if (angle < 120) [red, green, blue] = [part, chroma, 0];
+  else if (angle < 180) [red, green, blue] = [0, chroma, part];
+  else if (angle < 240) [red, green, blue] = [0, part, chroma];
+  else if (angle < 300) [red, green, blue] = [part, 0, chroma];
+  else [red, green, blue] = [chroma, 0, part];
+  const channel = (value) => Math.max(0, Math.min(255, Math.round((value + match) * 255)));
+  return [channel(red), channel(green), channel(blue)];
+}
+
 export function colorize(rows, { mode = 'none' } = {}) {
   if (!['truecolor', '256', 'none'].includes(mode)) throw new TypeError('Invalid color mode');
   if (mode === 'none') return [...rows];

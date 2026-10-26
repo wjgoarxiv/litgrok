@@ -17,6 +17,9 @@
     { "t0": 20, "t1": 24, "purpose": "recap", "onScreen": "the full cycle diagram with the droplet back home", "motion": "diagram arrows draw around the loop", "sound": "closing cadence" }
   ],
   "subject": { "name": "Droplet Dot", "source": "invented", "specifics": ["a water droplet that travels the full cycle", "drawn for young science viewers", "it swells as it condenses"] },
+  "story": { "expect": "Viewers expect a science diagram that labels each stage of the water cycle.", "turn": "The droplet itself travels the whole loop, and the diagram draws around it instead.", "beat": 2, "payoff": "The cycle closes on the sea where it began, one traveller home." },
+  "protagonist": { "name": "Droplet Dot", "kind": "character", "look": "A round glass droplet, sky-blue with a white glint, palm-sized against the sky.", "acts": [{ "beat": 0, "action": "Blinks awake on the warm sea." }, { "beat": 1, "action": "Lifts off the sea on rising heat lines." }, { "beat": 2, "action": "Joins the swelling cloud mass." }, { "beat": 3, "action": "Falls with the sheet of rain." }, { "beat": 4, "action": "Lands back in the sea, home." }] },
+  "world": { "layers": ["Low sun and still sea at the back.", "Heat lines and the travelling droplet mid-frame.", "Cloud mass and rain sheets in front."], "labels": ["Sea", "Sun", "Rise", "Cloud", "Rain", "Home"], "camera": [{ "beat": 0, "move": "slow push-in on the droplet" }, { "beat": 1, "move": "truck up with the lift" }, { "beat": 3, "move": "crane down with the rain" }] },
   "visualDevices": [
     { "kind": "illustration", "role": "subject", "beats": [0, 1, 2, 3, 4] },
     { "kind": "diagram", "role": "support", "beats": [1, 2, 4] },
@@ -28,7 +31,7 @@
     { "hex": "#7FD1FF", "role": "water and droplet" },
     { "hex": "#FFD166", "role": "sun warmth" }
   ],
-  "sound": { "mode": "generated", "plan": "soft pulse with a rise into the lift and a hit on each cut", "palette": "glass" },
+  "sound": { "mode": "score", "plan": "a house pulse with a hit on each cut and a closing cadence", "genre": "house", "events": [{ "t": 6, "on": "the droplet lifts off the sea", "kind": "tap" }, { "t": 12, "on": "droplets gather with a soft clang", "kind": "hit" }] },
   "copy": { "source": "invented", "lines": ["물방울 하나의 여행", "햇볕이 데우면 떠오른다", "차가운 하늘에서 뭉친다", "무거워지면 떨어진다", "그리고 다시 바다로"] },
   "inventions": ["Droplet Dot", "all five copy lines"],
   "ambition": "Match cuts that carry the droplet through every stage, with the diagram drawing itself in time with the pulse."

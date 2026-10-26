@@ -26,7 +26,7 @@ function bytecodeWrittenSince(since) {
 function run(code) { const r=spawnSync(python,['-c',code],{cwd:root,env:childEnv,encoding:'utf8'}); assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout); }
 
 test('PPTX craft gate finds accent overload and explicit left numeric cells', () => {
-  const result=run(`import sys,json\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import PP_ALIGN\nfrom craft_extras import assess\np=Presentation();s=p.slides.add_slide(p.slide_layouts[6])\nfor n,h in enumerate(['D6336C','2F9E44','1971C2']):\n q=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,100000+n*1000000,100000,600000,600000);q.fill.solid();q.fill.fore_color.rgb=RGBColor.from_string(h)\nt=s.shapes.add_table(3,1,100000,1200000,1000000,1000000).table\nfor i,v in enumerate(['Year','120','130']):t.cell(i,0).text=v\nfor i in (1,2):t.cell(i,0).text_frame.paragraphs[0].alignment=PP_ALIGN.LEFT\nprint(json.dumps(assess(p)))`);
+  const result=run(`import sys,json\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.dml.color import RGBColor\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.enum.text import PP_ALIGN\nfrom craft_extras import assess\np=Presentation();s=p.slides.add_slide(p.slide_layouts[6])\nfor n,h in enumerate(['D6336C','2F9E44','1971C2','E8A33D','7B2FBE']):\n q=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,100000+n*1000000,100000,600000,600000);q.fill.solid();q.fill.fore_color.rgb=RGBColor.from_string(h)\nt=s.shapes.add_table(3,1,100000,1200000,1000000,1000000).table\nfor i,v in enumerate(['Year','120','130']):t.cell(i,0).text=v\nfor i in (1,2):t.cell(i,0).text_frame.paragraphs[0].alignment=PP_ALIGN.LEFT\nprint(json.dumps(assess(p)))`);
   assert.ok(result.findings.some((f)=>f.rule==='OF-101'&&f.severity==='HIGH'));
   assert.ok(result.findings.some((f)=>f.rule==='OF-103'&&f.severity==='HIGH'));
 });
@@ -44,7 +44,7 @@ test('PPTX craft subset covers all nine OF-1xx signals and accepts a clean slide
 });
 
 test('PPTX public QA includes the craft verdict', () => {
-  const result=run(`import sys,json,tempfile\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.dml.color import RGBColor\nfrom pptx.util import Inches\nfrom qa_deck import qa\np=Presentation();s=p.slides.add_slide(p.slide_layouts[6])\nfor i,rgb in enumerate(((214,51,108),(47,158,68),(25,113,194))):\n q=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(1+i),Inches(1),Inches(.6),Inches(.6));q.fill.solid();q.fill.fore_color.rgb=RGBColor(*rgb)\nf=tempfile.NamedTemporaryFile(suffix='.pptx');p.save(f.name);r=qa(f.name)\nprint(json.dumps({'pass':r['pass'],'craft':r['office_craft']}))`);
+  const result=run(`import sys,json,tempfile\nsys.path.insert(0,${JSON.stringify(scripts)})\nfrom pptx import Presentation\nfrom pptx.enum.shapes import MSO_SHAPE\nfrom pptx.dml.color import RGBColor\nfrom pptx.util import Inches\nfrom qa_deck import qa\np=Presentation();s=p.slides.add_slide(p.slide_layouts[6])\nfor i,rgb in enumerate(((214,51,108),(47,158,68),(25,113,194),(232,163,61),(123,47,190))):\n q=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(1+i),Inches(1),Inches(.6),Inches(.6));q.fill.solid();q.fill.fore_color.rgb=RGBColor(*rgb)\nf=tempfile.NamedTemporaryFile(suffix='.pptx');p.save(f.name);r=qa(f.name)\nprint(json.dumps({'pass':r['pass'],'craft':r['office_craft']}))`);
   assert.equal(result.pass,false);
   assert.ok(result.craft.findings.some((f)=>f.rule==='OF-101'));
 });
@@ -84,8 +84,10 @@ const rules = (result, rule, severity) => result.findings.filter((f) => f.rule =
 test('OF-101 counts accent fills, not hairline rules or the sample-data tag', () => {
   const clean = craft("s=slide();box(s,0,0,4.5,7.5,fill='1F3B33')\nfor y in (1.8,3.3,4.8): box(s,4.7,y,6.9,0.01,fill='CBD3DA')\nbox(s,0.3,6.9,2.6,0.25,fill='FCEBE0',name='lit-notice tag')");
   assert.deepEqual(rules(clean, 'OF-101'), []);
-  const loud = craft("s=slide()\nfor i,h in enumerate(['D6336C','2F9E44','1971C2']): box(s,1+2*i,2,1.5,1.5,fill=h)");
+  const loud = craft("s=slide()\nfor i,h in enumerate(['D6336C','2F9E44','1971C2','E8A33D','7B2FBE']): box(s,1+i,2,1.5,1.5,fill=h)");
   assert.equal(rules(loud, 'OF-101', 'HIGH').length, 1);
+  const four = craft("s=slide()\nfor i,h in enumerate(['D6336C','2F9E44','1971C2','E8A33D']): box(s,1+i,2,1.5,1.5,fill=h)");
+  assert.deepEqual(rules(four, 'OF-101'), [], 'four families pass; the fifth fails');
 });
 
 test('OF-102 measures each broken line with Pretendard widths', () => {
@@ -224,10 +226,10 @@ layout: content
 ---
 `;
 
-test('the compiler lists the eight tonalities beside the legacy templates', () => {
+test('the compiler lists the thirteen tonalities beside the legacy templates', () => {
   const r = compile('--list-tonalities');
   assert.equal(r.status, 0, r.stderr);
-  for (const id of ['atlas', 'chalk', 'gazette', 'ledger', 'night', 'paper', 'signal', 'studio']) assert.match(r.stdout, new RegExp(`^${id}\\b`, 'm'), id);
+  for (const id of ['atlas', 'bauhaus', 'chalk', 'computational-brutalism', 'gazette', 'ledger', 'neo-brutalism', 'newsroom', 'night', 'paper', 'riso', 'signal', 'studio']) assert.match(r.stdout, new RegExp(`^${id}\\b`, 'm'), id);
   assert.match(r.stdout, /AZURE-PRO/);
 });
 
@@ -339,10 +341,11 @@ function diagram(file, ground, ink) {
 }
 const fileSha = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
 
-test('a section preview runs up to two lines an opened slide in a column within 70 % of the page, run-in labels bold with their colon', () => {
-  const { pptx } = deck('preview-ko', `---\ntitle: 추정 입문\ntonality: chalk\nnotice: 예시 데이터 — 실제 수치로 바꿔 주세요\n---\n\n---\nlayout: text-column\n\n## 5강 학습 목표\n\n- 표본 평균으로 모평균을 추정하는 방법을 익힌다\n---\n\n---\nlayout: section\n\n# 표본 평균의 분포\n---\n\n---\nlayout: text-column\n\n## 표본 평균이 흩어지는 정도\n\n- 표본 평균은 표본을 새로 뽑을 때마다 조금씩 달라진다\n- 그 흩어짐을 표준오차라고 부르고 σ/√n으로 계산한다\n- 세 번째 줄은 미리보기에 나오지 않는다\n---\n\n---\nlayout: text-column\n\n## 예제: 직장인 36명의 하루 걸음 수\n\n- **결과** 표본 평균 7,850보, 표준오차 약 410보 (95% 구간 7,050-8,650)\n- **자료:** 직장인 36명, 일주일 평균 걸음 수, 스마트폰 기록\n- **주의** 이 줄도 미리보기에 나오지 않는다\n---\n`);
+test('a section preview shows each opened slide first line, or its first two when they fit, run-in labels bold with their colon', () => {
+  const { pptx } = deck('preview-ko', `---\ntitle: 회귀 입문\ntonality: chalk\nnotice: 예시 데이터 — 실제 수치로 바꿔 주세요\n---\n\n---\nlayout: text-column\n\n## 4강 학습 목표\n\n- 회귀가 답하는 질문을 정의한다\n---\n\n---\nlayout: section\n\n# 회귀가 답하는 질문\n---\n\n---\nlayout: text-column\n\n## 회귀 기울기의 뜻과 해석 예\n\n- **자료:** 학생 40명, 하루 공부 시간 0-6시간, 점수 100점 만점\n- 회귀는 x가 1 늘 때 y가 평균 얼마나 변하는지 묻는다\n- 세 번째 줄은 미리보기에 나오지 않는다\n---\n\n---\nlayout: text-column\n\n## 예제: 공부 시간과 시험 점수, 학생 40명\n\n- **결과** 공부 시간이 1시간 긴 학생의 점수가 평균 4.2점 높다 (95% 구간 2.7-5.7)\n- 기울기는 언제나 'y 단위 / x 단위'로 읽는다\n- **주의** 이 줄도 미리보기에 나오지 않는다\n---\n`);
   const page = looks(pptx)[1].filter((s) => s.text && !s.name.startsWith('lit-notice') && !s.name.startsWith('title@'));
-  const previews = page.filter((s) => /표본 평균은|결과|그 흩어짐/u.test(s.text));
+  // The support zone holds each opened slide's first line, or its first two when they fit there.
+  const previews = page.filter((s) => /자료|회귀는|결과|기울기는/u.test(s.text));
   assert.ok(previews.length >= 2, JSON.stringify(page.map((s) => s.text)));
   for (const s of previews) {
     assert.ok(s.w <= 0.7 * 960 + 0.5, `preview ${Math.round(s.w)} pt wide, over 70 % of the page`);
@@ -352,7 +355,7 @@ test('a section preview runs up to two lines an opened slide in a column within 
   assert.ok(!page.some((s) => /나오지 않는다/u.test(s.text)), 'a third line stays out of the preview');
   const runs = [...parts(pptx, 'ppt/slides/slide\\d+\\.xml')[1].matchAll(/<a:r><a:rPr([^>]*)>[\s\S]*?<a:t>([^<]*)<\/a:t><\/a:r>/gu)].map((m) => ({ text: m[2], bold: /\bb="1"/u.test(m[1]) }));
   assert.ok(runs.some((r) => r.bold && r.text === '결과:'), `a bold run-in label with its colon: ${JSON.stringify(runs)}`);
-  assert.ok(runs.some((r) => r.bold && r.text === '자료:'), 'a label that brings its own colon keeps one');
+  assert.ok(runs.some((r) => r.bold && r.text === '자료:'), 'a label that brings its own colon keeps one colon');
   assert.ok(!runs.some((r) => r.text.includes('::')), 'never two colons');
   // An English preview stops at about 70 characters of body text.
   const en = deck('preview-en', `---\ntitle: Support review\ntonality: night\n---\n\n---\nlayout: text-column\n\n## Ticket volume\n\n- Tickets fell 14% in the quarter\n---\n\n---\nlayout: section\n\n# Data notes\n---\n\n---\nlayout: references-appendix\n\n## Sources and definitions\n\n- **Helpdesk** export from 1 July to 30 September 2026, every closed ticket (sample).\n- [2] Q3 2026 service targets, agreed in June 2026 (sample).\n- [3] First response: minutes from a ticket's arrival to the first human reply.\n---\n`);
@@ -360,64 +363,59 @@ test('a section preview runs up to two lines an opened slide in a column within 
   assert.ok(latin.length && latin.every((s) => s.w <= 70 * 13 * 0.5 + 0.5), JSON.stringify(latin.map((s) => [s.w, s.text])));
 });
 
-test('a bottom title ends on the body floor whatever its line count, and the gate fails one that floats above it', () => {
-  const chart = '::: chart type=column unit="천 명"\n| 분기 | 신규 가입 (천 명) | 해지 (천 명) |\n|---|---|---|\n| 25년 3Q | 5.1 | 2.2 |\n| 25년 4Q | 6.4 | 2.5 |\n| 26년 1Q | 7.7 | 2.4 |\n| 26년 2Q | 9.0 | 2.6 |\n> 분기별 신규 가입과 해지 (예시 데이터)\n:::\n\n- 신규 가입은 네 분기 동안 5,100명에서 9,000명으로 늘었다\n- 해지는 분기마다 2,200-2,600명 사이에서 거의 그대로였다\n- 출처: 예시 대리점 가입 관리 기록';
-  const { pptx } = deck('floor', `---\ntitle: 가입\ntonality: paper\nnotice: 예시 데이터 — 실제 수치로 바꿔 주세요\n---\n\n---\nlayout: chart-insight\ntitle: bottom-anchor\n\n## 분기별 신규 가입과 해지 추이\n\n${chart}\n---\n\n---\nlayout: chart-insight\ntitle: bottom-anchor\n\n## 영남권 네 지역 대리점의 분기별 신규 가입과 해지 추이, 2025년 3분기부터 2026년 2분기까지\n\n${chart}\n---\n`);
+test('bottom-anchor and side-rail titles are styles on the shared title zone, and the gate fails a title moved off it', () => {
+  const chart = '::: chart type=column unit="천 건"\n| 월 | 전체 주문 (천 건) | 재주문 (천 건) |\n|---|---|---|\n| 4월 | 6.2 | 1.9 |\n| 5월 | 7.9 | 2.9 |\n| 6월 | 9.4 | 3.9 |\n| 7월 | 11.8 | 5.4 |\n> 월별 전체 주문과 재주문 (예시 데이터)\n:::\n\n- 월 주문은 4월 6,200건에서 7월 1만 1,800건으로 늘었다\n- 광고비를 늘리지 않은 6-7월에도 증가세가 이어졌다\n- 출처: 예시 내부 주문 기록';
+  const { pptx } = deck('zone', `---\ntitle: 주문\ntonality: paper\nnotice: 예시 데이터 — 실제 수치로 바꿔 주세요\n---\n\n---\nlayout: chart-insight\ntitle: bottom-anchor\n\n## 월별 전체 주문과 재주문 추이\n\n${chart}\n---\n\n---\nlayout: chart-insight\ntitle: side-rail\n\n## 수도권 세 지역의 월별 전체 주문과 재주문 추이, 2026년 4월부터 7월까지 넉 달\n\n${chart}\n---\n\n---\nlayout: chart-insight\ntitle: top-rule\n\n## 월별 재주문 비중 추이\n\n${chart}\n---\n`);
   const slides = looks(pptx);
-  const titles = slides.map((s) => s.find((x) => x.name === 'title@bottom-anchor'));
+  const titles = ['bottom-anchor', 'side-rail', 'top-rule'].map((t, i) => slides[i].find((x) => x.name === `title@${t}`));
   assert.ok(titles.every(Boolean), JSON.stringify(slides.map((s) => s.map((x) => x.name))));
-  assert.deepEqual(titles.map((t) => lines(t.text).length), [1, 2]);
-  for (const t of titles) {
-    const textBottom = t.y + lines(t.text).length * 26 * 1.15;
-    assert.ok(textBottom >= 486 - 12 && t.y + t.h <= 487, `title text ends at ${textBottom.toFixed(0)}, frame ${t.y.toFixed(0)}+${t.h.toFixed(0)}`);
-  }
-  // A chart beside its takeaways grows into the room a one-line title used to leave under itself.
+  for (const t of titles) assert.deepEqual([t.x, t.y, t.w, t.h].map(Math.round), [24, 36, 756, 72], t.name);
+  // Bottom-anchor closes the title zone with a heavy rule across the body; side-rail sets a bar in the left margin.
+  assert.ok(slides[0].some((x) => x.fill && Math.round(x.y) === 110 && x.h >= 2 && x.h <= 4 && x.w >= 0.9 * 912), JSON.stringify(slides[0].map((x) => [x.name, x.fill, Math.round(x.x), Math.round(x.y), Math.round(x.w), Math.round(x.h)])));
+  assert.ok(slides[1].some((x) => x.fill && x.x <= 1 && x.w <= 14 && x.y <= 36 && x.y + x.h >= 108), JSON.stringify(slides[1].map((x) => [x.name, x.fill, Math.round(x.x), Math.round(x.y), Math.round(x.w), Math.round(x.h)])));
+  // Under every style the body starts on the body zone, never beside or over the title.
   for (const s of slides) {
-    const c = s.find((x) => x.chart);
-    const t = s.find((x) => x.name === 'title@bottom-anchor');
-    if (s.some((x) => x.text && x.x >= c.x + c.w)) assert.ok(c.y + c.h >= t.y - 60, `chart ends at ${(c.y + c.h).toFixed(0)}, title at ${t.y.toFixed(0)}`);
+    const ink = s.filter((x) => (x.text || x.chart) && !x.name.startsWith('title@') && !x.name.startsWith('lit-notice'));
+    assert.ok(Math.min(...ink.map((x) => x.y)) >= 120 - 0.5, JSON.stringify(ink.map((x) => [x.name, Math.round(x.y)])));
   }
   const report = deckGate(pptx).report;
-  assert.deepEqual([...ruled(report, 'OF-115'), ...ruled(report, 'OF-113')], []);
-  // The earlier geometry: the title and what stands on its line 54 pt higher, the floor under it empty.
-  const up = join(engineScratch, 'floor-up.pptx');
-  plant(pptx, up, "for s in p.slides[0].shapes:\n    if s.top >= Pt(380) and not s.name.startswith('lit-notice'):\n        s.top = s.top - Pt(54)");
-  const raised = ruled(deckGate(up).report, 'OF-115');
-  assert.ok(raised.some((f) => f.slide === 1 && f.severity === 'HIGH' && /bottom title/u.test(f.note)), JSON.stringify(raised));
+  assert.deepEqual([...ruled(report, 'OF-110'), ...ruled(report, 'OF-113'), ...ruled(report, 'OF-115')], []);
+  // The old bottom geometry: a title moved down onto the floor is reported as off the shared zone.
+  const down = join(engineScratch, 'zone-down.pptx');
+  plant(pptx, down, "t = next(x for x in p.slides[1].shapes if x.name.startswith('title@'))\nt.top = Pt(414)");
+  assert.ok(ruled(deckGate(down).report, 'OF-113').some((f) => f.severity === 'HIGH'), 'a title moved off the zone is reported');
 });
 
-test('a side rail carries the criteria labels, the takeaways and the source under its title, and the gate fails a rail left empty', () => {
+test('a side-rail title is a style on the shared zone: labels stand in a narrow left column, takeaways beside the visual, the strip on the floor', () => {
   const cmp = oneSlide('rail-cmp', 'ledger', 'layout: comparison\ntitle: side-rail\n\n## 상반기 계획 대비 실적 비교\n\n:::: columns 1fr 1fr\n::: col\n- **계획**\n  (1) 가입자: 42만 명, 전년 상반기 36만 명보다 17% 많은 목표\n  (2) 매출: 380억 원, 전년 상반기 331억 원보다 15% 많은 목표\n  (3) 해지율: 월 1.8%, 전년 상반기 2.1%보다 낮은 수준\n  (4) 획득 비용: 1인당 2만 8천 원, 전년과 같은 수준\n:::\n::: col\n- **실적**\n  (1) 가입자: 44만 명으로 계획보다 2만 명(▲ +4.8%) 많았다\n  (2) 매출: 391억 원으로 계획보다 11억 원 많았다\n  (3) 해지율: 월 1.6%로 계획보다 0.2%p 낮았다\n  (4) 획득 비용: 1인당 2만 6천 원으로 계획보다 2천 원 적었다\n:::\n::::\n\n- 출처: 예시 기업 2026년 사업 계획(1월 확정), 상반기 내부 결산 자료\n- 주: 전년 대비는 2025년 상반기 기준');
   const title = cmp.page.find((s) => s.name === 'title@side-rail');
   assert.ok(title, JSON.stringify(cmp.page.map((s) => s.name)));
-  const titleBottom = title.y + lines(title.text).length * 26 * 1.15;
+  assert.deepEqual([title.x, title.y, title.w, title.h].map(Math.round), [24, 36, 756, 72], 'the title sits on the shared zone');
   for (const label of ['가입자', '매출', '해지율', '획득 비용']) {
     const s = cmp.page.find((x) => x.text === label);
-    assert.ok(s && s.x + s.w <= 336.5 && s.y >= titleBottom, `${label} in the rail under the title: ${JSON.stringify(s)}`);
+    assert.ok(s && s.x < 200 && s.w <= 336.5, `${label} in the narrow label column: ${JSON.stringify(s)}`);
   }
-  const strip = cmp.page.find((s) => s.text.startsWith('출처:'));
-  assert.ok(strip && strip.x + strip.w <= 336.5 && strip.y + strip.h >= 440, `the source at the rail's foot: ${JSON.stringify(strip)}`);
-  assert.ok(cmp.page.filter((s) => /계획보다/u.test(s.text)).every((s) => s.x >= 335.5), 'the sides keep the body beside the rail');
+  assert.ok(cmp.page.filter((s) => /계획보다/u.test(s.text)).every((s) => s.x >= 150), 'the sides keep the body beside the label column');
   const g1 = deckGate(cmp.pptx).report;
-  assert.deepEqual([...ruled(g1, 'OF-110'), ...ruled(g1, 'OF-115')], [], 'still read as a side rail, and the rail is used');
+  assert.deepEqual([...ruled(g1, 'OF-110'), ...ruled(g1, 'OF-113'), ...ruled(g1, 'OF-115')], [], 'the style reads, on the shared frame');
   const chart = oneSlide('rail-chart', 'ledger', 'layout: chart-insight\ntitle: side-rail\n\n## 주차별 미처리 문의, 목표 대비 실적\n\n::: chart type=column unit="건"\n| 주차 | 실적 (건) | 목표 (건) |\n|---|---|---|\n| 8월 3주 | 612 | 590 |\n| 8월 4주 | 571 | 545 |\n| 9월 1주 | 534 | 500 |\n| 9월 2주 | 492 | 455 |\n| 9월 3주 | 455 | 410 |\n| 9월 4주 | 418 | 365 |\n> 주차별 미처리 문의, 실적과 목표 (예시 데이터)\n:::\n\n- 9월 미처리 문의는 주당 평균 39건씩 줄었다 (534 → 418건)\n- 이 속도면 약 11주 뒤인 12월 셋째 주에 미처리 문의가 0이 된다\n- 목표와의 차이는 8월 3주 22건에서 9월 4주 53건으로 커졌다\n- 연말 목표(12월 첫째 주, 10주 뒤)에 맞추려면 주당 약 42건씩 줄여야 한다\n- 출처: 예시 고객센터 문의 관리 시스템 주간 집계');
   const takeaways = chart.page.filter((s) => /주당 평균|11주 뒤|차이는|연말 목표/u.test(s.text));
   assert.equal(takeaways.length, 4, JSON.stringify(chart.page.map((s) => s.text.slice(0, 16))));
-  assert.ok(takeaways.every((s) => s.x + s.w <= 336.5), 'the takeaways stand in the rail');
   const plot = chart.page.find((s) => s.chart);
-  assert.ok(plot.x >= 335.5 && plot.w >= 500, `the chart takes the body beside the rail: ${JSON.stringify(plot)}`);
+  assert.ok(takeaways.every((s) => s.x >= plot.x + plot.w - 1), 'the takeaways stand beside the chart');
   const g2 = deckGate(chart.pptx).report;
-  assert.deepEqual([...ruled(g2, 'OF-110'), ...ruled(g2, 'OF-115')], []);
-  // A side rail pinned on a slide with nothing to put in it is reported.
+  assert.deepEqual([...ruled(g2, 'OF-110'), ...ruled(g2, 'OF-113'), ...ruled(g2, 'OF-115')], []);
+  // A side rail is a style, not a place: a plain text slide under a side-rail title passes the gate.
   const empty = oneSlide('rail-empty', 'studio', 'layout: text-column\ntitle: side-rail\n\n## 접이식 의자 하나로 바꾸는 현관\n\n- 1만 회 접기 시험 통과 (예시)\n- 펼치면 다리가 자동으로 잠긴다\n- 접으면 두께가 6cm로 줄어 문 뒤에 걸린다\n- 앉는 면이 100kg까지 버틴다');
-  assert.ok(ruled(deckGate(empty.pptx).report, 'OF-115').some((f) => f.severity === 'HIGH' && /rail/u.test(f.note)));
+  assert.deepEqual(ruled(deckGate(empty.pptx).report, 'OF-115'), [], 'no rail to fill, nothing reported');
 });
 
-test('a slide whose rail would stay empty takes another title unless the source pins the rail', () => {
-  // Chalk sets definitions under a side rail by default; a method with nothing for the rail takes another title.
-  const { page } = oneSlide('rail-method', 'chalk', 'layout: method\n\n## 표준오차 식과 기호의 뜻\n\nSE = σ / √n\n\n- **SE** 표본 평균의 표준오차 (예: 걸음 수 평균의 흩어짐)\n  (1) 예제: 약 410보\n- **σ** 모집단의 표준편차\n  (1) 예제: 하루 걸음 수 표준편차 약 2,460보\n- **n** 표본 크기, 뽑은 사람 수\n  (1) 예제: 직장인 36명\n- **√n** 표본이 네 배가 되면 표준오차는 절반이 된다\n  (1) 예제: 144명이면 약 205보');
+test('a method title is a style on the shared zone like any other, with nothing reserved for a rail', () => {
+  // A side rail is a style, not a place: a method takes it freely and stands on the shared frame.
+  const { page, pptx } = oneSlide('rail-method', 'chalk', 'layout: method\n\n## 표준오차 식과 기호의 뜻\n\nSE = σ / √n\n\n- **SE** 표본 평균의 표준오차 (예: 걸음 수 평균의 흩어짐)\n  (1) 예제: 약 410보\n- **σ** 모집단의 표준편차\n  (1) 예제: 하루 걸음 수 표준편차 약 2,460보\n- **n** 표본 크기, 뽑은 사람 수\n  (1) 예제: 직장인 36명\n- **√n** 표본이 네 배가 되면 표준오차는 절반이 된다\n  (1) 예제: 144명이면 약 205보');
   const title = page.find((s) => s.name.startsWith('title@'));
-  assert.notEqual(title.name, 'title@side-rail', 'the rail would hold the title alone');
+  assert.deepEqual([title.x, title.y, title.w].map(Math.round), [24, 36, 756], 'the title stands on the shared frame');
+  assert.deepEqual(ruled(deckGate(pptx).report, 'OF-115'), [], 'no rail to fill, nothing reported');
 });
 
 test('beside a chart, the source and note close the takeaway column instead of running across the body', () => {
@@ -450,27 +448,30 @@ test('compact process rows reach across the body, and a closing summary keeps it
   assert.ok(source.h <= 24, `the source is set as the strip: ${JSON.stringify(source)}`);
 });
 
-test('a title panel over a picture hugs its text on the page foot, and Atlas sets a quote on the whole-page field', () => {
+test('a title panel runs the page height over the title columns, and Atlas sets a quote on the whole-page field', () => {
   run(`import json,os\nfrom PIL import Image\nos.makedirs(${JSON.stringify(join(engineScratch, 'assets'))},exist_ok=True)\nImage.new('RGB',(960,540),(170,180,190)).save(${JSON.stringify(join(engineScratch, 'assets', 'panel.png'))})\nprint(json.dumps(True))`);
   const { pptx } = deck('panel', '---\ntitle: 이동식 화분 선반\ntonality: atlas\ndate: 2026-10-02\ndepartment: 예시 정원 디자인 스튜디오\npresenter: 예시 디자이너\nnotice: 예시 이미지 데이터 — 실제 자료로 바꿔 주세요\n---\n\n---\nlayout: cover-full-image\n\n# 베란다용 이동식 화분 선반\n---\n\n---\nlayout: image-full\n\n## 세 칸으로 펼친 상태\n\n![도 1. 세 칸으로 펼친 모습 | 출처: 예시 이미지](assets/panel.png)\n---\n\n---\nlayout: quote\n\n## 시범 고객 후기\n\n“겨울에는 거실로, 봄에는 볕 드는 쪽으로 밀어 두기만 하면 돼요.”\n\n— 예시 고객 인터뷰, 아파트 베란다(4m²) 사용, 사용 3개월 차\n---\n');
   const slides = looks(pptx);
   const title = slides[0].find((s) => s.name === 'title@cover');
   const panel = slides[0].find((s) => s.fill && s.y <= title.y && s.y + s.h >= title.y + title.h && s.w < 960);
   assert.ok(panel, JSON.stringify(slides[0].map((s) => [s.name, s.fill, s.x, s.y, s.w, s.h])));
-  assert.ok(panel.y + panel.h >= 539.5, `the panel bleeds off the foot: ${panel.y + panel.h}`);
-  assert.ok(title.y - panel.y <= 36, `the panel starts just above the title: panel ${panel.y}, title ${title.y}`);
+  // The title keeps the cover zone of every tonality; the panel is the page's height over the columns left of the side zone.
+  assert.deepEqual([title.x, title.y, title.w].map(Math.round), [24, 144, 678]);
+  assert.ok(panel.y <= 0.5 && panel.y + panel.h >= 539.5, `the panel runs the page's height: ${panel.y}-${panel.y + panel.h}`);
+  assert.ok(panel.x <= 0.5 && panel.x + panel.w >= title.x + title.w, `the panel covers the title's columns: ${panel.x}+${panel.w}`);
   const fullCanvas = (s) => s.fill && Math.round(s.x) === 0 && Math.round(s.y) === 0 && Math.round(s.w) === 960 && Math.round(s.h) === 540;
   assert.ok(slides[2].some(fullCanvas), 'the quote stands on the whole-page field');
   assert.deepEqual(ruled(deckGate(pptx).report, 'OF-115'), []);
-  // The earlier plate (the field under the lower half, nothing above it) is reported.
+  // A plate (the field under part of the page, its title in the display zone, nothing above it) is reported.
   const plate = join(engineScratch, 'panel-plate.pptx');
-  plant(pptx, plate, "s = p.slides[2]\nf = next(x for x in s.shapes if x.left == 0 and x.top == 0 and x.width == p.slide_width)\nf.top = Pt(300)\nf.height = Pt(240)\nt = next(x for x in s.shapes if x.name.startswith('title@'))\nt.top = Pt(330)");
+  plant(pptx, plate, "s = p.slides[2]\nf = next(x for x in s.shapes if x.left == 0 and x.top == 0 and x.width == p.slide_width)\nf.top = Pt(120)\nf.height = Pt(420)");
   assert.ok(ruled(deckGate(plate).report, 'OF-115').some((f) => f.slide === 3 && /open page|plate/u.test(f.note)));
 });
 
-test('two tonalities of one source never draw the same skeleton, and the gate checks a pair with --sibling', () => {
+test('two tonalities of one source set every title and the body corner in the same places (OF-116 via --sibling)', () => {
   const work = join(engineScratch, 'sibling');
-  run(`import json,os\nfrom PIL import Image\nos.makedirs(${JSON.stringify(join(work, 'assets'))},exist_ok=True)\nImage.new('RGB',(1600,900),(150,160,170)).save(${JSON.stringify(join(work, 'assets', 'example-a.png'))})\nprint(json.dumps(True))`);
+  // The lecture example names a neutral placeholder; the test draws it instead of shipping an image.
+  run(`import json,os\nos.makedirs(${JSON.stringify(join(work, 'assets'))},exist_ok=True)\nfrom PIL import Image\nImage.new('RGB',(1600,900),(150,130,140)).save(${JSON.stringify(join(work, 'assets', 'example-a.png'))})\nprint(json.dumps(True))`);
   const md = join(work, 'lecture.md');
   writeFileSync(md, readFileSync(join(root, '.grok/skills/lit-pptx/examples/04-lecture-chalk-ko.md'), 'utf8'));
   for (const t of ['chalk', 'paper']) {
@@ -478,11 +479,15 @@ test('two tonalities of one source never draw the same skeleton, and the gate ch
     assert.equal(r.status, 0, r.stderr || r.stdout);
   }
   const pair = deckGate(join(work, 'paper.pptx'), '--sibling', join(work, 'chalk.pptx')).report;
-  assert.deepEqual(ruled(pair, 'OF-116'), []);
-  const same = deckGate(join(work, 'paper.pptx'), '--sibling', join(work, 'paper.pptx'));
-  const hit = ruled(same.report, 'OF-116');
-  assert.ok(hit.length === 1 && hit[0].severity === 'HIGH' && /^0 of \d+ content slides/u.test(hit[0].note), JSON.stringify(hit));
-  assert.equal(same.status, 1);
+  assert.deepEqual(ruled(pair, 'OF-116'), [], 'the same source under two tonalities keeps every placement');
+  // A title moved off the shared frame in one copy is reported.
+  const moved = join(work, 'moved.pptx');
+  plant(join(work, 'paper.pptx'), moved, "t = next(x for x in p.slides[1].shapes if x.name.startswith('title@'))\nt.top = Pt(300)");
+  assert.ok(ruled(deckGate(moved, '--sibling', join(work, 'chalk.pptx')).report, 'OF-116').some((f) => f.severity === 'HIGH' && /placed differently/u.test(f.note)), 'a moved title is reported');
+  // A body corner moved in one copy is reported too.
+  const bodyMoved = join(work, 'body-moved.pptx');
+  plant(join(work, 'paper.pptx'), bodyMoved, "s = p.slides[2]\nfor x in s.shapes:\n    if not x.name.startswith(('title@', 'lit-notice')) and not x.has_chart:\n        x.top = x.top + Pt(60)");
+  assert.ok(ruled(deckGate(bodyMoved, '--sibling', join(work, 'chalk.pptx')).report, 'OF-116').some((f) => f.severity === 'HIGH'), 'a moved body is reported');
 });
 
 test('a dark tonality draws a figure\'s dark variant beside it, and the gate fails a light figure card on a dark ground', () => {
@@ -612,7 +617,12 @@ test('a short sidebar note beside a long main column stands across the top and t
   const note = page.find((s) => s.text.startsWith('Report the value'));
   const heads = page.filter((s) => /^(Reading outside|Forcing the line|Measuring standards|Skipping the residual)/u.test(s.text));
   assert.ok(note && heads.every((h) => h.y > note.y + note.h), 'the note stands above the main points');
-  assert.equal(new Set(heads.map((h) => Math.round(h.x))).size, 2, `two columns: ${JSON.stringify(heads.map((h) => Math.round(h.x)))}`);
+  // One column or two, whichever the body zone fills: the points reach the floor either way.
+  const columns = new Set(heads.map((h) => Math.round(h.x))).size;
+  assert.ok(columns <= 2, `at most two columns: ${JSON.stringify(heads.map((h) => Math.round(h.x)))}`);
+  assert.ok(heads.every((h) => h.w <= (columns === 2 ? 368 : 912) + 1), 'as narrow as the split allows');
+  const points = page.filter((s) => s.text && s.y > note.y + note.h && !s.name.startsWith('lit-notice'));
+  assert.ok(Math.max(...points.map((s) => s.y + s.h)) >= 486 - 48, `the points reach the floor: ${JSON.stringify(points.map((s) => [Math.round(s.y), Math.round(s.h)]))}`);
   assert.deepEqual(ruled(deckGate(pptx).report, 'OF-115'), []);
   // The note in a narrow column beside points that stop short of three quarters of the body is still read.
   const beside = join(engineScratch, 'sidebar-beside.pptx');
@@ -678,21 +688,22 @@ test('an agenda takes no count numeral beside its title, and the gate fails one 
   assert.ok(ruled(deckGate(planted).report, 'OF-119').some((f) => f.slide === 1), JSON.stringify(deckGate(planted).report.deck_output.findings.map((f) => f.rule)));
 });
 
-test('two tonalities of one source differ on at least two content slides once a deck has four, and a pack draws a comparison in its own structure', () => {
+test('two tonalities of one source share every placement, and a pack draws a comparison in its own structure', () => {
   const work = join(engineScratch, 'structure');
-  run(`import json,os\nfrom PIL import Image\nos.makedirs(${JSON.stringify(join(work, 'assets'))},exist_ok=True)\nImage.new('RGB',(1600,900),(150,160,170)).save(${JSON.stringify(join(work, 'assets', 'example-a.png'))})\nprint(json.dumps(True))`);
+  // The lecture example names a neutral placeholder; the test draws it instead of shipping an image.
+  run(`import json,os\nos.makedirs(${JSON.stringify(join(work, 'assets'))},exist_ok=True)\nfrom PIL import Image\nImage.new('RGB',(1600,900),(150,130,140)).save(${JSON.stringify(join(work, 'assets', 'example-a.png'))})\nprint(json.dumps(True))`);
   const md = join(work, 'lecture.md');
   writeFileSync(md, readFileSync(join(root, '.grok/skills/lit-pptx/examples/04-lecture-chalk-ko.md'), 'utf8'));
   for (const t of ['chalk', 'paper']) {
     const r = spawnSync(process.execPath, [compiler, md, '--tonality', t, '--pptx', join(work, `${t}.pptx`)], { cwd: work, env: childEnv, encoding: 'utf8' });
     assert.equal(r.status, 0, r.stderr || r.stdout);
   }
-  assert.deepEqual(ruled(deckGate(join(work, 'chalk.pptx'), '--sibling', join(work, 'paper.pptx')).report, 'OF-116'), []);
-  // One differing slide of six fails, two pass.
-  const bar = run(`import sys,json\nsys.path.insert(0,${JSON.stringify(scripts)})\nimport deck_output as d\na=[('top','one')]*6\nseq=iter([a,[('side','one')]+a[1:],a,[('side','one'),('side','grid')]+a[2:]])\nd.skeleton=lambda prs: next(seq)\nprint(json.dumps([d.compare_skeletons(None,None),d.compare_skeletons(None,None)]))`);
-  assert.equal(bar[0].length, 1, JSON.stringify(bar));
-  assert.match(bar[0][0].note, /needs 2/u);
-  assert.deepEqual(bar[1], []);
+  assert.deepEqual(ruled(deckGate(join(work, 'chalk.pptx'), '--sibling', join(work, 'paper.pptx')).report, 'OF-116'), [],
+    'the same source keeps every title and body corner under both tonalities');
+  // A sibling whose title moved off the shared frame is reported.
+  const moved = join(work, 'structure-moved.pptx');
+  plant(join(work, 'chalk.pptx'), moved, "t = next(x for x in p.slides[0].shapes if x.name.startswith('title@'))\nt.top = Pt(300)");
+  assert.ok(ruled(deckGate(moved, '--sibling', join(work, 'paper.pptx')).report, 'OF-116').some((f) => f.severity === 'HIGH'), 'a moved title is reported');
   // Chalk draws a comparison on its board rail, Paper as a ruled table under its title.
   const cmp = 'layout: comparison\n\n## 양측 검정과 단측 검정의 차이\n\n:::: columns 1fr 1fr\n::: col\n- **양측 검정**\n  (1) 질문: 두 평균이 다른가\n  (2) 기각 영역: 양쪽 꼬리에 0.025씩\n  (3) 예제 결과: p ≈ 0.043, 기각\n  (4) 쓰는 때: 방향을 미리 정할 근거가 없을 때\n:::\n::: col\n- **단측 검정**\n  (1) 질문: A반 평균이 더 큰가\n  (2) 기각 영역: 오른쪽 꼬리에 0.05\n  (3) 예제 결과: p ≈ 0.022, 기각\n  (4) 쓰는 때: 자료를 보기 전에 방향을 정했을 때\n:::\n::::\n\n- 같은 자료에서 단측 p값은 양측 p값의 절반이다\n- 그래서 방향은 자료를 보기 전에 정해 두고, 보고서에 그 근거를 적는다\n- 주: 자료를 본 뒤 단측으로 바꾸면 유의수준이 사실상 두 배가 된다';
   assert.equal(oneSlide('structure-chalk', 'chalk', cmp).page.find((s) => s.name.startsWith('title@')).name, 'title@side-rail');
@@ -806,13 +817,13 @@ test('the bundled faces are the official Pretendard Regular and Bold', () => {
   assert.equal(sha('Pretendard-Bold.otf'), '2e91915fab54df71cc9598ebf608b2bdb54c6fe3c066ac61dff0bc44fca71cc7');
 });
 
-test('every worked deck compiles and passes the deck gate, across all eight tonalities', () => {
+test('every worked deck compiles and passes the deck gate, across all thirteen tonalities', () => {
   const examples = join(root, '.grok/skills/lit-pptx/examples');
   const work = join(engineScratch, 'examples');
   // Picture slides name neutral placeholders; the test draws them instead of shipping images.
   run(`import json,os\nfrom PIL import Image\nos.makedirs(${JSON.stringify(join(work, 'assets'))},exist_ok=True)\nfor i,c in enumerate('abc'): Image.new('RGB',(1600,900),(120+30*i,130,140)).save(os.path.join(${JSON.stringify(join(work, 'assets'))},f'example-{c}.png'))\nprint(json.dumps(True))`);
   const names = readdirSync(examples).filter((name) => name.endsWith('.md'));
-  assert.ok(names.length >= 12, `${names.length} examples`);
+  assert.ok(names.length >= 17, `${names.length} examples`);
   const used = new Set(), failures = [];
   for (const name of names) {
     const source = readFileSync(join(examples, name), 'utf8');
@@ -825,7 +836,7 @@ test('every worked deck compiles and passes the deck gate, across all eight tona
     if (status !== 0) failures.push(`${name}: ${report.failure_reasons.join('; ')}`);
   }
   assert.deepEqual(failures, []);
-  for (const id of ['atlas', 'chalk', 'gazette', 'ledger', 'night', 'paper', 'signal', 'studio']) assert.ok(used.has(id), id);
+  for (const id of ['atlas', 'bauhaus', 'chalk', 'computational-brutalism', 'gazette', 'ledger', 'neo-brutalism', 'newsroom', 'night', 'paper', 'riso', 'signal', 'studio']) assert.ok(used.has(id), id);
 });
 
 test('the office script children write no Python bytecode into the packaged skill folders', () => {

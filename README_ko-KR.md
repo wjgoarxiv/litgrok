@@ -113,13 +113,13 @@ LitGrok 스킬을 부르는 프롬프트가 나오기 전까지는 조용한 한
 
 ## 무엇을 할 수 있나요
 
-스킬 39개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있습니다. 평소에는 그중 몇 가지만 써도 충분합니다.
+스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있습니다. 평소에는 그중 몇 가지만 써도 충분합니다.
 
 이 네 가지는 세션에서 맡은 일이 하나씩 있습니다.
 
 | 구성 | 수 | 하는 일 |
 | --- | --- | --- |
-| 스킬 | 39 | 이름으로 부를 때 세션이 읽는 지침입니다. |
+| 스킬 | 41 | 이름으로 부를 때 세션이 읽는 지침입니다. |
 | 에이전트 | 11 | `.grok/agents`에 있으며, 계획이나 검토처럼 범위가 정해진 일을 맡습니다. |
 | 훅 | 등록 열한 개 | LIT 마크를 띄우고, 상태 행을 갱신하고, 결과물 문장을 검사하고, 이벤트를 기록합니다. |
 | 프로젝트 규칙 | 1 | `.grok/rules/00-litgrok.md`가 언제 스킬을 쓸지 Grok Build에 알려 줍니다. |
@@ -178,7 +178,16 @@ LitGrok 스킬을 부르는 프롬프트가 나오기 전까지는 조용한 한
 | `/review-work` | 작업 전에는 계획을, 작업 후에는 변경 사항을 근거와 함께 검토합니다. |
 | `/litresearch` | 출처를 따라갈 수 있는 범위 안에서 조사하고, 근거보다 크게 말하지 않습니다. |
 
-[스킬 39개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
+[스킬 42개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
+
+## 만들 수 있는 것
+
+아래 그림은 모두 실제 출력입니다. LitGrok을 설치한 상태에서 그림 아래에 적힌 줄을 입력하면 같은 종류의 결과가 나옵니다. 줄이 없는 그림은 스킬에 들어 있는 예제를 스킬 자신의 엔진으로 만든 것입니다. 목업은 하나도 없습니다.
+
+<table>
+<tr><td width="50%" valign="top"><img src="./docs/assets/showcase/brief.webp" width="400" alt="lit-adhd 브리프를 보여주는 터미널: 머릿말 세션 하나, 표로 정리된 끝난 세션 하나, 체크 표시가 있는 로드맵, 상자로 감싼 다음 할 일." /><br /><b>lit-adhd</b> · 브리프<br /><code>lit adhd</code></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck.webp" width="400" alt="lit-pptx 슬라이드: 이번 주 완료와 41주차 계획, 두 단으로 나열된 번호 항목, 예제 데이터 바닥글." /><br /><b>lit-pptx</b> · 현황 덱<br /><sub>스킬에 들어 있는 예제 보고서를 자체 변환기로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="./docs/assets/showcase/page.webp" width="400" alt="frontend-ui-ux가 만든 랜딩 페이지: 설치 명령이 있는 히어로, 순서 안내, 요금제와 자주 묻는 질문. 휴대폰 너비에서 가로 스크롤 없이 보입니다." /><br /><b>frontend-ui-ux</b> · 랜딩 페이지<br /><sub>짧은 의뢰문으로 만들었습니다. 프로브가 일곱 화면으로 렌더링해 넘침, 대비, 모션을 검사합니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/pid.webp" width="400" alt="차아염소산나트륨 도징 스키드 A3 P&ID: 탱크, 상용·예비 정량 펌프, 안전 밸브, 계기와 제어 루프, 아래쪽 타이틀 블록." /><br /><b>lit-schematic</b> · P&ID<br /><sub>스킬에 들어 있는 동작 예제를 자체 키트로 만들었습니다. QA 게이트를 통과했습니다.</sub></td></tr>
+</table>
 
 ## 자동 핸드오프
 
@@ -237,9 +246,9 @@ flowchart TD
 
 Grok Build를 따로 설치하지 않아도, Grok Bot 안에서 같은 계획과 검토 습관을 쓸 수 있습니다. 플러그인이 스킬 본문을 건네고, 폴더 이름으로 스킬을 부릅니다.
 
-이 저장소의 `.cursor-plugin/plugin.json`이 Cursor 형식의 매니페스트입니다. Grok Bot과 Cursor가 이 파일을 읽고, `.grok/skills`의 스킬 39개를 불러옵니다. 메시지에 이름과 할 일을 같이 적으면 됩니다. 예를 들어 "lit-plan으로 이 변경의 계획을 잡아 줘"나 "litwork로 할 일 목록을 만들어 줘"처럼요. Bot은 그 스킬을 읽고, 이미 가진 도구로 일을 진행합니다. 이름은 다음과 같습니다.
+이 저장소의 `.cursor-plugin/plugin.json`이 Cursor 형식의 매니페스트입니다. Grok Bot과 Cursor가 이 파일을 읽고, `.grok/skills`의 스킬 42개를 불러옵니다. 메시지에 이름과 할 일을 같이 적으면 됩니다. 예를 들어 "lit-plan으로 이 변경의 계획을 잡아 줘"나 "litwork로 할 일 목록을 만들어 줘"처럼요. Bot은 그 스킬을 읽고, 이미 가진 도구로 일을 진행합니다. 이름은 다음과 같습니다.
 
-`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-handoff`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
+`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-adhd`, `lit-handoff`, `lit-hijack`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-schematic`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
 
 슬라이드나 문서 스킬처럼 함께 든 스크립트를 실행하는 스킬은, 그 스킬이 도는 컴퓨터에 Node.js나 Python이 있어야 합니다.
 
@@ -249,7 +258,7 @@ Grok Build를 따로 설치하지 않아도, Grok Bot 안에서 같은 계획과
 
 | 구성 | Grok Build | Grok Bot |
 | --- | --- | --- |
-| 스킬 | 설치가 폴더 39개를 `.grok/skills`에 두고, 이름으로 부릅니다. | 플러그인이 그 폴더를 가리키고, 메시지에 폴더 이름을 적어 부릅니다. |
+| 스킬 | 설치가 폴더 42개를 `.grok/skills`에 두고, 이름으로 부릅니다. | 플러그인이 그 폴더를 가리키고, 메시지에 폴더 이름을 적어 부릅니다. |
 | 에이전트 | `.grok/agents`의 정의 열한 개가 계획이나 검토처럼 범위가 정해진 일을 맡습니다. | 메시지에 스킬 이름을 적으면, Bot이 이미 가진 도구로 일을 진행합니다. |
 | 훅 | `/hooks-trust`로 프로젝트를 신뢰하면 등록 열한 개가 실행됩니다. | 훅 명령은 Grok Build가 시작합니다. |
 | 프로젝트 규칙 | `.grok/rules/00-litgrok.md`가 세션이 읽는 지침입니다. | Bot이 따르는 작업 습관은 스킬 본문에 적혀 있습니다. |
@@ -280,7 +289,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 ## 더 알아보기
 
 - [안내서](./docs/guide_ko-KR.md): LitGrok이 출력하는 화면, 홍보 영상, 설치 옵션과 상태 행, 안전 장치, 자동 핸드오프 세부 동작, 슬라이드와 문서, 자주 겪는 문제 해결.
-- [전체 스킬](./docs/skills_ko-KR.md): 스킬 39개를 한 줄씩 정리했습니다.
+- [전체 스킬](./docs/skills_ko-KR.md): 스킬 42개를 한 줄씩 정리했습니다.
 - [상세 안내](./docs/reference_ko-KR.md): 설치, 훅, 터미널 출력, 패키지 검증, 출처.
 - [프로젝트 규칙](./.grok/rules/00-litgrok.md), [스킬 폴더](./.grok/skills), [변경 이력](./CHANGELOG.md), [개인정보와 로컬 데이터](./docs/privacy.md), [기존 npm 이름에서 옮겨 오기](./docs/reference_ko-KR.md#npm-package-migration).
 - [LitFamily](https://github.com/wjgoarxiv/litfamily): 다른 코딩 에이전트에서도 같은 방식으로 일할 수 있습니다.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- New skill `lit-adhd` for the many-session brief: reads Grok Build session records, plans, handoffs, git and herdr (read-only, redacted, capped), draws a one-screen brief with a gauge only from real totals plus one `go` next step, and tints the status line rainbow while the brief is active.
+- New skill `lit-hijack` for clean-room ports of published techniques: capture with provenance, licence gate, gap analysis, source-free spec, separate build, parity proof and report, with a dependency-free `hijack.mjs` run gate. The project rule routes `lit hijack|hijacking|하이재킹|하이잭` requests there; `litresearch`, `lit-plan` and `start-work` point at it for source-first ports.
+- New skill `lit-schematic` for drawings of real equipment: a detailed P&ID with ISA-5.1 tags and control loops, a PFD or equipment layout, an isometric cutaway, or a journal figure of an experimental setup, as editable SVG with PDF and 600 dpi PNG (a cutaway also as an interactive HTML page or a motion loop), checked by a QA script and a render-and-look pass. The project rule routes equipment drawings there, and `lit-diagram-drawer` and `lit-scientific-visualization` point at it for hardware while it points back for abstract diagrams and measured data.
+- Maximal draw defaults: `lit-diagram-drawer` keeps density near 8/10 with 14–24 nodes and 3–5 accent families (6 or more fail `ACCENT_COUNT`), `lit-scientific-visualization` builds a rich layer (light grid, direct annotation, inset, multi-panel context) by default, and the schematic kit paints isometric views in full material colour unless a quiet grey figure is asked for.
+
 ## 1.0.26 — 2026-10-26
 
 - The motion skill's pinned dependencies pick up upstream fixes: `certifi` 2026.10.19 for the audio environment, and newer `hono` and `fast-uri` in the HyperFrames and Remotion template lockfiles. A fresh motion setup installs these versions; nothing else about how the skill runs changes.

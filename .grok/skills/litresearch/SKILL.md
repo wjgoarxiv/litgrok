@@ -33,6 +33,8 @@ Convert the question into checkable subquestions and one decision context. Ident
 
 Prefer controlling or original records: current official documentation or source for product behavior, original papers and methods for scientific claims, controlling authorities for policy, and current project files plus read-only output for repository facts. Search snippets and repeated announcements are discovery aids, not final evidence.
 
+A request to port someone else's published technique into a skill or system goes to `lit-hijack`; hand it the sources this research returns and let its capture, licence gate and parity proof run.
+
 ## MCP boundary
 
 Configured tools appear as `<server>__<tool>`. Use the visible namespaced tool name and its exposed input contract exactly. Identify the server, operation, expected evidence, and data scope before calling. Never guess a tool name or send secrets, broad file trees, or unrelated history.

@@ -85,7 +85,7 @@ test('every skill under the Cursor skills path passes Cursor\'s name and descrip
   const directories = readdirSync(skillsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory());
   const grokCatalog = readJson(join(PRODUCT_ROOT, '.grok-plugin', 'plugin.json')).skills;
   assert.equal(directories.length, grokCatalog.length, 'Cursor must see the same skills as the Grok catalog');
-  assert.equal(directories.length, 39);
+  assert.equal(directories.length, 42);
   for (const directory of directories) {
     const skillFile = join(skillsRoot, directory.name, 'SKILL.md');
     const label = posix.join(manifest.skills, directory.name, 'SKILL.md');

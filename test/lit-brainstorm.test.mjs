@@ -101,16 +101,22 @@ test('the route words reach only lit-brainstorm, and the neighbouring routes kee
   assert.equal(prompt(box, 'lit continue').discipline, 'lit-brainstorm', 'a bare lit continues the last explicitly selected discipline');
 });
 
-test('lit review switches to the review stage without a status-row discipline, like review-work', (t) => {
+test('review routes select the review-work discipline so the lanes look switches on', (t) => {
+  // BRIEF-mod-looks item 1 changed this contract on purpose: every route that runs review-work
+  // must select its look, like the lit-adhd route fix before it.
   for (const text of ['lit review plan plans/shout.md', 'lit review work', 'lit review', '/lit review the diff']) {
-    assert.deepEqual(entryFromPrompt(text), { stage: 'review', entry: 'switch', discipline: null }, text);
+    assert.deepEqual(entryFromPrompt(text), { stage: 'review', entry: 'switch', discipline: 'review-work' }, text);
     const box = sandbox(t);
     const after = prompt(box, text);
     assert.equal(after.workflow.stage, 'review', text);
-    assert.equal(after.discipline, null, `${text}: no litwork label`);
+    assert.equal(after.discipline, 'review-work', `${text}: the lanes look`);
+  }
+  for (const text of ['review-work plans/shout.md', '/review-work']) {
+    assert.equal(stageFromPrompt(text), 'review', text);
+    const box = sandbox(t);
+    assert.equal(prompt(box, text).discipline, 'review-work', `${text}: the lanes look`);
   }
   assert.equal(stageFromPrompt('lit reviewing the notes'), 'work', 'a longer word is no route');
-  assert.equal(stageFromPrompt('review-work plans/shout.md'), 'review');
 });
 
 test('the always-loaded rule teaches the brainstorm route in a few bytes and keeps the others', () => {

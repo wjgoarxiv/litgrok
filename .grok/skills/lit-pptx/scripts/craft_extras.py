@@ -5,8 +5,11 @@ import colorsys
 import math
 import re
 
+from pathlib import Path
+
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE, MSO_SHAPE_TYPE
 from pptx.enum.text import PP_ALIGN
+from pptx.oxml.ns import qn
 
 EMU = 914400
 LIMITS = {
@@ -15,7 +18,38 @@ LIMITS = {
     "cjk_chars": 38, "narrow_chars": 10, "group_ratio": 2,
     "symmetric_inset": .06, "radius_tolerance": .02,
     "empty_high": .35, "empty_medium": .25, "rule": .03,
+    # OF-101 default: five accent hue families pass on every slide, six fail.
+    "accent_high": 5, "accent_medium": 5,
 }
+STAMP = re.compile(r"tonality=(\S+) density=(\d+) grid=(\w+) variance=(\d+)")
+QA_KEY = re.compile(r"^  ([a-z-]+):\s*(\S+)\s*$")
+PACK_ROOT = Path(__file__).resolve().parent.parent / "templates" / "tonalities"
+
+
+def pack_allowances(prs):
+    """The stamped tonality pack's `qa:` block as {key: int or bool}; empty without a stamp or a block."""
+    try:
+        subject = prs.core_properties.subject or ""
+    except (AttributeError, ValueError):
+        return {}
+    stamp = STAMP.search(subject)
+    if not stamp or not re.fullmatch(r"[a-z][a-z0-9-]*", stamp.group(1)):
+        return {}
+    path = PACK_ROOT / stamp.group(1) / "pack.yaml"
+    if not path.is_file():
+        return {}
+    allowed, inside = {}, False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not line.startswith(" "):
+            inside = line.rstrip() == "qa:"
+            continue
+        match = QA_KEY.match(line) if inside else None
+        if match:
+            value = match.group(2)
+            allowed[match.group(1)] = value == "true" if value in ("true", "false") else int(value) if value.isdigit() else value
+    return allowed
 
 
 # Advance widths of the bundled Pretendard faces in em (the wider of Regular and Bold per class),
@@ -97,6 +131,23 @@ def _round_radius(shape):
     return adj * min(_box(shape)[2:])
 
 
+def check_shadows(number, slide, allowed):
+    """OF-120: a hard offset shadow (no blur) is a pack's look or nothing; a pack that has it keeps every shadow hard."""
+    found = []
+    for shape in slide.shapes:
+        if not hasattr(shape, "_element"):
+            continue
+        for shadow in shape._element.iter(qn("a:outerShdw")):
+            hard = int(shadow.get("blurRad") or 0) == 0
+            if hard and not allowed.get("offset-shadow"):
+                found.append(("OF-120", "HIGH", number, shape.name,
+                              "hard offset shadow in a pack that does not draw one"))
+            elif not hard and allowed.get("offset-shadow"):
+                found.append(("OF-120", "HIGH", number, shape.name,
+                              "soft shadow beside the pack's hard offset shadows"))
+    return found
+
+
 def assess(prs):
     findings = []
 
@@ -104,6 +155,7 @@ def assess(prs):
         findings.append({"rule": rule, "severity": severity, "slide": slide,
                          "tier": tier, "value": value, "threshold": threshold, "note": note})
 
+    allowed = pack_allowances(prs)
     W, H = prs.slide_width / EMU, prs.slide_height / EMU
     for number, slide in enumerate(prs.slides, 1):
         shapes = list(slide.shapes)
@@ -113,16 +165,22 @@ def assess(prs):
             box = _box(shape)
             if box[2] * box[3] >= LIMITS["full_bleed"] * W * H:
                 continue
-            if shape.name.startswith("lit-notice") or min(box[2], box[3]) < LIMITS["rule"]:
+            if shape.name.startswith(("lit-notice", "grid-mark")) or min(box[2], box[3]) < LIMITS["rule"]:
                 continue
             hue = _hue(shape)
             if hue is not None and not any(min(abs(hue - old), 360 - abs(hue - old)) <= LIMITS["hue_band"] for old in hue_families):
                 hue_families.append(hue)
         count = len(hue_families)
-        high = 4 if display else 3
-        medium = 3 if display else 2
+        # Five accent hue families pass on every slide; a pack's own limit only widens the default.
+        key = "display-accent-families" if display else "accent-families"
+        widened = allowed.get(key)
+        high = medium = max(LIMITS["accent_high"], widened + 1) if isinstance(widened, int) and not isinstance(widened, bool) else LIMITS["accent_high"]
         if count >= medium:
             add("OF-101", "HIGH" if count >= high else "MEDIUM", number, count, {"medium": medium, "high": high})
+            if count >= high:
+                findings[-1]["note"] = f"hold a slide to {high - 1} accent hue families; fold the extra fills into a family the slide already uses"
+        for rule, severity, slide_no, value, note in check_shadows(number, slide, allowed):
+            add(rule, severity, slide_no, value, None, note=note)
 
         text_shapes = [s for s in shapes if getattr(s, "has_text_frame", False) and s.text.strip()]
         title = named_title(slide) or (min(text_shapes, key=lambda s: _box(s)[1]) if text_shapes else None)

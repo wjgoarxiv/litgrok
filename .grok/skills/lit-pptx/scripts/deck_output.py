@@ -4,11 +4,11 @@
   OF-110  a deck of 8+ slides shows at least three title treatments, each drawn as it is named
   OF-111  content slides do not repeat one composition (title zone x body partition x dominant content)
   OF-112  the median empty band under the body stays at or under 0.20
-  OF-113  every slide under one title treatment keeps that treatment's frame
+  OF-113  every content title sits on the shared title frame, every display title on the display frame
   OF-114  titles and the cover subtitle are topic labels, never sentences
-  OF-115  no region stands empty beside a full one: the floor under a bottom title, the rail under a
-          side title, the column beside a visual, a title panel over a picture, the page above a plate
-  OF-116  (qa_deck.py --sibling) another tonality of the same source draws another skeleton
+  OF-115  no region stands empty beside a full one: a takeaway column as long as the visual beside it
+          (its values table included), a title panel as tall as its text and no plate under an empty page
+  OF-116  (qa_deck.py --sibling) another tonality of the same source sets titles and bodies in the same places
   OF-117  no mostly-white figure picture on a dark slide ground
   OF-118  a bold run-in label is followed by its separator ("요약: …", "Summary: …")
   OF-119  an agenda's title carries no count numeral beside it (its rows carry the numbers)
@@ -39,8 +39,10 @@ FLOOR, FOOTER = 486.0, 492.0
 LIMIT = {"slides": 8, "treatments": 3, "share": 0.40, "cap": 5, "band": 0.20, "anchor": 1.0}
 # Per-slide band caps by density: (highest density in the step, cap).
 BAND_CAPS = ((2, .28), (4, .24), (6, .20), (8, .16), (10, .12))
-ZONES = {"top-rule": "top", "top-plain-large": "top", "kicker-numeral": "top", "side-rail": "side",
-         "band": "band", "overlay": "overlay", "bottom-anchor": "bottom", "statement": "none"}
+TREATMENTS = ("top-rule", "top-plain-large", "side-rail", "band", "statement", "overlay", "kicker-numeral", "bottom-anchor")
+# Every content treatment styles the one shared title frame, so a slide's title "zone" in the
+# composition signature is its treatment: the look varies, the place does not.
+ZONES = {t: t for t in TREATMENTS}
 # The widest four-column title and the earliest column-5 start over all density grids.
 RAIL = {960: (288.0, 336.0), 720: (216.0, 252.0)}
 MARGINS = {960: {"airy": 60, "standard": 48, "dense": 36, "compact": 24}, 720: {"airy": 54, "standard": 42, "dense": 30, "compact": 24}}
@@ -80,7 +82,8 @@ def _inside(e, box, tol=1.0):
 
 def elements(slide, W, H):
     """Drawn shapes in points, each with a role: content, card (a fill that holds text) or decoration."""
-    out = [e for e in map(_shape, slide.shapes) if e and e["w"] + e["h"] > 0 and not e["name"].startswith("lit-notice")]
+    # The notice tag and a pack's grid marks in the top margin are page chrome, not composition.
+    out = [e for e in map(_shape, slide.shapes) if e and e["w"] + e["h"] > 0 and not e["name"].startswith(("lit-notice", "grid-mark"))]
     for e in out:
         if e["kind"] != "shape":
             e["role"] = "content"
@@ -113,21 +116,21 @@ def treatment(title, els, W, H):
             and not any(e["kind"] in ("table", "chart", "picture") or e["role"] == "card" for e in body)
             and sum(e["kind"] == "text" for e in body) <= 1):
         return "statement"
-    if title["y"] >= 360 - TOL and all(e["y"] <= title["y"] + TOL for e in body if e["kind"] == "text"):
+    # A heavy rule across the columns closing the title frame.
+    content_w = W - 2 * title["x"]
+    shapes = [e for e in others if e["kind"] == "shape" and e["filled"]]
+    if any(2 - SIZE_TOL <= e["h"] <= 4 + SIZE_TOL and e["w"] >= 0.9 * content_w and bottom - TOL <= e["y"] <= bottom + 8 for e in shapes):
         return "bottom-anchor"
-    rail, column5 = RAIL.get(round(W), RAIL[960])
-    beside = [e for e in body if e["x"] + e["w"] / 2 > title["x"] + title["w"]]
-    # What stands in the rail under the title (criteria labels, takeaways, the source) is the rail's; only a
-    # block that runs from the rail on into the body makes the title something else.
-    if (title["w"] <= rail + TOL and beside and min(e["x"] for e in beside) >= column5 - TOL
-            and not any(e["x"] < column5 - TOL and e["y"] > bottom and e["x"] + e["w"] > column5 + TOL for e in body)):
+    # A bar in the left margin, at least as tall as the title frame.
+    if any(e["x"] <= 1 and e["w"] <= 14 and e["h"] >= title["h"] - TOL and e["y"] <= title["y"] + TOL and e["y"] + e["h"] >= bottom - TOL
+           for e in shapes):
         return "side-rail"
     if any(e["kind"] == "text" and e["sizes"] and NUMERAL.fullmatch(e["text"]) and max(e["sizes"]) >= 44 - SIZE_TOL
            and e["x"] + e["w"] <= title["x"] + TOL and e["y"] >= 30 - TOL and e["y"] + e["h"] <= 114 + TOL for e in others):
         return "kicker-numeral"
     if title["y"] <= 48 + TOL:
-        # A rule is a line under the title, never a list-marker dot.
-        rule = any(e["kind"] == "shape" and e["h"] <= 8 and e["w"] >= max(16, 4 * e["h"]) and bottom - TOL <= e["y"] <= bottom + 24
+        # A rule is a line (wider than 16 pt and four times its height), never a list-marker dot.
+        rule = any(e["kind"] == "shape" and e["h"] <= 8 and e["w"] >= max(16, 4 * e["h"]) and title["y"] < e["y"] <= bottom + 24
                    and e["x"] < title["x"] + title["w"] and e["x"] + e["w"] > title["x"] for e in others)
         if size >= 36 - SIZE_TOL and not rule:
             return "top-plain-large"
@@ -289,10 +292,9 @@ def _short_column(content, title, kind, body_floor, column5, fields, family=None
     the body's top down to where the neighbour ends, is over 40 % of the body. A source or note strip that closes
     the column does not hide the band above it. Beside the figures of a kpi-row or big-number slide the column is
     measured to the body floor (spec-v2 Amendments 9)."""
-    # The body starts under a top title; beside a side title (in its rail) or over a bottom title it starts at the top.
-    top_of_title = title["y"] + title["h"] if kind not in ("bottom-anchor", "side-rail") else 0.0
+    top_of_title = title["y"] + title["h"]
     body = [e for e in content if e["y"] >= top_of_title - TOL and e["y"] < body_floor and e["w"] > 0 and e["h"] > 0
-            and not (kind == "side-rail" and e["x"] + e["w"] <= column5 + TOL) and not any(_inside(e, f) for f in fields)]
+            and not any(_inside(e, f) for f in fields)]
     if len(body) < 2:
         return None
     left_edge, right_edge = min(e["x"] for e in body), max(e["x"] + e["w"] for e in body)
@@ -343,22 +345,9 @@ def empty_regions(slides, W, H):
             continue
         content = [e for e in s["els"] if e is not title and e["role"] != "decoration" and e["y"] < FOOTER and not full(e)]
         if s["role"] in ("content", "closing"):
-            if kind == "bottom-anchor":
-                size = max(title["sizes"])
-                gap = FLOOR - (title["y"] + _title_lines(title) * size * 1.15)
-                if gap > REGION["floor_gap"]:
-                    found.append(_finding("OF-115", s["n"], round(gap, 1), REGION["floor_gap"],
-                                          "the bottom title ends above the body floor: stand its last line on the floor"))
-            if kind == "side-rail" and s["family"] not in ("quote", "statement"):
-                top = title["y"] + title["h"]  # the frame keeps a spare line for a title that wraps once more
-                rail = [e for e in content if e["x"] + e["w"] <= column5 + TOL and e["y"] + e["h"] > top]
-                share = _largest_gap(top, FLOOR, [(e["y"], e["y"] + e["h"]) for e in rail]) / max(1.0, FLOOR - top)
-                if share > REGION["share"]:
-                    found.append(_finding("OF-115", s["n"], round(share, 3), REGION["share"],
-                                          "the side rail under the title stands empty: give it the criteria, takeaways or source, or take another title"))
             # A takeaway column beside a chart, table or picture that runs on below it. Text on a colour field
             # (a closing's ask) stands on its own ground, not in a column.
-            body_floor = title["y"] - TOL if kind == "bottom-anchor" else FLOOR
+            body_floor = FLOOR
             fields = [e for e in s["els"] if e["kind"] == "shape" and e["filled"] and e["w"] * e["h"] >= .1 * W * H]
             short = _short_column(content, title, kind, body_floor, column5, fields, s["family"])
             if short:
@@ -379,14 +368,16 @@ def empty_regions(slides, W, H):
                                           f"the column beside the {v['kind']} stops short of it: close it with the source and note, the values or the takeaways"))
                     break
         if s["role"] in ("cover", "section") or kind in ("statement", "overlay"):
+            if title is None:
+                continue
             # A title panel over a picture, and a plate under a statement or quote. A typographic cover's plate
             # is the cover's own device, not a region its text must fill.
             pictured = any(full(e) for e in s["els"])
             for p in [e for e in s["els"] if e["kind"] == "shape" and e["filled"] and _inside(title, e) and e["w"] * e["h"] < .9 * W * H]:
                 inside = [e for e in content + [title] if e is not p and _inside(e, p)]
                 if p["y"] > TOL and pictured:
-                    floor = min(p["y"] + p["h"], FLOOR)
-                    share = _largest_gap(p["y"], floor, [(e["y"], e["y"] + e["h"]) for e in inside]) / max(1.0, floor - p["y"])
+                    region_floor = min(p["y"] + p["h"], FLOOR)
+                    share = _largest_gap(p["y"], region_floor, [(e["y"], e["y"] + e["h"]) for e in inside]) / max(1.0, region_floor - p["y"])
                     if share > REGION["share"]:
                         found.append(_finding("OF-115", s["n"], round(share, 3), REGION["share"],
                                               "the panel that carries the title stands partly empty: make it as tall as its text, on the page foot"))
@@ -396,23 +387,42 @@ def empty_regions(slides, W, H):
     return found
 
 
-# OF-116. A skeleton is each content slide's title zone and partition, as OF-111 reads them; two tonalities of
-# one source whose skeletons match differ in colour only.
-def skeleton(prs):
-    return [s["sig"][:2] for s in _read(prs) if s["role"] == "content"]
+# OF-116: another tonality of the same source sets everything in the same places.
+#
+# Titles, headers and the body sit on the shared slide grid, so two tonalities of one source
+# may differ in every look but never in where a slide's title frame and its body's top-left stand.
+# Slides are compared in order; a slide the other deck lacks is not compared.
+def placement(prs):
+    """Per slide: the title frame and the top-left corner of what stands under it, in points."""
+    out = []
+    for s in _read(prs):
+        t = s["title"]
+        if t is None:
+            out.append(None)
+            continue
+        # The corner is read off text, tables, charts and pictures: a pack may fill a surface one tonality
+        # leaves an outline, and that look must never move where the body stands.
+        under = [e for e in s["els"] if e is not t and e["role"] != "decoration" and e["kind"] != "shape" and e["y"] < FOOTER
+                 and e["y"] >= t["y"] + t["h"] - TOL
+                 and not e["name"].startswith(("header@", "numeral@", "subtitle@"))]
+        corner = (min(e["x"] for e in under), min(e["y"] for e in under)) if under and s["role"] == "content" else None
+        out.append({"n": s["n"], "title": (t["x"], t["y"], t["w"], t["h"]), "body": corner})
+    return out
 
 
-def compare_skeletons(prs, sibling, name="the sibling deck"):
-    a, b = skeleton(prs), skeleton(sibling)
-    n = min(len(a), len(b))
-    differ = sum(x != y for x, y in zip(a, b))
-    # Two slides once the deck has four content slides: one differing slide left the alternatives reading as
-    # one deck in two colours.
-    need = 2 if n >= 4 else 1
-    if not n or differ >= need:
+def compare_placement(prs, sibling, name="the sibling deck"):
+    a, b = placement(prs), placement(sibling)
+    moved = []
+    for x, y in zip(a, b):
+        if x is None or y is None:
+            continue
+        if any(abs(p - q) > TOL for p, q in zip(x["title"], y["title"])):
+            moved.append(f"slide {x['n']} title at {[round(v) for v in x['title']]} vs {[round(v) for v in y['title']]}")
+        elif x["body"] and y["body"] and any(abs(p - q) > TOL for p, q in zip(x["body"], y["body"])):
+            moved.append(f"slide {x['n']} body from {tuple(round(v) for v in x['body'])} vs {tuple(round(v) for v in y['body'])}")
+    if not moved:
         return []
-    return [_finding("OF-116", None, differ, need, f"{differ} of {n} content slides differ in title zone or partition from {name} "
-                     f"(needs {need}): give the tonality its own structure on more slides")]
+    return [_finding("OF-116", None, None, None, f"{len(moved)} slide(s) placed differently from {name}: {'; '.join(moved[:4])}")]
 
 
 # OF-117. A chart or diagram exported on white stands on a dark ground as a white card with small grey labels.
@@ -562,20 +572,24 @@ def assess(prs):
     if bands and statistics.median(bands) > LIMIT["band"]:
         add("OF-112", "MEDIUM" if legacy else "HIGH", None, round(statistics.median(bands), 3), LIMIT["band"], "deck median")
 
-    # OF-113: one frame per treatment. A statement keeps its x and width (its height follows the lines); a
-    # bottom title keeps its x, width and bottom edge, standing on the floor whatever its line count.
-    frames = {}
+    # OF-113: every content title on one frame and every display title (a statement, a quote, a closing
+    # statement) on another, whatever its treatment: a treatment changes the look, never the place. A title
+    # over a full-bleed picture (overlay) keeps its own panel. Slides are grouped by the treatment they name,
+    # so a title moved so far that it no longer reads as any treatment is still measured.
+    groups = {}
     for s in slides:
-        if s["kind"] and s["kind"] != "unclassified" and s["named"] not in ("cover", "section"):
-            frames.setdefault(s["kind"], []).append(s)
-    for kind, group in frames.items():
-        first = group[0]["title"]
-        keys = ("x", "w") if kind == "statement" else ("x", "w", "bottom") if kind == "bottom-anchor" else ("x", "y", "w")
-        edge = lambda t, k: t["y"] + t["h"] if k == "bottom" else t[k]  # noqa: E731
-        for s in group[1:]:
-            drift = max(abs(edge(s["title"], k) - edge(first, k)) for k in keys)
-            if drift > LIMIT["anchor"]:
-                add("OF-113", "HIGH", s["n"], round(drift, 1), LIMIT["anchor"], f"{kind} frame moved against slide {group[0]['n']}")
+        if s["kind"] and s["named"] in TREATMENTS and s["named"] != "overlay" and s["role"] not in ("cover", "section"):
+            groups.setdefault("display" if s["named"] == "statement" else "content", []).append(s)
+    for frame, group in groups.items():
+        modes = {}
+        for k in ("x", "y", "w", "h"):
+            values = [round(s["title"][k]) for s in group]
+            modes[k] = max(set(values), key=values.count)
+        for s in group:
+            off = [f"{k} {s['title'][k]:.0f} vs {modes[k]}" for k in modes if abs(s["title"][k] - modes[k]) > LIMIT["anchor"]]
+            if off:
+                add("OF-113", "HIGH", s["n"], round(max(abs(s["title"][k] - modes[k]) for k in modes), 1), LIMIT["anchor"],
+                    f"{s['kind']} title off the shared {frame} title frame: {', '.join(off)}")
 
     findings.extend(empty_regions(slides, W, H))
     findings.extend(light_figures(prs, W, H))

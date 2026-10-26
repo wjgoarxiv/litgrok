@@ -7,9 +7,11 @@ argument-hint: "<what the film is for, plus any words, facts or style>"
 
 # lit-typographic-motion: film director
 
-Installed at `.grok/skills/lit-typographic-motion/` (project) or `~/.grok/skills/lit-typographic-motion/` (user). Run every command from that skill root as `node scripts/motion.mjs <mode> --out <dir>`. Every frame and track passes through this skill's renderer; hand-encoded films (an ffmpeg filter graph, a Python frame loop, a screen recording, a flipbook) are not the deliverable.
+Installed at `.grok/skills/lit-typographic-motion/` (project) or `~/.grok/skills/lit-typographic-motion/` (user). Run every command from that skill root as `node scripts/motion.mjs <mode> --out <dir>`. Every frame and track passes through this skill's renderer; hand-encoded films are not the deliverable.
 
 Under bare `lit`, ask no questions: choose defaults and label them, and label every invention and the generated sound in the reply.
+
+Otherwise ask a numbered choice of house style first (recommended first; load references/choice-first.md); skip only when the prompt names the style or says you choose.
 
 A README, hero, banner or cover loop is not a film: cover mode (`cover`, `cover-gate`) replaces this order.
 
@@ -17,14 +19,14 @@ A README, hero, banner or cover loop is not a film: cover mode (`cover`, `cover-
 
 1. Read references/treatment.md first, and only it, before anything else. Write `<dir>/treatment.json`. When the request names no subject, words or facts, invent them and list them in `inventions`.
 2. Set `path` there, then read that path's references: stage → references/stage.md; type → references/scene-contract.md, references/type-craft.md, references/style-bible.md.
-3. Round 1 is stills: `stage --out <dir> --stills-only` or `make --out <dir> --stills-only`. Open every PNG it lists with your image tool, then `look --out <dir> --round 1 --answers <file>`, naming the weakest beat and the change you made.
-4. Full render: `stage --out <dir> --round 2` or `make --out <dir> --round 2`. Give the call a timeout of at least 600 s; never shorten the film to save time. `sound --out <dir>` rebuilds the generated bed alone.
+3. Round 1 is stills: `stage --out <dir> --stills-only` or `make --out <dir> --stills-only`. Open every PNG it lists, then `look --out <dir> --round 1 --answers <file>`, naming the weakest beat and the change you made.
+4. Full render: `stage --out <dir> --round 2` or `make --out <dir> --round 2` (timeout: at least 600 s; never shorten it). `sound --out <dir>` rebuilds the score or bed alone.
 5. Look again at the new stills (`look --round 2`, then a round 3 if an answer asks for one).
 6. `node scripts/motion.mjs verify --out <dir>` decides done.
 
 Pre-warm happens outside the session: `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` (`motion-runtime status` shows the probes). A render never installs or fetches.
 
-A flash FAIL withholds the exports under `withheld/`; say so and never present them as a film. Never downgrade to pass: fix the cause or deliver with the failure stated.
+A flash FAIL withholds the exports under `withheld/`; say so. Never downgrade to pass.
 
 Exit codes: 10 no Chrome (set CHROME_PATH), 11 no WebGL2, 12 no ffmpeg (stills still work), 13 gate FAIL, 14 runtime not pre-warmed, 15 font missing or tampered (fix both with the pre-warm above), 16 treatment invalid (the field is named), 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid, 21 no cover encoder, 22 cover asset missing. Name the code and its fix.
 
@@ -36,6 +38,7 @@ Read references/scene-contract.md when `path` is type and you write the brief or
 Read references/type-craft.md when `path` is type and the words mix Hangul and Latin or wrap.
 Read references/style-bible.md when `path` is type and you choose or describe the preset.
 Read references/craft-loop.md before the first look round: look questions, rounds, done, gate table.
+Read references/depth.md for a 3D subject or hero.
 Read references/runtime.md when a render exits 10-15 or 21, or an audio file is supplied.
 Read references/cover.md when the request is a README, hero, banner or cover loop.
 Read references/complete-contract.md for the reply contract and the completion rule.

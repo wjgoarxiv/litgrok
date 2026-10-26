@@ -28,8 +28,8 @@ Use a fixed viewBox and preserve its ratio. Keep titles and captions inside the 
 
 ## Variants
 
-- light: paper canvas, dark ink, neutral marks, and a restrained warm accent.
-- dark: dark paper, light ink, theme-specific rule and connector values, and a readable accent.
+- light: paper canvas, dark ink, neutral connectors, and the style guide's accent families on their washes.
+- dark: dark paper, light ink, theme-specific rule and connector values, and the dark-theme accent and wash tokens.
 - full: a title, concise context, optional key, and takeaway around the same layout. Keep the content footprint within the selected canvas.
 
 The full variant is still a single diagram. It does not mean a dashboard or a denser version.

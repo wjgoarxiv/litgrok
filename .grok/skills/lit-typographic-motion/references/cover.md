@@ -61,7 +61,7 @@ naming the first bad field (`BLOCKED_TREATMENT_INVALID field=...`).
 | `mode` | `cover` |
 | `request` | the user's words, verbatim and inert |
 | `idea` | one sentence on what the loop does; it may not restate the request |
-| `recipe`, `recipeReason` | `painted-light` (default), `weight-tide`, `orbit-loop` or `own`, and why in 1-2 sentences |
+| `recipe`, `recipeReason` | `painted-light` (default), `hero-3d`, `weight-tide`, `orbit-loop` or `own`, and why in 1-2 sentences |
 | `brandWord` | the name, set once, at most three words |
 | `motto` | optional `{ text, source: user \| project, from }`, at most six words; a `user` motto appears in the request, a `project` motto names where the project already uses it |
 | `aspect`, `loopSec`, `fps` | `2:1` or `3:2`; 6-12; 16, 20 or 25 |
@@ -197,6 +197,15 @@ transfers.
   and a ledger under the word whose cells light at the crossing times (as many crossings as cells,
   so the ledger loops). The core breathes once per loop and rings out on each bar. The word stands
   still on the left.
+- **Turning hero (`hero-3d`).** The loop as an object, for a subject with a back and an inside: a
+  rounded hero turns once per loop under a key light on the GPU rung (software when the GPU has no
+  WebGL; the manifest names the rung), the brand word sits live over it, and the motto closes the
+  frame. Build the hero once and only pose it from `t`: the seam is exact and a fresh capture draws
+  the same pixels. Render one warm-up frame before `window.ready = true`, so one-time allocations
+  (the shadow map's target, three.js object ids) happen in the seeded build phase. Keep the word
+  clear of the hero: the title gate measures contrast against the worst background decile in its
+  box. The shipped page reached TARGET at q 86 (seamLocal 1.14, 0.61 MB); read it before modelling a
+  product hero from its real logo and screens, and keep the type in the DOM.
 - **Own.** Any system that keeps the rules: one rule many copies, three layers, a still word, edges
   instead of fades. Name it in `recipeReason`.
 

@@ -4,7 +4,7 @@ This reference is the execution contract for the four interface modes. Keep the 
 
 ## Run the page
 
-Finish or build the page, then run `node "$FRONTEND_SKILL_ROOT/scripts/probe.mjs" --url <built-page-or-directory> --out <task-evidence-directory>`. The driver serves a local page on `127.0.0.1`, uses the already available `agent-browser` command, and closes its owned session and server. It never installs a browser or opens a `file://` page. Use an isolated evidence directory for each pass. The seven required views are 320, 390, 768, 1440, 390 dark, 390 reduced motion, and a 720×450 CSS viewport that approximates 1440 at 200% zoom. The last pass is a reflow emulation, not a claim that native browser zoom was changed.
+Finish or build the page, then run `node "$FRONTEND_SKILL_ROOT/scripts/interface-probe.mjs" <built-page-or-directory> --out <task-evidence-directory>`. The driver serves a local page on `127.0.0.1`, uses the already available `agent-browser` command, and closes its owned session and server. It never installs a browser or opens a `file://` page. Use an isolated evidence directory for each pass. The seven required views are 320, 390, 768, 1440, 390 dark, 390 reduced motion, and a 720×450 CSS viewport that approximates 1440 at 200% zoom. The last pass is a reflow emulation, not a claim that native browser zoom was changed.
 
 Open the 320, 390, and 1440 screenshots yourself. Look for clipping, hierarchy, focus and labels, image meaning, state handling, and any visual defect that a DOM measurement cannot decide. Inspect the dark and reduced-motion captures when those variants are relevant. The screenshots and the JSON must describe the same build.
 

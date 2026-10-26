@@ -26,6 +26,9 @@ palette:
   accent-tint: "#FBE7E2"
   field: "#C8361A"
   on-field: "#FFFFFF"
+  positive: "#1E7A3F"
+  # The accent is red, so a loss keeps the ink colour and carries its sign instead.
+  negative: "#15131A"
   series: ["#C8361A", "#15131A", "#6B6870", "#2F6F8F"]
 
 ramp: reading

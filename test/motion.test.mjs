@@ -63,9 +63,9 @@ test('motion skill is enrolled on every catalog, listing and pack surface', () =
   assert.ok(!skillFiles.some((file) => /fixtures|treatment-(stage|type)\.json/.test(file)), 'no stage or treatment fixture ships');
   assert.ok(!skillFiles.some((file) => /\.(wav|mp4)$/.test(file)), 'the kit ships no sound or film, recipes included');
   assert.ok(!skillFiles.some((file) => file.endsWith('.html') && !file.includes('/recipes/')), 'the kit ships no scene page outside recipes/');
-  // The one exception is cover mode's worked pages: three recipes and four negatives, each a single page.
+  // The one exception is cover mode's worked pages: four recipes and four negatives, each a single page.
   const pages = skillFiles.filter((file) => file.endsWith('.html')).map((file) => file.replace('.grok/skills/lit-typographic-motion/', '')).sort();
-  assert.deepEqual(pages, ['recipes/negatives/card-scenes/index.html', 'recipes/negatives/reset-sweep/index.html', 'recipes/negatives/still-glow/index.html', 'recipes/negatives/title-slam/index.html', 'recipes/orbit-loop/index.html', 'recipes/painted-light/index.html', 'recipes/weight-tide/index.html']);
+  assert.deepEqual(pages, ['recipes/hero-3d/index.html', 'recipes/negatives/card-scenes/index.html', 'recipes/negatives/reset-sweep/index.html', 'recipes/negatives/still-glow/index.html', 'recipes/negatives/title-slam/index.html', 'recipes/orbit-loop/index.html', 'recipes/painted-light/index.html', 'recipes/weight-tide/index.html']);
 });
 
 test('SKILL.md stays lean, loads the treatment first, routes every reference, and names the director order', () => {

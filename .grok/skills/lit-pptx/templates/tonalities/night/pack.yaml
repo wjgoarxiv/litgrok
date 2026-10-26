@@ -26,6 +26,8 @@ palette:
   accent-tint: "#2A2418"
   field: "#1E2A36"
   on-field: "#F5F7FA"
+  positive: "#6CC08B"
+  negative: "#F08A7E"
   series: ["#E3A857", "#7FB8E0", "#A3AEBA", "#C58FD0"]
 
 ramp: reading

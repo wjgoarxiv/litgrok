@@ -4,8 +4,6 @@ provenance.
 
 ## Authorized brand inputs
 
-Use what the user handed you or what the repository already holds. Anything else is rework.
-
 - tokens, theme files, or CSS custom properties already in the repository
 - a brand guideline document or style page the user pointed at explicitly
 - logo, icon, and font files present under the repository's asset paths
@@ -17,15 +15,13 @@ an approval you do not have.
 
 Do not invent an identity. Build a neutral system a real brand can replace at one seam.
 
-- a single accent role, defined once as a token and referenced everywhere
+- an accent role and a second accent role, each defined once as a token and referenced everywhere
 - a neutral ramp derived from one hue with fixed contrast steps
 - a system font stack with an explicit per-script fallback
 - geometric placeholder marks, never a wordmark that reads as a company name
 - record the neutral choice under `accepted_exceptions` with an owner
 
 ## Qualities into interface decisions
-
-Convert each adjective into something a reviewer can measure.
 
 | Quality | Concrete expression |
 |---|---|
@@ -46,8 +42,6 @@ wherever it appears.
 - keep it out of the verification receipt; only a real capture proves behavior
 
 ## Reference frames
-
-Fix dimensions and a safe area before requesting or producing an image.
 
 - hero 16:9, 8% inset on all sides kept clear for overlaid text
 - card 4:3 or 4:5, subject centered, no text rendered into the raster
@@ -81,3 +75,13 @@ Check each asset against the surface that will render it, not against the design
 3. Degradation: alt text, failed load, and slow-network placeholder.
 4. Weight: hero under 200KB, card under 80KB, icon under 8KB.
 5. Layout: intrinsic width and height declared, so loading causes no reflow.
+
+## Failure patterns
+
+Reject:
+
+- a generated image filed, named, or captioned as a screenshot
+- text baked into an image, where it cannot be translated, scaled, or read aloud
+- decorative imagery given a descriptive alt string, or informative imagery given none
+- an asset with no license basis, or a mark reused because it "looks generic"
+- brand adjectives carried into implementation with no concrete expression behind them

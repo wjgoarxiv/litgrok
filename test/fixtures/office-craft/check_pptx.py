@@ -13,7 +13,7 @@ from craft_extras import assess
 
 deck = Presentation()
 first = deck.slides.add_slide(deck.slide_layouts[6])
-for i, rgb in enumerate(('D6336C', '2F9E44', '1971C2')):
+for i, rgb in enumerate(('D6336C', '2F9E44', '1971C2', 'E8A33D', '7B2FBE')):
     shape = first.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(.5 + i), Inches(.5), Inches(.6), Inches(.6))
     shape.fill.solid()
     shape.fill.fore_color.rgb = RGBColor.from_string(rgb)

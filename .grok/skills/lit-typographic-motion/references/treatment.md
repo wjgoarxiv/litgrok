@@ -39,12 +39,17 @@ or a type-led cue in the request, and refuses `type` at 9:16.
 | `durationSec` | 4 to 90; at least 10 for announcement, event, explainer and motion-graphics unless the user asked for a length |
 | `beats[]` | `{t0, t1, purpose, onScreen, motion, sound}`; they cover 0 to `durationSec` with no gap over 0.25 s; each lasts at least 1.2 s; at least as many beats as the genre's arc |
 | `subject` | `{name, source: user or invented, specifics[]}`; a user subject is named in the request's words; an invented one has at least 2 concrete specifics (what it is or does, for whom, one distinctive detail) |
-| `visualDevices[]` | `{kind, role: subject, support or texture, beats[]}`; kinds: illustration, diagram, chart, icon, shape, path, mask, depth3d, particles, grid, gradient, photo-texture |
+| `visualDevices[]` | `{kind, role: subject, support or texture, beats[]}`; kinds: illustration, diagram, chart, icon, shape, path, mask, depth3d, screen, particles, grid, gradient, photo-texture; a `screen` device names a listed product asset in `asset` and shows the product's real screenshot, UI or README image, never an invented screen |
 | `typePlan` | `{faces[], hierarchy, maxWordsOnScreen, index?}`; faces from Archivo, Pretendard, VT323, Silkscreen, Galmuri9, Meslo; `index: true` only when the film should show a running shot index |
 | `palette[]` | 3 to 6 `{hex, role}` entries |
 | `sound` | `{mode: generated, supplied, authored or none, plan, palette, file?}`; see below |
 | `copy` | `{source: user or invented, lines[]}`; user lines are the request's own words (quoted spans included); invented lines may not restate the request |
 | `inventions[]` | every invented thing, named; required when the subject or copy is invented, and it names the invented subject |
+| `story` | `{expect, turn, beat, payoff}` on every film: what the viewer expects, what happens instead (at most 2 sentences each, never equal), the shot where the turn lands (after the opening, before the end: 1 to beats-1), what the ending gives |
+| `protagonist` | stage only: `{name, kind: character or object, look, acts[]}`; one drawn character or hero object that acts across the film, shot by shot (`{beat, action}`), covering at least half the film including the turn's shot, one act per shot |
+| `product` | when the request links a product, repo or site: `{name, url, assets[]}` with the request's link; assets are `{path, role, source, sha256}` under `stage/assets/` (`fetched` by `motion.mjs assets`, or `user` supplied); when nothing could be reached, `{name, url, unreachable}` instead and the film stops at exit 22 until the user supplies the files |
+| `depth`, `render3d` | `depth`: `2d` (default) or `3d`; a `depth3d` subject device needs `depth: 3d` (the 3D route, references/depth.md), and only the stage path takes it. `render3d`: `three` (the GPU rung, default) or `blender` (the offline Cycles rung, only with `depth: 3d`) |
+| `world` | a rich stage film's density, planned before any page exists: `{layers[], labels[], camera[]}`; at least 3 depth layers back to front, at least 6 labelled parts as they appear on screen (at most 4 words each; longer text is copy), camera moves (`{beat, move}`: push-in, truck, crane, orbit, rack focus) in at least half the shots; a locked shot is never listed. Minimal films (negative space) skip it |
 | `ambition` | 1 to 2 sentences, in craft terms, on what would make this film excellent for this request |
 | `seed` | optional integer; the stage page's `Math.random` is seeded from it (otherwise from the idea) |
 
@@ -106,6 +111,9 @@ mostly equals this example.
   "sound": { "mode": "generated", "plan": "<what the bed does across the arc>", "palette": "glass" },
   "copy": { "source": "invented", "lines": ["<line written from the subject's specifics>"] },
   "inventions": ["<subject name>", "<every other invented item>"],
+  "story": { "expect": "<what the viewer expects>", "turn": "<what happens instead>", "beat": 2, "payoff": "<what the ending gives>" },
+  "protagonist": { "name": "<subject name>", "kind": "<character or object>", "look": "<what it looks like on screen>", "acts": [{ "beat": 0, "action": "<what it does in this shot>" }] },
+  "world": { "layers": ["<back>", "<middle>", "<front>"], "labels": ["<part>", "<part>", "<part>", "<part>", "<part>", "<part>"], "camera": [{ "beat": 0, "move": "<push-in, truck, crane, orbit or rack focus>" }] },
   "ambition": "<what would make this film excellent, in craft terms>"
 }
 ```

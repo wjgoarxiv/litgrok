@@ -32,7 +32,12 @@ const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
 // A finished call by one of these tools cannot have changed a plan file, so it skips the plan reread.
 const READ_ONLY_TOOLS = /^(?:read_file|grep|list_dir|glob|todo_write|web_search|web_fetch|read|ls)$/iu;
-const HUD_DISCIPLINE_PATTERN = /(?:^|[\s/])(lit-scientific-visualization|lit-handoff|lit-brainstorm|autoconference|autoresearch|lit-plan|litwork|lit)(?=$|[^\w-])/iu;
+const HUD_DISCIPLINE_PATTERN = /(?:^|[\s/])(lit-scientific-visualization|lit-handoff|lit-brainstorm|lit-adhd|lit-rewind|autoconference|autoresearch|lit-plan|litwork|review-work|lit)(?=$|[^\w-])/iu;
+// The skill also runs from bare words, the rule and the catalog, where no prompt names it. Its
+// collector starting is the run, so that call switches the card to the rewind look. The command
+// text is only inspected, never stored: the ledger keeps the tool name alone.
+const ADHD_COLLECTOR_SCRIPT = /lit-adhd\/scripts\/rewind\.mjs/u;
+const ADHD_COLLECTOR_RUN = /(?:^|[\s"'])(?:--brief|--json)(?:$|[\s"'=])/u;
 
 function maskCode(text) {
   return text.replace(/[^\r\n]/gu, '\u0000');
@@ -93,7 +98,9 @@ function hudDisciplineFromPrompt(prompt) {
   const match = HUD_DISCIPLINE_PATTERN.exec(visiblePromptText(prompt));
   if (!match) return null;
   const token = match[1].toLowerCase();
-  return token === 'lit' ? 'litwork' : token;
+  if (token === 'lit') return 'litwork';
+  if (token === 'lit-rewind') return 'lit-adhd';
+  return token;
 }
 
 class RecorderError extends Error {
@@ -444,6 +451,18 @@ export async function recordPassiveEvent(expectedEvent) {
     let hudDiscipline = null;
     if (expectedEvent === 'UserPromptSubmit') {
       hudDiscipline = continued ?? (entry?.discipline !== undefined ? entry.discipline : hudDisciplineFromPrompt(event.prompt));
+    }
+    if (expectedEvent === 'PreToolUse') {
+      const command = event?.toolInput?.command ?? event?.toolInput?.cmd;
+      if (typeof command === 'string' && ADHD_COLLECTOR_SCRIPT.test(command) && ADHD_COLLECTOR_RUN.test(command)) {
+        writeHudRecords({
+          env: process.env,
+          sessionId: environment.sessionId,
+          cwd: environment.eventCwd,
+          workspaceRoot: environment.realWorkspaceRoot,
+          discipline: 'lit-adhd',
+        });
+      }
     }
     if (discipline !== null) record.discipline = discipline;
     if (entry?.stage && continued !== 'lit-brainstorm') record.stage = entry.stage;

@@ -2,16 +2,12 @@ A design system is three token layers, a finite primitive set, and a gate that p
 
 ## Audit before authoring anything
 
-Write nothing until the audit shows no existing token or primitive fits.
-
 - List tokens, primitives with their variants, and duplicate components.
 - Count raw one-off values per file; that is the migration size.
 - Mark each primitive keep, extend, or replace, with its replacement cost.
 - Every proposed primitive names the existing one it cannot reuse.
 
 ## Split the three token layers
-
-Layers exist so a value change and a meaning change land in different diffs.
 
 1. Foundation: raw values with no meaning — `color.slate.700`, `space.16`, `duration.150`.
 2. Semantic roles: meaning per theme — `color.text.muted`, `color.border.strong`, `radius.control`.
@@ -72,3 +68,13 @@ The system lives in the contract, not in tribal knowledge.
 - Validate from the installed skill root: `node .grok/skills/frontend-ui-ux/scripts/validate-design-contract.mjs <path>`.
 - Record the contract hash so the independent review pass binds its receipt to those bytes.
 - Shipping this package also requires `npm test` and the canonical-corpus verifier.
+
+## Governance reject-list
+
+Reject:
+
+- A component reaching past the semantic layer to a foundation value.
+- A primitive or variant introduced for exactly one screen.
+- A state surfaced by review rather than declared in the anatomy.
+- A dark theme assembled from per-component overrides.
+- A value change bundled into the same diff as a reference migration.

@@ -15,14 +15,20 @@ import { run } from '../bin/litgrok.mjs';
 // brainstorm route and the `lit review plan|work` spelling (199 bytes), with the depth kept in the skills;
 // 15,880 adds the film section's pointer to the README cover loop commands (73 bytes); 15,960 adds
 // the line that puts a Markdown report's figures in a table and its decisions in a numbered list (89 bytes);
-// 16,160 adds the reader-facing line on when a reply's results belong in a short table (195 bytes).
-const RULE_BUDGET_BYTES = 16_160;
+// 16,160 adds the reader-facing line on when a reply's results belong in a short table (195 bytes);
+// 16,840 adds the equipment-drawing route to lit-schematic and the film exclusion that sends such a drawing there (682 bytes);
+// 17,516 adds the mechanism-port route to lit-hijack with its triggers, owners and precedence (676 bytes);
+// 17,985 adds the brief-over-sessions route to lit-adhd with its triggers and scope (469 bytes).
+const RULE_BUDGET_BYTES = 17_985;
 const ROUTES = {
   'lit, English': 'lit fix the failing date parser',
   'lit, Korean': 'lit 날짜 파서 버그 고쳐줘',
   'lit-loop': 'lit-loop finish the migration',
   'lit-plan': 'lit-plan plan the cache rewrite',
   'lit-brainstorm': 'lit brainstorm a name for my app',
+  'lit-schematic': 'lit draw a P&ID of the reactor loop',
+  'lit-hijack': 'lit hijack the review-lane technique from this post into my skill',
+  'lit-adhd': 'lit adhd brief me on every recent session',
   'plain, English': 'what does this function return?',
   'plain, Korean': '이 함수는 무엇을 반환하나요?',
   'slash': '/lit-plan plan the cache rewrite',

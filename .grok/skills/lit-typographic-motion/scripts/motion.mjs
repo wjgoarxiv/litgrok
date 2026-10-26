@@ -12,11 +12,21 @@ Usage: node scripts/motion.mjs <mode> --out <dir> [options]
   stage  --out <dir> [--round 1..3] [--stills-only]
            stage path (every other film; always for 9:16): captures <dir>/stage/index.html frame by
            frame on a virtual clock, then encode, stills, determinism replay, text QA and gate
-  sound  --out <dir>                     build the generated bed alone (sound.wav, sound-cues.json) from the
+  sound  --out <dir>                     build the score or generated bed alone (sound.wav, sound-cues.json) from the
            treatment; renders rebuild it at the film's exact length and cuts
+  blender --out <dir> [--final]        render the Blender rung (treatment render3d "blender"): preview stills
+           at the beat midpoints from <dir>/stage/scene.py, then with --final the plate in <dir>/stage/plate/
   make   --out <dir> [--brief <file>] [--round 1..3] [--stills-only] [--style <preset>] [--word-timing] [--swiftshader]
            type path (the words themselves are the film, 16:9): timeline, pre-flight, stills, sheet,
            video, preview, poster, still, gate; without --brief the words are the treatment's copy
+  scaffold --out <dir>                 write <dir>/stage/index.html from the treatment (refuses to
+           replace a page); run it before the first board round
+  styles --out <dir> [--format 16:9|9:16]
+           render the same demo film as a board round in every house style
+           into <dir>/<style>/, and compose <dir>/styles.png
+  assets --out <dir> --url <link> [--cover]
+           fetch a named product's real logo, README images and words into
+           <dir>/stage/assets/ (cover/assets/), <dir>/product/ and <dir>/product.json
   stills --out <dir> [--brief <file>]    one still per shot (no ffmpeg needed)
   sheet  --out <dir> [--brief <file>]    contact sheet at every cut (no ffmpeg needed)
   video  --out <dir> [--brief <file>]    same as make without the stills-only stop
@@ -35,7 +45,7 @@ Usage: node scripts/motion.mjs <mode> --out <dir> [options]
 Presets: swiss-signal | terminalcore | tidal. Exit codes: 0 OK, 10 no Chrome, 11 no WebGL2,
 12 no ffmpeg for video, 13 gate FAIL, 14 runtime not pre-warmed, 15 font missing or tampered,
 16 treatment invalid, 17 stage contract, 18 stage nondeterministic, 19 stage network request, 20 sound invalid,
-21 no cover encoder (libwebp img2webp + dwebp, or gifski), 22 a listed cover asset is missing.
+21 no cover encoder (libwebp img2webp + dwebp, or gifski), 22 a listed asset is missing (cover base art, product files, or fetched assets).
 --swiftshader forces the SwiftShader rung (the CI determinism setting). Pre-warm outside the session:
 npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install
 ${ONE_LINE_CREDIT}
@@ -51,7 +61,7 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
   const mode = args[0];
   if (mode === 'cover-gate') return coverGateCommand(args.slice(1), { env, stdout, stderr });
   const out = option(args, '--out');
-  if (!['cover', 'stage', 'sound', 'look', 'make', 'stills', 'sheet', 'video', 'perf', 'gate', 'verify'].includes(mode) || !out) { stderr.write(USAGE); return EXIT.USAGE; }
+  if (!['cover', 'stage', 'sound', 'look', 'make', 'stills', 'sheet', 'video', 'perf', 'gate', 'verify', 'scaffold', 'assets', 'styles', 'blender'].includes(mode) || !out) { stderr.write(USAGE); return EXIT.USAGE; }
   const outDir = resolve(out);
   try {
     if (mode === 'verify') {
@@ -89,11 +99,19 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
     if (mode === 'sound') {
       const { loadTreatment } = await import('./lib/treatment.mjs');
       const treatment = loadTreatment(outDir);
-      if (treatment.sound.mode !== 'generated') { stdout.write(`sound: the treatment's sound is ${treatment.sound.mode}; nothing to generate (renders mux it as planned)\n`); return EXIT.OK; }
-      const { writeBed } = await import('./lib/sound.mjs');
       const fps = treatment.fps ?? 60;
       const cutTimes = [...treatment.beats].sort((a, b) => a.t0 - b.t0).slice(1).map((beat) => beat.t0);
-      const bed = writeBed(outDir, treatment, { frameCount: Math.round(treatment.durationSec * fps), fps, cutTimes });
+      const frameCount = Math.round(treatment.durationSec * fps);
+      if (treatment.sound.mode === 'score') {
+        const { writeScore } = await import('./lib/score.mjs');
+        const score = writeScore({ treatment, frameCount, fps, cutTimes, dir: outDir });
+        const sections = score.sections.map((x) => x.kind).join(' → ');
+        stdout.write(`sound: score, ${score.genre} in ${score.key}, ${score.tempo} BPM (${score.progression}; ${sections}; sidechain ${score.sidechainDb.toFixed(1)} dB; ${score.lufs.toFixed(1)} LUFS, peak ${score.peakDbfs.toFixed(1)} dBFS) -> ${score.file}; stems in ${join(outDir, 'sound', 'stems')}\n`);
+        return EXIT.OK;
+      }
+      if (treatment.sound.mode !== 'generated') { stdout.write(`sound: the treatment's sound is ${treatment.sound.mode}; nothing to generate (renders mux it as planned)\n`); return EXIT.OK; }
+      const { writeBed } = await import('./lib/sound.mjs');
+      const bed = writeBed(outDir, treatment, { frameCount, fps, cutTimes });
       stdout.write(`sound: generated bed ${bed.timbre}, ${bed.key}, ${bed.tempo} BPM, ${bed.lufs.toFixed(1)} LUFS, peak ${bed.peakDbfs.toFixed(1)} dBFS -> ${bed.wavPath}; cues in ${bed.cuesPath}\n`);
       return EXIT.OK;
     }
@@ -114,6 +132,38 @@ export async function main(args, { env = process.env, stdout = process.stdout, s
       const result = await cover.renderCover({ out: outDir, round, env, log });
       stdout.write(`${result.message}\nexit ${result.exitCode} ${EXIT_NAMES[result.exitCode] ?? ''}\n`);
       return result.exitCode;
+    }
+    if (mode === 'scaffold') {
+      const { scaffoldCommand } = await import('./lib/scaffold.mjs');
+      const result = scaffoldCommand({ out: outDir });
+      stdout.write(`${result.message}\n`);
+      return result.code;
+    }
+    if (mode === 'styles') {
+      const { stylesCommand } = await import('./lib/gallery.mjs');
+      const result = await stylesCommand({ out: outDir, format: option(args, '--format') ?? '16:9', env, log: (line) => stderr.write(`${line}\n`) });
+      stdout.write(`${result.message}\n`);
+      return result.code;
+    }
+    if (mode === 'assets') {
+      const target = option(args, '--url');
+      if (!target) { stderr.write('assets needs --url <link>\n'); return EXIT.USAGE; }
+      const { fetchAssets } = await import('./lib/assets.mjs');
+      const result = await fetchAssets({ out: outDir, url: target, into: args.includes('--cover') ? 'cover' : 'stage' });
+      stdout.write(`${result.message}\n`);
+      return result.code;
+    }
+    if (mode === 'blender') {
+      const { blenderCommand } = await import('./lib/blender.mjs');
+      const log = (line) => stderr.write(`${line}\n`);
+      try {
+        const result = await blenderCommand({ out: outDir, final: args.includes('--final'), env, log });
+        stdout.write(`${result.message}\n`);
+        return result.code;
+      } catch (error) {
+        if (error instanceof BlockedError) { stderr.write(`${error.message}\n`); return error.code; }
+        throw error;
+      }
     }
     const { loadTreatment, recordFirstTreatment } = await import('./lib/treatment.mjs');
     const treatment = loadTreatment(outDir);

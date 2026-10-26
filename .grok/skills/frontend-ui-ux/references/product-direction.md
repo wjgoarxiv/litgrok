@@ -19,8 +19,6 @@ One surface, one task the user must be able to finish. Everything else is subord
 
 ## Convert quality words into measured signals
 
-"Fast" and "intuitive" are not acceptance criteria. Each becomes a number you can read.
-
 - Completion time at p50 and p90, with the ceiling you will defend.
 - Error rate on the primary form, and the share of errors preserving entered input.
 - Interaction cost on the frequent path, as a keystroke or tap ceiling.
@@ -48,8 +46,6 @@ Each journey ends at the completion condition above. One that stops earlier is a
 
 ## Keep more than one answer alive
 
-Hand the next stage a bounded set. One inevitable option is a decision nobody reviewed.
-
 - Produce 2-3 directions separated by structure or density, never by accent hue.
 - Give each the task it accelerates, the task it slows, and its migration cost.
 - Mark one recommendation with a one-sentence reason; keep the rejected ones legible.
@@ -73,3 +69,12 @@ The next stage reads this package, not the transcript. What is missing does not 
 - Five journeys with pass conditions; bounded directions with costs and recommendation.
 - Finite surface list: routes, states, viewport bands, auth requirements.
 - The design contract hash the independent review pass binds its receipt to.
+
+## Failure patterns
+
+Reject:
+
+- A persona described by demographics rather than by a decision.
+- "Improve the experience" accepted as an outcome with no observable task.
+- One direction presented with no alternative and no stated cost.
+- A success claim resting on a single happy-path capture.

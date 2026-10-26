@@ -29,8 +29,11 @@ function stageTreatment({ format = '16:9', fps = 30, duration = 4, lines = ['시
   const request = sound.mode === 'none' ? '작은 도형이 움직이는 영상 만들어줘, 소리 없이 lit' : '작은 도형이 움직이는 영상 만들어줘 lit';
   return {
     request, genre: 'other', path: 'stage', pathReason: 'The film draws shapes that move, not only words.',
+    register: 'minimal',
     idea: 'A few plain shapes keep time with each other until they settle.', audience: 'Test viewers', channel: 'Local playback',
     format, formatReason: 'Local playback fits this frame.', durationSec: duration, fps,
+    story: { expect: 'Viewers expect a clock face that simply runs.', turn: 'The shapes keep time with each other instead of ticking.', beat: 1, payoff: 'Every shape settles on the same beat.' },
+    protagonist: { name: '도형', kind: 'object', look: 'Plain flat shapes, teal on near-black, hand-sized in frame.', acts: [{ beat: 0, action: 'Starts apart and still.' }, { beat: 1, action: 'Moves in time together.' }, { beat: 2, action: 'Settles into place.' }] },
     beats: [[0, 1.3], [1.3, 2.6], [2.6, duration]].map(([t0, t1], i) => ({ t0, t1, purpose: ['open', 'develop', 'land'][i], onScreen: 'the moving shapes', motion: 'steady motion', sound: 'pad' })),
     subject: { name: '도형', source: 'user', specifics: [] },
     visualDevices: [{ kind: 'shape', role: 'subject', beats: [0, 1, 2] }, { kind: 'path', role: 'support', beats: [1] }],
@@ -215,7 +218,7 @@ describe('full stage renders', { concurrency: 3 }, () => {
     });
   }
   test('a 1080x1920 kit film: portrait size, portrait flash grid, a muxed generated bed', { skip: NO_TOOLS }, () => {
-    const { work, out } = prepare('portrait', stageTreatment({ format: '9:16', lines: ['세로로 서는 모양'], sound: { mode: 'generated', plan: 'a soft pulse under the morph', palette: 'glass' } }));
+    const { work, out } = prepare('portrait', stageTreatment({ format: '9:16', lines: ['세로로 서는 모양'], sound: { mode: 'generated', plan: 'a soft pulse under the morph', palette: 'glass', events: [{ t: 1.5, on: 'the shapes move in time', kind: 'tap' }, { t: 2.8, on: 'the shapes settle', kind: 'hit' }] } }));
     try {
       const result = stage(out, ['--round', '2']);
       assert.ok([0, 13].includes(result.status), result.stdout + result.stderr);

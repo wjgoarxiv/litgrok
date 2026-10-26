@@ -1,15 +1,17 @@
 # Direction step
 
 A deck's look is decided once, before the first slide is written, and it is decided as data: one of
-the eight tonality packs in `templates/tonalities/<id>/pack.yaml`. The pack fixes the palette roles,
+the thirteen tonality packs in `templates/tonalities/<id>/pack.yaml`. The pack fixes the palette roles,
 the type ramp, the title treatments each slide role may take, the layout families the engine will
 draw, the cover, section and closing variants, and the density and variance dials. Skipping this
 step leaves the engine without a design and the deck without a reason for looking the way it does.
 
 The step produces three things: a direction card in the build log, a `tonality:` line in the deck
-frontmatter, and two or three sentences in the reply that name the choice and two alternatives. A
-bare request (`lit 발표자료 만들어줘`, "make me a deck on X") asks the user nothing. The skill
-infers what it needs, writes the inference on the card, and lets the user correct it afterwards.
+frontmatter, and two or three sentences in the reply that name the choice and two alternatives.
+Before building, ask the user to choose the tonality with a numbered choice in the reply
+(recommended first); skip only when the brief names it or says you choose. When the brief leaves
+the look open on purpose, also render a compare strip of the first three slides under the chosen
+tonality and both alternatives and build the rest under the one picked.
 
 ## What to settle first
 
@@ -23,9 +25,10 @@ and the sources when it does not.
 | Delivery | Presented live, read alone, or both? | "미리 배포", "보고서형", "circulate" → read; "keynote", "demo day" → presented |
 | Language | Korean, English or mixed? | the language of the request, unless the sources or the user say otherwise |
 
-Pretendard Regular and Bold are the only faces this skill ships. Every pack draws with them, so the
+Pretendard Regular and Bold are the faces every pack draws with, so the
 direction never depends on a font the machine might lack. Hierarchy comes from size, weight, colour
-and placement.
+and placement. One pack adds a second face: Computational Brutalism sets Latin titles, labels and
+figures in the bundled JetBrains Mono (Hangul stays Pretendard); body text stays Pretendard in every pack.
 
 ## Candidates by deck type
 
@@ -34,9 +37,14 @@ Start from the row for the deck type. The first name is the default when no sign
 | Deck type | First choice | Second | Third, and when |
 |---|---|---|---|
 | Pitch (투자·제안) | signal | studio | atlas, when the product is a physical thing to show |
+| Launch, demo day or campaign (런칭·데모데이·캠페인) | neo-brutalism | signal | studio |
+| Engineering or developer review (아키텍처·인프라·장애 리뷰) | computational-brutalism | night, for a stage screen | ledger, when it is read alone |
 | Business review (실적 보고) | ledger | gazette, when circulated in Korean before the meeting | night, when shown on a stage screen |
 | Research talk (연구 발표) | paper | night, for a keynote hall | chalk, for a tutorial |
 | Lecture (강의·교육) | chalk | paper | studio, for a public lecture |
+| Design or culture lecture (디자인·건축·전시·워크숍) | bauhaus | studio | atlas, when the works are the deck |
+| Community, culture or education programme (커뮤니티·문화·교육 프로그램) | riso | studio | bauhaus, for a design programme |
+| Data story for the public (주민·독자 대상 데이터 브리핑) | newsroom | gazette, when it is read alone | ledger |
 | Data-heavy review (데이터 리뷰) | night | ledger | paper, for a written analysis |
 | Image-led (제품·현장·포트폴리오) | atlas | studio | signal, for a launch |
 | Korean briefing (보고서형 덱) | gazette | ledger | — |
@@ -53,6 +61,7 @@ choice.
 |---|---|---|
 | User's choice | the brief or an earlier turn names a tonality | use it, still write the card |
 | Named template | the brief names an enrolled template such as AZURE-PRO | use that template, offer two tonalities as alternatives |
+| Named style | the brief names a style rather than a pack id: 네오 브루탈리즘, neo-brutalism; 컴퓨테이셔널 브루탈리즘, computational brutalism, 레트로 퓨처, retro-futurist, terminal look; 바우하우스, Bauhaus; 리소, risograph, zine; 뉴스룸, data journalism, explainer | that pack, as if named; a bare 브루탈리즘 or brutalist takes Neo-Brutalism for a pitch or launch and Computational Brutalism for a technical deck, and the card says which reading it took |
 | Read, not presented | the brief says the file is sent ahead or filed | gazette (Korean) or ledger (any language) moves to first |
 | Tables | 30 % or more of content slides hold a table | ledger and gazette up one place |
 | Charts | 30 % or more hold a chart | ledger, night and paper up one place |
@@ -62,6 +71,12 @@ choice.
 | Citations | numbered references, DOIs or a references slide | paper up one place |
 | Teaching structure | definitions, a formula, or a sequence of three or more steps taught in order | chalk up one place, paper up one |
 | Dark room | keynote, stage, demo day | night up one place |
+| Metrics, versions or identifiers | p99, rps, v3 or endpoint names on a third of the content slides | Computational Brutalism up one place |
+| Young or consumer audience | a sign-up or launch ask, stated in the brief | Neo-Brutalism up one place |
+| Works, makers or periods | the subject of a third of the content slides | Bauhaus up one place |
+| Participants, sessions and dates | a community or a class, on a third of the content slides | Riso up one place |
+| One-point charts for outsiders | charts with one point each for readers outside the field, stated in the brief | Newsroom up one place |
+| Board, finance or sensitive topic | a board, investor committee, finance or public-sector reader, or a sensitive topic (loss, safety, HR), stated in the brief | Neo-Brutalism, Computational Brutalism, Bauhaus and Riso drop out |
 | Coverage gap | a pack has no family for a slide the outline needs | drop that pack |
 
 The coverage row decides more often than it seems. Read `--list-layouts <id>` against the outline:
@@ -76,6 +91,11 @@ The coverage row decides more often than it seems. Read `--list-layouts <id>` ag
 | gazette | charts, pictures |
 | studio | tables |
 | night | tables (KPI rows and charts only), pictures, running text |
+| computational-brutalism | pictures, agenda, timelines |
+| neo-brutalism | timelines, running text |
+| bauhaus | picture-led decks (image-split only), dashboard grids |
+| riso | dashboard grids, reference appendices |
+| newsroom | agenda, process steps |
 
 A ten-slide deck with four charts cannot be a chalk or gazette deck, however well the rest fits. A
 deck with a 2×2 option matrix needs ledger or gazette.
@@ -174,7 +194,7 @@ pick becomes the card's reason ("chosen from the comparison"); then build the fu
 ## Enrolled templates
 
 The templates in `templates/enrolled/` keep their single fixed look. `--list-tonalities` lists them
-as legacy templates after the eight packs. Use one only when the user names it or an existing source
+as legacy templates after the thirteen packs. Use one only when the user names it or an existing source
 already says `template:`. The card names the template, the reply still offers two tonalities, and
 the gate reports its variety and band checks as advisories, because a named template asks for one
 look on purpose.
@@ -191,7 +211,7 @@ look on purpose.
 
 ## Example decks
 
-Twelve complete decks live in `examples/`, each verified to compile and pass the gate under its
+Seventeen complete decks live in `examples/`, each verified to compile and pass the gate under its
 pack. Open the one whose deck type and language match the job before drafting. The picture slides name `assets/example-a.png`, `assets/example-b.png` and
 `assets/example-c.png`; put real images at those paths, or change the paths, before compiling.
 
@@ -208,4 +228,10 @@ pack. Open the one whose deck type and language match the job before drafting. T
 | `09-pitch-studio-en.md` | pitch for a physical product | studio | signal, atlas |
 | `10-image-led-studio-ko.md` | image-led portfolio | studio | atlas, signal |
 | `11-business-review-night-en.md` | business review on a stage screen | night | ledger, gazette |
+| `12-status-update-gazette-ko.md` | status update | gazette | ledger, night |
+| `13-engineering-review-computational-brutalism-ko.md` | engineering review | computational-brutalism | night, ledger |
+| `14-launch-pitch-neo-brutalism-ko.md` | launch pitch | neo-brutalism | signal, studio |
+| `15-design-lecture-bauhaus-ko.md` | design lecture | bauhaus | studio, atlas |
+| `16-community-programme-riso-ko.md` | community programme | riso | studio, bauhaus |
+| `17-public-data-briefing-newsroom-ko.md` | data story for residents | newsroom | gazette, ledger |
 | `12-status-update-gazette-ko.md` | status update, circulated in Korean | gazette | ledger, night |

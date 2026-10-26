@@ -12,6 +12,7 @@ import { FlashDetector } from './flash.mjs';
 import { FramePool, measureFrame } from './frame-pool.mjs';
 import { encodePng } from './png.mjs';
 import { CONTENT_TYPES, openStage } from './stage-session.mjs';
+import { readPlate } from './blender.mjs';
 import { stillsPlan, writeStills } from './stills.mjs';
 import { startEncode } from './encode.mjs';
 import { encodePreview, findTool, previewRung, promoteOrWithhold, clearDeliverables } from './render.mjs';
@@ -73,6 +74,10 @@ export function scanStage(stageDir) {
   const warnings = [];
   if (!existsSync(join(stageDir, 'index.html'))) return { contract: ['stage/index.html is missing'], network, warnings, files: [], rasters: [] };
   const files = walk(stageDir);
+  // A Blender plate and its preview stills are frames the runner wrote and plate.json lists by name
+  // and size; they are not page rasters. Anything not listed is held to the raster limits.
+  const plates = [readPlate(stageDir, 'plate'), readPlate(stageDir, 'plate-preview')].filter(Boolean);
+  const listed = new Set(plates.flatMap((p) => p.frames.map((f) => `${p.dir}/${String(f.name)}`)));
   const rasters = [];
   for (const file of files) {
     if (file.symlink) continue;
@@ -93,7 +98,7 @@ export function scanStage(stageDir) {
       const hint = text.match(/<link[^>]+rel\s*=\s*["']?(preconnect|prefetch|dns-prefetch|prerender)\b/i);
       if (hint) network.push(`stage/${file.rel}: <link rel=${hint[1]}>`);
     }
-    if (RASTER_EXT.has(ext)) {
+    if (RASTER_EXT.has(ext) && !listed.has(file.rel)) {
       const bytes = readFileSync(file.path);
       let info;
       try { info = rasterInfo(bytes, ext === '.jpeg' ? '.jpg' : ext); } catch { info = { width: 0, height: 0, animated: false }; }
@@ -244,18 +249,31 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
   if (scan.contract.length) fail(new BlockedError(EXIT.STAGE_CONTRACT, `STAGE_CONTRACT_ERROR: ${scan.contract[0]}`));
   let fonts;
   try { fonts = stageFonts(treatment.typePlan.faces, env); } catch (error) { fail(error); }
+  let style = null;
+  if (treatment.style) {
+    const { readStyle, styleCss, styleScript } = await import('./styles.mjs');
+    const declared = readStyle(treatment.style);
+    style = { css: styleCss(declared, treatment.format), js: styleScript(declared, treatment.format, treatment) };
+  }
   const executable = resolveChrome(env);
   if (!executable) fail(new BlockedError(EXIT.NO_CHROME, 'BLOCKED_NO_CHROME: Chrome/Chromium not found; set CHROME_PATH to a Chrome executable'));
+  // The browser rung: a three.js world asks for the GPU; a Blender film shows its path-traced
+  // plate under HTML type, so its page needs only the software rung.
+  const rung = stageRung(treatment);
   const ffmpeg = findTool('ffmpeg', env);
   const seed = Number.isInteger(treatment.seed) ? treatment.seed : fnv1a32(treatment.idea);
   const warnings = [...scan.warnings];
 
   const pool = new FramePool();
   let master = null;
+  // The rung the master page actually got (a GPU ask can fall back to software); the replay, the
+  // QA and the manifest reuse it, not the requested rung.
+  let masterRung = null, masterRenderer = null, masterArgs = null;
   let encoder = null;
   let abortReplays = () => {};
   try {
-    master = await openStage({ executable, outDir: out, stageDir, width, height, fps: 60, seed, fonts, label: 'm', log });
+    master = await openStage({ executable, outDir: out, stageDir, width, height, fps: 60, seed, fonts, style, label: 'm', rung, log });
+    if (master.notice) { warnings.push(master.notice); log(master.notice); }
     const prepared = await master.load();
     const contractError = contractCheck(prepared.contract, treatment, width, height);
     if (contractError) throw new BlockedError(EXIT.STAGE_CONTRACT, `STAGE_CONTRACT_ERROR: ${contractError}`);
@@ -286,7 +304,8 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
     // The QA replay only reads layout between samples and settles before its own captures.
     const stop = { aborted: false };
     const replay = async () => {
-      const session = await openStage({ executable, outDir: out, stageDir, width, height, fps, seed, fonts, label: 'd', log });
+      // The replay shares the master's rung: a replay on another rung would flag the rung, not the page.
+      const session = await openStage({ executable, outDir: out, stageDir, width, height, fps, seed, fonts, style, label: 'd', rung: masterRung ?? rung, log });
       try {
         await session.load();
         const hashes = {};
@@ -309,7 +328,7 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
       const result = await job;
       if (!stillsOnly) {
         const flash = detector.push(result.grid);
-        frames.push({ frame: f, ink: 0, lumP995: Math.round(result.lumP995 * 10000) / 10000, flash: { general: flash.general, red: flash.red, ...(flash.general2 ? { general2: flash.general2 } : {}), ...(flash.red2 ? { red2: flash.red2 } : {}), stepArea: flash.stepArea }, rgbaSha256: result.sha256 });
+        frames.push({ frame: f, ink: 0, lumP995: Math.round(result.lumP995 * 10000) / 10000, lumP005: Math.round(result.lumP005 * 10000) / 10000, busy: Math.round(result.busy * 10000) / 10000, flash: { general: flash.general, red: flash.red, ...(flash.general2 ? { general2: flash.general2 } : {}), ...(flash.red2 ? { red2: flash.red2 } : {}), stepArea: flash.stepArea }, rgbaSha256: result.sha256 });
         await encoder?.write(result.rgba);
       }
       if (keep.has(f)) kept.get(f).rgba = result.rgba;
@@ -330,6 +349,9 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
     while (queue.length) await drain();
     const masterDone = Date.now();
     const pageReport = await master.report();
+    masterRung = master.rung;
+    masterRenderer = master.renderer;
+    masterArgs = master.args;
     await master.close();
     master = null;
     if (pageReport.errors.length) warnings.push(`the page logged ${pageReport.errors.length} error(s); first: ${pageReport.errors[0]}`);
@@ -340,8 +362,27 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
         record({ exitCode: EXIT.NO_FFMPEG_FOR_VIDEO, state: 'blocked', reason: 'no ffmpeg', stillsIndexSha256: stills.sha256 });
         throw new BlockedError(EXIT.NO_FFMPEG_FOR_VIDEO, 'BLOCKED_NO_FFMPEG_FOR_VIDEO: ffmpeg not found on PATH; the stills and the contact sheet were written, install ffmpeg for the film');
       }
+      // The board round: judge the page's text on a QA replay, draw the storyboard, and stop when
+      // copy overlaps, leaves the style, or leaves its zone — fix the page, not the gate.
+      const boardQa = await runStageQa({ executable, out, stageDir, width, height, fps, seed, fonts, treatment, totalFrames, log, stepOrThrow, captureChecked, rung: masterRung, stop });
+      const { writeBoard, addToStills } = await import('./board.mjs');
+      const { assetUsed } = await import('./assets.mjs');
+      const { createHash } = await import('node:crypto');
+      const pad2 = (n) => String(n).padStart(2, '0');
+      const beatFiles = plan.mids.map((m) => join(out, 'stills', `beat-${pad2(m.beat + 1)}-mid.png`));
+      const assetRule = assetUsed(treatment, stageDir);
+      const check = { schema: 1, path: 'stage', round, rules: [...boardQa.results.filter((r) => /^(TEXT-|RICH-FILL)/u.test(r.id)), ...(assetRule ? [assetRule] : [])] };
+      writeFileSync(join(stageDir, 'check.json'), `${JSON.stringify(check, null, 2)}\n`);
+      const boardFile = await writeBoard({ out, treatment, beatFiles, check, env, log });
+      const sha = (b) => createHash('sha256').update(b).digest('hex');
+      addToStills(out, { file: 'stills/board.png', kind: 'board', check: 'stills' }, { sha256: sha });
+      const failed = check.rules.filter((x) => x.status === 'FAIL');
+      if (failed.length) {
+        record({ exitCode: EXIT.GATE_FAIL_QA, state: 'check-fail', stillsIndexSha256: stills.sha256, frames: lastNeeded + 1, perf: { p50Ms: pct(times, 0.5), p95Ms: pct(times, 0.95), totalSec: (Date.now() - started) / 1000 } });
+        throw new BlockedError(EXIT.GATE_FAIL_QA, `BOARD_CHECK_FAIL: ${failed.map((x) => `${x.id} ${x.detail}`).join('; ')}. Fix the page, render --stills-only again, then look at ${boardFile ?? join(out, 'stills', 'board.png')}`);
+      }
       record({ exitCode: EXIT.OK, state: 'stills-only', stillsIndexSha256: stills.sha256, frames: lastNeeded + 1, perf: { p50Ms: pct(times, 0.5), p95Ms: pct(times, 0.95), totalSec: (Date.now() - started) / 1000 } });
-      log(`stills-only: ${stills.index.stills.length} files listed in ${join(out, 'stills', 'index.json')}; open every one, then record the look`);
+      log(`stills-only: board check PASS; open the storyboard ${boardFile ?? join(out, 'stills', 'board.png')} and every file in ${join(out, 'stills', 'index.json')}, record the look with look --round ${round}, make the change, then render the film with --round ${round + 1} (no --stills-only)`);
       return { exitCode: EXIT.OK, stillsOnly: true, stills };
     }
 
@@ -358,7 +399,7 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
     previewJob.catch(() => {});
     const [rerun, qa] = await Promise.all([
       replay(),
-      runStageQa({ executable, out, stageDir, width, height, fps, seed, fonts, treatment, totalFrames, log, stepOrThrow, captureChecked, stop }),
+      runStageQa({ executable, out, stageDir, width, height, fps, seed, fonts, treatment, totalFrames, log, stepOrThrow, captureChecked, rung: masterRung, stop }),
     ]);
     timings.replaysSec = (Date.now() - replayStart) / 1000;
     const masterHash = new Map(frames.map((frame) => [frame.frame, frame.rgbaSha256]));
@@ -371,13 +412,29 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
     if (qa.minCopyFontPx && qa.minCopyFontPx < 32) preview = await encodePreview({ runDir, master: join(runDir, 'film.mp4'), encoder: previewRung(env), minFontPx: qa.minCopyFontPx, env, log, frame: { width, height } });
     const previewRecords = preview.records ? preview.records.map((r) => ({ preview: { frame: r.frame, fps: preview.fps }, flash: { general: r.general, red: r.red, ...(r.general2 ? { general2: r.general2 } : {}), ...(r.red2 ? { red2: r.red2 } : {}) } })) : [];
     const sound = muxGate({ mp4: join(runDir, 'film.mp4'), durationSec: totalFrames / fps, treatment, env, track });
+    // A film about a named product shows its real assets; without a product there is no verdict.
+    const { assetUsed } = await import('./assets.mjs');
+    const assetRule = assetUsed(treatment, stageDir);
+    if (assetRule) qa.results.push(assetRule);
 
+    // The manifest names the rung the master page got and its renderer string, so the report and
+    // the determinism replay can be read against the same hardware.
+    const { isSoftwareRenderer } = await import('./chrome.mjs');
     const manifest = {
       schemaVersion: 1, path: 'stage', format: treatment.format, resolution: [width, height], fps, durationSec: totalFrames / fps, targetDurationSec: treatment.durationSec,
-      frames: totalFrames, seed, renderer: 'SwiftShader software rung (stage path)', softwareRenderer: true, chromeFlags: stageFlagsUsed(), previewEncoder: preview.encoder,
+      frames: totalFrames, seed, rung: masterRung, renderer: `${masterRenderer} on the ${masterRung} rung (stage path)`, softwareRenderer: masterRung === 'software' || isSoftwareRenderer(masterRenderer), chromeFlags: masterArgs.filter((arg) => !arg.startsWith('--user-data-dir') && !arg.startsWith('--window-size') && arg !== 'about:blank'), previewEncoder: preview.encoder,
       sound: sound.summary, round, warnings,
     };
     const stills = writeStills(out, { plan, frames: kept, width, height, path: 'stage', round, mode: 'full', poster: { bytes: posterBytes, frame: posterFrame }, treatmentSha256 });
+    // The final render ships its storyboard too: the done-check wants the board viewed on the final set.
+    const { writeBoard, addToStills } = await import('./board.mjs');
+    const { createHash } = await import('node:crypto');
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const beatFiles = plan.mids.map((m) => join(out, 'stills', `beat-${pad2(m.beat + 1)}-mid.png`));
+    const boardCheck = { schema: 1, path: 'stage', round, rules: [...qa.results.filter((r) => /^(TEXT-|RICH-FILL)/u.test(r.id)), ...(assetRule ? [assetRule] : [])] };
+    await writeBoard({ out, treatment, beatFiles, check: boardCheck, env, log });
+    const sha = (b) => createHash('sha256').update(b).digest('hex');
+    stills.sha256 = addToStills(out, { file: 'stills/board.png', kind: 'board', check: 'stills' }, { sha256: sha });
     manifest.stillsIndexSha256 = stills.sha256;
     clearDeliverables(out);
     writeFileSync(join(out, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -415,8 +472,16 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
   }
 }
 
-export function stageFlagsUsed() {
-  return stageArgs({ profileDir: '<profile>', width: 0, height: 0 }).filter((arg) => !arg.startsWith('--user-data-dir') && !arg.startsWith('--window-size') && arg !== 'about:blank');
+// The browser rung for a treatment: a three.js world asks for the platform GPU rung, a Blender
+// film shows its path-traced plate under HTML type on the software rung, and anything else renders
+// on the software rung where a determinism mismatch is always a page leak.
+export function stageRung(treatment) {
+  if (treatment.render3d === 'blender') return 'software';
+  return treatment.depth === '3d' ? 'gpu' : 'software';
+}
+
+export function stageFlagsUsed(rung = 'software') {
+  return stageArgs({ profileDir: '<profile>', width: 0, height: 0, rung }).filter((arg) => !arg.startsWith('--user-data-dir') && !arg.startsWith('--window-size') && arg !== 'about:blank');
 }
 
 // `gate --out <dir>` on a stage render: re-evaluate the recorded facts against the exports where they

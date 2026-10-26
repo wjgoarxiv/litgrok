@@ -113,13 +113,13 @@ The row lives in your user settings and stays off until you ask for it (`litgrok
 
 ## What you get
 
-It ships 39 skills, 11 agents, one project rule, and eleven hook registrations. Most days you will use a handful of them.
+It ships 42 skills, 11 agents, one project rule, and eleven hook registrations. Most days you will use a handful of them.
 
 Each of those four has one job in the session.
 
 | Piece | How many | What it does |
 | --- | --- | --- |
-| Skills | 39 | Instructions the session reads when you call them by name. |
+| Skills | 40 | Instructions the session reads when you call them by name. |
 | Agents | 11 | Helpers in `.grok/agents` for a bounded job, such as a plan, a review, or a prose pass. |
 | Hooks | Eleven registrations | They show the LIT mark, keep the status row current, check deliverable wording, and log events. |
 | Project rule | 1 | `.grok/rules/00-litgrok.md` tells Grok Build when to reach for a skill. |
@@ -178,7 +178,16 @@ For a larger change, `/lit-plan` writes a plan file with numbered rows and the c
 | `/review-work` | Reviews a plan before work or a change after it, with its evidence. |
 | `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
 
-[All 39 skills, with a picture of what each one gives you](./docs/skills.md).
+[All 42 skills, with a picture of what each one gives you](./docs/skills.md).
+
+## What you can make
+
+Every picture below is a real output. Type the line under it with LitGrok installed and you get the same kind of result; where no line sits under a picture, the skill's own engine made it from the example the skill ships with. None of them is a mock-up.
+
+<table>
+<tr><td width="50%" valign="top"><img src="./docs/assets/showcase/brief.webp" width="400" alt="Terminal showing the lit-adhd brief: one headline session, one ended session in a table, a roadmap with checkmarks, and a boxed recommended next step." /><br /><b>lit-adhd</b> · the brief<br /><code>lit adhd</code></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck.webp" width="400" alt="A lit-pptx slide: completed this week and planned for week 41, two columns of numbered items, and a sample-data footer." /><br /><b>lit-pptx</b> · status deck<br /><sub>Built from the skill's bundled sample report by its own converter; the layout gate passed.</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="./docs/assets/showcase/page.webp" width="400" alt="Landing page built by frontend-ui-ux: hero with install command, how-it-works steps, pricing tiers and FAQ, shown at phone width with no sideways scroll." /><br /><b>frontend-ui-ux</b> · landing page<br /><sub>Built from a plain brief; the probe renders it at seven views and checks overflow, contrast and motion.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/pid.webp" width="400" alt="A3 P&ID of a hypochlorite dosing skid: tank, duty and standby metering pumps, relief valve, instruments and control loop, title block at the bottom." /><br /><b>lit-schematic</b> · P&ID<br /><sub>Built from the skill's bundled worked example by its own kit; the QA gate passed.</sub></td></tr>
+</table>
 
 ## Automatic handoff
 
@@ -237,9 +246,9 @@ The installer copies plain files into the project's `.grok/` folder and changes 
 
 You can use the same planning and review habits inside Grok Bot, without a separate Grok Build install. The plugin gives the bot the skill text, and you call a skill by its folder name.
 
-This repository carries that plugin at `.cursor-plugin/plugin.json`. Grok Bot and Cursor both read this Cursor-format manifest, and it points them at the 39 skills in `.grok/skills`. Ask with the name and the job, for example "lit-plan this change" or "litwork the to-do list". The bot reads that skill and does the work with the tools it already has. These are the names:
+This repository carries that plugin at `.cursor-plugin/plugin.json`. Grok Bot and Cursor both read this Cursor-format manifest, and it points them at the 42 skills in `.grok/skills`. Ask with the name and the job, for example "lit-plan this change" or "litwork the to-do list". The bot reads that skill and does the work with the tools it already has. These are the names:
 
-`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-handoff`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
+`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-adhd`, `lit-handoff`, `lit-hijack`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-schematic`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
 
 Skills that run a bundled script, such as the slide and document skills, need Node.js or Python on the computer that runs them.
 
@@ -249,7 +258,7 @@ Here is that split, one piece at a time.
 
 | Piece | Grok Build | Grok Bot |
 | --- | --- | --- |
-| Skills | The install copies the 39 folders into `.grok/skills`, and you call one by name. | The plugin points at those folders, and you call one by its folder name in the message. |
+| Skills | The install copies the 40 folders into `.grok/skills`, and you call one by name. | The plugin points at those folders, and you call one by its folder name in the message. |
 | Agents | Eleven definitions in `.grok/agents` take a bounded job, such as a plan or a review. | You name the skill, and the bot does the work with the tools it already has. |
 | Hooks | The eleven registrations run after you trust the project with `/hooks-trust`. | Grok Build starts the hook commands. |
 | Project rule | `.grok/rules/00-litgrok.md` is the guidance the session reads. | The working habit the bot follows is written in the skill files. |
@@ -280,7 +289,7 @@ The installer never runs `git init`, trusts hooks, signs in or picks a model for
 ## Learn more
 
 - [Guide](./docs/guide.md): pictures of what LitGrok prints, the promo film, install options and the status row, safety checks, automatic handoff in detail, slides and documents, and fixes for common problems.
-- [All skills](./docs/skills.md): the 39 skills, one row each.
+- [All skills](./docs/skills.md): the 42 skills, one row each.
 - [Operational reference](./docs/reference.md): installation, hooks, terminal output, payload checks and source provenance.
 - [Project rule](./.grok/rules/00-litgrok.md), [skill folders](./.grok/skills), [changelog](./CHANGELOG.md), [privacy and local data](./docs/privacy.md) and [migration from the old npm name](./docs/reference.md#npm-package-migration).
 - [LitFamily](https://github.com/wjgoarxiv/litfamily): the same way of working for other coding agents.

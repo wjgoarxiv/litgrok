@@ -7,9 +7,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BlockedError, COVER, EXIT } from './constants.mjs';
-import { normalize, restateLimit, sentenceCount, sharedRun, stripQuoted } from './treatment.mjs';
+import { normalize, normUrl, requestUrls, restateLimit, sentenceCount, sharedRun, stripQuoted } from './treatment.mjs';
 
-export const RECIPES = Object.freeze(['painted-light', 'weight-tide', 'orbit-loop', 'own']);
+export const RECIPES = Object.freeze(['hero-3d', 'painted-light', 'weight-tide', 'orbit-loop', 'own']);
 export const LAYERS = Object.freeze(['slow', 'mid', 'beat']);
 
 const PLACEHOLDER = /<[^<>\n]{1,80}>|^\s*(?:todo|tbd|tk|xxx|\.\.\.|…)\s*$/iu;
@@ -76,6 +76,19 @@ export function validateCoverTreatment(t) {
     }
   }
   if ('seed' in t && !Number.isInteger(t.seed)) return bad('seed', 'seed must be an integer');
+  // A link in the request names the product: the cover is built from its real assets, fetched first.
+  {
+    const urls = requestUrls(t.request);
+    if (!('product' in t) || t.product === null) {
+      if (urls.length) return bad('product', `product is missing: the request links ${urls[0]}; fetch its real assets first with motion.mjs assets --out <dir> --url <link> --cover, look at them, and set product { name, url }`);
+    } else {
+      const product = t.product;
+      if (!product || typeof product !== 'object') return bad('product', 'product must be an object { name, url }');
+      if (typeof product.name !== 'string' || !product.name.trim() || PLACEHOLDER.test(product.name)) return bad('product.name', 'product.name names the product');
+      if (urls.length && !urls.includes(normUrl(product.url ?? ''))) return bad('product.url', `product.url must be the link the request gives (${urls.join(', ')})`);
+      if ('unreachable' in product && product.unreachable !== undefined && product.unreachable !== null && (typeof product.unreachable !== 'string' || !product.unreachable.trim())) return bad('product.unreachable', 'product.unreachable says what could not be reached and why');
+    }
+  }
   const ambition = prose(t, 'ambition', 2);
   if (ambition) return ambition;
   const { page, out } = COVER.aspects[t.aspect];
@@ -95,6 +108,17 @@ export function loadCoverTreatment(outDir) {
   if (parsed?.mode !== 'cover') throw new BlockedError(EXIT.TREATMENT_INVALID, 'BLOCKED_TREATMENT_INVALID field=mode: this treatment is a film; render it with stage or make (references/treatment.md); a cover sets mode: cover');
   const result = validateCoverTreatment(parsed);
   if (!result.ok) throw new BlockedError(EXIT.TREATMENT_INVALID, `BLOCKED_TREATMENT_INVALID field=${result.field}: ${result.message}`);
+  // A linked cover is built only from fetched assets: product.json must exist, list cover files,
+  // and an unreachable product stops with exit 22 until the user supplies the art.
+  const coverProduct = result.treatment.product;
+  if (coverProduct?.unreachable) throw new BlockedError(EXIT.ASSET_MISSING, `BLOCKED_ASSET_MISSING: ${coverProduct.name}'s real assets could not be reached (${coverProduct.unreachable}); ask the user for its logo or README images, put them in ${join(outDir, 'cover', 'assets')} and list them in assets.json`);
+  if (coverProduct && !existsSync(join(outDir, 'product.json'))) throw new BlockedError(EXIT.TREATMENT_INVALID, `BLOCKED_TREATMENT_INVALID field=product: no ${join(outDir, 'product.json')}: run motion.mjs assets --out ${outDir} --url ${coverProduct.url} --cover first`);
+  if (coverProduct) {
+    let fetched;
+    try { fetched = JSON.parse(readFileSync(join(outDir, 'product.json'), 'utf8'))?.product?.assets ?? []; } catch (error) { throw new BlockedError(EXIT.TREATMENT_INVALID, `BLOCKED_TREATMENT_INVALID field=product: ${join(outDir, 'product.json')} is not valid JSON (${error.message}); run motion.mjs assets --out ${outDir} --url ${coverProduct.url} --cover again`); }
+    const astray = fetched.filter((asset) => !String(asset?.path ?? '').startsWith('cover/assets/'));
+    if (astray.length) throw new BlockedError(EXIT.TREATMENT_INVALID, `BLOCKED_TREATMENT_INVALID field=product: ${astray[0].path} sits outside cover/assets/, where the cover page cannot load it; run motion.mjs assets --out ${outDir} --url ${coverProduct.url} --cover again`);
+  }
   const first = join(outDir, '.run', 'treatment-first.json');
   if (!existsSync(first)) {
     mkdirSync(join(outDir, '.run'), { recursive: true });

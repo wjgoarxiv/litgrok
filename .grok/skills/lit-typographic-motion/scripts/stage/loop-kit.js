@@ -2,8 +2,8 @@
 // /lit/stage-kit.js). A cover page is one function of loop time t in [0, 1): the renderer calls
 // window.renderFrame(t) for t = i / N in any order and twice in separate browsers. So every helper
 // here is pure, and every helper that takes t closes the loop: its value at t = 1 is its value at
-// t = 0. The cover init script makes Math.random and every clock throw, so layout randomness comes
-// from LitLoop.rng(seed) and everything that moves comes from t.
+// t = 0. The cover init script makes every clock throw and seeds Math.random only until the page is
+// ready, so layout randomness comes from LitLoop.rng(seed) and everything that moves comes from t.
 (function install(scope) {
   'use strict';
 

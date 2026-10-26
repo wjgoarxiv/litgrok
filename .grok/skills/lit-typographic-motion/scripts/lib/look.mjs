@@ -170,6 +170,7 @@ export function doneState(out) {
     let raw = null;
     try { raw = readJson(treatmentFile); } catch { return notDone('treatment.json is not valid JSON'); }
     if (raw?.mode === 'cover') return coverDoneState(out, raw);
+    if (raw?.preview === true) return previewDoneState(out, raw);
   }
   const render = completionState(out);
   if (!render.done) return notDone(render.reason);
@@ -198,7 +199,7 @@ export function doneState(out) {
   const indexNow = existsSync(join(out, 'stills', 'index.json')) ? sha(readFileSync(join(out, 'stills', 'index.json'))) : null;
   if (indexNow !== manifest.stillsIndexSha256) return notDone('the stills on disk are not the final render\'s; render again', { downgraded });
   const index = readJson(join(out, 'stills', 'index.json'));
-  const required = index.stills.filter((s) => ['poster', 'contact-sheet', 'beat-mid', 'transition'].includes(s.kind)).map((s) => s.file);
+  const required = index.stills.filter((s) => ['poster', 'contact-sheet', 'beat-mid', 'transition', 'board'].includes(s.kind)).map((s) => s.file);
   const unviewed = required.filter((file) => !last.viewed.includes(file));
   if (unviewed.length) return notDone(`the last look did not view ${unviewed.join(', ')}`, { downgraded });
   const open = last.openItems ?? [];
@@ -210,6 +211,43 @@ export function lookSummary(out) {
   const look = readLook(out);
   const viewed = new Set(look.rounds.flatMap((r) => r.viewed ?? []));
   return { rounds: look.rounds.length, viewed: viewed.size, blocked: look.rounds.some((r) => r.blocked) };
+}
+
+// A preview film (treatment preview: true) is done at its board: a stills-only render whose layout
+// check passed, looked at, storyboard included. The full render waits for the user.
+export function previewDoneState(out, raw) {
+  const labels = [`this is the storyboard preview (${join(out, 'stills', 'board.png')}); the film is not rendered yet, and the user can say go to render it`];
+  const notDone = (reason, extra = {}) => ({ status: 'NOT DONE', done: false, reason, downgraded: [], open: [], preview: true, labels, ...extra });
+  const valid = validateTreatment(raw);
+  if (!valid.ok) return notDone(`the treatment is invalid (${valid.field})`);
+  const indexFile = join(out, 'stills', 'index.json');
+  if (!existsSync(indexFile)) return notDone('no board yet: render with --stills-only');
+  const indexSha = sha(readFileSync(indexFile));
+  const index = readJson(indexFile);
+  if (!index.stills.some((s) => s.file === 'stills/board.png')) return notDone('the stills set has no storyboard (stills/board.png); render with --stills-only again');
+  try {
+    const check = readJson(join(out, 'stage', 'check.json'));
+    const failed = (check.rules ?? []).filter((x) => x.status === 'FAIL').map((x) => x.id);
+    if (failed.length) return notDone(`the board check failed (${failed.join(', ')}); fix the page and render the board again`);
+  } catch {
+    return notDone('the board check result is missing; render with --stills-only again');
+  }
+  let rounds;
+  try {
+    rounds = readLook(out).rounds;
+  } catch {
+    return notDone('look.json is unreadable', {});
+  }
+  const last = rounds.at(-1);
+  if (!last) return notDone('no look round on the board: open the storyboard and the stills with Read and record round 1');
+  if (last.stamp?.stillsIndexSha256 !== indexSha) return notDone('the look round was recorded before the latest board; look again and record it');
+  const required = index.stills.filter((s) => ['board', 'contact-sheet', 'beat-mid'].includes(s.kind)).map((s) => s.file);
+  const missing = required.filter((file) => !last.viewed?.includes(file));
+  if (missing.length) return notDone(`the look round did not view ${missing.slice(0, 4).join(', ')}`);
+  const open = last.openItems ?? [];
+  if (open.length && last.round < 3) return notDone(`the last look asks for another round (${open.join('; ')}); fix it and record round ${last.round + 1}`, { open });
+  if (last.blocked) return { status: 'DONE_UNVIEWED', done: true, reason: 'the board was looked at without a vision tool: say so in the reply', downgraded: [], open, preview: true, labels };
+  return { status: 'DONE', done: true, reason: 'the board passed its check and was looked at', downgraded: [], open, preview: true, labels };
 }
 
 // The cover done-check (references/cover.md, Rounds and done): a valid cover treatment unchanged

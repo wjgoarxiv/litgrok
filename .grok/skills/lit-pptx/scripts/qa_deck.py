@@ -13,7 +13,7 @@ via python-pptx. (A renderer is only ever needed for *visual* preview, which is
 optional and lives in thumbnail.py.)
 
 `--sibling other.pptx` names the same source compiled under another tonality; the deck output checks
-then fail the pair when they differ on fewer than two content slides (one in a deck of under four) (OF-116).
+then fail the pair when any content slide's title frame or body corner stands in another place (OF-116).
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from craft_extras import assess as assess_craft, display_slide
-from deck_output import assess as assess_output, compare_skeletons
+from deck_output import assess as assess_output, compare_placement
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATE = ROOT / "scripts" / "validate_pptx.py"
@@ -726,9 +726,9 @@ def qa(pptx: Path, sibling: Path | None = None) -> dict[str, Any]:
     substance = check_visual_substance(pptx)
     craft = assess_craft(Presentation(str(pptx)))
     output = assess_output(Presentation(str(pptx)))
-    # The same source under another tonality, when given: the two decks differ on at least two content slides (OF-116).
+    # The same source under another tonality, when given: the two must place titles and bodies alike (OF-116).
     if sibling is not None:
-        output["findings"] += compare_skeletons(Presentation(str(pptx)), Presentation(str(sibling)), sibling.name)
+        output["findings"] += compare_placement(Presentation(str(pptx)), Presentation(str(sibling)), sibling.name)
         output["pass"] = not any(f["severity"] == "HIGH" for f in output["findings"])
 
     reasons: list[str] = []

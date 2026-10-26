@@ -3,8 +3,6 @@ first; after the first edit nobody can tell a regression from an intended change
 
 ## Baseline capture
 
-Capture before touching a file. No baseline means no parity list and no regression guard.
-
 - Pin the pre-change revision; its `source_hash` is the baseline identity.
 - Capture every affected route at `compact` and `expanded`.
 - Capture `loading`, `empty`, `error`, `disabled`, and overflow per route.
@@ -20,8 +18,6 @@ Classify debt before proposing a treatment; the category decides how far the fix
 4. Responsive: overflow, content hidden with no named alternative, targets lost.
 5. Behavioral: no recovery path, destroyed input, missing progress feedback.
 6. Aesthetic: dated treatment with no functional cost.
-
-Rank by what a user cannot do. Aesthetic debt alone does not justify opening a surface.
 
 ## Decision per surface
 
@@ -43,8 +39,6 @@ Order the work so the product ships at the end of every stage.
 3. Migrate remaining routes in traffic order, one route per stage.
 4. Keep behavioral fixes in their own stages, never folded into a visual stage.
 5. Delete the superseded path only after its last consumer moves.
-
-A stage that cannot ship alone is too large. Split it.
 
 ## Parity list
 
@@ -85,3 +79,13 @@ Close only when the record is complete.
 - The parity list holds, or each break has an owner and an expiry.
 - The final artifact reached the independent review pass bound to the design contract hash.
 - The receipt states `PASS`, `FAIL`, or `BLOCKED` and names unresolved deviations.
+
+## Failure patterns
+
+Reject:
+
+- Editing before the baseline is captured.
+- "Modernize it" accepted as a scope statement.
+- One branch that migrates every route at once.
+- A failing test rewritten to match the new implementation.
+- A redesign called done while one route still renders the superseded system.

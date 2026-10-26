@@ -14,7 +14,7 @@ LitGrok gives xAI's Grok Build the habit of planning before it edits, checking w
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.26/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often just means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 39 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
+Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often just means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 42 skills, 11 agents, one project rule, and eleven hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
 
 ## Install in 30 seconds
 
@@ -67,9 +67,9 @@ Long sessions can write their own handoff. Turn on automatic handoff with `litgr
 | `/review-work` | Reviews a plan before work or a change after it, with its evidence. |
 | `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
 
-`/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) shows all 39 with a picture of each result.
+`/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) shows all 42 with a picture of each result.
 
-Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (eight for decks, six restrained ones for documents); `/frontend-ui-ux` builds and checks interfaces, `/readme-studio` writes source-checked READMEs, and `lit-humanizer` rewrites stiff English or Korean prose.
+Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (eight for decks, six restrained ones for documents); `/frontend-ui-ux` builds and checks interfaces, `/readme-studio` writes source-checked READMEs, `lit-humanizer` rewrites stiff English or Korean prose, `lit-schematic` draws checked P&IDs, equipment layouts and isometric cutaways, `lit-hijack` ports published techniques clean-room with provenance, licence gate and parity proof, and `lit-adhd` briefs every recent session on one read-only screen.
 
 ## What changes after install
 

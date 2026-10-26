@@ -10,12 +10,13 @@ argument-hint: "<surface and intended outcome>"
 Use Grok Build's selected skill and authorized repository tools. A clear build request proceeds to implementation and rendered inspection; a contract alone is not delivery. Review-only and plan-only requests authorize no edits. Incidental mentions are not requests; infer a bare target only when one frontend is unambiguous.
 
 Read references/production.md when deciding whether to clarify or build.
+Ask a numbered choice of house style first (recommended first); skip only when the prompt names it or says you choose.
 Read references/complete-contract.md for the v1beta2 contract and validation limits.
 Read references/probe-loop.md for the required rendered check and fix cycle.
 
 Record direction and inventory, then implement. Evolve and validate the `litfamily.design-contract/v1beta2` contract as decisions settle; retain its evidence requirements. Respect explicit art direction and existing tokens, or use the authored editorial/pixel profile in the production reference.
 
-Resolve resources from the exact selected SKILL.md parent; bind its absolute path as FRONTEND_SKILL_ROOT and quote it, including spaces. Run scripts/verify-canonical-corpus.mjs before corpus use. Run scripts/validate-design-contract.mjs to validate the task contract. Run scripts/query-design-intelligence.mjs when retrieval helps. Run scripts/import-design-intelligence.mjs before trusting its dataset. See the complete contract for rooted commands.
+Resolve resources from the exact selected SKILL.md parent; bind its absolute path as FRONTEND_SKILL_ROOT and quote it, including spaces. Run scripts/verify-canonical-corpus.mjs before corpus use. Run scripts/validate-design-contract.mjs to validate the task contract. Run scripts/query-design-intelligence.mjs when retrieval helps. Run scripts/import-design-intelligence.mjs before trusting its dataset. Run scripts/design-lock.mjs init --family <landing|workspace|settings> when the lock is missing. Run scripts/pixel-art.mjs init <style-id> to see the pixels first. Run scripts/interface-probe.mjs <built-page-or-directory> --out <task-evidence-directory> when the page stands. See the complete contract for rooted commands.
 
 ## Reference routes
 
@@ -27,6 +28,7 @@ Load references/craft-floor.md when checking numeric craft or responsive rules.
 Load references/composition.md when reading order, columns, or density is undecided.
 Load references/creative-directions.md when comparing visual directions.
 Load references/evidence-review.md when preparing observations or an independent verdict.
+Load references/house-styles.md when naming the style, then lock it with design-lock.
 Load references/implementation-platforms.md when rendering or styling changes.
 Load references/inclusive-interface.md when keyboard, semantics, CJK, IME, or preferences matter.
 Load references/interaction-motion.md when states, feedback, focus, or motion need specification.
@@ -34,6 +36,7 @@ Load references/motion-guide.md when planning animation timing, scroll choreogra
 Load references/operating-lanes.md when selecting or recording the lane.
 Load references/performance-delivery.md when budgets or critical-path evidence matter.
 Load references/product-direction.md when the user, completion condition, or non-goal is unclear.
+Load references/production-interview.md before the production round.
 Load references/redesign-playbook.md when changing an existing visual language.
 Load references/system-foundations.md when token layers or primitives need grounding.
 Load references/slop-register.md when reviewing generic patterns and functional tells.

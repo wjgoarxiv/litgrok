@@ -210,17 +210,24 @@ export async function renderCover({ out, round = 1, env = process.env, log = (li
     const order = seekOrder(times.length, treatment.seed);
     const pool = new CoverPool();
     let master, replay, sought;
+    // A 3D hero turns on the GPU rung; when it cannot start there it falls back to software, and
+    // the report says so. The replay and the seek share the master's rung.
+    const rung = treatment.recipe === 'hero-3d' ? 'gpu' : 'software';
+    let rungUsed = rung, rendererUsed = null;
     try {
-      const open = (label) => openCover({ dir, fonts, width: pageW, height: pageH, scale: COVER.captureScale, profileRoot: runDir, env, label, log });
+      const open = (label, useRung) => openCover({ dir, fonts, width: pageW, height: pageH, scale: COVER.captureScale, profileRoot: runDir, env, label, rung: useRung ?? rung, log });
       const a = await open('master');
       try {
         master = await capturePass({ page: a, pool, times, dir: dirs.frames, prefix: 'f', width: w, height: h });
         log(`cover: master ${times.length} frames (${((Date.now() - started) / 1000).toFixed(1)} s)`);
         await capturePass({ page: a, pool, times, dir: dirs.masks, prefix: 'm', mask: true, width: w, height: h });
+        rungUsed = a.rung;
+        rendererUsed = a.renderer;
+        if (a.notice) { warnings.push(a.notice); log(`warning: ${a.notice}`); }
       } finally { await a.close(); }
-      const b = await open('replay');
+      const b = await open('replay', rungUsed);
       try { replay = await capturePass({ page: b, pool, times, dir: dirs.frames2, prefix: 'f', width: w, height: h }); } finally { await b.close(); }
-      const c = await open('seek');
+      const c = await open('seek', rungUsed);
       try { sought = await capturePass({ page: c, pool, times: order.map((i) => times[i]), dir: dirs.seek, prefix: 's', width: w, height: h }); } finally { await c.close(); }
     } finally { await pool.close(); }
     const captureSec = (Date.now() - started) / 1000;
@@ -279,7 +286,7 @@ export async function renderCover({ out, round = 1, env = process.env, log = (li
     const summary = { pass: gate.pass, target: gate.target, medianD: gate.medianD, movingFrac: gate.movingFrac, longestStillSec: gate.longestStillSec, spike: gate.spike, seamLocal: gate.seamLocal, gates: gate.gates };
     writeJson(join(out, 'manifest.json'), {
       schemaVersion: 1, path: 'cover', mode: 'cover', round, recipe: treatment.recipe, treatmentSha256, stillsIndexSha256: indexed.sha256,
-      page: treatment.page, size: treatment.out, scale: COVER.captureScale, fps: treatment.fps, frames: times.length, frameMs: ms, seed: treatment.seed,
+      page: treatment.page, size: treatment.out, scale: COVER.captureScale, fps: treatment.fps, frames: times.length, frameMs: ms, seed: treatment.seed, rung: rungUsed, renderer: rendererUsed ? `${rendererUsed} on the ${rungUsed} rung (cover path)` : null,
       encoder: encoded.encoder, encode: treatment.encode, file: encoded.file.split('/').at(-1), bytes: statSync(encoded.file).size, captureSec, warnings, gate: summary,
     });
     if (!flash.pass) {
@@ -326,7 +333,7 @@ export async function renderCoverWindow({ out, round = 1, window: [t0, t1], env 
   mkdirSync(profileRoot, { recursive: true });
   const pool = new CoverPool();
   try {
-    const page = await openCover({ dir: coverDir, fonts, width: treatment.page[0], height: treatment.page[1], scale: COVER.captureScale, profileRoot, env, label: 'window', log });
+    const page = await openCover({ dir: coverDir, fonts, width: treatment.page[0], height: treatment.page[1], scale: COVER.captureScale, profileRoot, env, label: 'window', rung: treatment.recipe === 'hero-3d' ? 'gpu' : 'software', log });
     try { await capturePass({ page, pool, times: [...new Set(picks.map((p) => p.index))].map((i) => [i, i / treatment.frames]), dir, prefix: 'f', width: w, height: h }); } finally { await page.close(); }
   } finally { await pool.close(); }
   const file = (i) => join(dir, `f${pad4(i)}.png`);

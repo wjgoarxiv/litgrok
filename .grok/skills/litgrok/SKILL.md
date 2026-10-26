@@ -22,7 +22,7 @@ reader_projection: shared_rule
 
 LitGrok is a dependency-free package containing:
 
-- 39 Grok-native skill folders under `.grok/skills/`, including their owned references;
+- 42 Grok-native skill folders under `.grok/skills/`, including their owned references;
 - a root-level `plugin.json` manifest declaring the shipped skill, agent, and hook surfaces;
 - 11 Grok-native agent definitions under `.grok/agents/`;
 - one project rule under `.grok/rules/`;
