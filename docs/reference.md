@@ -66,10 +66,10 @@ flowchart LR
     HK --> PLAN --> LEDGER
     HK --> HEDGE
     RL --> LG
-    LG --> S["40 skills · 11 agents"]
+    LG --> S["42 skills · 11 agents"]
 ```
 
-> **A narrow host boundary.** `plugin.json` exposes the package, hooks feed the plan gate and hedge guard, and rules provide project guidance while the session ledger records bounded state. Together these surfaces carry LitGrok’s 40 skills and 11 agents into Grok Build.
+> **A narrow host boundary.** `plugin.json` exposes the package, hooks feed the plan gate and hedge guard, and rules provide project guidance while the session ledger records bounded state. Together these surfaces carry LitGrok’s 42 skills and 11 agents into Grok Build.
 
 ## Install
 
@@ -80,7 +80,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 Pin a version when you need a reproducible install:
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@1.0.26 -- litgrok install
+npm exec --yes --package @litfamily/litgrok@1.0.27 -- litgrok install
 ```
 
 Preview without writing files:

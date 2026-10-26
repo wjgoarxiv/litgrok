@@ -2,10 +2,15 @@
 
 ## Unreleased
 
-- New skill `lit-adhd` for the many-session brief: reads Grok Build session records, plans, handoffs, git and herdr (read-only, redacted, capped), draws a one-screen brief with a gauge only from real totals plus one `go` next step, and tints the status line rainbow while the brief is active.
-- New skill `lit-hijack` for clean-room ports of published techniques: capture with provenance, licence gate, gap analysis, source-free spec, separate build, parity proof and report, with a dependency-free `hijack.mjs` run gate. The project rule routes `lit hijack|hijacking|하이재킹|하이잭` requests there; `litresearch`, `lit-plan` and `start-work` point at it for source-first ports.
-- New skill `lit-schematic` for drawings of real equipment: a detailed P&ID with ISA-5.1 tags and control loops, a PFD or equipment layout, an isometric cutaway, or a journal figure of an experimental setup, as editable SVG with PDF and 600 dpi PNG (a cutaway also as an interactive HTML page or a motion loop), checked by a QA script and a render-and-look pass. The project rule routes equipment drawings there, and `lit-diagram-drawer` and `lit-scientific-visualization` point at it for hardware while it points back for abstract diagrams and measured data.
-- Maximal draw defaults: `lit-diagram-drawer` keeps density near 8/10 with 14–24 nodes and 3–5 accent families (6 or more fail `ACCENT_COUNT`), `lit-scientific-visualization` builds a rich layer (light grid, direct annotation, inset, multi-panel context) by default, and the schematic kit paints isometric views in full material colour unless a quiet grey figure is asked for.
+## 1.0.27 — 2026-10-27
+
+- Three new skills bring LitGrok to 42. `lit-schematic` draws real equipment: a P&ID with ISA-5.1 tags and control loops, a PFD, an isometric cutaway or a journal figure of an apparatus, as editable SVG with PDF and PNG, checked by a QA script. `lit-hijack` ports a technique from a published project clean-room: it records where the source came from, checks the licence, and makes sure the new code does not copy it. `lit-adhd` catches you up on recent sessions: what each one asked, did and is waiting on, a progress gauge drawn only from real totals, and one next step.
+- `lit-pptx` has five more design tonalities (thirteen in all), each with a worked deck, and its quality gate checks the same things across all of them. `frontend-ui-ux` ships its component kit, fonts and layouts, a design lock that keeps a chosen look consistent, and new interface probes. The motion skill keeps its house styles as data, shows a storyboard before the full render, rejects empty or text-only frames, writes a score for each film and can render through Blender.
+- Design skills now ask which house style you want before they start, with the recommended one first.
+- Drawings and charts are richer by default: `lit-diagram-drawer` aims for a dense diagram with three to five accent colours, and `lit-scientific-visualization` adds a light grid, direct labels and context panels unless you ask for a plain figure.
+- The status row changes its look with the skill: a rainbow while `lit-adhd` runs, however you started it; the review lanes during `review-work`; a YOUR TURN marker while a plan gate or a question waits for you; and a short burst when work completes. With colour off, these appear as plain labels.
+- The README has a "What you can make" gallery of real renders.
+- Safer fetching: when `lit-hijack` or the motion skill downloads something, redirects stay on https, private and local addresses are refused, downloads are capped in size, and the connection goes to the exact address that passed the check, so a DNS change cannot point it elsewhere. Secrets are masked before collected text is shortened, control characters are removed, the session-start note no longer writes through symlinks, the bundled three.js build is checked by hash, and Blender renders stop at a deadline.
 
 ## 1.0.26 — 2026-10-26
 

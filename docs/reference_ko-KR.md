@@ -67,7 +67,7 @@ flowchart LR
     HK --> PLAN --> LEDGER
     HK --> HEDGE
     RL --> LG
-    LG --> S["40 skills · 11 agents"]
+    LG --> S["42 skills · 11 agents"]
 ```
 
 > **Host 경계는 좁고 명확합니다.** `plugin.json`이 package를 노출하고, hook은 plan gate와 hedge guard로 연결되며, rule은 project guidance가 됩니다. session ledger에는 bounded state를 기록하고, 이 표면들이 42개 skill과 11개 agent를 Grok Build에서 사용할 수 있게 합니다.
@@ -81,7 +81,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 재현 가능한 설치는 버전을 고정합니다.
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@1.0.26 -- litgrok install
+npm exec --yes --package @litfamily/litgrok@1.0.27 -- litgrok install
 ```
 
 파일을 쓰지 않고 미리보기:

@@ -1,7 +1,7 @@
 {
   "name": "litgrok",
   "displayName": "LitGrok",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "description": "LitGrok's skills for planning, building, reviewing, researching and handing off work, with Korean prose and office-document help.",
   "author": {
     "name": "LitGrok contributors"

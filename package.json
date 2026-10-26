@@ -1,6 +1,6 @@
 {
   "name": "@litfamily/litgrok",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "description": "Installer for LitGrok: skills, a project rule and hooks that help xAI Grok Build sessions plan, build, check and hand off their work.",
   "keywords": [
     "grok",
