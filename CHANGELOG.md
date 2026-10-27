@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The status row shows the other sessions of the same project, one row each: running first, then idle, with the herdr pane when there is one. A finished start-work shows done for a minute and then leaves. The rows come from small liveness records the hooks now write, including a new `SessionEnd` hook, so there are twelve hook registrations; trust the project again with `/hooks-trust` after updating.
+- After `lit-plan` saves a plan, typing `go` within 30 minutes starts it with start-work. A plan whose tasks name a folder outside the project must say so on a `Scope roots:` line; `--check` and the plan gate name the exact line to add.
+- `lit-adhd` opens with three lines (done so far, doing now, next), counts finished plans, shows sessions that ended as done and the ones waiting at a turn end as idle, reads plans before session files, says how many plans it skipped, falls back to the `## Next` list in HANDOFF.md, and never suggests a step that is already done.
+- A message relayed from another session (`<cross-session-message>`) no longer turns on the plan gate.
+
 ## 1.0.27 — 2026-10-27
 
 - Three new skills bring LitGrok to 42. `lit-schematic` draws real equipment: a P&ID with ISA-5.1 tags and control loops, a PFD, an isometric cutaway or a journal figure of an apparatus, as editable SVG with PDF and PNG, checked by a QA script. `lit-hijack` ports a technique from a published project clean-room: it records where the source came from, checks the licence, and makes sure the new code does not copy it. `lit-adhd` catches you up on recent sessions: what each one asked, did and is waiting on, a progress gauge drawn only from real totals, and one next step.

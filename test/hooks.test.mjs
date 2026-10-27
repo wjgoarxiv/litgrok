@@ -26,6 +26,7 @@ const DOCUMENTED_EVENTS = new Set([
 
 const EXPECTED_HOOK_EVENTS = new Set([
   'SessionStart',
+  'SessionEnd',
   'UserPromptSubmit',
   'PreToolUse',
   'PostToolUse',

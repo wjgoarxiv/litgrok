@@ -48,10 +48,11 @@ node <SKILL_ROOT>/scripts/rewind.mjs --brief --lang <ko|en>
 2. The brief is the result:
 
 - a one-line headline: how many sessions, how many wait on you, how many are active, and the next step in plain words;
-- one card per live session grouped by worktree and branch (status badge, goal, a real gauge or the known facts, done, next);
-- ended sessions, one table row each, newest first;
-- a roadmap timeline (done ✓ with dates, now ▶, later ○);
-- **one recommended next step** in a box, with the word to type (`go`), then one line: "Type `go` to continue." When nothing can run on `go`, the box still recommends a real step from the records (a session waiting on the user, an open plan item, the latest active session, the latest ended one) and says that nothing runs on its own.
+- a three-line opener: **Done so far** (finished plans, commits, sessions that ended through SessionEnd), **Doing now** (waiting, active and idle counts) and **Next** (the same one step as the box);
+- one card per live, idle or waiting session grouped by worktree and branch (status badge, goal, a real gauge or the known facts, done, next);
+- done and ended sessions, one table row each, newest first, a done one marked ✓;
+- a roadmap timeline (commits ✓ with dates, finished plans ✓ done, now ▶, later ○);
+- **one recommended next step** in a box (an untagged fence), with the word to type (`go`), then one line: "Type `go` to continue." When nothing can run on `go`, the box still recommends a real step from the records (a session waiting on the user, an open plan item, the first `## Next` item of this worktree's HANDOFF.md that no checked plan row or commit already did, the latest active session, the latest ended one) and says that nothing runs on its own. A step that is already checked or committed is never offered again.
 
 **Progress gauges, required.** A gauge appears only when both numbers are real, in the form `[▉▉▉░░] 3/5` (filled `▉` done, light `░` remaining, then done/total). An unknown total has no gauge: the card states what is known in words instead. Never a question-mark gauge, never a guess, never an estimate, never a gauge of your own.
 
@@ -92,23 +93,26 @@ The collector (`scripts/lib/collect.mjs`, served as `scripts/rewind.mjs`) reads,
 | Source | What it gives | Missing reads |
 | --- | --- | --- |
 | Grok Build session records, `~/.grok/sessions/<encoded cwd>/<session-id>/` | per session: title, first and last ask, tools used, last assistant text, status | `transcripts: unknown` |
-| `plans/*.md` checkbox rows | open plans, current item, done/total, remaining names | `plans: unknown` |
-| `.handoff/HANDOFF.md`, else root `HANDOFF.md` | headings from the first 40 lines only | `handoffs: unknown` |
+| `plans/*.md` checkbox rows changed inside the window | open and finished plans, current item, done/total, remaining names; plans outside the window or past the read budget are counted as skipped | `plans: unknown` |
+| `.handoff/HANDOFF.md`, else root `HANDOFF.md` | headings from the first 40 lines, and for this worktree the items under `## Next` | `handoffs: unknown` |
+| `.grok/litgrok/liveness/<key>.json`, written by LitGrok's hooks | whether a session is working, waiting at a turn end, or ended through SessionEnd | the transcript's own status stands |
 | `git log --since` | commits in the window, matched to sessions by time and branch | `git: unknown` |
 | `herdr agent list` (only when `HERDR_ENV=1`) | agent panes | `herdr: unknown` |
 
-Session files are read head (64 KiB) and tail (256 KiB) only, under one 8 MiB budget for the whole run, through descriptors opened without following links. The store format is private and may move, so every field is read defensively and anything missing reads as unknown. Only the session's own project folder is ever listed: the store is never scanned blindly. Every string is redacted before it leaves the collector: credential shapes, `NAME=value` with a secret-like name, URI userinfo, any current environment value of eight or more characters, and the home directory (shown as `~`).
+Plans and handoffs are read first, so a run whose transcripts spend the budget still shows what is left. Session files are read head (64 KiB) and tail (256 KiB) only, under one 8 MiB budget for the whole run, through descriptors opened without following links. The store format is private and may move, so every field is read defensively and anything missing reads as unknown. Only the session's own project folder is ever listed: the store is never scanned blindly. Every string is redacted before it leaves the collector: credential shapes, `NAME=value` with a secret-like name, URI userinfo, any current environment value of eight or more characters, and the home directory (shown as `~`).
 
 Grok Build keeps no litgoal ledger, workflow stack or start-work state file, so those sources stay `unknown` and the offered next step degrades to plans. A paused workflow or a start-work boundary shows in the waiting reason only when the transcript itself says so.
 
 ## Status taxonomy
 
 - `waiting-on-user`: the session's last word was the assistant asking something (a closing `?`, `lit approve`, `확인해 주세요`, `할까요`…).
-- `active`: written to within the last 15 minutes and not waiting.
-- `ended`: quiet for longer than that.
+- `active`: written to within the last 15 minutes and not waiting, or a liveness record under 15 minutes old says it is working.
+- `idle`: a liveness record under 15 minutes old says it stopped at a turn end and asked nothing.
+- `done`: its liveness record says it ended through SessionEnd, at any age.
+- `ended`: quiet for longer than 15 minutes, with no SessionEnd record.
 - `unknown`: the records held no timestamp.
 
-Sessions waiting on the user come first, then active ones, newest first.
+Sessions waiting on the user come first, then active, idle, done and ended ones, newest first.
 
 ## The next step
 

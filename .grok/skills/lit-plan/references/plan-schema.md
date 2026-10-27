@@ -84,4 +84,8 @@ approval_state: approved
 
 ## Validation
 
+### Scope roots
+
+A todo may name an absolute path outside the project only when a column-zero line of the form `Scope roots: <path> (<actions>)` covers it, for example `Scope roots: /srv/shared/fixtures (read)`. `<path>` is an existing folder and `<actions>` is a comma list such as `read`, `write` or `execute`; ask the user for anything beyond `read`. `node scripts/scaffold-plan.mjs --check plans/<slug>.md` lists every uncovered outside folder with the exact line to paste, and the Stop plan gate blocks a plan written this turn on the same finding (within its two-block cap). Paths inside fenced blocks and commands quoted in inline code (a span holding a space) do not count; a span that is one path does. When the nearest existing folder is the filesystem root, a top-level folder or the home folder, the check names a problem instead of a line: pick a narrower folder.
+
 Before presenting the plan, check that each referenced path exists or is explicitly marked to be created, each command has a working directory, each count has a source, and each real-surface probe avoids external side effects. The plan subagent has no shell and no edits, so its claims must come from supplied evidence or read/list/search inspection rather than invented command output.

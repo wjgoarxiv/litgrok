@@ -14,6 +14,8 @@
 import { constants, existsSync, lstatSync, mkdirSync, openSync, closeSync, readFileSync, realpathSync, writeSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { describeScopePath, uncoveredScopePaths } from './scope-roots.mjs';
+
 export const PLAN_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 export const IMPLEMENTATION_ROW = /^- \[[ xX]\] (\d+)\. .+$/u;
 export const FINAL_VERIFIER_ROW = /^- \[[ xX]\] F(\d+)\. .+$/u;
@@ -134,7 +136,8 @@ export function countImplementationRows(text) {
   return planLinesOutsideFences(text).filter(({ line }) => IMPLEMENTATION_ROW.test(line)).length;
 }
 
-export function checkPlanStructure(text) {
+// With `projectRoot`, a todo that names a folder outside the project needs a `Scope roots:` line.
+export function checkPlanStructure(text, projectRoot = null) {
   const problems = [];
   const visibleLines = planLinesOutsideFences(text);
 
@@ -180,6 +183,10 @@ export function checkPlanStructure(text) {
   }
 
   if (/<fill\b/u.test(text)) problems.push('unfilled <fill ...> placeholders remain — the plan is not decision-complete');
+
+  if (projectRoot !== null) {
+    for (const entry of uncoveredScopePaths(visibleLines, projectRoot)) problems.push(describeScopePath(entry));
+  }
 
   return { ok: problems.length === 0, problems };
 }
@@ -232,7 +239,7 @@ function check(planPath, cwd) {
   }
   if (status.isSymbolicLink() || !status.isFile()) return fail(`FAIL PLAN_UNSAFE: ${path} must be a regular file`);
   if (status.size > MAX_PLAN_BYTES) return fail(`FAIL PLAN_TOO_LARGE: ${path}`);
-  const result = checkPlanStructure(readFileSync(path, 'utf8'));
+  const result = checkPlanStructure(readFileSync(path, 'utf8'), cwd);
   if (!result.ok) {
     for (const problem of result.problems) process.stderr.write(`FAIL ${problem}\n`);
     return 1;

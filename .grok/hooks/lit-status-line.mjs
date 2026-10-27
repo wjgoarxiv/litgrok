@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
 import { rewindCellRgb } from './lit-mark.mjs';
 import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
+import { readOtherSessions } from './session-rows.mjs';
 import { STAGES, readWorkflowState } from './workflow-stage.mjs';
 
 const MAX_INPUT_BYTES = 64 * 1024;
@@ -759,6 +760,28 @@ function detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rai
   return layoutLine({ left, right, separator: { plain: ` ${glyphs.dot} `, painted: paint.fg(` ${glyphs.dot} `, 'dim') }, rail: elbow, maxCells, ellipsis: glyphs.ellipsis });
 }
 
+// One row per other session of this workspace: `● start-work · w2B:p2 running`. The name clips first;
+// the state word stays.
+function otherSessionLine(row, { glyphs, paint, maxCells, rail }) {
+  const mark = row.state === 'running' ? glyphs.run : row.state === 'done' ? glyphs.tick : glyphs.dot;
+  const role = row.state === 'running' ? 'accent' : row.state === 'done' ? 'green' : 'dim';
+  const name = row.pane ? `${plainText(row.label, 'session')} ${glyphs.dot} ${row.pane}` : plainText(row.label, 'session');
+  const text = mark ? `${mark} ${name}` : name;
+  const lead = mark ? `${mark} ` : '';
+  return layoutLine({
+    left: [
+      segment(text, (value) => paint.fg(value, role, row.state !== 'idle'), {
+        clip: 1, minCells: width(lead) + 1, shrink: (cells) => `${lead}${clipCells(name, Math.max(1, cells - width(lead)), glyphs.ellipsis)}`,
+      }),
+      segment(row.state, (value) => paint.fg(value, role)),
+    ],
+    separator: { plain: ' ', painted: ' ' },
+    rail,
+    maxCells,
+    ellipsis: glyphs.ellipsis,
+  });
+}
+
 function figuresLine({ status, glyphs, paint, handoff, maxCells, rail }) {
   return layoutLine({
     left: figureLeads(figureSegments(status, { glyphs, paint, handoff }), glyphs, paint, false),
@@ -822,18 +845,25 @@ function render(input) {
     burst: phase.phase === 'complete' && workflow?.stage === 'done',
   };
   if (process.env.LITGROK_HUD_LINES === '1') return [compactRow({ ...shared, looks, phase })];
+  let others = [];
+  try {
+    others = readOtherSessions(statusDirs(input), input?.session_id, now);
+  } catch {
+    others = [];
+  }
+  const rail = railFor(paint, glyphs);
+  const otherLines = others.map((row) => otherSessionLine(row, { glyphs, paint, maxCells, rail }));
   // The card shows while a discipline is active or the session has a workflow stage; otherwise the
-  // HUD is the single row.
-  if (!discipline && !workflow?.stage) return [compactRow({ ...shared, looks, phase })];
+  // HUD is the single row, with the other sessions' rows under it.
+  if (!discipline && !workflow?.stage) return [compactRow({ ...shared, looks, phase }), ...otherLines];
   const warning = warningText(input, activity, handoff);
   const live = turn.running ? activity?.live ?? null : null;
-  const rail = railFor(paint, glyphs);
   const lines = [titleLine({ ...shared, phase, warning, activity: phase.phase === 'idle' ? null : activity, rail, looks })];
   if (workflow?.stage) lines.push(mapLine(workflow, { paint, glyphs, nerd, running: turn.running, now }, rail, maxCells));
   const detail = detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail });
   if (detail) lines.push(detail);
   lines.push(figuresLine({ ...shared, rail }));
-  return lines;
+  return [...lines, ...otherLines];
 }
 
 

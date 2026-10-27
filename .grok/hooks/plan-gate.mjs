@@ -3,14 +3,16 @@
 // Host contract (documented Stop decision control): stdout `{"decision":"block","reason"}` keeps
 // the agent working; empty stdout with exit 0 allows the stop; failures fail open. The prompt text
 // is never persisted, so the gate arms on `permissionMode === "plan"`, on the ledger's lit-plan
-// discipline marker for the turn, and on a plan file written this turn that carries zero rows. At
+// discipline marker for the turn, on a plan file written this turn that carries zero rows, and on
+// one whose todos name a folder outside the project with no `Scope roots:` line covering it. At
 // most two blocks per session; after that it passes with a stderr warning so a condition the model
 // cannot resolve never loops.
 
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { countImplementationRows } from '../skills/lit-plan/scripts/scaffold-plan.mjs';
+import { countImplementationRows, planLinesOutsideFences } from '../skills/lit-plan/scripts/scaffold-plan.mjs';
+import { describeScopePath, uncoveredScopePaths } from '../skills/lit-plan/scripts/scope-roots.mjs';
 import { readLedgerRecords } from './record-passive-event.mjs';
 
 export const PLAN_GATE_SIGNAL = 'plan-gate-block';
@@ -38,7 +40,13 @@ function plansWrittenSince(workspaceRoot, since) {
     const status = statSync(path);
     if (status.size > MAX_PLAN_BYTES) continue;
     if (since !== null && status.mtimeMs < since) continue;
-    plans.push({ name: `plans/${entry.name}`, mtimeMs: status.mtimeMs, rows: countImplementationRows(readFileSync(path, 'utf8')) });
+    const text = readFileSync(path, 'utf8');
+    plans.push({
+      name: `plans/${entry.name}`,
+      mtimeMs: status.mtimeMs,
+      rows: countImplementationRows(text),
+      outside: uncoveredScopePaths(planLinesOutsideFences(text), workspaceRoot),
+    });
   }
   return plans.sort((left, right) => right.mtimeMs - left.mtimeMs);
 }
@@ -62,6 +70,8 @@ export function evaluatePlanGate({ event, workspaceRoot, sessionId, ledgerFile }
     reason = `lit-plan must persist plans/<slug>.md before finishing this planning turn: run \`node ${SCAFFOLD} <slug>\` from the project root, append column-zero \`- [ ] N. <title>\` task rows under "## Todos", then run \`node ${SCAFFOLD} --check plans/<slug>.md\`.`;
   } else if (newest && newest.rows === 0 && (planMode || since !== null)) {
     reason = `${newest.name} was written this turn but has no column-zero \`- [ ] 1. <title>\` task row; start-work cannot execute it. Append the task rows under "## Todos", then run \`node ${SCAFFOLD} --check ${newest.name}\`.`;
+  } else if (newest && newest.outside.length > 0 && (planMode || since !== null)) {
+    reason = `${newest.name} names folders outside the project that start-work would have to stop and ask for. ${newest.outside.map(describeScopePath).join(' ')} Then run \`node ${SCAFFOLD} --check ${newest.name}\`.`;
   }
   if (reason === null) return { block: false };
 

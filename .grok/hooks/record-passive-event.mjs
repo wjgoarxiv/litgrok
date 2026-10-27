@@ -19,6 +19,7 @@ import {
 } from 'node:fs';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { writeHudRecords } from './litgrok-hud-state.mjs';
+import { writeLiveness } from './session-liveness.mjs';
 import { entryFromPrompt, readWorkflowState, testVerdict, updateWorkflowState, workflowStatePath } from './workflow-stage.mjs';
 
 const MAX_EVENT_BYTES = 1024 * 1024;
@@ -30,6 +31,7 @@ const KEPT_SEGMENTS = 2;
 const ROTATION_LOCK_STALE_MS = 30 * 1000;
 const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
+const LIVENESS_BY_EVENT = Object.freeze({ PostToolUse: 'alive', PostToolUseFailure: 'alive', Stop: 'idle', SessionEnd: 'ended' });
 // A finished call by one of these tools cannot have changed a plan file, so it skips the plan reread.
 const READ_ONLY_TOOLS = /^(?:read_file|grep|list_dir|glob|todo_write|web_search|web_fetch|read|ls)$/iu;
 const HUD_DISCIPLINE_PATTERN = /(?:^|[\s/])(lit-scientific-visualization|lit-handoff|lit-brainstorm|lit-adhd|lit-rewind|autoconference|autoresearch|lit-plan|litwork|review-work|lit)(?=$|[^\w-])/iu;
@@ -74,9 +76,13 @@ function maskInlineCode(text) {
   return output + text.slice(cursor);
 }
 
+// A message relayed from another session is quoted data, never this user's route; an unclosed
+// block runs to the end of the prompt.
+const CROSS_SESSION_BLOCK = /<cross-session-message\b[^>]*>[\s\S]*?(?:<\/cross-session-message>|$)/gu;
+
 function visiblePromptText(prompt) {
   let fence = null;
-  const lines = prompt.match(/[^\n]*\n|[^\n]+$/gu) ?? [];
+  const lines = prompt.replace(CROSS_SESSION_BLOCK, ' ').match(/[^\n]*\n|[^\n]+$/gu) ?? [];
   const withoutFences = lines.map((line) => {
     if (fence !== null) {
       const close = line.match(/^[\t ]{0,3}(`+|~+)[\t ]*(?:\r?\n)?$/u)?.[1];
@@ -438,7 +444,8 @@ export async function recordPassiveEvent(expectedEvent) {
     const tool = toolRecord(event, expectedEvent);
     if (tool) record.tool = tool;
     if (typeof event.promptId === 'string') record.promptId = event.promptId;
-    const entry = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string' ? entryFromPrompt(visiblePromptText(event.prompt)) : null;
+    const visiblePrompt = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string' ? visiblePromptText(event.prompt) : null;
+    const entry = visiblePrompt === null ? null : entryFromPrompt(visiblePrompt);
     const ledgerFile = environment.sessionId === null ? null : ledgerPath(environment.realWorkspaceRoot, environment.sessionId);
     // A bare `lit` continues the discipline the last explicit switch selected, and with it that discipline's gate.
     const continued = entry?.entry === 'continue' && ledgerFile !== null
@@ -446,8 +453,8 @@ export async function recordPassiveEvent(expectedEvent) {
       : null;
     const selected = entry === null || entry.entry === 'continue' ? undefined
       : entry.discipline === 'lit-brainstorm' ? 'lit-brainstorm' : entry.stage === 'plan' ? 'lit-plan' : null;
-    const discipline = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string'
-      && (/(?:^|[\s/])lit-plan(?:$|[^\w-])/iu.test(event.prompt) || entry?.discipline === 'lit-plan' || continued === 'lit-plan') ? 'lit-plan' : null;
+    const discipline = visiblePrompt !== null
+      && (/(?:^|[\s/])lit-plan(?:$|[^\w-])/iu.test(visiblePrompt) || entry?.discipline === 'lit-plan' || continued === 'lit-plan') ? 'lit-plan' : null;
     let hudDiscipline = null;
     if (expectedEvent === 'UserPromptSubmit') {
       hudDiscipline = continued ?? (entry?.discipline !== undefined ? entry.discipline : hudDisciplineFromPrompt(event.prompt));
@@ -473,6 +480,14 @@ export async function recordPassiveEvent(expectedEvent) {
     if (ledgerFile !== null) {
       appendRecord(ledgerFile, record);
       await noteWorkflow(ledgerFile, environment, expectedEvent, record, entry?.entry, selected);
+      // Liveness is best effort: a refused or failed write never changes this hook's output.
+      if (Object.hasOwn(LIVENESS_BY_EVENT, expectedEvent)) {
+        try {
+          writeLiveness({ ledgerFile, sessionId: environment.sessionId, cwd: environment.eventCwd, state: LIVENESS_BY_EVENT[expectedEvent] });
+        } catch {
+          // The ledger record above is the durable trace.
+        }
+      }
     }
     if (expectedEvent === 'UserPromptSubmit') {
       writeHudRecords({

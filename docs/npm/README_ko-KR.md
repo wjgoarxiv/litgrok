@@ -14,7 +14,7 @@ LitGrok은 xAI Grok Build가 코드를 고치기 전에 계획부터 세우고, 
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열한 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
+Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열두 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
 
 ## 30초 설치
 
@@ -73,7 +73,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 설치하면 달라지는 것
 
-설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/hooks/hooks.json)에 있는 훅 등록 열한 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
+설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/hooks/hooks.json)에 있는 훅 등록 열두 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
 
 지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다. 프롬프트가 작업 흐름 스킬을 시작하면 지금 단계, 돌고 있는 도구, 마지막 테스트 결과도 함께 보입니다. 턴이 끝날 때 Grok의 터미널 알림을 받으려면 `--notify`를 붙이세요.
 
@@ -112,6 +112,6 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 
 LitGrok 덕분에 같은 설명을 덜 반복하게 됐다면, [GitHub 스타](https://github.com/wjgoarxiv/litgrok) 하나가 다른 Grok Build 사용자에게 이 프로젝트를 알리는 데 도움이 됩니다.
 
-[상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/LICENSE)
+[상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/LICENSE) · [상표 정책](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.27/TRADEMARK.md)
 
 커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다.

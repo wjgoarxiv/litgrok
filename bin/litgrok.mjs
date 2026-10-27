@@ -95,6 +95,8 @@ const PRE_MANIFEST_PAYLOAD_HASHES = Object.freeze({
   'skills/lit-comprehend/references/worked-explainer.md': 'c6ecde363a39760632e8c7f296d14ea32df508afebb99c101cc68ee021d0fac4',
   'skills/lit-handoff/SKILL.md': '7152d6399fd778ab3d16e1abad2ec97e2f4be4350cd3993cdde038cc1211dd80',
   'skills/lit-plan/SKILL.md': '0efb869398cedf36128ec2160eee660da8df8d324cdc18f56256fe7d08ff8d78',
+  'skills/lit-plan/references/plan-schema.md': '1799c070eb8cf465f1737ac7d25409b6bfb245beb4c589e7bd69e2058861d74d',
+  'skills/lit-plan/scripts/scaffold-plan.mjs': '3b5784f7c39af28afcf8d9f3df872cbfd3bf2bb46855b1d0370145ac18cff876',
   'skills/lit-recap/SKILL.md': '65f76df0ce9170bbc0c6a0bd7110f6a6eb0169e6f92c4fc3bd32e28cf0232dc1',
   'skills/lit-scientific-visualization/SKILL.md': 'ffc3b2ea49dd7e7c4c7d4568f289df294a3a30f953c11039f98aaf6f8fb983ee',
   'skills/lit-scientific-visualization/scripts/verify-canonical-corpus.mjs': 'a1cfe0578195098dc4afc2d25f0d391f38aeaa57cd3970fa7dca51e20cbf929d',

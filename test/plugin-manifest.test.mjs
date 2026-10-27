@@ -54,6 +54,7 @@ test('uses the native plugin hook manifest form', () => {
       'PostToolUseFailure',
       'PreCompact',
       'PreToolUse',
+      'SessionEnd',
       'SessionStart',
       'Stop',
       'StopFailure',

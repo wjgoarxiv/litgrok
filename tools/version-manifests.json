@@ -29,13 +29,13 @@
     {
       "path": "docs/npm/README.md",
       "kind": "pinned",
-      "occurrences": 20,
+      "occurrences": 21,
       "why": "The npm page, swapped in as README.md at pack time, pins its package file links and artwork URLs to the current package release."
     },
     {
       "path": "docs/npm/README_ko-KR.md",
       "kind": "pinned",
-      "occurrences": 20,
+      "occurrences": 21,
       "why": "The npm page, swapped in as README_ko-KR.md at pack time, pins its package file links and artwork URLs to the current package release."
     },
     {

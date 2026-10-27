@@ -25,6 +25,7 @@ const PASSIVE_HOOKS = [
   ['SubagentStop', 'subagent-stop'],
   ['PreCompact', 'pre-compact'],
   ['PostCompact', 'post-compact'],
+  ['SessionEnd', 'session-end'],
 ];
 
 const sessionEvent = {
@@ -584,6 +585,21 @@ test('Stop blocks a lit-plan prompt turn that ends without a plan file, in any p
   assert.equal(JSON.stringify(records).includes('refactor'), false, 'prompt text is never persisted');
 });
 
+test('a lit-plan word inside a cross-session message body records no discipline and arms no gate', () => {
+  const workspaceRoot = planGateWorkspace('cross-session');
+  const prompt = 'Relayed note:\n<cross-session-message from="lane-2">\nplease run lit-plan on the cache rewrite\n</cross-session-message>\nAnswer the question above.';
+  const result = runTurn(workspaceRoot, { promptExtra: { prompt } });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, '', 'a quoted cross-session body must not arm the plan gate');
+
+  const ledgerDirectory = join(workspaceRoot, '.grok', 'litgrok', 'session-ledger');
+  const records = readFileSync(join(ledgerDirectory, readdirSync(ledgerDirectory)[0]), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+  assert.ok(records.every((record) => !Object.hasOwn(record, 'discipline')), 'no discipline is recorded');
+
+  const outside = runTurn(planGateWorkspace('cross-session-outside'), { promptExtra: { prompt: `${prompt}\nThen lit-plan it yourself.` } });
+  assert.equal(JSON.parse(outside.stdout).decision, 'block', 'the same word outside the block still arms the gate');
+});
+
 test('bare lit and litwork do not add ledger discipline or arm the lit-plan Stop gate', () => {
   const workspaceRoot = planGateWorkspace('bare-lit-discipline');
   for (const promptText of ['Check out the litgrok install. lit', 'litwork']) {
@@ -611,6 +627,32 @@ test('bare lit and litwork do not add ledger discipline or arm the lit-plan Stop
     .map((line) => JSON.parse(line))
     .filter((record) => record.event === 'UserPromptSubmit');
   assert.equal(allPromptRecords.at(-1).discipline, 'lit-plan');
+});
+
+test('Stop blocks a plan whose todo names an uncovered outside folder, with the Scope roots line to paste, sharing the cap', () => {
+  const workspaceRoot = planGateWorkspace('scope-roots');
+  const outside = mkdtempSync(join(tmpdir(), 'litgrok-plan-gate-outside-'));
+  test.after(() => rmSync(outside, { recursive: true, force: true }));
+  const plan = (scope) => `# demo\n\n${scope}## Todos\n- [ ] 1. First task\n  Read ${outside}/notes.md first.\n`;
+
+  const first = runTurn(workspaceRoot, { stopExtra: { permissionMode: 'plan' }, beforeStop: () => writePlan(workspaceRoot, 'demo.md', plan('')) });
+  assert.equal(first.status, 0, first.stderr);
+  const decision = JSON.parse(first.stdout);
+  assert.equal(decision.decision, 'block');
+  assert.ok(decision.reason.includes(`Scope roots: `), decision.reason);
+  assert.match(decision.reason, /\(read\)/);
+
+  const covered = runTurn(workspaceRoot, {
+    stopExtra: { permissionMode: 'plan' },
+    beforeStop: () => writePlan(workspaceRoot, 'demo.md', plan(`Scope roots: ${outside} (read)\n\n`)),
+  });
+  assert.equal(covered.stdout, '', 'a covered folder passes');
+
+  const second = runTurn(workspaceRoot, { stopExtra: { permissionMode: 'plan' }, beforeStop: () => writePlan(workspaceRoot, 'demo.md', plan('')) });
+  assert.equal(JSON.parse(second.stdout).decision, 'block');
+  const third = runTurn(workspaceRoot, { stopExtra: { permissionMode: 'plan' }, beforeStop: () => writePlan(workspaceRoot, 'demo.md', plan('')) });
+  assert.equal(third.stdout, '', 'the two-block cap is shared with the other plan-gate reasons');
+  assert.match(third.stderr, /plan gate/i);
 });
 
 function disciplineSession(label) {

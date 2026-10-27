@@ -102,6 +102,7 @@ Judge by this session's own state (earlier banner, plan file, workflow row), nev
 - A named discipline (`lit plan`, `lit-plan`, `start-work`, `review-work`, `lit review plan|work`) switches: ignite it once, in full.
 - `lit brainstorm|brainstorming|ideation|ideate|idea|ideas …` opens `lit-brainstorm` (options only, no edits), never deep-interview, lit-plan or the Office and film routes.
 - An approved plan or an active start-work plus a bare `lit` resumes that work; write no second plan.
+- A bare `go` within 30 minutes (plan mtime) of saving a plan here loads start-work on it.
 - `lit new …` and `lit restart …` start fresh with the full activation.
 - A bare `lit` with nothing active asks one question to confirm; `lit fix X` never does.
 

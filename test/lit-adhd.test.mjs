@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { before, describe, it } from "node:test";
@@ -224,6 +225,123 @@ describe("lit-adhd next step", () => {
     assert.equal(chooseNextStep(two, "sess-run").kind, "none", "two open plans is not startable by word alone");
   });
 
+  it("lets a plan saved in the last 30 minutes win over older open plans", () => {
+    const { proj, store } = fixture();
+    const data = collectRewind({ cwd: proj, since: "30d", max: 5, env: baseEnv(store), now: NOW, record: false });
+    const ended = { ...data, sessions: data.sessions.map((session) => ({ ...session, status: "ended" })) };
+    const base = ended.roadmap.plans[0];
+    const withPlans = (plans) => ({ ...ended, roadmap: { ...ended.roadmap, plans } });
+    const fresh = { ...base, plan: "plans/fresh.md", local: true, changedMs: NOW - 29 * 60_000 };
+    const old = { ...base, local: true, changedMs: NOW - 3 * 3_600_000 };
+    assert.deepEqual(chooseNextStep(withPlans([old, fresh]), "sess-run"), { kind: "start-plan", target: { plan: "plans/fresh.md" }, say: "go" });
+    const stale = { ...fresh, changedMs: NOW - 31 * 60_000 };
+    assert.equal(chooseNextStep(withPlans([old, stale]), "sess-run").kind, "none", "a plan older than 30 minutes is not just saved");
+    const twin = { ...fresh, plan: "plans/twin.md", changedMs: NOW - 5 * 60_000 };
+    assert.equal(chooseNextStep(withPlans([old, fresh, twin]), "sess-run").kind, "none", "two fresh plans stay ambiguous");
+  });
+
+  it("the rule and lit-plan route a bare go after a saved plan to start-work", () => {
+    const rule = read(".grok", "rules", "00-litgrok.md");
+    assert.match(rule, /bare `go`.{0,200}30 minutes/su, "rule routes go after a saved plan");
+    const litPlan = readFileSync(join(skillsRoot, "lit-plan", "SKILL.md"), "utf8");
+    assert.match(litPlan, /`go`.{0,300}30 minutes.{0,300}start-work/su, "lit-plan ends with the go offer");
+    assert.match(litPlan, /mtime|modification time/u, "age comes from the plan file");
+  });
+
+});
+
+// Round-3 shape: several lanes of one project, one finished plan, one plan nobody touched in weeks, one
+// open plan, a lane that ended through SessionEnd, one waiting at a turn end, and a HANDOFF.md Next.
+const liveness = (proj, id, state, atMs = NOW) => {
+  const dir = join(proj, ".grok", "litgrok", "liveness");
+  mkdirSync(dir, { recursive: true });
+  const key = createHash("sha256").update(id).digest("hex").slice(0, 32);
+  writeFileSync(join(dir, `${key}.json`), JSON.stringify({ sessionId: id, cwd: proj, state, pane: null, at: iso(atMs) }));
+};
+const roundThree = () => {
+  const { proj, store } = fixture();
+  writeFileSync(join(proj, "plans", "shipped.md"), "- [x] 1. Port liveness\n- [x] 2. Port rows\n");
+  const stale = join(proj, "plans", "stale.md");
+  writeFileSync(stale, "- [ ] 1. Forgotten idea\n");
+  utimesSync(stale, new Date(NOW - 40 * 86_400_000), new Date(NOW - 40 * 86_400_000));
+  writeFileSync(join(proj, ".handoff", "HANDOFF.md"), "# Handoff\n\n## Task\n\n## Next\n\n- Collect records\n- Rerun the family gates\n");
+  liveness(proj, "sess-old", "ended", NOW - 5 * 3_600_000);
+  liveness(proj, "sess-run", "idle", NOW - 60_000);
+  return { proj, store };
+};
+const collectThree = (extra = {}) => {
+  const { proj, store } = roundThree();
+  return collectRewind({ cwd: proj, since: "30d", max: 5, sessionId: "sess-wait", env: baseEnv(store), now: NOW, ...extra });
+};
+
+describe("lit-adhd round-3 brief", () => {
+  it("keeps a finished plan as complete and counts it", () => {
+    const data = collectThree();
+    const shipped = data.roadmap.plans.find((plan) => plan.plan === "plans/shipped.md");
+    assert.ok(shipped, "a finished plan stays in the roadmap");
+    assert.equal(shipped.complete, true);
+    assert.equal(data.roadmap.plansDone, 1);
+    assert.match(renderBrief(data, { lang: "en" }), /✓ .*plans\/shipped\.md/u, "the roadmap shows it as done");
+  });
+
+  it("holds local plans to the window and reports the ones it skipped", () => {
+    const data = collectThree();
+    assert.equal(data.roadmap.plans.some((plan) => plan.plan === "plans/stale.md"), false, "a local plan outside the window is left out");
+    assert.equal(data.roadmap.plansSkipped, 1);
+    assert.match(renderBrief(data, { lang: "en" }), /1 plan skipped/u);
+    assert.match(renderBrief(data, { lang: "ko" }), /계획 1개 건너뜀/u);
+  });
+
+  it("reads plans before transcripts, so a spent budget still leaves the plans", () => {
+    const data = collectThree({ budgetBytes: 200 });
+    assert.ok(data.roadmap.plans.some((plan) => plan.plan === "plans/brief.md"), "plans are read first");
+    assert.equal(data.budget.exhausted, true);
+  });
+
+  it("reads done from a SessionEnd record and idle from a turn end, next to the current statuses", () => {
+    const data = collectThree();
+    const byId = Object.fromEntries(data.sessions.map((session) => [session.id8, session.status]));
+    assert.equal(byId["sess-old"], "done");
+    assert.equal(byId["sess-run"], "idle");
+    assert.equal(byId["sess-wai"], "waiting-on-user", "a session that asked something still waits on you");
+    assert.equal(data.summary.idle, 1);
+  });
+
+  it("opens with three lines: done so far, doing now, next", () => {
+    const text = renderBrief(collectThree(), { lang: "en" });
+    const lines = text.split("\n");
+    const at = lines.findIndex((line) => line.startsWith("**Done so far:**"));
+    assert.ok(at > 0, text);
+    assert.match(lines[at], /1 plan finished/u);
+    assert.match(lines[at + 1], /^\*\*Doing now:\*\* /u);
+    assert.match(lines[at + 1], /1 idle/u);
+    assert.match(lines[at + 2], /^\*\*Next:\*\* /u);
+    const ko = renderBrief(collectThree(), { lang: "ko" });
+    assert.match(ko, /\*\*지금까지 한 일:\*\*/u);
+    assert.match(ko, /\*\*지금 하는 일:\*\*/u);
+    assert.match(ko, /\*\*다음:\*\*/u);
+  });
+
+  it("draws the step box in an untagged fence", () => {
+    const text = renderBrief(collectThree(), { lang: "en" });
+    assert.doesNotMatch(text, /```text/u);
+    assert.match(text, /```\n╭─ RECOMMENDED NEXT STEP/u);
+  });
+
+  it("falls back to HANDOFF.md Next and never offers a step that is already done", () => {
+    const { proj, store } = roundThree();
+    writeFileSync(join(proj, "plans", "brief.md"), "- [x] 0. Scope the store\n- [x] 1. Collect records\n- [x] 2. Draw brief\n");
+    rmSync(join(store, "sessions"), { recursive: true, force: true });
+    const data = collectRewind({ cwd: proj, since: "30d", max: 5, env: baseEnv(store), now: NOW });
+    assert.deepEqual(data.handoffs[0].next, ["Collect records", "Rerun the family gates"]);
+    const text = renderBrief(data, { lang: "en" });
+    const nextLine = text.split("\n").find((line) => line.startsWith("**Next:**"));
+    const boxText = text.slice(text.indexOf("╭─"), text.indexOf("╯"));
+    for (const shown of [nextLine, boxText]) {
+      assert.doesNotMatch(shown, /Collect records/u, "a checked plan row is never the next step");
+      assert.match(shown, /Rerun the family gates/u, "the first HANDOFF Next item not already done");
+    }
+  });
 });
 
 describe("lit-adhd brief rendering", () => {

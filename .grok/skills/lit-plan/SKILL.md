@@ -71,3 +71,5 @@ Stop when an undocumented schema controls the implementation, a required user ch
 ## Output
 
 Return the `plans/<slug>.md` path, evidence baseline, open decisions, approval boundary, verification map, and exact next action. Do not edit product files or run implementation commands; the plan file is the only write. The plan is ready when `--check` passes and `start-work` can execute it without inventing scope, ownership, or success criteria.
+
+End a saved plan with one line telling the user they can reply `go`. A bare `go` in the same conversation within 30 minutes of the save loads start-work on that `plans/<slug>.md`; judge the age by the plan file's modification time (mtime), and when several plans are open the one just saved is the one `go` means. Older than that, or after another plan was saved, `go` starts nothing and you name the plan to run. No hook writes this offer down: Grok Build drops an allowing prompt hook's output, so the route lives in this text and the project rule.

@@ -128,3 +128,31 @@ test('--check accepts a filled plan and rejects a plan without implementation ro
   assert.equal(unfilled.status, 1, 'an unfilled skeleton is not a decision-complete plan');
   assert.match(unfilled.stderr, /<fill/);
 });
+
+test('--check asks for a Scope roots line when a todo names a folder outside the project', () => {
+  const root = temporaryProject();
+  const outside = mkdtempSync(join(tmpdir(), 'litgrok-plan-scope-'));
+  test.after(() => rmSync(outside, { recursive: true, force: true }));
+  mkdirSync(join(root, 'plans'));
+  const withTodoLine = (line, extra = '') => FILLED_PLAN
+    .replace('  References: scripts/check.mjs', `  References: scripts/check.mjs\n${line}`)
+    .replace('## Scope\n', `## Scope\n${extra}`);
+  const cases = {
+    'uncovered.md': withTodoLine(`  Read ${outside}/notes.md before editing.`),
+    'covered.md': withTodoLine(`  Read ${outside}/notes.md before editing.`, `Scope roots: ${outside} (read)\n`),
+    'fenced.md': withTodoLine(`  \`\`\`text\n  cat ${outside}/notes.md\n  \`\`\``),
+    'command.md': withTodoLine(`  Compare with \`git -C ${outside} log -1\`.`),
+    'inside.md': withTodoLine(`  Read ${join(root, 'scripts', 'check.mjs')}.`),
+  };
+  for (const [name, text] of Object.entries(cases)) writeFileSync(join(root, 'plans', name), text);
+
+  const uncovered = run(['--check', 'plans/uncovered.md'], root);
+  assert.equal(uncovered.status, 1, 'an uncovered outside folder must fail the check');
+  assert.match(uncovered.stderr, /outside the project/);
+  assert.ok(uncovered.stderr.includes('Scope roots: '), 'the exact line to paste is named');
+  assert.match(uncovered.stderr, /\(read\)/);
+  for (const name of ['covered.md', 'fenced.md', 'command.md', 'inside.md']) {
+    const result = run(['--check', `plans/${name}`], root);
+    assert.equal(result.status, 0, `${name}: ${result.stderr}`);
+  }
+});

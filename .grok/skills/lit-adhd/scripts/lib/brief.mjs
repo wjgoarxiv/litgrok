@@ -16,7 +16,15 @@ const WORDS = {
     active: (n) => `${n} active`,
     next: "next",
     window: (since, trees) => `last ${since} · ${trees} ${trees === 1 ? "worktree" : "worktrees"}`,
-    badge: { "waiting-on-user": "🟠 **WAITING ON YOU**", active: "🟢 **ACTIVE**", ended: "⚪ ended", unknown: "⚫ unknown" },
+    badge: { "waiting-on-user": "🟠 **WAITING ON YOU**", active: "🟢 **ACTIVE**", idle: "🔵 idle", done: "✅ done", ended: "⚪ ended", unknown: "⚫ unknown" },
+    doneSoFar: "Done so far",
+    doingNow: "Doing now",
+    plansFinished: (n) => `${n} ${n === 1 ? "plan" : "plans"} finished`,
+    sessionsDone: (n) => `${n} ${n === 1 ? "session" : "sessions"} done`,
+    idleCount: (n) => `${n} idle`,
+    nothingDone: "nothing finished on record",
+    nothingRunning: "nothing running",
+    skipped: (n) => `${n} ${n === 1 ? "plan" : "plans"} skipped (outside the window or past the read budget).`,
     reason: { "asked the user": "it asked you something", "paused workflow": "paused workflow", "start-work boundary": "start-work needs approval" },
     ago: (text) => `${text} ago`,
     justNow: "just now",
@@ -60,6 +68,7 @@ const WORDS = {
       answer: ({ id8, where, question }) => `Answer ${id8} in ${where}${question ? `: “${question}”` : ""}`,
       resume: ({ id8, skill, stage, where }) => `Resume ${skill} at ${stage} in ${id8} (${where})`,
       plan: ({ plan, item }) => `Next in ${plan}: ${item}`,
+      handoff: ({ file, item }) => `Next in ${file}: ${item}`,
       check: ({ id8, goal, where, doing }) => `Check on ${id8} in ${where} (${goal})${doing ? `, now ${doing}` : ""}`,
       pickUp: ({ id8, goal, where }) => `Pick up ${id8} in ${where}: ${goal}`,
       start: () => "No session or plan in this window: say what to start",
@@ -76,7 +85,15 @@ const WORDS = {
     active: (n) => `진행 중 ${n}`,
     next: "다음",
     window: (since, trees) => `최근 ${since} · 워크트리 ${trees}개`,
-    badge: { "waiting-on-user": "🟠 **나를 기다림**", active: "🟢 **진행 중**", ended: "⚪ 끝남", unknown: "⚫ 모름" },
+    badge: { "waiting-on-user": "🟠 **나를 기다림**", active: "🟢 **진행 중**", idle: "🔵 쉬는 중", done: "✅ 마침", ended: "⚪ 끝남", unknown: "⚫ 모름" },
+    doneSoFar: "지금까지 한 일",
+    doingNow: "지금 하는 일",
+    plansFinished: (n) => `끝낸 계획 ${n}개`,
+    sessionsDone: (n) => `마친 세션 ${n}개`,
+    idleCount: (n) => `쉬는 중 ${n}`,
+    nothingDone: "기록된 끝낸 일 없음",
+    nothingRunning: "진행 중인 일 없음",
+    skipped: (n) => `계획 ${n}개 건너뜀(기간 밖이거나 읽기 예산 초과).`,
     reason: { "asked the user": "질문에 답을 기다림", "paused workflow": "멈춘 워크플로", "start-work boundary": "start-work 승인 대기" },
     ago: (text) => `${text} 전`,
     justNow: "방금",
@@ -120,6 +137,7 @@ const WORDS = {
       answer: ({ id8, where, question }) => `${where}의 ${id8}에 답하기${question ? `: “${question}”` : ""}`,
       resume: ({ id8, skill, stage, where }) => `${where}의 ${id8}에서 ${skill}(${stage}) 이어가기`,
       plan: ({ plan, item }) => `${plan} 다음 항목: ${item}`,
+      handoff: ({ file, item }) => `${file} 다음 항목: ${item}`,
       check: ({ id8, goal, where, doing }) => `${where}의 ${id8} 확인 (${goal})${doing ? `, 지금 ${doing}` : ""}`,
       pickUp: ({ id8, goal, where }) => `${where}의 ${id8} 이어받기: ${goal}`,
       start: () => "이 기간에 세션·계획이 없습니다. 시작할 일을 말해 주세요",
@@ -245,7 +263,7 @@ const endedTable = (sessions, now, w) => {
     const done = commits ? w.commits(commits) : files ? w.fileCount(files) : "·";
     const at = Date.parse(session.last);
     const age = Number.isFinite(at) ? duration(now - at).split(" ")[0] : "·";
-    return `| ${code(session.id8)} | ${cell(clipToWidth(placeOf(session), 20))} | ${cell(clipToWidth(goalOf(session), 44))} | ${cell(age)} | ${cell(done)} |`;
+    return `| ${session.status === "done" ? "✓ " : ""}${code(session.id8)} | ${cell(clipToWidth(placeOf(session), 20))} | ${cell(clipToWidth(goalOf(session), 44))} | ${cell(age)} | ${cell(done)} |`;
   });
   const head = `| ${w.endedHead.join(" | ")} |`;
   const rule = `|${w.endedHead.map(() => "---").join("|")}|`;
@@ -253,8 +271,12 @@ const endedTable = (sessions, now, w) => {
   return [head, rule, ...rows, ...more];
 };
 
+// A step as a bare lower-case phrase, without its plan number, so `2. Draw brief` matches `Draw brief`.
+const stepKey = (text) => bare(text).toLowerCase().replace(/^\d+\.\s*/u, "");
+
 // When no step can run on `go`, the brief still recommends one from what it read, in this order:
-// a session that waits on the user, a paused workflow, the next item of an open plan,
+// a session that waits on the user, a paused workflow, the next item of an open plan, the first
+// item under this worktree's HANDOFF.md `## Next` that no checked plan row or commit already did,
 // the most recent other active session, the most recent ended one. It is shown, never recorded.
 const suggestion = (data, w) => {
   // Raw text: the headline escapes it once, the box shows it inside a code block.
@@ -268,9 +290,16 @@ const suggestion = (data, w) => {
   if (paused) return w.suggest.resume({ id8: paused.id8, skill: paused.skill, stage: paused.stage, where: owner ? where(owner) : basename(String(paused.worktree)) });
   // A plan in the worktree of a live session comes first, then this worktree's, then the newest.
   const liveTrees = new Set(sessions.filter((session) => session.status !== "ended").map((session) => session.worktree));
-  const open = (data.roadmap?.plans ?? []).filter((item) => item.current);
+  const open = (data.roadmap?.plans ?? []).filter((item) => item.current && !item.complete);
   const plan = open.find((item) => liveTrees.has(item.worktree)) ?? open.find((item) => item.local) ?? open[0];
   if (plan) return w.suggest.plan({ plan: plan.local ? plan.plan : `${basename(String(plan.worktree))}/${plan.plan}`, item: clipToWidth(bare(plan.current), 60) });
+  const doneSteps = new Set([
+    ...(data.roadmap?.plans ?? []).flatMap((item) => (item.rows ?? []).filter((row) => row.checked).map((row) => stepKey(row.title))),
+    ...(data.commits ?? []).map((commit) => stepKey(commit.subject)),
+  ]);
+  const handoff = (data.handoffs ?? []).find((item) => item.local && item.next?.length);
+  const handoffItem = handoff?.next.find((item) => !doneSteps.has(stepKey(item)));
+  if (handoffItem) return w.suggest.handoff({ file: handoff.file, item: clipToWidth(bare(handoffItem), 60) });
   const active = sessions.find((session) => session.status === "active" && !session.self);
   if (active) return w.suggest.check({ id8: active.id8, goal: goal(active), where: where(active), doing: actionOf(active, bare) });
   const ended = sessions.find((session) => session.status === "ended" && !session.self);
@@ -292,6 +321,10 @@ const roadmapLines = (data, w) => {
   const omitted = plans.length - shownPlans.length + (data.roadmap?.plansOmitted ?? 0);
   for (const plan of shownPlans) {
     const where = plan.local ? "" : `${code(basename(String(plan.worktree)))} `;
+    if (plan.complete) {
+      lines.push(`- ✓ ${w.milestoneDone} · ${where}${code(plan.plan)} ${plan.progress?.gauge ? code(plan.progress.gauge) : ""}`.trimEnd());
+      continue;
+    }
     lines.push(`- ▶ **${w.now}** · ${where}${code(plan.plan)} ${plan.progress?.gauge ? code(plan.progress.gauge) : ""} → ${plain(plan.current)}`);
     const later = (plan.progress?.remaining ?? []).filter((name) => name !== "unknown" && name !== plan.current).slice(0, 2);
     for (const item of later) lines.push(`  - ○ ${w.later} · ${plain(item)}`);
@@ -308,7 +341,7 @@ const roadmapLines = (data, w) => {
 const box = (title, body) => {
   const width = Math.max(displayWidth(title) + 2, ...body.map((line) => displayWidth(line))) + 2;
   const pad = (line) => `${line}${" ".repeat(Math.max(0, width - 2 - displayWidth(line)))}`;
-  return ["```text", `╭─ ${title} ${"─".repeat(Math.max(1, width - displayWidth(title) - 3))}╮`, ...body.map((line) => `│ ${pad(line)} │`), `╰${"─".repeat(width)}╯`, "```"].join("\n");
+  return ["```", `╭─ ${title} ${"─".repeat(Math.max(1, width - displayWidth(title) - 3))}╮`, ...body.map((line) => `│ ${pad(line)} │`), `╰${"─".repeat(width)}╯`, "```"].join("\n");
 };
 
 // Wraps a step to the box at word breaks, three lines at most, the last one clipped.
@@ -339,10 +372,24 @@ export const renderBrief = (data, { lang = "en", now = Date.parse(data.generated
   const out = [];
   out.push(`## 🧭 ${[w.sessions(summary.sessions), w.waiting(summary.waitingOnUser), w.active(summary.active)].join(" · ")} · ${w.next}: ${plain(step)}`);
   out.push(`*${w.window(data.scope?.since ?? "7d", (data.scope?.worktrees ?? []).length || 1)}*`);
+  // The opener: what is done, what is going on, and the one next step, before any detail.
+  const finished = [
+    data.roadmap?.plansDone ? w.plansFinished(data.roadmap.plansDone) : null,
+    data.commits?.length ? w.commits(data.commits.length) : null,
+    summary.done ? w.sessionsDone(summary.done) : null,
+  ].filter(Boolean);
+  const doing = [
+    summary.waitingOnUser ? w.waiting(summary.waitingOnUser) : null,
+    summary.active ? w.active(summary.active) : null,
+    summary.idle ? w.idleCount(summary.idle) : null,
+  ].filter(Boolean);
+  out.push("", `**${w.doneSoFar}:** ${finished.join(" · ") || w.nothingDone}`, `**${w.doingNow}:** ${doing.join(" · ") || w.nothingRunning}`, `**${w.nextLabel}:** ${plain(step)}`);
   if (!sessions.length) out.push("", w.noSessions);
-  // Sessions that are live or wait on the user come first, as full cards grouped by worktree.
-  const live = sessions.filter((session) => session.status !== "ended");
-  const ended = sessions.filter((session) => session.status === "ended");
+  // Sessions that are live, idle or wait on the user come first, as full cards grouped by worktree;
+  // finished and ended ones go to the history table.
+  const history = (session) => session.status === "ended" || session.status === "done";
+  const live = sessions.filter((session) => !history(session));
+  const ended = sessions.filter(history);
   const groups = new Map();
   for (const session of live) {
     const key = groupKey(session);
@@ -364,7 +411,11 @@ export const renderBrief = (data, { lang = "en", now = Date.parse(data.generated
   out.push("", box(w.recommended, body));
   out.push("", say ? w.goLine(say) : w.noGo);
   const unknown = Object.entries(data.sources ?? {}).filter(([, status]) => status !== "ok").map(([name]) => name);
-  const notes = [unknown.length ? w.unknownSources(unknown.join(", ")) : null, data.budget?.exhausted ? w.older : null].filter(Boolean);
+  const notes = [
+    unknown.length ? w.unknownSources(unknown.join(", ")) : null,
+    data.roadmap?.plansSkipped ? w.skipped(data.roadmap.plansSkipped) : null,
+    data.budget?.exhausted ? w.older : null,
+  ].filter(Boolean);
   if (notes.length) out.push("", `*${notes.join(" ")}*`);
   return `${out.join("\n")}\n`;
 };

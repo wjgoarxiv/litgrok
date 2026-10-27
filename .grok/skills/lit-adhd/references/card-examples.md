@@ -10,24 +10,33 @@ words change with the language.
 
 1. **Headline** (`## 🧭 …`): how many sessions, how many wait on you, how many are active, and the
    next step in plain words.
-2. **One card per live session** (waiting or active), under a `### 🌿 branch · worktree` group:
-   - badge: 🟠 waiting on you, 🟢 active, ⚪ ended, ⚫ unknown, with the reason it waits;
+2. **Opener**, three lines: **Done so far** (finished plans, commits, sessions done), **Doing now**
+   (waiting, active and idle counts), **Next** (the one step the box recommends).
+3. **One card per live session** (waiting, active or idle), under a `### 🌿 branch · worktree` group:
+   - badge: 🟠 waiting on you, 🟢 active, 🔵 idle, ⚫ unknown, with the reason it waits;
    - the goal in bold, from the session's title or its first ask;
    - a gauge only when both numbers are recorded (a session backed by a plan shows its plan's
      gauge), otherwise the known facts after ⏳ (how long it ran and its last ask), never a
      question-mark gauge;
    - ✅ what was done (edited files, commits, or the tools used before any edit) and ▶ what is next
      for that session, or what it is doing now.
-3. **Ended sessions**, one table row each.
-4. **Roadmap** timeline: ✓ finished commits with their dates, ▶ the current item of each open plan
-   with its gauge, ○ the items after it.
-5. **One recommended next step** in a box, and the word to type.
+4. **Done and ended sessions**, one table row each; a session that ended through SessionEnd is done
+   and its id is marked ✓.
+5. **Roadmap** timeline: ✓ finished commits with their dates, ✓ finished plans, ▶ the current item of
+   each open plan with its gauge, ○ the items after it.
+6. **One recommended next step** in a box (an untagged fence), and the word to type. A step that a
+   checked plan row or a commit already did is never offered; with no open plan, the first remaining
+   item under this worktree's HANDOFF.md `## Next` is the fallback.
 
 ## English
 
 ````markdown
 ## 🧭 3 sessions · 1 waits on you · 1 active · next: Answer sess-wai in proj: “Which window should I start with?”
 *last 30d · 1 worktree*
+
+**Done so far:** 1 commit
+**Doing now:** 1 waits on you · 1 active
+**Next:** Answer sess-wai in proj: “Which window should I start with?”
 
 ### 🌿 `unknown` · proj
 
@@ -55,7 +64,7 @@ words change with the language.
 - ▶ **now** · `plans/brief.md` `[▉░░] 1/3` → 1. Collect records
   - ○ later · 2. Draw brief
 
-```text
+```
 ╭─ RECOMMENDED NEXT STEP ──────────────────────────────────────╮
 │ Answer sess-wai in proj: “Which window should I start with?” │
 ╰──────────────────────────────────────────────────────────────╯
@@ -71,6 +80,10 @@ Type **`go`** to continue.
 ````markdown
 ## 🧭 세션 3개 · 나를 기다리는 것 1 · 진행 중 1 · 다음: proj의 sess-wai에 답하기: “Which window should I start with?”
 *최근 30d · 워크트리 1개*
+
+**지금까지 한 일:** 커밋 1개
+**지금 하는 일:** 나를 기다리는 것 1 · 진행 중 1
+**다음:** proj의 sess-wai에 답하기: “Which window should I start with?”
 
 ### 🌿 `unknown` · proj
 
@@ -98,7 +111,7 @@ Type **`go`** to continue.
 - ▶ **지금** · `plans/brief.md` `[▉░░] 1/3` → 1. Collect records
   - ○ 이후 · 2. Draw brief
 
-```text
+```
 ╭─ 추천하는 다음 단계 ──────────────────────────────────────────╮
 │ proj의 sess-wai에 답하기: “Which window should I start with?” │
 ╰───────────────────────────────────────────────────────────────╯

@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
 import { planProgress } from '../.grok/hooks/plan-progress.mjs';
+import { writeLiveness } from '../.grok/hooks/session-liveness.mjs';
 import { readWorkflowState, stageFromPrompt, testVerdict, updateWorkflowState, workflowStatePath } from '../.grok/hooks/workflow-stage.mjs';
 
 // The card's stage map and detail line: where the session is in the LIT workflow (interview, plan,
@@ -250,6 +251,68 @@ test('the card needs a workflow stage or an active skill, and LITGROK_HUD_LINES=
   seedLedger(sb.workspace, liveTurn());
   seedWorkflow(sb.workspace, { stage: 'work', plan: { done: 3, total: 7 } });
   assert.equal(runStatus(sb, { env: { ...PLAIN, LITGROK_HUD_LINES: '1' }, turnAgoMs: 100_000, promptId: 'p1' }).lines.length, 1);
+});
+
+// Another session of the same workspace, seeded the way its hooks would leave it.
+function seedOther(workspace, sessionId, { state, pane = null, workflow = [], atMs = Date.now() }) {
+  const file = ledgerFile(workspace, sessionId);
+  mkdirSync(dirname(file), { recursive: true });
+  if (state) writeLiveness({ ledgerFile: file, sessionId, cwd: workspace, state, env: pane ? { HERDR_PANE_ID: pane } : {}, now: atMs });
+  for (const patch of workflow) updateWorkflowState(file, sessionId, { ...patch, now: new Date(atMs) });
+}
+
+const FINISHED_WORK = [{ stage: 'work', active: 'start-work', plan: { done: 2, total: 2 } }, { ended: true }];
+
+test('other sessions show as rows: running first, then idle, then a finished start-work', (t) => {
+  const sb = sandbox(t);
+  seedWorkflow(sb.workspace, { stage: 'work', plan: { done: 3, total: 7 } });
+  seedOther(sb.workspace, 'other-done', { state: 'idle', workflow: FINISHED_WORK, atMs: Date.now() - 30_000 });
+  seedOther(sb.workspace, 'other-idle', { state: 'idle', workflow: [{ stage: 'plan', active: 'lit-plan' }] });
+  seedOther(sb.workspace, 'other-run', { state: 'alive', pane: 'w2B:p2', workflow: [{ stage: 'work', active: 'start-work', plan: { done: 1, total: 4 } }] });
+  seedOther(sb.workspace, 'other-gone', { state: 'ended', workflow: [{ stage: 'review' }] });
+  const { plain } = runStatus(sb, { env: PLAIN });
+  const rows = plain.filter((line) => / (?:running|idle|done)$/u.test(line) && !line.startsWith('['));
+  assert.deepEqual(rows, ['● start-work · w2B:p2 running', '· lit-plan idle', '✓ start-work done'], plain.join('\n'));
+  assert.equal(plain.indexOf(rows[0]) > 0, true, 'rows come after this session\'s own card line');
+  assert.equal(plain.some((line) => line.includes('review') && line.endsWith('ended')), false, 'an ended session leaves');
+});
+
+test('a finished start-work row shows done for 60 s, then leaves', (t) => {
+  for (const [ago, shown] of [[59_000, true], [61_000, false]]) {
+    const sb = sandbox(t, null);
+    seedOther(sb.workspace, 'other-done', { state: 'idle', workflow: FINISHED_WORK, atMs: Date.now() - ago });
+    const { plain } = runStatus(sb, { env: PLAIN });
+    assert.equal(plain.includes('✓ start-work done'), shown, `${ago} ms: ${plain.join(' / ')}`);
+  }
+});
+
+test('a lone other row still shows under a quiet one-row HUD, and a stale record reads as ended', (t) => {
+  const sb = sandbox(t, null);
+  seedOther(sb.workspace, 'other-run', { state: 'alive', pane: 'w2B:p9', workflow: [{ stage: 'review', active: 'review-work' }] });
+  const { plain } = runStatus(sb, { env: PLAIN });
+  assert.equal(plain.length, 2, plain.join('\n'));
+  assert.equal(plain[1], '● review-work · w2B:p9 running');
+  assert.equal(runStatus(sb, { env: { ...PLAIN, LITGROK_HUD_LINES: '1' } }).lines.length, 1, 'LITGROK_HUD_LINES=1 keeps one row');
+
+  const stale = sandbox(t, null);
+  seedOther(stale.workspace, 'other-stale', { state: 'alive', workflow: [{ stage: 'work', active: 'start-work' }], atMs: Date.now() - 16 * 60_000 });
+  assert.equal(runStatus(stale, { env: PLAIN }).lines.length, 1, 'a record older than 15 minutes is ended');
+});
+
+test('other-session rows keep the width with colour on and off', (t) => {
+  const sb = sandbox(t);
+  seedWorkflow(sb.workspace, { stage: 'work', plan: { done: 3, total: 7 } });
+  seedOther(sb.workspace, 'other-run', { state: 'alive', pane: 'w2B:p2', workflow: [{ stage: 'work', active: 'lit-scientific-visualization' }] });
+  seedOther(sb.workspace, 'other-idle', { state: 'idle', workflow: [{ stage: 'plan', active: 'lit-plan' }] });
+  for (const columns of [20, 30, 40, 79]) {
+    for (const env of [PLAIN, { LITGROK_HUD_COLOR: '24' }, { NO_COLOR: '1' }]) {
+      const { plain, raw } = runStatus(sb, { env: { ...env, COLUMNS: String(columns) } });
+      for (const line of plain) assert.ok(cells(line) <= columns - 1, `${columns} columns ${JSON.stringify(env)}: "${line}" is ${cells(line)} cells`);
+      if (env !== PLAIN && env.NO_COLOR === undefined) assert.match(raw, /\u001b\[/u, 'colour on paints');
+      else assert.doesNotMatch(raw, /\u001b\[/u, 'colour off has no escapes');
+      assert.equal(plain.filter((line) => /(?:running|idle)$/u.test(line) && !line.includes('LIT')).length, 2, `${columns}: both rows stay`);
+    }
+  }
 });
 
 test('narrow rows shorten the rails, then drop the stage names, and always fit', (t) => {

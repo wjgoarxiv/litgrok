@@ -18,8 +18,9 @@ import { run } from '../bin/litgrok.mjs';
 // 16,160 adds the reader-facing line on when a reply's results belong in a short table (195 bytes);
 // 16,840 adds the equipment-drawing route to lit-schematic and the film exclusion that sends such a drawing there (682 bytes);
 // 17,516 adds the mechanism-port route to lit-hijack with its triggers, owners and precedence (676 bytes);
-// 17,985 adds the brief-over-sessions route to lit-adhd with its triggers and scope (469 bytes).
-const RULE_BUDGET_BYTES = 17_985;
+// 17,985 adds the brief-over-sessions route to lit-adhd with its triggers and scope (469 bytes);
+// 18,073 adds the re-entry line that sends a bare `go` after a saved plan to start-work (88 bytes).
+const RULE_BUDGET_BYTES = 18_073;
 const ROUTES = {
   'lit, English': 'lit fix the failing date parser',
   'lit, Korean': 'lit 날짜 파서 버그 고쳐줘',

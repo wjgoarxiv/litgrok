@@ -163,7 +163,7 @@ Day to day, most work goes through these six. Each one hands Grok Build a skill'
 
 ### Project hooks
 
-The eleven hook registrations live in [`hooks/hooks.json`](../hooks/hooks.json). They show the LitGrok mark when a session starts, keep the optional status row current, check deliverable wording before it is written, and log the order of events. Like any project hook, they run only in a trusted Git root (see [Quick start](../README.md#quick-start)).
+The twelve hook registrations live in [`hooks/hooks.json`](../hooks/hooks.json). They show the LitGrok mark when a session starts, keep the optional status row current, check deliverable wording before it is written, and log the order of events. Like any project hook, they run only in a trusted Git root (see [Quick start](../README.md#quick-start)).
 
 ### The first line of an activated reply
 

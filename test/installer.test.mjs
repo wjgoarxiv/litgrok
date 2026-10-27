@@ -896,8 +896,8 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.match(readme, /\.grok\/rules\/00-litgrok\.md/);
     assert.match(readme, /SessionStart/);
     assert.match(readme, /PreToolUse/);
-    assert.match(readme, /eleven hook registrations|(?:hook|훅) 등록 열한 개/);
-    assert.match(readme, /\/hooks[^\n]*(?:eleven|열한)[^\n]*hook/i);
+    assert.match(readme, /twelve hook registrations|(?:hook|훅) 등록 열두 개/);
+    assert.match(readme, /\/hooks[^\n]*(?:twelve|열두)[^\n]*hook/i);
     assert.match(readme, /UserPromptSubmit/);
     assert.match(readme, /PostToolUseFailure/);
     assert.match(readme, /StopFailure/);

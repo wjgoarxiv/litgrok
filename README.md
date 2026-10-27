@@ -113,7 +113,7 @@ The row lives in your user settings and stays off until you ask for it (`litgrok
 
 ## What you get
 
-It ships 42 skills, 11 agents, one project rule, and eleven hook registrations. Most days you will use a handful of them.
+It ships 42 skills, 11 agents, one project rule, and twelve hook registrations. Most days you will use a handful of them.
 
 Each of those four has one job in the session.
 
@@ -121,7 +121,7 @@ Each of those four has one job in the session.
 | --- | --- | --- |
 | Skills | 40 | Instructions the session reads when you call them by name. |
 | Agents | 11 | Helpers in `.grok/agents` for a bounded job, such as a plan, a review, or a prose pass. |
-| Hooks | Eleven registrations | They show the LIT mark, keep the status row current, check deliverable wording, and log events. |
+| Hooks | Twelve registrations | They show the LIT mark, keep the status row current, check deliverable wording, and log events. |
 | Project rule | 1 | `.grok/rules/00-litgrok.md` tells Grok Build when to reach for a skill. |
 
 ### A checklist for one task
@@ -260,7 +260,7 @@ Here is that split, one piece at a time.
 | --- | --- | --- |
 | Skills | The install copies the 40 folders into `.grok/skills`, and you call one by name. | The plugin points at those folders, and you call one by its folder name in the message. |
 | Agents | Eleven definitions in `.grok/agents` take a bounded job, such as a plan or a review. | You name the skill, and the bot does the work with the tools it already has. |
-| Hooks | The eleven registrations run after you trust the project with `/hooks-trust`. | Grok Build starts the hook commands. |
+| Hooks | The twelve registrations run after you trust the project with `/hooks-trust`. | Grok Build starts the hook commands. |
 | Project rule | `.grok/rules/00-litgrok.md` is the guidance the session reads. | The working habit the bot follows is written in the skill files. |
 | Status row and LIT mark | `--status-line` on a user install draws the row, and a trusted session opens with the LIT mark. | Connect apps lists the plugin's skills and connectors. |
 
@@ -334,4 +334,4 @@ grok
 
 If LitGrok saves you some re-explaining, a star on GitHub helps other Grok Build users find it.
 
-To contribute, start with a small issue or pull request; the [contributing guide](./CONTRIBUTING.md) lists the checks to run first. See also [security](./SECURITY.md), the [code of conduct](./CODE_OF_CONDUCT.md) and [support](./SUPPORT.md). LitGrok is released under the [MIT license](./LICENSE).
+To contribute, start with a small issue or pull request; the [contributing guide](./CONTRIBUTING.md) lists the checks to run first. See also [security](./SECURITY.md), the [code of conduct](./CODE_OF_CONDUCT.md) and [support](./SUPPORT.md). LitGrok is released under the [MIT license](./LICENSE); the name and logos follow the [trademark policy](./TRADEMARK.md).

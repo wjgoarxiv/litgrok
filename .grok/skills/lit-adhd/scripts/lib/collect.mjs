@@ -1,11 +1,13 @@
 // The lit-adhd record collector behind `node scripts/rewind.mjs`. It reads what is on disk for
-// every worktree of this repo (Grok Build session records, plan rows, handoff headings, git log,
-// and herdr when HERDR_ENV=1) and returns one redacted, capped JSON brief. A source that is not
+// every worktree of this repo (plan rows, handoff headings and `## Next`, Grok Build session records
+// with LitGrok's liveness records, git log, and herdr when HERDR_ENV=1) and returns one redacted,
+// capped JSON brief. A source that is not
 // there reads `unknown`; nothing is inferred. It writes nothing: `go` re-collects the brief and
 // continues the offered step. There is no litgoal ledger, workflow stack or start-work state file
 // in Grok Build, so those sources stay `unknown` and the next step degrades to plans.
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
@@ -81,32 +83,78 @@ const mtimeOf = (path) => {
   }
 };
 
-const plansIn = (root, budget, redact, local) => {
+// Every plan changed inside the window, open or finished; a finished one has no current item. A plan
+// outside the window is never read, and one the read budget cannot cover is not read either: both are
+// counted in `skipped` so the brief can say so.
+const plansIn = (root, budget, redact, local, sinceMs, now) => {
   const list = entries(join(root, "plans"));
   if (!list) return null;
-  return list.filter((entry) => entry.isFile() && entry.name.endsWith(".md")).sort((a, b) => a.name.localeCompare(b.name)).flatMap((entry) => {
-    const text = readSmallFile(join(root, "plans", entry.name), budget);
+  let skipped = 0;
+  const plans = list.filter((entry) => entry.isFile() && entry.name.endsWith(".md")).sort((a, b) => a.name.localeCompare(b.name)).flatMap((entry) => {
+    const path = join(root, "plans", entry.name);
+    const changedMs = mtimeOf(path);
+    if (changedMs === null || now - changedMs > sinceMs || budget.used >= budget.limit) {
+      skipped += 1;
+      if (changedMs !== null && now - changedMs <= sinceMs) budget.exhausted = true;
+      return [];
+    }
+    const text = readSmallFile(path, budget);
     if (text === null) return [];
     const rows = parsePlanTaskRows(text);
     if (!rows.length || isTemplate(rows)) return [];
     const open = rows.filter((row) => !row.checked);
-    if (!open.length) return [];
     const done = rows.length - open.length;
     return [{
       worktree: redact(root),
       plan: `plans/${entry.name}`,
       local,
-      changedMs: mtimeOf(join(root, "plans", entry.name)),
+      changedMs,
+      complete: open.length === 0,
       rows: rows.map((row) => ({ checked: row.checked, title: clipToWidth(redact(row.text), NAME_MAX) })),
-      current: clipToWidth(redact(open[0].text), NAME_MAX),
+      current: open.length ? clipToWidth(redact(open[0].text), NAME_MAX) : null,
       progress: progressOf(done, rows.length, open.map((row) => clipToWidth(redact(row.text), NAME_MAX))),
     }];
   });
+  return { plans, skipped };
+};
+
+// The items under a `## Next` heading of a handoff, the fallback next step when no plan has one.
+const nextItemsOf = (text, redact) => {
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => /^#{2,3} Next\s*$/iu.test(line.trim()));
+  if (start === -1) return [];
+  const items = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^#{1,3} /u.test(line)) break;
+    const item = /^\s*(?:[-*]|\d+\.)\s+(.+)$/u.exec(line)?.[1]?.trim();
+    if (item) items.push(clipToWidth(redact(item), NAME_MAX));
+    if (items.length === 5) break;
+  }
+  return items;
+};
+
+// A session's liveness record, written by LitGrok's hooks under `.grok/litgrok/liveness/`.
+const LIVENESS_STALE_MS = 15 * 60_000;
+const livenessOf = (roots, sessionId, budget) => {
+  const key = createHash("sha256").update(sessionId).digest("hex").slice(0, 32);
+  for (const root of roots) {
+    const text = readSmallFile(join(root, ".grok", "litgrok", "liveness", `${key}.json`), budget);
+    if (text === null) continue;
+    try {
+      const record = JSON.parse(text);
+      if (record?.sessionId === sessionId && ["alive", "idle", "ended"].includes(record.state) && Number.isFinite(Date.parse(record.at))) {
+        return { state: record.state, atMs: Date.parse(record.at) };
+      }
+    } catch {
+      // A torn or foreign record says nothing.
+    }
+  }
+  return null;
 };
 
 // Grok Build handoff policy: `.handoff/HANDOFF.md`, else a root `HANDOFF.md` on explicit request,
 // else a root `HANDOFF*.md` for compatibility.
-const handoffsOf = (root, budget, redact) => {
+const handoffsOf = (root, budget, redact, local) => {
   const candidates = [join(root, ".handoff", "HANDOFF.md"), join(root, "HANDOFF.md")];
   const found = [];
   for (const path of candidates) {
@@ -123,7 +171,7 @@ const handoffsOf = (root, budget, redact) => {
   }
   return found.map(({ file, text }) => {
     const headings = text.split("\n").slice(0, 40).filter((line) => /^#{1,3} /u.test(line)).map((line) => clipToWidth(redact(line), 100));
-    return { worktree: redact(root), file, headings };
+    return { worktree: redact(root), file, local, headings, next: local ? nextItemsOf(text, redact) : [] };
   });
 };
 
@@ -152,7 +200,17 @@ const herdrOf = (env, exec, redact) => {
 };
 
 const known = (list) => (list === null ? "unknown" : "ok");
-const statusRank = { "waiting-on-user": 0, active: 1, ended: 2, unknown: 3 };
+const statusRank = { "waiting-on-user": 0, active: 1, idle: 2, done: 3, ended: 4, unknown: 5 };
+
+// A SessionEnd record is a stop record, so that session reads `done` at any age. A fresh record also
+// says whether the session is working (`active`) or waiting at a turn end (`idle`); a question the
+// session asked still wins, and an old record leaves the transcript's own reading.
+const statusFrom = (status, live, now) => {
+  if (!live || status === "waiting-on-user") return status;
+  if (live.state === "ended") return "done";
+  if (now - live.atMs > LIVENESS_STALE_MS) return status;
+  return live.state === "idle" ? "idle" : "active";
+};
 
 /**
  * Collects the brief. Options: `cwd`, `here` (cwd only), `since` (`7d`), `max` (12), `sessionId`
@@ -167,16 +225,29 @@ export const collectRewind = ({
   env = process.env,
   now = Date.now(),
   exec = defaultExec,
+  budgetBytes = undefined,
 } = {}) => {
   const home = env.HOME || homedir();
   const redact = makeRedactor({ env, home });
-  const budget = makeBudget();
+  const budget = makeBudget(budgetBytes);
   const sinceMs = parseSince(since) ?? parseSince(DEFAULT_SINCE);
   const limit = Number.isInteger(max) && max > 0 ? Math.min(max, 50) : DEFAULT_MAX;
   const start = resolve(cwd);
   const stateRoot = resolveProjectStateRoot(start);
   const listed = here ? null : worktreesOf(start, exec);
   const roots = [...new Set([start, ...(here ? [] : listed ?? [stateRoot])])];
+  const isLocal = (root) => resolve(root) === stateRoot || resolve(root) === start;
+
+  const collectEach = (read) => {
+    const results = roots.map(read);
+    return results.every((value) => value === null) ? null : results.flatMap((value) => value ?? []);
+  };
+  // Plans and handoffs are small and say what is left, so they are read before any transcript can
+  // spend the read budget.
+  const planReads = roots.map((root) => plansIn(root, budget, redact, isLocal(root), sinceMs, now));
+  const plans = planReads.every((read) => read === null) ? null : planReads.flatMap((read) => read?.plans ?? []);
+  const plansSkipped = planReads.reduce((sum, read) => sum + (read?.skipped ?? 0), 0);
+  const handoffs = roots.flatMap((root) => handoffsOf(root, budget, redact, isLocal(root)));
 
   const storeDir = join(env.GROK_CONFIG_DIR || join(home, ".grok"), "sessions");
   const found = findSessions(storeDir, roots);
@@ -186,15 +257,10 @@ export const collectRewind = ({
     const session = sessionRecord(dir, { redact, now, budget });
     if (!session || (session.lastMs !== null && now - session.lastMs > sinceMs)) continue;
     if (here && session.cwd && resolve(session.cwd).normalize("NFC") !== start.normalize("NFC")) continue;
+    session.status = statusFrom(session.status, livenessOf(roots, session.sessionId, budget), now);
     sessions.push(session);
   }
 
-  const collectEach = (read) => {
-    const results = roots.map(read);
-    return results.every((value) => value === null) ? null : results.flatMap((value) => value ?? []);
-  };
-  const plans = collectEach((root) => plansIn(root, budget, redact, resolve(root) === stateRoot || resolve(root) === start));
-  const handoffs = roots.flatMap((root) => handoffsOf(root, budget, redact));
   const commits = collectEach((root) => commitsOf(root, sinceMs, now, exec, redact));
   const herdr = herdrOf(env, exec, redact);
 
@@ -209,12 +275,10 @@ export const collectRewind = ({
   }
   sessions.sort((a, b) => statusRank[a.status] - statusRank[b.status] || (b.lastMs ?? 0) - (a.lastMs ?? 0));
 
-  // This worktree's open plans and the ones another worktree touched inside the window are listed,
-  // this one's first, then the most recently changed, up to a short cap; a stale plan elsewhere is
-  // left out entirely. The roadmap gauge counts this worktree only, since a sum over unrelated
-  // branches measures nothing.
-  const recent = (plan) => plan.local || (plan.changedMs !== null && now - plan.changedMs <= sinceMs);
-  const orderedPlans = (plans ?? []).filter(recent).sort((a, b) => Number(b.local) - Number(a.local) || (b.changedMs ?? 0) - (a.changedMs ?? 0));
+  // Plans touched inside the window are listed, this worktree's first, open before finished, then the
+  // most recently changed, up to a short cap; plansIn already left out every plan outside the window.
+  // The roadmap gauge counts this worktree only, since a sum over unrelated branches measures nothing.
+  const orderedPlans = (plans ?? []).sort((a, b) => Number(b.local) - Number(a.local) || Number(a.complete) - Number(b.complete) || (b.changedMs ?? 0) - (a.changedMs ?? 0));
   const shownPlans = orderedPlans.slice(0, PLAN_LIMIT);
   const roadmapItems = orderedPlans.filter((plan) => plan.local).map((plan) => plan.progress);
   const data = {
@@ -233,11 +297,15 @@ export const collectRewind = ({
       sessions: sessions.length,
       waitingOnUser: sessions.filter((session) => session.status === "waiting-on-user").length,
       active: sessions.filter((session) => session.status === "active").length,
+      idle: sessions.filter((session) => session.status === "idle").length,
+      done: sessions.filter((session) => session.status === "done").length,
     },
     sessions: sessions.map(({ cwd: _cwd, lastMs: _lastMs, sessionId: id, ...rest }) => ({ ...rest, self: Boolean(sessionId) && id === sessionId })),
     roadmap: {
       plans: shownPlans,
       plansOmitted: orderedPlans.length - shownPlans.length,
+      plansDone: orderedPlans.filter((plan) => plan.complete).length,
+      plansSkipped,
       litgoal: [],
       progress: roadmapItems.length ? aggregateProgress(roadmapItems) : progressOf(null, null),
     },
@@ -275,7 +343,7 @@ export const renderRewind = (data, width = 100) => {
   push(`lit-adhd: ${data.summary.sessions} session(s), ${data.summary.waitingOnUser} waiting on you, ${data.summary.active} active`);
   push(`roadmap here${shown(data.roadmap.progress)}`);
   for (const plan of data.roadmap.plans) {
-    push(`  ${plan.local ? "" : `${basename(plan.worktree)}: `}${plan.plan}${shown(plan.progress)} now: ${plan.current}`);
+    push(`  ${plan.local ? "" : `${basename(plan.worktree)}: `}${plan.plan}${shown(plan.progress)} ${plan.complete ? "done" : `now: ${plan.current}`}`);
     const left = remainingLine(plan.progress.remaining, width);
     if (left) push(`  ${left}`);
   }
