@@ -80,7 +80,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 Pin a version when you need a reproducible install:
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@1.0.27 -- litgrok install
+npm exec --yes --package @litfamily/litgrok@1.0.28 -- litgrok install
 ```
 
 Preview without writing files:

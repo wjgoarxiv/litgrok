@@ -2,10 +2,13 @@
 
 ## Unreleased
 
-- The status row shows the other sessions of the same project, one row each: running first, then idle, with the herdr pane when there is one. A finished start-work shows done for a minute and then leaves. The rows come from small liveness records the hooks now write, including a new `SessionEnd` hook, so there are twelve hook registrations; trust the project again with `/hooks-trust` after updating.
-- After `lit-plan` saves a plan, typing `go` within 30 minutes starts it with start-work. A plan whose tasks name a folder outside the project must say so on a `Scope roots:` line; `--check` and the plan gate name the exact line to add.
-- `lit-adhd` opens with three lines (done so far, doing now, next), counts finished plans, shows sessions that ended as done and the ones waiting at a turn end as idle, reads plans before session files, says how many plans it skipped, falls back to the `## Next` list in HANDOFF.md, and never suggests a step that is already done.
-- A message relayed from another session (`<cross-session-message>`) no longer turns on the plan gate.
+## 1.0.28 — 2026-10-28
+
+- The status row now lists the other sessions open in the same project, one row each: running ones first, then idle ones, with the herdr pane when there is one. A finished start-work shows as done for a minute and then disappears. To make this work the hooks keep small liveness records and there is a new `SessionEnd` hook, so a project install now has twelve hook registrations. Run `/hooks-trust` in the project once after updating.
+- After `lit-plan` saves a plan, typing `go` within 30 minutes starts it with start-work. If a plan's tasks touch a folder outside the project, the plan must list it on a `Scope roots:` line; `--check` and the plan gate tell you the exact line to add.
+- `lit-adhd` starts with three lines: what is done, what is happening now and what comes next. It counts finished plans, marks sessions that ended as done and sessions waiting at the end of a turn as idle, reads plans before session files, says how many plans it skipped, falls back to the `## Next` list in HANDOFF.md, and never suggests a step that is already done.
+- A message relayed from another session no longer switches on the plan gate.
+- The repository now has a `TRADEMARK.md`: the code stays MIT, while the LitGrok and LitFamily names and logos are kept for the official project. It ships in the npm package next to the other policy files.
 
 ## 1.0.27 — 2026-10-27
 
