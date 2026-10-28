@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.0.29 — 2026-10-28
+
+- Releases are now built and published from GitHub Actions with npm trusted publishing, so each version carries a signed provenance statement that links the package to this repository and commit. Check it on the npm page (the green check by the version) or with `npm audit signatures`.
+- A motion test that forces a render crash no longer fails on machines without libwebp, where the cover-encoder check stops the render first.
+
 ## 1.0.28 — 2026-10-28
 
 - The status row now lists the other sessions open in the same project, one row each: running ones first, then idle ones, with the herdr pane when there is one. A finished start-work shows as done for a minute and then disappears. To make this work the hooks keep small liveness records and there is a new `SessionEnd` hook, so a project install now has twelve hook registrations. Run `/hooks-trust` in the project once after updating.
