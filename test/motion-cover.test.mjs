@@ -542,7 +542,8 @@ const qa = (args) => spawnSync(process.execPath, [qaScript, '--out', temp('lgm-c
 test('a render that crashes never counts as a caught regression or negative', () => {
   const feather = qa(['--feather', '150']);
   assert.equal(feather.status, 1, feather.stdout + feather.stderr);
-  assert.match(feather.stdout, /^FAIL +regression painted-light feather-150 +not proven: the render did not complete and gate the decoded file \(exit 10\)/mu);
+  // Without libwebp the encoder check stops the render (exit 21) before the missing Chrome does (exit 10).
+  assert.match(feather.stdout, /^FAIL +regression painted-light feather-150 +not proven: the render did not complete and gate the decoded file \(exit (?:10|21)\)/mu);
   const negatives = qa(['--negatives', '--only', 'painted-light']);
   assert.equal(negatives.status, 1, negatives.stdout + negatives.stderr);
   for (const name of NEGATIVES) assert.match(negatives.stdout, new RegExp(`^FAIL +negative ${name} +not proven: the render did not complete`, 'mu'));
