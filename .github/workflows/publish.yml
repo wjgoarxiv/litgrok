@@ -1,0 +1,64 @@
+# Releases @litfamily/litgrok from GitHub through npm trusted publishing, so each version ships with a
+# provenance statement naming this repository and the commit it was built from. Start it by hand on main.
+# Left at its default it is a rehearsal: the gates run and the tarball is listed, nothing is uploaded.
+# With stage on, npm receives a staged version that stays hidden until the maintainer approves it with 2FA.
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Upload a staged version to npm (off = gates and pack listing only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      # The office skill tests run their Python scripts in place; bytecode caches would add files to the
+      # installed .grok tree and break the installer's file-count test.
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: npm with staged publishing
+        run: npm install -g npm@11.21.1
+
+      # LitGrok declares no dependencies and ships no lockfile, so there is no install step.
+      - name: Syntax and canonical corpus
+        run: |
+          node --check bin/litgrok.mjs
+          node --check test/skills-and-rules.test.mjs
+          node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
+
+      - name: Version lockstep
+        run: npm run check:version
+
+      # prepublishOnly (scripts/prepublish-test-gate.mjs) runs npm test inside npm stage publish, so the
+      # suite runs here only on a dry run.
+      - name: Tests
+        if: ${{ !inputs.stage }}
+        run: npm test
+
+      - name: Pack listing
+        run: npm pack --dry-run --json --ignore-scripts > "$RUNNER_TEMP/pack.json" && node -e "const p=require(process.argv[1])[0]; console.log(p.name+'@'+p.version, p.entryCount+' files')" "$RUNNER_TEMP/pack.json"
+
+      - name: Stage on npm (runs the suite through prepublishOnly first)
+        if: inputs.stage
+        run: npm stage publish
