@@ -202,3 +202,16 @@ An old agent name, prefixed or not, selects the renamed agent and prints that ro
 | `oracle-verifier` | `litgrok-verifier` | Note: `oracle-verifier` was renamed to `litgrok-verifier`; the old name is removed in the next minor. |
 
 These rows are prompt guidance, not a router: old slash routes are not guaranteed; never create old skill directories or invent command metadata.
+
+<!-- litfamily:litgrok:start v=1.0.29 pre=0a -->
+## LitGrok ground rules
+
+Grok Build reads this file on every turn. These lines are the working agreement. The sections above still choose the skill.
+
+- A prompt that starts with `lit` is LitGrok's activation word.
+- Plans live in `plans/`. The session handoff lives in `.handoff/HANDOFF.md`, or in `HANDOFF.md` outside a Git repo. Run notes live in `.grok/litgrok/`. Read the handoff and the active plan before resuming.
+- Never push, publish, tag or bump a version unless the user explicitly says yes to that action.
+- Call work done only after its tests pass and the changed surface was checked for real.
+- In a new repo, an approved lit-init places the short project rule by running `litgrok ground project`.
+- Turn these lines off with `litgrok ground off`. `litgrok ground on` brings them back.
+<!-- litfamily:litgrok:end -->

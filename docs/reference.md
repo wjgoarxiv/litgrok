@@ -103,7 +103,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
 ```
 
-`doctor` is read-only. It prints the package version, asks the npm registry for the latest stable `@litfamily/litgrok` with a 3-second limit, and adds `newer version available: <version> (run: npm exec --yes --package @litfamily/litgrok@latest -- litgrok install)` when one exists. It prints nothing more when you are current, and one `update check unavailable` line when the registry cannot be reached. It never installs or writes files. `NO_UPDATE_NOTIFIER`, `CI` or `LITGROK_NO_UPDATE_CHECK` (present, even empty) skips the registry request.
+`doctor` is read-only. It prints the package version and one `GROUND:` line for the section at the end of `~/.grok/rules/00-litgrok.md`: `present v=<version>`, `stale v=<version>`, `absent`, `malformed` or `off`. It asks the npm registry for the latest stable `@litfamily/litgrok` with a 3-second limit, and adds `newer version available: <version> (run: npm exec --yes --package @litfamily/litgrok@latest -- litgrok install)` when one exists. It adds nothing further when you are current, and one `update check unavailable` line when the registry cannot be reached. It never installs or writes files. `NO_UPDATE_NOTIFIER`, `CI` or `LITGROK_NO_UPDATE_CHECK` (present, even empty) skips the registry request. `litgrok ground off` removes that section and keeps it off; `litgrok ground on` restores it; `install --no-ground` skips it for that run. `litgrok ground project` writes the repo copy at `.grok/rules/10-litgrok-ground.md` and refuses a symlink, a non-directory path, or a file it does not own.
 
 ### Persistent status line (opt-in)
 

@@ -104,7 +104,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
 ```
 
-`doctor`는 읽기만 합니다. 패키지 버전을 출력하고, npm 레지스트리에 최신 안정 `@litfamily/litgrok` 버전을 최대 3초 동안 물어봅니다. 더 새 버전이 있으면 `newer version available: <version> (run: npm exec --yes --package @litfamily/litgrok@latest -- litgrok install)` 한 줄을 더합니다. 최신이면 아무것도 더하지 않고, 레지스트리에 닿지 못하면 `update check unavailable` 한 줄만 출력합니다. 설치하거나 파일을 쓰지 않습니다. `NO_UPDATE_NOTIFIER`, `CI`, `LITGROK_NO_UPDATE_CHECK` 중 하나가 있으면(값이 비어 있어도) 레지스트리에 묻지 않습니다.
+`doctor`는 읽기만 합니다. 패키지 버전을 출력하고, `~/.grok/rules/00-litgrok.md` 끝 구간에 대해 `GROUND:` 한 줄을 냅니다. 값은 `present v=<version>`, `stale v=<version>`, `absent`, `malformed`, `off` 중 하나입니다. npm 레지스트리에 최신 안정 `@litfamily/litgrok` 버전을 최대 3초 동안 물어봅니다. 더 새 버전이 있으면 `newer version available: <version> (run: npm exec --yes --package @litfamily/litgrok@latest -- litgrok install)` 한 줄을 더합니다. 최신이면 그 이상은 더하지 않고, 레지스트리에 닿지 못하면 `update check unavailable` 한 줄을 출력합니다. 설치하거나 파일을 쓰지 않습니다. `NO_UPDATE_NOTIFIER`, `CI`, `LITGROK_NO_UPDATE_CHECK` 중 하나가 있으면(값이 비어 있어도) 레지스트리에 묻지 않습니다. `litgrok ground off`는 그 구간을 빼고 꺼 둔 채로 두며, `litgrok ground on`은 다시 넣습니다. `install --no-ground`는 그 한 번만 건너뜁니다. `litgrok ground project`는 저장소 복사본을 `.grok/rules/10-litgrok-ground.md`에 쓰며, 심볼릭 링크, 디렉터리가 아닌 경로, 자신이 소유하지 않은 파일은 거절합니다.
 
 ### 지속 상태 행 (선택)
 

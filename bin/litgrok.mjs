@@ -6,6 +6,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMark, terminalMode } from '../.grok/hooks/lit-mark.mjs';
+import { applyStoredGround, backupIfSectionAbsent, decideGround, groundReport, ruleSourceForInstall, runGround } from './ground-rule.mjs';
 import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from './status-line-config.mjs';
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -208,7 +209,7 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/text-naturalization/SKILL.md': 'aa1ff8f68ab0bf71cb47818b536c4a2934da65adb413ee43ec5839b540b2df8e',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -217,7 +218,7 @@ function parseInstall(args) {
   const remaining = [...args];
   let command = 'install';
   if (['install', 'uninstall'].includes(remaining[0])) command = remaining.shift();
-  if (remaining.some((argument) => !['--user', '--project', '--status-line', '--notify', '--dry-run', '--no-color', '--yes'].includes(argument))) return null;
+  if (remaining.some((argument) => !['--user', '--project', '--status-line', '--notify', '--dry-run', '--no-color', '--yes', '--no-ground'].includes(argument))) return null;
   if (remaining.includes('--user') && remaining.includes('--project')) return null;
   // Both opt-ins change ~/.grok/config.toml, which only a user install may touch.
   if ((remaining.includes('--status-line') || remaining.includes('--notify')) && (command !== 'install' || !remaining.includes('--user'))) return null;
@@ -226,6 +227,7 @@ function parseInstall(args) {
     dryRun: remaining.includes('--dry-run'),
     noColor: remaining.includes('--no-color'),
     yes: remaining.includes('--yes'),
+    noGround: remaining.includes('--no-ground'),
     statusLine: remaining.includes('--status-line'),
     notify: remaining.includes('--notify'),
     scope: remaining.includes('--user') ? 'user' : 'project',
@@ -833,7 +835,7 @@ async function runDoctor(args, { env, stdout, stderr, fetchFn }) {
     return 1;
   }
   const current = packageVersion();
-  stdout.write(`litgrok ${current}\n`);
+  stdout.write(`litgrok ${current}\n${groundReport(env)}\n`);
   if (UPDATE_OPT_OUTS.some((name) => Object.hasOwn(env, name))) return 0;
   let latest;
   try {
@@ -855,6 +857,7 @@ export async function run(args, context = {}) {
     const { runAutoHandoff } = await import('../.grok/hooks/auto-handoff.mjs');
     return runAutoHandoff(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr, cwd: context.cwd ?? process.cwd() });
   }
+  if (args[0] === 'ground') return runGround(args.slice(1), context);
   if (args[0] === 'doctor') {
     return runDoctor(args.slice(1), {
       env: context.env ?? process.env,
@@ -906,7 +909,7 @@ export async function run(args, context = {}) {
     if (projectHooksIncluded(files)) stdout.write('Project hooks require a trusted Git project root: use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json; the installer never runs git init or changes trust.\n');
   }
 
-  const files = discoveredPayload ? filesFromPayload(discoveredPayload) : null;
+  let files = discoveredPayload ? filesFromPayload(discoveredPayload) : null;
   const payloadElapsed = payloadError ? null : elapsedSince(payloadStarted);
   const colors = printInstallFrame(stdout, options, env, files?.length, displayRoot);
 
@@ -928,6 +931,33 @@ export async function run(args, context = {}) {
     if (options.notify) stdout.write(`would configure user finish notification ${join(root, 'config.toml')}\n`);
     printHookTrustRequirement(files);
     return 0;
+  }
+
+  let includeGround = true;
+  let groundAfter = null;
+  let cleanupGround = () => {};
+  if (options.command === 'install') {
+    try {
+      const decision = await decideGround({
+        scope: options.scope,
+        yes: options.yes,
+        noGround: options.noGround,
+        env,
+        stdin,
+        stdout,
+        home,
+      });
+      includeGround = decision.include;
+      groundAfter = decision.afterWrite;
+      if (!decision.include) {
+        const prepared = ruleSourceForInstall(files);
+        files = prepared.files;
+        cleanupGround = prepared.cleanup;
+      }
+    } catch (error) {
+      stderr.write(`litgrok: ${error instanceof Error ? error.message : String(error)}\n`);
+      return 1;
+    }
   }
 
   const progress = new InstallProgress(stdout, colors);
@@ -1046,6 +1076,7 @@ export async function run(args, context = {}) {
         throw error;
       }
       const statusDetail = configDetail(statusLineResult, notifyResult);
+      if (groundAfter) applyStoredGround(home, groundAfter);
       skipStep(progress, 'WRITE', `SKIPPED · 0 written · ${states.counts.current} already-current${statusDetail}`);
       const receipt = receiptCard(options, displayRoot, colors, { status: 'Already current', written: 0, current: states.counts.current });
       progress.close();
@@ -1059,8 +1090,11 @@ export async function run(args, context = {}) {
     try {
       for (let index = 0; index < files.length; index += 1) {
         if (states.states[index] === 'current') continue;
-        const { source, target } = files[index];
+        const { source, target, relativePath } = files[index];
         mkdirSync(dirname(target), { recursive: true });
+        if (includeGround && normalizedRelativePath(relativePath) === 'rules/00-litgrok.md' && states.states[index] !== 'missing') {
+          backupIfSectionAbsent(target);
+        }
         if (states.states[index] === 'owned') replaceOwnedFile(source, target);
         else copyFileSync(source, target, constants.COPYFILE_EXCL);
         installed += 1;
@@ -1072,6 +1106,7 @@ export async function run(args, context = {}) {
       const notifyResult = options.notify ? installNotifications(root) : null;
       const legacyDetail = removedLegacy === 0 ? '' : ` · ${removedLegacy} legacy removed`;
       const statusDetail = configDetail(statusLineResult, notifyResult);
+      if (groundAfter) applyStoredGround(home, groundAfter);
       progress.finish('ok', 'WRITE', `${installed} written · ${states.counts.current} already-current · ${states.counts.owned} owned${legacyDetail}${statusDetail}`, elapsedSince(writeStarted));
     } catch (error) {
       progress.finish('failed', 'WRITE', errorText(error), elapsedSince(writeStarted));
@@ -1086,6 +1121,8 @@ export async function run(args, context = {}) {
     progress.close();
     reportFailure(error, { stderr, stdout, options, root: displayRoot, colors, step });
     return 1;
+  } finally {
+    cleanupGround();
   }
 }
 

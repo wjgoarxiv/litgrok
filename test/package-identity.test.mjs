@@ -25,6 +25,7 @@ test('npm rename preserves legacy ownership while refusing forged owners and mod
     for (const path of ['bin', '.grok/hooks', '.grok/skills/example']) mkdirSync(join(source, path), { recursive: true });
     mkdirSync(project);
     copyFileSync(join(root, 'bin/litgrok.mjs'), join(source, 'bin/litgrok.mjs'));
+    copyFileSync(join(root, 'bin/ground-rule.mjs'), join(source, 'bin/ground-rule.mjs'));
     copyFileSync(join(root, 'bin/status-line-config.mjs'), join(source, 'bin/status-line-config.mjs'));
     copyFileSync(join(root, '.grok/hooks/lit-mark.mjs'), join(source, '.grok/hooks/lit-mark.mjs'));
     copyFileSync(join(root, 'package.json'), join(source, 'package.json'));

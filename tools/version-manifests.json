@@ -103,6 +103,12 @@
       "kind": "pinned",
       "occurrences": 1,
       "why": "The operational reference keeps executable examples aligned with the package release."
+    },
+    {
+      "path": ".grok/rules/00-litgrok.md",
+      "kind": "pinned",
+      "occurrences": 1,
+      "why": "The ground-rules marker in the user rule carries the package release so doctor can tell a current section from a stale one."
     }
   ],
   "incidentalMatches": [

@@ -51,6 +51,8 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.29`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
 
+A user install leaves a short ground-rules section at the end of `~/.grok/rules/00-litgrok.md`. It says that a prompt starting with `lit` is LitGrok's activation word, that plans live in `plans/` and the handoff in `.handoff/HANDOFF.md`, and that a push, a publish, a tag or a version bump waits for an explicit yes. `litgrok doctor` and `litgrok ground status` print `GROUND:` with that section's presence and version. `litgrok ground off` takes the section out and leaves it off; `litgrok ground on` puts it back. `install --no-ground` skips it for that run only. In a new repo, an approved lit-init can add the same agreement as its own file, `.grok/rules/10-litgrok-ground.md`, by running `litgrok ground project`.
+
 The same package can sit in the project, in your user account, or be opened from Grok Bot through Cursor.
 
 | Place | How you add it | Where it lives |
@@ -275,7 +277,7 @@ On 22 October 2026, Grok Bot loaded LitGrok 1.0.25. It came from this public rep
 
 You need Node.js and Grok Build; the notes on this page were checked on Grok Build 1.0.13. Slides need Node.js 20.9 or newer, and the office skills install their pinned tools into their own cache the first time you use them.
 
-To update, run the same `install` command again. `litgrok doctor` prints the installed version and, when npm has a newer one, the command that installs it; the doctor itself only reads.
+To update, run the same `install` command again. `litgrok doctor` prints the installed version, one `GROUND:` line for the user-rule section, and, when npm has a newer one, the command that installs it. The doctor itself only reads.
 
 To uninstall, use the scope you installed with. The installer removes only files it put there, and if you edited one, it stops before removing anything and names that file.
 

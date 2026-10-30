@@ -51,6 +51,8 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.29`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
 
+사용자 홈에 설치하면 `~/.grok/rules/00-litgrok.md` 끝에 짧은 기본 규칙이 붙습니다. `lit`으로 시작하는 프롬프트가 LitGrok을 부르는 말이고, 계획은 `plans/`에, 인수인계는 `.handoff/HANDOFF.md`에 두며, push, 배포, 태그, 버전 올리기는 그 일을 하라고 분명히 말하기 전에는 하지 않는다는 내용입니다. `litgrok doctor`와 `litgrok ground status`는 이 구간이 있는지, 어느 버전인지를 `GROUND:`로 보여 줍니다. `litgrok ground off`는 구간을 빼고 꺼 둔 채로 두고, `litgrok ground on`은 다시 넣습니다. `install --no-ground`는 그 한 번만 건너뜁니다. 새 저장소에서는 승인한 lit-init이 `litgrok ground project`로 같은 약속을 `.grok/rules/10-litgrok-ground.md`에 둘 수 있습니다.
+
 같은 패키지를 이 프로젝트에 두거나, 사용자 계정에 두거나, Cursor를 거쳐 Grok Bot에서 열 수 있습니다.
 
 | 두는 곳 | 추가하는 방법 | 파일이 있는 곳 |
@@ -275,7 +277,7 @@ Grok Bot의 **Connect apps**는 Cursor Marketplace를 읽습니다. 이 저장�
 
 Node.js와 Grok Build가 있으면 됩니다. 이 페이지의 내용은 Grok Build 1.0.13에서 확인했습니다. 슬라이드 작업에는 Node.js 20.9 이상이 필요하고, 문서 스킬은 처음 쓸 때 버전이 고정된 도구를 전용 캐시에 설치합니다.
 
-업데이트는 같은 `install` 명령을 다시 실행하면 됩니다. `litgrok doctor`는 설치된 버전을 보여 주고, npm에 새 버전이 있으면 설치 명령을 알려 줍니다. 직접 설치해 주지는 않습니다.
+업데이트는 같은 `install` 명령을 다시 실행하면 됩니다. `litgrok doctor`는 설치된 버전과 사용자 규칙 구간의 `GROUND:` 한 줄을 보여 주고, npm에 새 버전이 있으면 설치 명령을 알려 줍니다. 직접 설치해 주지는 않습니다.
 
 제거할 때는 설치한 범위 그대로 실행하세요. 설치 프로그램은 자기가 넣은 파일만 지우고, 그중 직접 고친 파일이 있으면 아무것도 지우기 전에 멈추고 그 파일을 알려 줍니다.
 

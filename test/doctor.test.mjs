@@ -34,7 +34,7 @@ async function doctor({ args = [], env = {}, fetch } = {}) {
       stderr: { isTTY: false, write(value) { stderr += String(value); return true; } },
       fetch,
     });
-    return { code, stdout, stderr, written: readdirSync(scratch) };
+    return { code, stdout, stderr, written: readdirSync(scratch), home: scratch };
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
@@ -45,7 +45,7 @@ test('doctor prints a notify-only line when the registry has a newer version', a
   const result = await doctor({ fetch: registry.fetch });
   assert.equal(result.code, 0);
   assert.equal(result.stderr, '');
-  assert.equal(result.stdout, `litgrok ${VERSION}\nnewer version available: 99.0.0 (run: ${INSTALL_LINE})\n`);
+  assert.equal(result.stdout, `litgrok ${VERSION}\nGROUND: absent ${join(result.home, '.grok', 'rules', '00-litgrok.md')}\nnewer version available: 99.0.0 (run: ${INSTALL_LINE})\n`);
   assert.equal(registry.calls.length, 1);
   assert.equal(registry.calls[0].url, REGISTRY_URL);
   assert.ok(registry.calls[0].signal instanceof AbortSignal, 'the registry request must carry a timeout signal');
@@ -56,7 +56,7 @@ test('doctor prints nothing extra when the installed version is current or ahead
   for (const version of [VERSION, '0.0.1']) {
     const result = await doctor({ fetch: fakeRegistry({ version }).fetch });
     assert.equal(result.code, 0);
-    assert.equal(result.stdout, `litgrok ${VERSION}\n`, version);
+    assert.equal(result.stdout, `litgrok ${VERSION}\nGROUND: absent ${join(result.home, '.grok', 'rules', '00-litgrok.md')}\n`, version);
   }
 });
 
@@ -68,7 +68,7 @@ test('doctor prints one quiet line when offline or the registry answer is unusab
     const result = await doctor({ fetch });
     assert.equal(result.code, 0);
     assert.equal(result.stderr, '');
-    assert.equal(result.stdout, `litgrok ${VERSION}\nupdate check unavailable (offline or registry unreachable)\n`);
+    assert.equal(result.stdout, `litgrok ${VERSION}\nGROUND: absent ${join(result.home, '.grok', 'rules', '00-litgrok.md')}\nupdate check unavailable (offline or registry unreachable)\n`);
   }
 });
 
@@ -79,7 +79,7 @@ test('doctor gives up on a registry that never answers within the bounded timeou
   const started = Date.now();
   const result = await doctor({ fetch: hanging });
   const elapsed = Date.now() - started;
-  assert.equal(result.stdout, `litgrok ${VERSION}\nupdate check unavailable (offline or registry unreachable)\n`);
+  assert.equal(result.stdout, `litgrok ${VERSION}\nGROUND: absent ${join(result.home, '.grok', 'rules', '00-litgrok.md')}\nupdate check unavailable (offline or registry unreachable)\n`);
   assert.ok(elapsed >= 2500 && elapsed < 6000, `bounded near 3 s, took ${elapsed} ms`);
 });
 
@@ -88,7 +88,7 @@ test('doctor skips the registry entirely under each opt-out, even with an empty 
     const registry = fakeRegistry({ version: '99.0.0' });
     const result = await doctor({ env: { [name]: '' }, fetch: registry.fetch });
     assert.equal(result.code, 0);
-    assert.equal(result.stdout, `litgrok ${VERSION}\n`, name);
+    assert.equal(result.stdout, `litgrok ${VERSION}\nGROUND: absent ${join(result.home, '.grok', 'rules', '00-litgrok.md')}\n`, name);
     assert.equal(registry.calls.length, 0, name);
   }
 });
@@ -96,7 +96,7 @@ test('doctor skips the registry entirely under each opt-out, even with an empty 
 test('doctor accepts --no-color and rejects any other argument with the usage text', async () => {
   const colorless = await doctor({ args: ['--no-color'], fetch: fakeRegistry({ version: VERSION }).fetch });
   assert.equal(colorless.code, 0);
-  assert.equal(colorless.stdout, `litgrok ${VERSION}\n`);
+  assert.equal(colorless.stdout, `litgrok ${VERSION}\nGROUND: absent ${join(colorless.home, '.grok', 'rules', '00-litgrok.md')}\n`);
   const registry = fakeRegistry({ version: '99.0.0' });
   const rejected = await doctor({ args: ['--yes'], fetch: registry.fetch });
   assert.equal(rejected.code, 1);

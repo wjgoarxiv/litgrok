@@ -177,6 +177,10 @@ The internal analysis should contain:
 Keep proposed wording separate from observed current wording.
 Label every new policy choice that needs user approval.
 
+## Project ground rules
+
+When the user approves the exact files to create, and this agreement is not already in the repo, place it by running `litgrok ground project` with the repository root as the working directory. The command writes one project rule and no other file. That rule keeps plans in the plans directory, the handoff beside the repo or in a handoff directory, and run notes in LitGrok's state directory, out of commits. A push, publish, tag or version bump waits for an explicit yes. It refuses a symlink, a path that is not a directory, or an existing file it does not own. Do not write that rule by hand, and do not run the command before the user approves that target. If the command refuses, stop and report the path it printed.
+
 ## Mutation gate
 
 Do not create an instruction file merely because none exists.
