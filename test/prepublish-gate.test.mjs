@@ -64,7 +64,7 @@ test('intentional release gate failure', () => assert.fail('intentional LitGrok 
   return { archive: `${name}-1.0.0.tgz`, home, root, scratch };
 }
 
-function runNpm(args, fixture) {
+function runNpm(args, fixture, extraEnv = {}) {
   const env = {
     ...process.env,
     HOME: fixture.home,
@@ -76,6 +76,9 @@ function runNpm(args, fixture) {
     NPM_CONFIG_FUND: 'false',
   };
   delete env.NODE_TEST_CONTEXT;
+  delete env.LITGROK_PUBLISH_FROM_CI;
+  Object.assign(env, extraEnv);
+  for (const [key, value] of Object.entries(extraEnv)) if (value === undefined) delete env[key];
   return spawnSync(NPM, args, {
     cwd: fixture.root,
     encoding: 'utf8',
@@ -125,5 +128,88 @@ test('publish refuses when the test command cannot start', () => {
     assert.equal(existsSync(join(fixture.root, 'suite-started')), false);
   } finally {
     rmSync(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test('a local publish without the CI flag still runs the full suite', () => {
+  const fixture = createFixture({ failingSuite: true });
+  try {
+    const result = runNpm([
+      'publish', '--dry-run', '--offline', '--foreground-scripts', '--ignore-scripts=false',
+      '--registry=http://127.0.0.1:9',
+    ], fixture, { GITHUB_ACTIONS: 'true' });
+
+    assert.notEqual(result.status, 0, output(result));
+    assert.equal(existsSync(join(fixture.root, 'suite-started')), true, 'the suite must run without the CI flag');
+    assert.doesNotMatch(output(result), /the suite is not run again/u);
+  } finally {
+    rmSync(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test('the CI flag outside GitHub Actions refuses the publish instead of skipping the suite', () => {
+  const fixture = createFixture({ testCommand: 'node -e "process.exitCode = 0"' });
+  try {
+    const result = runNpm([
+      'publish', '--dry-run', '--offline', '--foreground-scripts', '--ignore-scripts=false',
+      '--registry=http://127.0.0.1:9',
+    ], fixture, { LITGROK_PUBLISH_FROM_CI: '1', GITHUB_ACTIONS: undefined });
+
+    assert.notEqual(result.status, 0, output(result));
+    assert.match(output(result), /prepublish test gate refused: this is not a GitHub Actions run/u);
+  } finally {
+    rmSync(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+const SHA = 'f'.repeat(40);
+const CI_ENV = { GITHUB_ACTIONS: 'true', GITHUB_SHA: SHA, GITHUB_REPOSITORY: 'wjgoarxiv/litgrok', GITHUB_TOKEN: 'token' };
+const cleanCheckout = (args) => (args[0] === 'rev-parse' ? SHA : '');
+const reply = (payload, status = 200) => async () => ({ ok: status === 200, status, json: async () => payload });
+const GREEN = { workflow_runs: [{ id: 41, head_sha: SHA, conclusion: 'success' }] };
+
+test('the CI gate passes when ci.yml passed on the same clean commit', async () => {
+  const { checkCiRun } = await import('../scripts/prepublish-test-gate.mjs');
+  const asked = [];
+  const request = async (url, init) => {
+    asked.push({ url, authorization: init.headers.authorization });
+    return reply(GREEN)();
+  };
+  const verdict = await checkCiRun({ env: CI_ENV, request, runGit: cleanCheckout });
+  assert.equal(verdict.passed, true, verdict.why);
+  assert.equal(asked.length, 1);
+  assert.equal(asked[0].authorization, 'Bearer token');
+  assert.equal(
+    asked[0].url,
+    `https://api.github.com/repos/wjgoarxiv/litgrok/actions/workflows/ci.yml/runs?head_sha=${SHA}&status=success&event=push&per_page=1`,
+  );
+});
+
+test('the CI gate refuses every case without a green ci.yml run on this checkout', async () => {
+  const { checkCiRun } = await import('../scripts/prepublish-test-gate.mjs');
+  const cases = [
+    ['no matching run', { request: reply({ workflow_runs: [] }) }, /no successful push run/u],
+    ['run for another commit', { request: reply({ workflow_runs: [{ id: 1, head_sha: 'e'.repeat(40), conclusion: 'success' }] }) }, /no successful push run/u],
+    ['failed run', { request: reply({ workflow_runs: [{ id: 1, head_sha: SHA, conclusion: 'failure' }] }) }, /no successful push run/u],
+    ['HTTP error', { request: reply({}, 404) }, /answered 404/u],
+    ['offline', { request: async () => { throw new Error('getaddrinfo ENOTFOUND'); } }, /could not be reached: getaddrinfo ENOTFOUND/u],
+    ['HEAD mismatch', { runGit: (args) => (args[0] === 'rev-parse' ? 'd'.repeat(40) : '') }, /checkout is not/u],
+    ['dirty tree', { runGit: (args) => (args[0] === 'rev-parse' ? SHA : ' M bin/litgrok.mjs') }, /local changes/u],
+    ['git unavailable', { runGit: () => null }, /checkout is not/u],
+    ['not in Actions', { env: { ...CI_ENV, GITHUB_ACTIONS: undefined } }, /not a GitHub Actions run/u],
+    ['short sha', { env: { ...CI_ENV, GITHUB_SHA: 'abc123' } }, /not a GitHub Actions run/u],
+    ['bad repository string', { env: { ...CI_ENV, GITHUB_REPOSITORY: 'wjgoarxiv/litgrok?per_page=100' } }, /not a GitHub Actions run/u],
+  ];
+  for (const [label, override, reason] of cases) {
+    let calls = 0;
+    const request = override.request ?? reply(GREEN);
+    const verdict = await checkCiRun({
+      env: override.env ?? CI_ENV,
+      runGit: override.runGit ?? cleanCheckout,
+      request: async (...args) => { calls += 1; return request(...args); },
+    });
+    assert.equal(verdict.passed, false, label);
+    assert.match(verdict.why, reason, label);
+    if (!override.request) assert.equal(calls, 0, `${label} must refuse before asking the GitHub API`);
   }
 });

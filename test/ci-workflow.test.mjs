@@ -6,6 +6,7 @@ import test from 'node:test';
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const WORKFLOW_PATH = join(PRODUCT_ROOT, '.github', 'workflows', 'ci.yml');
+const PUBLISH_PATH = join(PRODUCT_ROOT, '.github', 'workflows', 'publish.yml');
 
 // Terms are split so this guard cannot match itself.
 const RELEASE_TERMS = [
@@ -57,4 +58,23 @@ test('CI bounds validation, disables persisted credentials, and retains failure 
   assert.match(source, /uses: actions\/upload-artifact@v4/u);
   assert.match(source, /retention-days: 7/u);
   assert.doesNotMatch(source, /\b(?:contents|packages|actions|id-token|pull-requests): write/u);
+});
+
+test('the publish workflow trusts only a green ci.yml run and carries no token or push', () => {
+  const source = readFileSync(PUBLISH_PATH, 'utf8');
+  assert.match(source, /on:\n\s+workflow_dispatch:/u, 'publish must start by hand only');
+  assert.doesNotMatch(source, /^\s+(?:push|pull_request|schedule|release):/mu, 'publish must have no automatic trigger');
+  assert.match(source, /if: github\.ref == 'refs\/heads\/main'/u);
+  assert.match(source, /LITGROK_PUBLISH_FROM_CI: "1"/u, 'publish must switch the gate to the ci.yml check');
+  assert.match(source, /GITHUB_TOKEN: \$\{\{ github\.token \}\}/u);
+  assert.match(source, /permissions:\n\s+contents: read\n\s+actions: read\n\s+id-token: write/u);
+  assert.match(source, /timeout-minutes: 10/u);
+  assert.match(source, /persist-credentials: false/u);
+  assert.match(source, /run: npm run check:version$/mu);
+  assert.match(source, /run: node scripts\/prepublish-test-gate\.mjs$/mu, 'a dry run must still check ci.yml');
+  assert.match(source, /run: npm stage publish$/mu, 'publish must stage, never upload a live version');
+  assert.doesNotMatch(source, /run: npm test/u, 'the suite belongs to ci.yml');
+  assert.doesNotMatch(source, /\b(?:contents|packages|actions|pull-requests): write/u);
+  const found = RELEASE_TERMS.filter((term) => source.includes(term));
+  assert.deepEqual(found, [], `release-command term present in the publish workflow: ${found.join(', ')}`);
 });
