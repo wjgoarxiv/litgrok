@@ -12,5 +12,8 @@
   "scripts": {
     "render": "remotion render",
     "still": "remotion still"
+  },
+  "overrides": {
+    "zod": "4.6.6"
   }
 }

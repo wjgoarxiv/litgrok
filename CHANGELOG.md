@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Dependency alerts cleared: the audio runtime pins msgpack 1.2.3 (was 1.2.2) and the Remotion cover template pins zod 4.6.6 (was 4.5.4). The HyperFrames cover template still resolves zod 3.25.76 through its pinned browser-driver chain; that needs a HyperFrames upgrade, so it is left for a separate change.
+
 ## 1.0.29 — 2026-10-28
 
 - Releases are now built and published from GitHub Actions with npm trusted publishing, so each version carries a signed provenance statement that links the package to this repository and commit. Check it on the npm page (the green check by the version) or with `npm audit signatures`.
