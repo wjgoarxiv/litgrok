@@ -189,11 +189,24 @@ const commitsOf = (root, sinceMs, now, exec, redact) => {
   }
 };
 
+const herdrAgent = (agent, env, redact) => ({
+  status: typeof agent?.agent_status === "string" ? agent.agent_status : "unknown",
+  pane: typeof agent?.pane_id === "string" ? clipToWidth(redact(agent.pane_id), 40) : "unknown",
+  id8: typeof agent?.agent_session?.value === "string" ? agent.agent_session.value.slice(0, 8) : null,
+  self: Boolean(env.HERDR_PANE_ID) && agent?.pane_id === env.HERDR_PANE_ID,
+});
+
 const herdrOf = (env, exec, redact) => {
   if (env.HERDR_ENV !== "1") return { status: "unknown", agents: [] };
   try {
     const out = exec("herdr", ["agent", "list"], { timeout: HERDR_TIMEOUT_MS });
-    return { status: "ok", agents: out.split("\n").filter((line) => line.trim()).slice(0, 20).map((line) => clipToWidth(redact(line.trim()), 120)) };
+    try {
+      const listed = JSON.parse(out)?.result?.agents;
+      if (!Array.isArray(listed)) throw new Error("not a list");
+      return { status: "ok", agents: listed.slice(0, 20).map((agent) => herdrAgent(agent, env, redact)) };
+    } catch {
+      return { status: "ok", agents: out.split("\n").filter((line) => line.trim()).slice(0, 20).map((line) => clipToWidth(redact(line.trim()), 120)) };
+    }
   } catch {
     return { status: "unknown", agents: [] };
   }

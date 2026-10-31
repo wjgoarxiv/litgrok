@@ -109,6 +109,12 @@
       "kind": "pinned",
       "occurrences": 1,
       "why": "The ground-rules marker in the user rule carries the package release so doctor can tell a current section from a stale one."
+    },
+    {
+      "path": "test/ground-rule.test.mjs",
+      "kind": "pinned",
+      "occurrences": 1,
+      "why": "The ground-rule round trip pins the release written into the section marker."
     }
   ],
   "incidentalMatches": [

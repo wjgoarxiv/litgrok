@@ -46,6 +46,7 @@ const WORDS = {
     self: "this session",
     answer: (q) => `answer its question: “${q}”`,
     resume: (skill, stage, self) => `resume ${skill} at ${stage} (\`lit continue\`${self ? "" : " there"})`,
+    lanesAtWork: (n) => `${n} other ${n === 1 ? "piece of work is" : "pieces of work are"} still running. Leave this session until ${n === 1 ? "it finishes" : "they finish"}.`,
     approve: "approve or deny the start-work boundary (`lit approve` / `lit deny`)",
     planNow: (plan, item) => `${plan} → ${item}`,
     nothing: "nothing pending on record",
@@ -115,6 +116,7 @@ const WORDS = {
     self: "이 세션",
     answer: (q) => `질문에 답하기: “${q}”`,
     resume: (skill, stage, self) => `${skill}(${stage}) 이어가기 (${self ? "" : "그 세션에서 "}\`lit continue\`)`,
+    lanesAtWork: (n) => `다른 작업 ${n}건이 아직 진행 중입니다. 끝날 때까지 이 세션은 이어가지 않습니다.`,
     approve: "start-work 경계 승인 또는 거절 (`lit approve` / `lit deny`)",
     planNow: (plan, item) => `${plan} → ${item}`,
     nothing: "기록된 남은 일 없음",
@@ -218,6 +220,7 @@ const actionOf = (session, escape = plain) => {
 const nextOf = (session, data, w) => {
   const frames = (data.workflows ?? []).filter((frame) => frame.id8 === session.id8);
   const paused = frames.find((frame) => frame.status === "paused");
+  if (paused && session.self && data.next?.wait?.lanes) return w.lanesAtWork(data.next.wait.lanes);
   if (paused) return w.resume(paused.skill, paused.stage, session.self);
   if (session.waitingReason === "start-work boundary") return w.approve;
   if (session.status === "waiting-on-user") {
@@ -287,7 +290,7 @@ const suggestion = (data, w) => {
   if (waiting) return w.suggest.answer({ id8: waiting.id8, where: where(waiting), question: lastQuestion(waiting.result, bare) });
   const paused = (data.workflows ?? []).find((frame) => frame.status === "paused");
   const owner = paused ? sessions.find((session) => session.id8 === paused.id8) : null;
-  if (paused) return w.suggest.resume({ id8: paused.id8, skill: paused.skill, stage: paused.stage, where: owner ? where(owner) : basename(String(paused.worktree)) });
+  if (paused && !data.next?.wait?.lanes) return w.suggest.resume({ id8: paused.id8, skill: paused.skill, stage: paused.stage, where: owner ? where(owner) : basename(String(paused.worktree)) });
   // A plan in the worktree of a live session comes first, then this worktree's, then the newest.
   const liveTrees = new Set(sessions.filter((session) => session.status !== "ended").map((session) => session.worktree));
   const open = (data.roadmap?.plans ?? []).filter((item) => item.current && !item.complete);

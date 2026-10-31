@@ -225,6 +225,25 @@ describe("lit-adhd next step", () => {
     assert.equal(chooseNextStep(two, "sess-run").kind, "none", "two open plans is not startable by word alone");
   });
 
+  it("does not resume this session or continue its run while another lane works", () => {
+    const now = new Date(NOW).toISOString();
+    const self = { id8: "self0001", status: "idle", self: true, title: "This session", asked: [], done: {}, last: now };
+    const open = { plan: "plans/c.md", local: true, progress: { total: 2, done: 0, gauge: null, remaining: [] }, current: "Count lanes", complete: false, changedMs: NOW - 60_000 };
+    const frame = { id8: "self0001", status: "paused", skill: "lit-loop", stage: "RED" };
+    const ownRun = { id8: "self0001", sessionId: "self0001session", status: "active", plan: "plans/c.md" };
+    const working = { status: "ok", agents: [{ status: "working", self: false, pane: "pane-1" }] };
+    const shell = { generatedAt: now, sessions: [{ ...self, status: "ended" }], roadmap: { plans: [open] }, workflows: [], startWork: [], herdr: { status: "ok", agents: [] }, scope: { since: "7d", worktrees: ["."] }, summary: { sessions: 1, waitingOnUser: 0, active: 0, idle: 0, done: 0 }, handoffs: [], commits: [], sources: {} };
+    assert.equal(chooseNextStep({ ...shell, workflows: [frame], sessions: [self] }, "self0001session").say, "lit continue");
+    assert.notEqual(chooseNextStep({ ...shell, workflows: [frame], sessions: [self], herdr: working }, "self0001session").say, "lit continue");
+    assert.equal(chooseNextStep({ ...shell, startWork: [ownRun] }, "self0001session").say, "go");
+    assert.notEqual(chooseNextStep({ ...shell, startWork: [ownRun], herdr: working }, "self0001session").say, "go");
+    const boundary = { ...ownRun, status: "paused", pendingBoundary: { action: "read", root: "/x" } };
+    assert.equal(chooseNextStep({ ...shell, startWork: [boundary], herdr: working }, "self0001session").say, "lit approve");
+    const held = chooseNextStep({ ...shell, workflows: [frame], sessions: [self], herdr: working }, "self0001session");
+    const card = renderBrief({ ...shell, workflows: [frame], sessions: [self], herdr: working, next: held }, { lang: "en", now: NOW });
+    assert.doesNotMatch(card, /lit continue/u);
+  });
+
   it("lets a plan saved in the last 30 minutes win over older open plans", () => {
     const { proj, store } = fixture();
     const data = collectRewind({ cwd: proj, since: "30d", max: 5, env: baseEnv(store), now: NOW, record: false });

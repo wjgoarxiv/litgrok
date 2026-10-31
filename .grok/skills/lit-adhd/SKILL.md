@@ -101,7 +101,7 @@ The collector (`scripts/lib/collect.mjs`, served as `scripts/rewind.mjs`) reads,
 
 Plans and handoffs are read first, so a run whose transcripts spend the budget still shows what is left. Session files are read head (64 KiB) and tail (256 KiB) only, under one 8 MiB budget for the whole run, through descriptors opened without following links. The store format is private and may move, so every field is read defensively and anything missing reads as unknown. Only the session's own project folder is ever listed: the store is never scanned blindly. Every string is redacted before it leaves the collector: credential shapes, `NAME=value` with a secret-like name, URI userinfo, any current environment value of eight or more characters, and the home directory (shown as `~`).
 
-Grok Build keeps no litgoal ledger, workflow stack or start-work state file, so those sources stay `unknown` and the offered next step degrades to plans. A paused workflow or a start-work boundary shows in the waiting reason only when the transcript itself says so.
+Grok Build keeps no litgoal ledger, workflow stack or start-work state file, so those lists stay empty unless a record already carries a frame or a boundary. A paused workflow or a start-work boundary also shows in the waiting reason when the transcript itself says so.
 
 ## Status taxonomy
 
@@ -116,10 +116,16 @@ Sessions waiting on the user come first, then active, idle, done and ended ones,
 
 ## The next step
 
-`next` is chosen by code, in this priority order, and the brief offers exactly that one:
+`next` is chosen by code, in this priority order, and the brief offers exactly that one. Other work is counted first: another live session, or a herdr agent that is working or blocked in another pane. While that work runs, this session is not told to `lit continue` or `go`, and its own card does not offer the resume command. An approval is still offered.
 
-1. Exactly one open plan in this worktree and no work running: start it. Say `go`.
-2. Otherwise `none`: say so.
+1. This session's paused frame, and no other work running: resume it. Say `lit continue`.
+2. A start-work boundary waiting on the user: say `lit approve`. It is not automatic.
+3. Other work still running: `none`. The card says to leave this session until it finishes.
+4. This session's own running start-work: continue it. Say `go`.
+5. Exactly one open plan in this worktree and nothing else running: start it. Say `go`. With several open, the one saved in the last 30 minutes wins.
+6. Otherwise `none`: say so.
+
+Grok Build keeps no workflow stack on disk. The collector leaves those lists empty unless a record supplies them. Herdr's agent list is read when `HERDR_ENV=1`.
 
 `go` (also `lit go`, `ㄱㄱ`, `고`, `진행`, as the whole prompt) continues the step the brief offered: re-collect first, then continue the step the fresh brief offers, which the live records derive the same way again. The collector writes no session record, so there is nothing to go stale. A start-work boundary approval still needs the typed words (`lit approve` / `lit deny`) and is never automatic. Anything else typed after the brief is an ordinary prompt.
 
