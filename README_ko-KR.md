@@ -49,7 +49,7 @@ Node.js와 Grok Build가 있으면 됩니다. 써 보고 싶은 프로젝트에�
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.29`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
+파일은 `<project>/.grok/`에 들어갑니다. 어디에 무엇이 들어갈지 먼저 보려면 `--dry-run`을, 사용자 홈(`~/.grok/`)에 설치하려면 `--user`를 붙이세요. 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.30`을 쓰면 됩니다. `install`을 다시 실행하면 업데이트되고, 직접 고친 파일은 덮어쓰지 않습니다. [다른 설치 방법, 상태 행, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
 
 사용자 홈에 설치하면 `~/.grok/rules/00-litgrok.md` 끝에 짧은 기본 규칙이 붙습니다. `lit`으로 시작하는 프롬프트가 LitGrok을 부르는 말이고, 계획은 `plans/`에, 인수인계는 `.handoff/HANDOFF.md`에 두며, push, 배포, 태그, 버전 올리기는 그 일을 하라고 분명히 말하기 전에는 하지 않는다는 내용입니다. `litgrok doctor`와 `litgrok ground status`는 이 구간이 있는지, 어느 버전인지를 `GROUND:`로 보여 줍니다. `litgrok ground off`는 구간을 빼고 꺼 둔 채로 두고, `litgrok ground on`은 다시 넣습니다. `install --no-ground`는 그 한 번만 건너뜁니다. 새 저장소에서는 승인한 lit-init이 `litgrok ground project`로 같은 약속을 `.grok/rules/10-litgrok-ground.md`에 둘 수 있습니다.
 

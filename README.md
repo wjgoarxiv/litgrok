@@ -49,7 +49,7 @@ You need Node.js and Grok Build. Open an interactive terminal in the project you
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.29`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
+The files land in `<project>/.grok/`. Add `--dry-run` to see every destination first, or `--user` to install under `~/.grok/` instead. To pin this release, use `--package @litfamily/litgrok@1.0.30`. Running `install` again updates LitGrok, and it refuses to overwrite any file you edited. [Other install options, the optional status row and the safety checks](./docs/guide.md#install-options).
 
 A user install leaves a short ground-rules section at the end of `~/.grok/rules/00-litgrok.md`. It says that a prompt starting with `lit` is LitGrok's activation word, that plans live in `plans/` and the handoff in `.handoff/HANDOFF.md`, and that a push, a publish, a tag or a version bump waits for an explicit yes. `litgrok doctor` and `litgrok ground status` print `GROUND:` with that section's presence and version. `litgrok ground off` takes the section out and leaves it off; `litgrok ground on` puts it back. `install --no-ground` skips it for that run only. In a new repo, an approved lit-init can add the same agreement as its own file, `.grok/rules/10-litgrok-ground.md`, by running `litgrok ground project`.
 

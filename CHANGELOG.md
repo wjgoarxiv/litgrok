@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.30 — 2026-10-31
+
 - `lit-adhd` counts other work before it tells this session what to do. A paused frame here is not resumed, and this session's own run is not continued with `go`, while another session or a herdr agent is still working. A start-work approval is still offered. The session's own card does not show `lit continue` while that work runs.
 - The user rule `~/.grok/rules/00-litgrok.md` now ends with a short ground-rules section: a prompt that starts with `lit` is LitGrok's activation word, plans live in `plans/`, the handoff lives in `.handoff/HANDOFF.md`, and a push, publish, tag or version bump waits for an explicit yes. `litgrok doctor` and `litgrok ground status` print whether that section is present and which version it is. `litgrok ground off` removes it and leaves it off; `litgrok ground on` restores it. `install --no-ground` skips it for that run. An approved lit-init can place the project copy with `litgrok ground project`, which writes `.grok/rules/10-litgrok-ground.md` and refuses a symlink, a non-directory path, or a file LitGrok does not own.
 - Dependency alerts cleared: the audio runtime pins msgpack 1.2.3 (was 1.2.2) and the Remotion cover template pins zod 4.6.6 (was 4.5.4). The HyperFrames cover template still resolves zod 3.25.76 through its pinned browser-driver chain; that needs a HyperFrames upgrade, so it is left for a separate change.

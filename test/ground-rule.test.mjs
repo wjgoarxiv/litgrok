@@ -52,7 +52,7 @@ test('the packaged user rule carries one ground section under the byte cap, at t
 
 test('adding the section and removing it returns the original bytes, including CRLF', () => {
   const original = 'keep this\r\nline\r\n';
-  const added = upsertGround(original, { version: '1.0.29', body: 'One line.\r\nStill one.', created: false });
+  const added = upsertGround(original, { version: '1.0.30', body: 'One line.\r\nStill one.', created: false });
   assert.equal(added.changed, true);
   assert.equal(inspectGround(added.text).state, 'present');
   assert.match(added.text, /\r\n/);

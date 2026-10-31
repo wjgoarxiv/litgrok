@@ -203,7 +203,7 @@ An old agent name, prefixed or not, selects the renamed agent and prints that ro
 
 These rows are prompt guidance, not a router: old slash routes are not guaranteed; never create old skill directories or invent command metadata.
 
-<!-- litfamily:litgrok:start v=1.0.29 pre=0a -->
+<!-- litfamily:litgrok:start v=1.0.30 pre=0a -->
 ## LitGrok ground rules
 
 Grok Build reads this file on every turn. These lines are the working agreement. The sections above still choose the skill.
