@@ -195,6 +195,19 @@ export const STAGE = Object.freeze({
   determinismMax: 16,
 });
 
+// Keyed overlay clips (references/stage.md, Clips): frame folders declared in stage/clips/clips.json
+// are held to these caps instead of the raster limits above. A clip is a sticker on the film, never
+// the film: 8-bit RGBA PNG frames with real transparency, at most `side` px on the long side.
+export const CLIP_LIMITS = Object.freeze({
+  clips: 12,
+  framesPerClip: 360,
+  framesTotal: 1500,
+  bytesPerClip: 40 * 1024 * 1024,
+  bytesTotal: 128 * 1024 * 1024,
+  side: 720,
+  fps: 30,
+});
+
 // Cover mode (references/cover.md): the README cover loop and the gate that reads its DECODED file.
 // Calibrated on 2026-10-20 against eight earlier painted covers, four slide-like negatives and
 // three pilot loops; a number moves only with a new calibration table. FLOOR fails a cover (every

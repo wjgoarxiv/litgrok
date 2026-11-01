@@ -124,6 +124,7 @@ export function stageReportText({ manifest, gate, withheld, perf, outDir, treatm
   lines.push(`path: stage · format ${manifest.format} (${manifest.resolution.join('x')}) · ${manifest.durationSec.toFixed(2)} s of ${treatment.durationSec} s target @ ${manifest.fps} fps`);
   lines.push(`sound: ${manifest.sound?.label ?? 'n/a'}${manifest.sound?.timbre ? ` (${manifest.sound.timbre}, ${manifest.sound.key}, ${manifest.sound.tempo} BPM, ${manifest.sound.lufs?.toFixed?.(1)} LUFS)` : ''}`);
   lines.push(`renderer: ${manifest.renderer}`);
+  if (manifest.clips?.length) lines.push(`clips: ${manifest.clips.map((c) => `${c.id} ${c.frames} frames at ${c.fps} fps`).join(', ')} (keyed overlays, chosen from film time)`);
   lines.push('');
   lines.push(`QA gate: ${gate.status}`);
   for (const r of gate.results) lines.push(`  ${`${r.id}:`.padEnd(30)}${r.status}  (${r.detail})`);

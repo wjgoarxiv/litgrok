@@ -7,6 +7,7 @@ import { extname, join, sep } from 'node:path';
 import { STAGE } from './constants.mjs';
 import { launchStage } from './chrome.mjs';
 import { SKILL_ROOT } from './fonts.mjs';
+import { clipsScript } from './clips.mjs';
 
 export const CONTENT_TYPES = Object.freeze({
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -78,6 +79,7 @@ export async function openStage({ executable, outDir, stageDir, width, height, f
   const network = [];
   const refused = [];
   const served = new Set();
+  const clipsJs = clipsScript(stageDir);
   const kit = existsSync(KIT_PATH) ? readFileSync(KIT_PATH) : Buffer.from('/* stage kit missing */');
   const respond = (requestId, status, body, type) => browser.send('Fetch.fulfillRequest', {
     requestId, responseCode: status,
@@ -95,6 +97,7 @@ export async function openStage({ executable, outDir, stageDir, width, height, f
       return;
     }
     if (url.pathname === '/lit/stage-kit.js') { served.add('/lit/stage-kit.js'); await respond(requestId, 200, kit, CONTENT_TYPES['.js']); return; }
+    if (clipsJs && url.pathname === '/lit/clips.js') { served.add('/lit/clips.js'); await respond(requestId, 200, clipsJs, CONTENT_TYPES['.js']); return; }
     if (url.pathname.startsWith('/lit/three/')) {
       const resolved = resolveThree(url.pathname);
       if (resolved.refused) { refused.push(resolved.refused); await respond(requestId, 403, 'refused'); return; }

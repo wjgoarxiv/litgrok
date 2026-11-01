@@ -280,6 +280,49 @@
     };
   }
 
+  // A declared keyed clip (stage/clips/clips.json, served as window.LitClips by /lit/clips.js): one
+  // wrapper at `box` over the film, holding the clip's frame for t. The frame is a pure function of film
+  // time, floor((t - start) * fps) + 1 within from..to, so no <video> and no real clock is involved.
+  // Before `start` and after `to` the wrapper is hidden (null) unless `hold` keeps the last frame or
+  // `loop` wraps by frame index. The wrapper is what a page scales or fades; the <img> inside is
+  // replaced on a frame change, so the renderer waits for its decode before the capture.
+  function overlay(opts) {
+    var all = root.LitClips, parent = opts && opts.parent, id = opts && opts.id, box = opts && opts.box;
+    if (!all) throw new Error('LitStage.overlay: load <script src="/lit/clips.js"></script> before the page script; the stage declares no clips (clips/clips.json)');
+    var c = all[id];
+    if (!c) throw new Error('LitStage.overlay: no clip "' + id + '" in clips/clips.json (declared: ' + Object.keys(all).join(', ') + ')');
+    if (!parent || !box || !(box.w > 0) || !(box.h > 0)) throw new TypeError('LitStage.overlay: pass { parent, id, box: { x, y, w, h } }');
+    var doc = parent.ownerDocument || root.document;
+    var wrap = doc.createElement('div');
+    wrap.setAttribute('data-lit-clip', id);
+    var ws = wrap.style;
+    ws.position = 'absolute'; ws.left = box.x + 'px'; ws.top = box.y + 'px'; ws.width = box.w + 'px'; ws.height = box.h + 'px';
+    ws.display = 'none'; ws.pointerEvents = 'none';
+    parent.append(wrap);
+    var shown = 0, img = null;
+    return function (t, o) {
+      o = o || {};
+      var start = o.start == null ? 0 : o.start, from = o.from == null ? 1 : o.from, to = o.to == null ? c.count : o.to;
+      if (!(from >= 1 && to <= c.count && from <= to)) throw new RangeError('LitStage.overlay: from..to must lie within 1..' + c.count + ' (got ' + from + '..' + to + ')');
+      var n = to - from + 1, k = Math.floor((t - start) * c.fps + 1e-6);
+      var i = k < 0 ? 0 : k < n ? from + k : o.loop ? from + (k % n) : o.hold ? to : 0;
+      wrap.style.display = i ? 'block' : 'none';
+      if (!i) return null;
+      if (i !== shown) {
+        var next = doc.createElement('img');
+        next.src = c.src + '/frame_' + String(i).padStart(4, '0') + '.png';
+        next.alt = '';
+        var ns = next.style;
+        ns.display = 'block'; ns.width = '100%'; ns.height = '100%'; ns.objectFit = 'contain';
+        if (img) img.replaceWith(next);
+        else wrap.append(next);
+        img = next;
+        shown = i;
+      }
+      return wrap;
+    };
+  }
+
   function rgb(hex) {
     var h = String(hex).replace('#', '');
     if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
@@ -472,6 +515,7 @@
     clip: clip,
     circle: circle,
     plate: plate,
+    overlay: overlay,
     mix: mix,
     rgb: rgb,
     hex: hex,

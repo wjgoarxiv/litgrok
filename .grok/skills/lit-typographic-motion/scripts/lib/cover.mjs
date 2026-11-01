@@ -137,7 +137,7 @@ function prepare({ out, env }) {
   const treatment = loadCoverTreatment(out);
   const dir = join(out, COVER_DIR);
   if (!existsSync(join(dir, 'index.html'))) throw new BlockedError(EXIT.STAGE_CONTRACT, `STAGE_CONTRACT_ERROR: ${join(dir, 'index.html')} is missing; write the cover page first (start from a recipe in recipes/)`);
-  const scan = scanStage(dir);
+  const scan = scanStage(dir, { clips: false });
   const rename = (line) => line.replaceAll('stage/', `${COVER_DIR}/`);
   if (scan.network.length) throw new BlockedError(EXIT.STAGE_NETWORK, `STAGE_NETWORK_REQUEST: ${rename(scan.network[0])}; a cover loads only its own files and the /lit/ routes`);
   if (scan.contract.length) throw new BlockedError(EXIT.STAGE_CONTRACT, `STAGE_CONTRACT_ERROR: ${rename(scan.contract[0])}`);

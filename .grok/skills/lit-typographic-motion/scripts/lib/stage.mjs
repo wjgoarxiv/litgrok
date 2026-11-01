@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 import { BlockedError, DIRECTOR, EXIT, STAGE } from './constants.mjs';
+import { scanClips } from './clips.mjs';
 import { resolveChrome, stageArgs } from './chrome.mjs';
 import { fontPath, fontState, PINS, resolveFontKey } from './fonts.mjs';
 import { FlashDetector } from './flash.mjs';
@@ -67,17 +68,24 @@ export function rasterInfo(bytes, ext) {
 }
 
 // Static scan before any launch: forbidden elements (17), absolute or protocol-relative URLs and
-// preconnect/prefetch links (19), raster limits, flipbooks and animated rasters (17).
-export function scanStage(stageDir) {
+// preconnect/prefetch links (19), raster limits, flipbooks and animated rasters (17). Frames of a clip
+// declared in clips/clips.json are checked by scanClips instead; `clips: false` (cover mode) ignores the
+// declaration, so a declared folder is held to the raster limits like any other.
+export function scanStage(stageDir, { clips: allowClips = true } = {}) {
   const contract = [];
   const network = [];
   const warnings = [];
-  if (!existsSync(join(stageDir, 'index.html'))) return { contract: ['stage/index.html is missing'], network, warnings, files: [], rasters: [] };
+  if (!existsSync(join(stageDir, 'index.html'))) return { contract: ['stage/index.html is missing'], network, warnings, files: [], rasters: [], clips: [] };
   const files = walk(stageDir);
   // A Blender plate and its preview stills are frames the runner wrote and plate.json lists by name
   // and size; they are not page rasters. Anything not listed is held to the raster limits.
   const plates = [readPlate(stageDir, 'plate'), readPlate(stageDir, 'plate-preview')].filter(Boolean);
   const listed = new Set(plates.flatMap((p) => p.frames.map((f) => `${p.dir}/${String(f.name)}`)));
+  let clips = [];
+  if (allowClips) {
+    try { clips = scanClips(stageDir); } catch (error) { contract.push(error.message); }
+    for (const clip of clips) for (const rel of clip.frames) listed.add(rel);
+  }
   const rasters = [];
   for (const file of files) {
     if (file.symlink) continue;
@@ -112,7 +120,7 @@ export function scanStage(stageDir) {
   const bySize = new Map();
   for (const r of rasters) { const key = `${r.width}x${r.height}`; bySize.set(key, (bySize.get(key) ?? 0) + 1); }
   for (const [size, count] of bySize) if (count >= STAGE.flipbookCount) contract.push(`${count} rasters of one size (${size}) form a flipbook; rasters are textures and stills, never a frame sequence`);
-  return { contract, network, warnings, files: files.map((f) => f.rel), rasters };
+  return { contract, network, warnings, files: files.map((f) => f.rel), rasters, clips };
 }
 
 // ---- fonts -----------------------------------------------------------------------------------
@@ -424,6 +432,7 @@ export async function renderStage({ out, treatment, round = 1, stillsOnly = fals
       schemaVersion: 1, path: 'stage', format: treatment.format, resolution: [width, height], fps, durationSec: totalFrames / fps, targetDurationSec: treatment.durationSec,
       frames: totalFrames, seed, rung: masterRung, renderer: `${masterRenderer} on the ${masterRung} rung (stage path)`, softwareRenderer: masterRung === 'software' || isSoftwareRenderer(masterRenderer), chromeFlags: masterArgs.filter((arg) => !arg.startsWith('--user-data-dir') && !arg.startsWith('--window-size') && arg !== 'about:blank'), previewEncoder: preview.encoder,
       sound: sound.summary, round, warnings,
+      clips: scan.clips.map((c) => ({ id: c.id, frames: c.count, fps: c.fps, width: c.width, height: c.height, bytes: c.bytes })),
     };
     const stills = writeStills(out, { plan, frames: kept, width, height, path: 'stage', round, mode: 'full', poster: { bytes: posterBytes, frame: posterFrame }, treatmentSha256 });
     // The final render ships its storyboard too: the done-check wants the board viewed on the final set.
