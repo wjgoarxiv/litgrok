@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.31 — 2026-11-01
+
 - The motion skill's stage path can carry keyed overlay clips: real footage keyed on green screen outside the renderer into one RGBA PNG per frame, declared in `stage/clips/clips.json` (`id`, `dir`, `count`, `fps`). The page registers a clip once with `LitStage.overlay` and shows it from film time, so a cue is plain arithmetic and the flash audit, the determinism replay and the text checks still run on the final pixels. The scan holds clips to 12 per film, 360 frames each and 1500 in all, 40 MB each and 128 MB in all, 720 px on the long side and 30 fps, and refuses opaque or mixed-size frames with exit 17; an undeclared frame folder is still a flipbook, and cover mode takes no clips.
 
 ## 1.0.30 — 2026-10-31
