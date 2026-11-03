@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Dependency alerts cleared in the HyperFrames cover template: `@hono/node-server` 2.1.5 (was 2.1.1), and HyperFrames is now a development dependency of the template, as it is a render tool and never ships in an install. Its browser-driver chain still resolves zod 3.25.76, which GitHub now tracks as a development-scope dependency.
+
 ## 1.0.31 — 2026-11-01
 
 - The motion skill's stage path can carry keyed overlay clips: real footage keyed on green screen outside the renderer into one RGBA PNG per frame, declared in `stage/clips/clips.json` (`id`, `dir`, `count`, `fps`). The page registers a clip once with `LitStage.overlay` and shows it from film time, so a cue is plain arithmetic and the flash audit, the determinism replay and the text checks still run on the final pixels. The scan holds clips to 12 per film, 360 frames each and 1500 in all, 40 MB each and 128 MB in all, 720 px on the long side and 30 fps, and refuses opaque or mixed-size frames with exit 17; an undeclared frame folder is still a flipbook, and cover mode takes no clips.
