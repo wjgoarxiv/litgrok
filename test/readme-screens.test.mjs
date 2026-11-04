@@ -11,29 +11,30 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SCREENS = join(ROOT, 'docs/assets/screens');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 
-// Captures of LitGrok's own installer, SessionStart hook, prompt hook and status-line command.
+// Carbon-style window cards of LitGrok's own installer, SessionStart hook, prompt hook and status-line command.
+// The card is the same on both page themes, so each -dark/-light pair holds the same picture.
 const screens = {
-  'install-done-dark.webp': '2dad1f0c008fe8d415d16d4d8e01fb6887314d7576ea191dc9bcc339342662cf',
-  'install-done-light.webp': '84002f78f42dd5f4cc1bc6efc64d6904410d1e84ff6528fd224cfe68b7167c80',
-  'install-dry-run-dark.webp': '74c116c806a2f3d1444823c63cd1141a32dae6406ec02d12c301722c9f386a9b',
-  'install-dry-run-light.webp': '8a0058c1e8d5e9f9814cffe6129b3d39894ade9455f8b86b31525fdbaf70961d',
-  'install-plan-dark.webp': '1d4efafaa704e0952b76223e8376e195c93031b5c73f0e788e654899fce4a8cf',
-  'session-start-dark.webp': '6e0d6a44b3de29bb75050b453501f16dda7d78983c8a0df694b2407df0fde578',
-  'session-start-light.webp': 'a8d8bfc4438bbdf6fd262738ec5de1e6826b09ba49ae57c03f3ff0edc7c93016',
-  'status-row-dark.webp': '6e8804bdf548dfe45065a64e99744ab2ecfc43df1092efd0a157db64065e893f',
-  'status-row-light.webp': 'a797fbe1885488278d8453cf7f18181f86aeaa0a3f0620038570538718ff0546',
+  'install-done-dark.webp': '2284c663f069f60c4160f6cdeaede1e7574040a2990ea19ba7c9c98baaa725a1',
+  'install-done-light.webp': '2284c663f069f60c4160f6cdeaede1e7574040a2990ea19ba7c9c98baaa725a1',
+  'install-dry-run-dark.webp': '0da434cf37cd224016597d359e29e738265551d684da3b95c276a769bf31a43b',
+  'install-dry-run-light.webp': '0da434cf37cd224016597d359e29e738265551d684da3b95c276a769bf31a43b',
+  'install-plan-dark.webp': '08dd8776fb9841595767e688be35e21e1ff0a7e9d6fb73141141ccbf46fdac6a',
+  'session-start-dark.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
+  'session-start-light.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
+  'status-row-dark.webp': '5cc43af2e7623e6f6ba0375f4821bcdd6d2022df3bedef7401b90e016ea2f0c8',
+  'status-row-light.webp': '5cc43af2e7623e6f6ba0375f4821bcdd6d2022df3bedef7401b90e016ea2f0c8',
 };
-const MAX_SCREEN_BYTES = 61_440;
+const MAX_SCREEN_BYTES = 245_760;
 
 // What each picture must quote in its alt text, in the language of the page.
 const quotes = {
-  'install-plan': ['INSTALL', '02 · Payload 1154 files · byte-identical copies only', 'Model selection: host-owned'],
-  'install-dry-run': ['DRY RUN — no files written', '02 · Payload 1154 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
-  'install-done': ['INSTALL STEPS', 'PAYLOAD · 1154 files discovered', 'WRITE · 1154 written', 'INSTALL RECEIPT', 'Status: Ready', 'Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@', '-- litgrok motion-runtime install', 'Next: restart Grok Build'],
+  'install-plan': ['INSTALL', '02 · Payload 1315 files · byte-identical copies only', 'Model selection: host-owned'],
+  'install-dry-run': ['DRY RUN — no files written', '02 · Payload 1315 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
+  'install-done': ['INSTALL STEPS', 'PAYLOAD · 1315 files discovered', 'WRITE · 1315 written', 'INSTALL RECEIPT', 'Status: Ready', 'Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@', '-- litgrok motion-runtime install', 'Next: restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
   'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $0.43 │ git main', '· litwork', '3 tools · 1 agent ● 1m42s', 'plan ✓ ━━━━', 'work 3/7', 'review · ──── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash 0:12'],
 };
-// The install plan stays a single dark picture: the cream cells of the mark fade on a white window.
+// The install plan was always a single picture; the other four keep their themed pair.
 const themedNames = ['install-done', 'session-start', 'install-dry-run', 'status-row'];
 const singleNames = ['install-plan'];
 
@@ -43,7 +44,7 @@ test('screen captures are the approved small lossless WebP files', () => {
     const path = join(SCREENS, name);
     assert.ok(lstatSync(path).isFile(), `${name} must be a regular file`);
     const bytes = readFileSync(path);
-    assert.ok(bytes.length <= MAX_SCREEN_BYTES, `${name} must stay under 60 KiB`);
+    assert.ok(bytes.length <= MAX_SCREEN_BYTES, `${name} must stay under 240 KiB`);
     assert.equal(bytes.subarray(0, 4).toString(), 'RIFF');
     assert.equal(bytes.subarray(8, 12).toString(), 'WEBP');
     assert.ok(!bytes.includes(Buffer.from('ANIM')), `${name} is a still picture`);
@@ -149,14 +150,14 @@ test('README prose never states a payload count that differs from what the insta
 
 // Captures of the `litgrok auto-handoff` command and of the status line around a Stop-hook handoff request.
 const autoHandoff = {
-  'auto-handoff-env-dark.webp': '7f04e0f5d98e79144e10f3ffd079f64791b6e7e56ddcba9649eb1e5616a1165d',
-  'auto-handoff-env-light.webp': '8eaa41a1d3b7162f16fe37168ad2aa3bdc1b085fc564bfe202219758d7ffdadf',
-  'auto-handoff-off-dark.webp': 'fd8406fc4ae6a7addfd3b8bdb8c6bdc2c7d75f57fe1c5d7c017a849a6c944851',
-  'auto-handoff-off-light.webp': '609517ec31c81bb19a72e93b21584b5cd228a05b4d296f51bbfcab5cb99c7b6e',
-  'auto-handoff-on-dark.webp': '48bb553aacfe8d7e132d390a209da8e194acad7bd79b415fe0f948c33f52199a',
-  'auto-handoff-on-light.webp': 'ebe15d4e3c53722c9f3c16421fb346f4c6b8af61791860cd99c8aa111ab6e97c',
-  'auto-handoff-session-dark.webp': 'a41a5a06a2c6d5e7b020a7364686070a4393bcaa91f2a1b300769689872008a6',
-  'auto-handoff-session-light.webp': 'fe76dee925fa3087422e6ee5df703cc90015f6de44a451e045bc9a747bb2bbda',
+  'auto-handoff-env-dark.webp': '2144ee9406b5450bd0da125aea4a041e51a5b9a4d1c5ff67249db2a268b5c83a',
+  'auto-handoff-env-light.webp': '2144ee9406b5450bd0da125aea4a041e51a5b9a4d1c5ff67249db2a268b5c83a',
+  'auto-handoff-off-dark.webp': '8b54ebdf7243f8f10918579d034b2e62e05c457d8b65659b8d21f76af124524c',
+  'auto-handoff-off-light.webp': '8b54ebdf7243f8f10918579d034b2e62e05c457d8b65659b8d21f76af124524c',
+  'auto-handoff-on-dark.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
+  'auto-handoff-on-light.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
+  'auto-handoff-session-dark.webp': '21b676828675e98114a166b922b07e18f11fff8c556a7750cdcf5f8b4c968a40',
+  'auto-handoff-session-light.webp': '21b676828675e98114a166b922b07e18f11fff8c556a7750cdcf5f8b4c968a40',
 };
 const autoHandoffQuotes = {
   'auto-handoff-on': ['litgrok auto-handoff on 60', 'Automatic handoff is ON at 60 percent for this project.', 'litgrok auto-handoff status', 'Automatic handoff: ON at 60 percent', 'It needs the LitGrok status line (litgrok install --user --status-line)'],
@@ -170,7 +171,7 @@ test('both GitHub pages show every automatic-handoff capture in its section, the
   assert.deepEqual(readdirSync(folder).sort(), Object.keys(autoHandoff).sort());
   for (const [name, expected] of Object.entries(autoHandoff)) {
     const bytes = readFileSync(join(folder, name));
-    assert.ok(bytes.length <= MAX_SCREEN_BYTES, `${name} must stay under 60 KiB`);
+    assert.ok(bytes.length <= MAX_SCREEN_BYTES, `${name} must stay under 240 KiB`);
     assert.equal(bytes.subarray(8, 16).toString(), 'WEBPVP8L', `${name} is a lossless WebP`);
     assert.equal(createHash('sha256').update(bytes).digest('hex'), expected, name);
   }
