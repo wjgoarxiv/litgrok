@@ -10,6 +10,10 @@
       "reason": "Project Grok configuration is supplied by the consuming workspace and is not an installed skill resource."
     },
     {
+      "token": ".grok/lsp.json",
+      "reason": "Grok Build's project language-server file is host configuration and is not a file LitGrok ships."
+    },
+    {
       "prefix": ".handoff/",
       "reason": "The consuming project's handoff file is host workspace state, not a template shipped by this skill package."
     }

@@ -27,7 +27,7 @@ function parseFrontmatter(source) {
   const fields = {};
   let activeList;
   for (const line of match[1].split('\n')) {
-    const scalar = line.match(/^([a-z_]+):\s*(.*)$/);
+    const scalar = line.match(/^([A-Za-z_]+):\s*(.*)$/);
     if (scalar) {
       activeList = undefined;
       fields[scalar[1]] = scalar[2].replace(/^['"]|['"]$/g, '');
@@ -55,7 +55,8 @@ test('ships the pinned Grok-native agent inventory and skill bindings', () => {
     const { fields, body } = parseFrontmatter(source);
     assert.match(fields.name, /^litgrok-[a-z0-9-]+$/);
     assert.ok(fields.description.length >= 24, `${fileName} needs a useful description`);
-    assert.ok(['plan', 'default', 'acceptEdits'].includes(fields.permission_mode));
+    assert.ok(['plan', 'default', 'acceptEdits'].includes(fields.permissionMode), `${fileName} permissionMode`);
+    assert.equal(fields.permission_mode, undefined, `${fileName} still uses the unread permission_mode key`);
     assert.deepEqual(fields.skills, expectedSkills, `${fileName} skill bindings drifted`);
     assert.ok(body.trim().length >= 240, `${fileName} needs a substantive prompt`);
     assert.doesNotMatch(source, /Claude Code|Codex|OpenCode/i, fileName);

@@ -1,7 +1,7 @@
 ---
 name: litgrok-librarian-researcher
 description: Researches authoritative documentation and records source-backed evidence for a bounded question.
-permission_mode: plan
+permissionMode: plan
 skills:
   - litresearch
   - rules

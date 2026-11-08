@@ -86,7 +86,7 @@ What stays in Grok Build:
 - The installer does not run, and `litgrok install`, `--status-line` and `--notify` change only Grok Build paths. Do not offer them as a fix inside these hosts.
 - The status row and its LIT card do not render. Report the current stage, checked tasks and last test verdict in your reply when the skill would have shown them there.
 - The Grok Build rule `.grok/rules/00-litgrok.md` is not loaded. Apply the reply guidance written into each skill directly.
-- Agent definitions: Grok Bot and the `.cursor-plugin/` route load none. When Cursor lists them through its third-party setting, remember they are written for Grok Build (`permission_mode` and `skills:` keys that Cursor does not document), so a delegated agent may run without the permissions or skills its file describes. Check what the agent actually did before reporting its result.
+- Agent definitions: Grok Bot and the `.cursor-plugin/` route load none. When Cursor lists them through its third-party setting, remember they are written for Grok Build (`permissionMode` and `skills:` keys that Cursor does not document), so a delegated agent may run without the permissions or skills its file describes. Check what the agent actually did before reporting its result.
 
 When a skill step names a Grok Build tool, use the host's nearest equivalent or say the step is unavailable:
 

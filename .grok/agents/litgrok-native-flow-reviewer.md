@@ -1,7 +1,7 @@
 ---
 name: litgrok-native-flow-reviewer
 description: Reviews a workflow for coherent Grok-native activation, evidence, and failure handling.
-permission_mode: plan
+permissionMode: plan
 skills:
   - lit-humanizer
   - review-work

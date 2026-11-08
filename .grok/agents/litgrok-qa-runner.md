@@ -1,7 +1,7 @@
 ---
 name: litgrok-qa-runner
 description: Runs bounded project and host QA scenarios and records artifacts plus cleanup receipts.
-permission_mode: default
+permissionMode: default
 skills:
   - start-work
   - review-work

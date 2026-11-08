@@ -1,7 +1,7 @@
 ---
 name: litgrok-executor
 description: Executes one bounded plan task and returns tests, evidence, and a fail-closed status packet.
-permission_mode: acceptEdits
+permissionMode: acceptEdits
 skills:
   - start-work
   - lit-code

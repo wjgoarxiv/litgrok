@@ -1,6 +1,6 @@
 # Built-in LSP code-intelligence contract
 
-This reference is deliberately narrow. Grok Build documents a built-in code-intelligence tool that is off by default. LitGrok explains how to enable and bound that tool. No language server ships with LitGrok, and no server configuration schema is described here.
+This reference is deliberately narrow. Grok Build documents a built-in code-intelligence tool that is off by default. LitGrok explains how to enable and bound that tool. No language server ships with LitGrok. Where a server is registered, in `.grok/lsp.json` or `~/.grok/lsp.json`, and the entry shape a Grok 1.0.13 inspect loaded, are described in the `lsp-setup` references, not here.
 
 ## Documented enable paths
 
@@ -34,16 +34,16 @@ The documented default is off. This is a user feature switch, not a project `.gr
 | Result points outside scope | Discard or narrow request | Returned path | Do not inspect unauthorized path |
 | Result conflicts with source text | Inspect source as authority | Result plus current file | Do not treat index as current |
 | User asks which server powers it | State documentation limit | Four documented LSP facts | Do not claim a bundled server |
-| User asks for plugin server setup | Report undocumented schema boundary | Documentation search receipt | Ship no configuration |
+| User asks where to register a server | Point at the `lsp-setup` references | Probed string `command` shape | Do not invent an unprobed field |
 
 ## Operational limits
 
-The documentation exposes an enable switch and the built-in tool, but it does not define supported languages, server selection, server installation, workspace indexing guarantees, freshness guarantees, or a project-level server configuration. Therefore:
+The documentation exposes an enable switch and the built-in tool, and it names project `.grok/lsp.json` and user `~/.grok/lsp.json`. It does not define supported languages, which binary a language uses, workspace indexing guarantees, or freshness guarantees. The entry a Grok 1.0.13 inspect loaded is a string `command`, an `args` array, and `extensionToLanguage`, as the `lsp-setup` references show. Therefore:
 
 - do not promise support for a language before observing a real result;
 - do not claim that enabling the switch installs or starts a particular server;
-- do not invent initialization, transport, or executable fields;
-- do not use a plugin manifest or project server block;
+- do not invent fields past that probed shape;
+- do not write the server into `.grok/config.toml` or wrap the file in `lspServers`;
 - do not diagnose an empty result as a server crash without evidence;
 - do not treat index results as newer than the current file on disk.
 
@@ -62,9 +62,9 @@ Text search and direct source inspection remain the fallback. The built-in tool 
 
 ## Failure taxonomy
 
-`disabled` means neither opt-in is active. `not-exposed` means an opt-in was attempted but the tool is absent. `no-result` means the visible tool returned no match. `stale-result` means the returned location conflicts with current source. `out-of-scope` means the tool returned an unauthorized path. `undocumented-server-request` means the requested setup requires a schema the documentation does not provide.
+`disabled` means neither opt-in is active. `not-exposed` means an opt-in was attempted but the tool is absent. `no-result` means the visible tool returned no match. `stale-result` means the returned location conflicts with current source. `out-of-scope` means the tool returned an unauthorized path. `undocumented-server-request` means the request needs a field or plugin format the Grok 1.0.13 probe did not show.
 
-None of these statuses justifies creating a server definition. The honest remedy is to narrow the claim, use repository-native search, or wait for documented host support.
+None of these statuses is a reason to invent a server field. Registering a server belongs to the `lsp-setup` references, and only in the probed shape. The honest remedy for a missing tool result is to narrow the claim or use repository-native search.
 
 ## Receipt
 

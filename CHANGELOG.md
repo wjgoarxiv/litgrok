@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Agent definitions use `permissionMode`, the key Grok reads. The old `permission_mode` spelling was ignored, so `plan` and `acceptEdits` never reached the host. Each agent's mode is unchanged: writers stay on `acceptEdits`, the QA runner stays on `default`, and the read-only reviewers and planner stay on `plan`.
+- Language-server notes now describe `.grok/lsp.json` and `~/.grok/lsp.json`. A server loads when `command` is a string, `args` is a list, and `extensionToLanguage` maps extensions. A `command` written as an array is dropped. The TypeScript install pins `typescript@6`, because TypeScript 7 ships no `lib/tsserver.js` for `typescript-language-server` to load.
+
 ## 1.0.32 — 2026-11-04
 
 - Dependency alerts cleared in the HyperFrames cover template: `@hono/node-server` 2.1.5 (was 2.1.1), and HyperFrames is now a development dependency of the template, as it is a render tool and never ships in an install. Its browser-driver chain still resolves zod 3.25.76, which GitHub now tracks as a development-scope dependency.

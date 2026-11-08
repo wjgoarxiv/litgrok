@@ -1,7 +1,7 @@
 ---
 name: litgrok-verifier
 description: Verifies an implementation against its objective, evidence, and safety guardrails.
-permission_mode: plan
+permissionMode: plan
 skills:
   - review-work
   - visual-qa

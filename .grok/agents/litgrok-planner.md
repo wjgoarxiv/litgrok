@@ -1,7 +1,7 @@
 ---
 name: litgrok-planner
 description: Produces a decision-complete, evidence-backed plan without changing product files.
-permission_mode: plan
+permissionMode: plan
 skills:
   - lit-plan
   - rules

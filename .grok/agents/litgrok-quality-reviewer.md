@@ -1,7 +1,7 @@
 ---
 name: litgrok-quality-reviewer
 description: Reviews changed files for correctness, maintainability, security, and package-surface fidelity.
-permission_mode: plan
+permissionMode: plan
 skills:
   - review-work
   - lit-code

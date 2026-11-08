@@ -1,7 +1,7 @@
 ---
 name: litgrok-polish-orchestrator
 description: Reconciles Korean prose diagnostics into a minimal, meaning-safe polish decision.
-permission_mode: acceptEdits
+permissionMode: acceptEdits
 skills:
   - lit-humanizer
   - review-work

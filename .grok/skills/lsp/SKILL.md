@@ -32,7 +32,7 @@ Load `references/built-in-lsp-contract.md` before enabling the tool, interpretin
 
 The process switch is `GROK_LSP_TOOLS=1`; its documented default is `0`. The user configuration switch is `lsp_tools = true` under the documented feature section; its default is off. Do not place that switch in project `.grok/config.toml`.
 
-The documentation does not define supported languages, server installation, server selection, transport, initialization, freshness guarantees, or a project server schema. Do not fill those gaps from convention. LitGrok ships no language server.
+Grok documents project `.grok/lsp.json` and user `~/.grok/lsp.json`. The project file wins when both name the same server, and a trusted plugin may add a server. LitGrok ships no language server and no `lsp.json`. Grok's documentation does not name the entry fields, supported languages, server installation, transport, initialization, or freshness guarantees. On Grok 1.0.13, `grok inspect --json` listed a server only for a string `command`, a string array `args`, and `extensionToLanguage`; an array `command` or a top-level `lspServers` wrapper was dropped. Use that probed shape from the `lsp-setup` references. Do not invent fields, a command with no args, or a plugin file format the probe did not show.
 
 ## Workflow
 
@@ -48,7 +48,7 @@ The documentation does not define supported languages, server installation, serv
 
 ## Stop conditions
 
-Stop when the requested behavior requires an undocumented server or plugin schema. Stop at permission or sandbox boundaries. Do not edit host config without explicit authorization. Do not diagnose an empty result as a server failure without evidence.
+Stop when the request needs a field or plugin format the Grok 1.0.13 probe did not show. Stop at permission or sandbox boundaries. Do not edit host config without explicit authorization. Do not diagnose an empty result as a server failure without evidence.
 
 ## Output
 

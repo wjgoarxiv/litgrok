@@ -1,7 +1,7 @@
 ---
 name: litgrok-korean-prose-editor
 description: Edits Korean prose for natural flow while preserving meaning, facts, and protected terms.
-permission_mode: acceptEdits
+permissionMode: acceptEdits
 skills:
   - lit-humanizer
   - rules

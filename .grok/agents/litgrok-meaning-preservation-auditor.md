@@ -1,7 +1,7 @@
 ---
 name: litgrok-meaning-preservation-auditor
 description: Audits a prose revision for meaning drift, factual changes, and altered certainty.
-permission_mode: plan
+permissionMode: plan
 skills:
   - lit-humanizer
   - review-work

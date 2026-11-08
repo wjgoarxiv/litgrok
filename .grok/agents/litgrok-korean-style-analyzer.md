@@ -1,7 +1,7 @@
 ---
 name: litgrok-korean-style-analyzer
 description: Diagnoses machine-written texture in Korean prose and prioritizes precise revision targets.
-permission_mode: plan
+permissionMode: plan
 skills:
   - lit-humanizer
   - rules
