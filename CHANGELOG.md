@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.33 — 2026-11-09
+
 - Agent definitions use `permissionMode`, the key Grok reads. The old `permission_mode` spelling was ignored, so `plan` and `acceptEdits` never reached the host. Each agent's mode is unchanged: writers stay on `acceptEdits`, the QA runner stays on `default`, and the read-only reviewers and planner stay on `plan`.
 - Language-server notes now describe `.grok/lsp.json` and `~/.grok/lsp.json`. A server loads when `command` is a string, `args` is a list, and `extensionToLanguage` maps extensions. A `command` written as an array is dropped. The TypeScript install pins `typescript@6`, because TypeScript 7 ships no `lib/tsserver.js` for `typescript-language-server` to load.
 

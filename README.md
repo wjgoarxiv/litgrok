@@ -137,7 +137,7 @@ Three switches change how the install runs, each for a particular moment:
   you open. Add
   `--status-line` to that command to get the LIT status row as well, which Grok reads only
   from user settings.
-- `--package @litfamily/litgrok@1.0.32` in place of `@latest` pins this release, for when a team
+- `--package @litfamily/litgrok@1.0.33` in place of `@latest` pins this release, for when a team
   wants everyone on the same files.
 
 [Every install option, local packages and the safety checks](./docs/guide.md#install-options).
