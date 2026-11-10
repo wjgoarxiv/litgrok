@@ -12,8 +12,9 @@ import { closeSync, constants, fstatSync, lstatSync, openSync, readSync, readdir
 import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
-import { parsePlanTaskRows } from "./plan-task-rows.mjs";
+import { planLinesOutsideFences, parsePlanTaskRows } from "./plan-task-rows.mjs";
 import { resolveProjectStateRoot } from "./project-state-root.mjs";
+import { buildBoard, renderBoard } from "./board.mjs";
 import { renderBrief } from "./brief.mjs";
 import { aggregateProgress, clipToWidth, displayWidth, progressOf } from "./gauge.mjs";
 import { chooseNextStep } from "./next-step.mjs";
@@ -27,6 +28,9 @@ const DEFAULT_SINCE = "7d";
 const DEFAULT_MAX = 12;
 const NAME_MAX = 90;
 const PLAN_LIMIT = 8;
+const STALE_MS = 7 * 86_400_000;
+const STALE_READS = 6;
+const TITLE_MAX = 48;
 
 /** `7d`, `12h`, `30m` in milliseconds, or null. */
 export const parseSince = (text) => {
@@ -83,19 +87,29 @@ const mtimeOf = (path) => {
   }
 };
 
+// A plan's name for a reader: its first `# ` heading, else its file name without the date and dashes.
+const planTitle = (text, fileName, redact) => {
+  const heading = planLinesOutsideFences(text).map(({ line }) => /^#\s+(.+?)\s*#*\s*$/u.exec(line)?.[1]).find(Boolean);
+  const fallback = fileName.replace(/\.md$/u, "").replace(/^\d{4}-\d{2}-\d{2}[-_]?/u, "").replace(/[-_]+/gu, " ").trim();
+  return clipToWidth(redact(heading || fallback || fileName), TITLE_MAX);
+};
+
 // Every plan changed inside the window, open or finished; a finished one has no current item. A plan
-// outside the window is never read, and one the read budget cannot cover is not read either: both are
-// counted in `skipped` so the brief can say so.
+// outside the window stays out of the roadmap, and one the read budget cannot cover is not read
+// either: both are counted in `skipped` so the brief can say so. A few plans outside the window are
+// still read for one fact, whether rows are left in them, so the board can say which plan stalled.
 const plansIn = (root, budget, redact, local, sinceMs, now) => {
   const list = entries(join(root, "plans"));
   if (!list) return null;
   let skipped = 0;
+  const outside = [];
   const plans = list.filter((entry) => entry.isFile() && entry.name.endsWith(".md")).sort((a, b) => a.name.localeCompare(b.name)).flatMap((entry) => {
     const path = join(root, "plans", entry.name);
     const changedMs = mtimeOf(path);
     if (changedMs === null || now - changedMs > sinceMs || budget.used >= budget.limit) {
       skipped += 1;
       if (changedMs !== null && now - changedMs <= sinceMs) budget.exhausted = true;
+      else if (changedMs !== null) outside.push({ path, name: entry.name, changedMs });
       return [];
     }
     const text = readSmallFile(path, budget);
@@ -107,6 +121,7 @@ const plansIn = (root, budget, redact, local, sinceMs, now) => {
     return [{
       worktree: redact(root),
       plan: `plans/${entry.name}`,
+      title: planTitle(text, entry.name, redact),
       local,
       changedMs,
       complete: open.length === 0,
@@ -115,7 +130,16 @@ const plansIn = (root, budget, redact, local, sinceMs, now) => {
       progress: progressOf(done, rows.length, open.map((row) => clipToWidth(redact(row.text), NAME_MAX))),
     }];
   });
-  return { plans, skipped };
+  // Newest first, so the plans that stalled most recently are the ones read.
+  const stale = outside.sort((a, b) => b.changedMs - a.changedMs).slice(0, STALE_READS).flatMap(({ path, name, changedMs }) => {
+    if (budget.used >= budget.limit) return [];
+    const text = readSmallFile(path, budget);
+    const rows = text === null ? [] : parsePlanTaskRows(text);
+    if (!rows.length || isTemplate(rows)) return [];
+    const open = rows.filter((row) => !row.checked).length;
+    return open ? [{ worktree: redact(root), plan: `plans/${name}`, title: planTitle(text, name, redact), local, changedMs, open }] : [];
+  });
+  return { plans, skipped, stale };
 };
 
 // The items under a `## Next` heading of a handoff, the fallback next step when no plan has one.
@@ -189,6 +213,26 @@ const commitsOf = (root, sinceMs, now, exec, redact) => {
   }
 };
 
+// Changes nobody committed yet and commits not pushed to the upstream, per worktree. A count git
+// cannot give (no repository, no upstream) is null, never zero.
+const gitCount = (exec, root, args) => {
+  try {
+    return exec("git", args, { cwd: root, timeout: GIT_TIMEOUT_MS });
+  } catch {
+    return null;
+  }
+};
+const worktreeStateOf = (root, exec, redact, local) => {
+  const status = gitCount(exec, root, ["status", "--porcelain=v1", "--untracked-files=normal"]);
+  const ahead = gitCount(exec, root, ["rev-list", "--count", "@{upstream}..HEAD"]);
+  return {
+    worktree: redact(root),
+    local,
+    uncommitted: status === null ? null : status.split("\n").filter((line) => line.trim()).length,
+    unpushed: ahead === null || !/^\d+\s*$/u.test(ahead) ? null : Number(ahead.trim()),
+  };
+};
+
 const herdrAgent = (agent, env, redact) => ({
   status: typeof agent?.agent_status === "string" ? agent.agent_status : "unknown",
   pane: typeof agent?.pane_id === "string" ? clipToWidth(redact(agent.pane_id), 40) : "unknown",
@@ -260,6 +304,7 @@ export const collectRewind = ({
   const planReads = roots.map((root) => plansIn(root, budget, redact, isLocal(root), sinceMs, now));
   const plans = planReads.every((read) => read === null) ? null : planReads.flatMap((read) => read?.plans ?? []);
   const plansSkipped = planReads.reduce((sum, read) => sum + (read?.skipped ?? 0), 0);
+  const staleOutside = planReads.flatMap((read) => read?.stale ?? []);
   const handoffs = roots.flatMap((root) => handoffsOf(root, budget, redact, isLocal(root)));
 
   const storeDir = join(env.GROK_CONFIG_DIR || join(home, ".grok"), "sessions");
@@ -275,6 +320,7 @@ export const collectRewind = ({
   }
 
   const commits = collectEach((root) => commitsOf(root, sinceMs, now, exec, redact));
+  const worktreeState = roots.map((root) => worktreeStateOf(root, exec, redact, isLocal(root)));
   const herdr = herdrOf(env, exec, redact);
 
   // A session waits on the user when it asked something.
@@ -319,6 +365,12 @@ export const collectRewind = ({
       plansOmitted: orderedPlans.length - shownPlans.length,
       plansDone: orderedPlans.filter((plan) => plan.complete).length,
       plansSkipped,
+      // Plans with rows left that nobody touched for a week, inside the window or outside it.
+      stalePlans: [
+        ...orderedPlans.filter((plan) => !plan.complete && now - plan.changedMs >= STALE_MS)
+          .map(({ worktree, plan, title, local, changedMs, progress }) => ({ worktree, plan, title, local, changedMs, open: progress.total - progress.done })),
+        ...staleOutside.filter((plan) => now - plan.changedMs >= STALE_MS),
+      ].sort((a, b) => a.changedMs - b.changedMs).map(({ changedMs, ...plan }) => ({ ...plan, changedMs, days: Math.floor((now - changedMs) / 86_400_000) })),
       litgoal: [],
       progress: roadmapItems.length ? aggregateProgress(roadmapItems) : progressOf(null, null),
     },
@@ -326,11 +378,15 @@ export const collectRewind = ({
     startWork: [],
     handoffs,
     commits: (commits ?? []).slice(0, 20).map(({ atMs: _atMs, ...commit }) => commit),
+    worktreeState,
     herdr,
   };
   // `go` re-collects the brief and continues this step; no record is written, because the model
   // has no documented way to learn its session id and no hook could hand the record back to it.
   data.next = chooseNextStep(data, sessionId);
+  // The KPI board's facts (buckets, counts, bars, reminders), computed here so the board is the
+  // same for every reader and the model only shows it.
+  data.board = buildBoard(data);
   return data;
 };
 
@@ -373,16 +429,18 @@ export const renderRewind = (data, width = 100) => {
 };
 
 /**
- * `rewind [--brief [--lang ko|en] | --json] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]`.
- * `--brief` prints the Markdown brief the lit-adhd skill copies; `--json` the data under it.
+ * `rewind [--brief [--detail] [--lang ko|en] | --json] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]`.
+ * `--brief` prints the KPI board the lit-adhd skill shows; `--detail` adds the per-session brief
+ * under it; `--json` the data under both, with the board text in `board.text`.
  */
 export const runRewindCli = (args, cwd = process.cwd(), { env = process.env, stdout = process.stdout, stderr = process.stderr } = {}) => {
   const options = { cwd, env, here: false, since: DEFAULT_SINCE, max: DEFAULT_MAX, sessionId: null };
   let json = false;
   let brief = false;
+  let detail = false;
   let lang = "en";
   let width = Number(stdout.columns) || 100;
-  const usage = "Usage: rewind [--brief [--lang ko|en] | --json] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]";
+  const usage = "Usage: rewind [--brief [--detail] [--lang ko|en] | --json] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]";
   if (args.some((arg) => arg === "--help" || arg === "-h")) {
     stdout.write(`${usage}\n`);
     return 0;
@@ -391,6 +449,7 @@ export const runRewindCli = (args, cwd = process.cwd(), { env = process.env, std
     const arg = args[index];
     if (arg === "--json") json = true;
     else if (arg === "--brief") brief = true;
+    else if (arg === "--detail") detail = true;
     else if (arg === "--lang" && ["ko", "en"].includes(args[index + 1])) lang = args[++index];
     else if (arg === "--here") options.here = true;
     else if (arg === "--since" && parseSince(args[index + 1])) options.since = args[++index];
@@ -403,6 +462,15 @@ export const runRewindCli = (args, cwd = process.cwd(), { env = process.env, std
     }
   }
   const data = collectRewind(options);
-  stdout.write(json ? `${JSON.stringify(data, null, 2)}\n` : brief ? renderBrief(data, { lang }) : renderRewind(data, width));
+  const now = Date.parse(data.generatedAt);
+  if (json) {
+    data.board.text = renderBoard(data, { lang, now });
+    stdout.write(`${JSON.stringify(data, null, 2)}\n`);
+  } else if (brief) {
+    // The board is the answer; the per-session brief is the detail a reader asks for.
+    stdout.write(detail ? `${renderBoard(data, { lang, now })}\n---\n\n${renderBrief(data, { lang, now })}` : renderBoard(data, { lang, now }));
+  } else {
+    stdout.write(renderRewind(data, width));
+  }
   return 0;
 };

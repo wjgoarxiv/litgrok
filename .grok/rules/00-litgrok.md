@@ -135,7 +135,7 @@ For an authorized bare `lit` request to draw real process or lab equipment, or `
 
 ## Brief over sessions
 
-For an authorized bare `lit` request to catch up on every recent session of the repository, or `/lit-adhd` or `/lit-rewind`, load `lit-adhd` from `.grok/skills/lit-adhd/` (project) or `~/.grok/skills/lit-adhd/` (user). Triggers: adhd, rewind, where was I, catch up, 어디까지, 브리핑. It runs read-only and prints the drawn brief; it never edits plans or files. One session's own state is `lit-recap`; many sessions' state is this skill.
+For an authorized bare `lit` request to catch up on every recent session of the repository, or `/lit-adhd` or `/lit-rewind`, load `lit-adhd` from `.grok/skills/lit-adhd/` (project) or `~/.grok/skills/lit-adhd/` (user). Triggers: adhd, rewind, where was I, catch up, 어디까지, 브리핑. It runs read-only and prints the drawn KPI board as given (`lit adhd detail` or `자세히` adds session cards); it never edits plans or files. One session's own state is `lit-recap`; many sessions' state is this skill.
 
 ## Mechanism ports
 

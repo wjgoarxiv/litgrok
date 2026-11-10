@@ -362,9 +362,12 @@ lit hijack https://example.com/post and docs/paper.pdf into .grok/skills/lit-ppt
 ### Where was I?
 
 After a day of several sessions and interruptions, `lit adhd` (or `lit rewind`) reads every
-recent agent session of this repository and prints one screen: what each session was asked and
-did, how far each open plan has come, and one recommended next step. It changes nothing. If that
-step is what you want, type `go` and the session takes it.
+recent agent session of this repository and prints one board: the one thing to do now and what to
+type, how much is done, in progress, waiting on you and left, each plan as a milestone with a
+progress bar, what you finished lately, what is still to do, and a short list of things not to
+forget, such as a session waiting on your answer, uncommitted changes or a plan that stalled. It
+changes nothing. If that step is what you want, type `go` and the session takes it. `lit adhd
+detail` adds one card per session under the board.
 
 ```text
 lit adhd

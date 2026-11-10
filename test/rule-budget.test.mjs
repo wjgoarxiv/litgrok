@@ -20,8 +20,9 @@ import { run } from '../bin/litgrok.mjs';
 // 17,516 adds the mechanism-port route to lit-hijack with its triggers, owners and precedence (676 bytes);
 // 17,985 adds the brief-over-sessions route to lit-adhd with its triggers and scope (469 bytes);
 // 18,073 adds the re-entry line that sends a bare `go` after a saved plan to start-work (88 bytes);
-// 18,954 adds the ground-rules section: plans, handoff, no publish without a yes, and how to turn it off (881 bytes).
-const RULE_BUDGET_BYTES = 18_954;
+// 18,954 adds the ground-rules section: plans, handoff, no publish without a yes, and how to turn it off (881 bytes);
+// 19,021 says lit-adhd prints its KPI board as given and that `lit adhd detail` adds the session cards (67 bytes).
+const RULE_BUDGET_BYTES = 19_021;
 const ROUTES = {
   'lit, English': 'lit fix the failing date parser',
   'lit, Korean': 'lit 날짜 파서 버그 고쳐줘',

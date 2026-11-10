@@ -1,7 +1,110 @@
-# lit-adhd brief examples
+# lit-adhd board and brief examples
 
-The collector draws the brief (`scripts/rewind.mjs --brief --lang en|ko`), and the skill prints it
-exactly as drawn. Both examples below come from the same three fixture sessions: one that waits on
+## The KPI board (default)
+
+`scripts/rewind.mjs --brief --lang en|ko` draws the board, and the skill shows it as given. Both
+examples below are real collector runs over one throwaway fixture repository: a finished plan with
+three rows, a plan with two of five rows ticked, a plan nobody touched for twelve days, a session
+that asked the user a question, a session still working, uncommitted changes and a handoff with a
+`## Next` item. Counts, bars, titles and reminders come from those records; only the labels change
+with the language.
+
+How to read it in ten seconds: the bold line under **Do this now** is the one action and `👉` says
+what to type (or what to wait for); the table under **At a glance** counts done, in progress,
+waiting on you and left; **Milestones** gives each plan its bar; **Done lately** and **Still to do**
+list the rows; **Don't forget** holds at most five `thing → what to do` reminders.
+
+````markdown
+## 🎯 Do this now
+**Answer the question in “Release notes”** — it asked: “Should the notes mention the old installer?”
+👉 Type: your answer, in that session's window
+
+## 📊 At a glance
+| ✅ Done | 🔄 In progress | ⏳ Waiting on you | ⬜ Left |
+|:--:|:--:|:--:|:--:|
+| 5 | 1 | 1 | 3 |
+
+Overall  ██████░░░░ 5/8 (63%)
+
+## 🏁 Milestones
+| Milestone | State | Progress | Last |
+|---|---|---|---|
+| KPI board | 🔄 In progress | ████░░░░░░ 2/5 | 2m ago |
+| LitGrok autopilot | ✅ Done | ██████████ 3/3 | 2d ago |
+
+## ✅ Done lately
+- Write the RED tests
+- Pin the spec
+- Ship the status line
+- Port plan rows
+- Port liveness
+
+## ⬜ Still to do
+1. Draw the board
+2. Update the skill
+3. Run the gates
+
+## 🔔 Don't forget
+- ⏳ “Release notes” asked: “Should the notes mention the old installer?” → answer it in that session's window
+- 💾 3 uncommitted changes (kpi-demo) → commit them, or decide to drop them
+- 🏃 1 lane still working → don't type `go` until it finishes
+- 🕰️ Plan untouched for 12 days: Docs tour → decide whether to pick it up or drop it
+- 📌 Handoff next: Write the evidence file → start it when you are ready
+````
+
+````markdown
+## 🎯 지금 할 일
+**“Release notes” 질문에 답하기** — 물어본 것: “Should the notes mention the old installer?”
+👉 입력: 그 세션 창에서 답 쓰기
+
+## 📊 한눈에 보기
+| ✅ 끝남 | 🔄 진행 중 | ⏳ 나를 기다림 | ⬜ 남음 |
+|:--:|:--:|:--:|:--:|
+| 5 | 1 | 1 | 3 |
+
+전체 진행  ██████░░░░ 5/8 (63%)
+
+## 🏁 마일스톤
+| 마일스톤 | 상태 | 진행 | 최근 |
+|---|---|---|---|
+| KPI board | 🔄 진행 중 | ████░░░░░░ 2/5 | 2분 전 |
+| LitGrok autopilot | ✅ 끝남 | ██████████ 3/3 | 2일 전 |
+
+## ✅ 최근 끝낸 일
+- Write the RED tests
+- Pin the spec
+- Ship the status line
+- Port plan rows
+- Port liveness
+
+## ⬜ 남은 일
+1. Draw the board
+2. Update the skill
+3. Run the gates
+
+## 🔔 잊지 말 것
+- ⏳ “Release notes” 질문: “Should the notes mention the old installer?” → 그 세션 창에서 답하기
+- 💾 커밋 안 된 변경 3개 (kpi-demo) → 커밋할지, 버릴지 정하기
+- 🏃 아직 일하는 레인 1개 → 끝날 때까지 `go` 치지 않기
+- 🕰️ 12일째 멈춘 계획: Docs tour → 이어 할지, 접을지 정하기
+- 📌 핸드오프 다음 할 일: Write the evidence file → 준비되면 시작하기
+````
+
+What the board does not do:
+
+- It shows no session id, commit hash, status code or plan file path. A plan is named by its first
+  `# ` heading; a session by its title in quotes.
+- It invents no reminder. The 💾 count is the worktree's `git status --porcelain` lines; the 🕰️ plan
+  was last saved twelve days ago and still has a row left; the 🏃 lane is the session still working.
+- It draws no bar without a total. With no plan rows the overall line says so in words.
+
+`lit adhd detail` (`--detail`) prints the same board, a `---` rule, and then the per-session brief
+below, unchanged.
+
+# The per-session brief (detail)
+
+The collector draws the brief under the board (`scripts/rewind.mjs --brief --detail --lang en|ko`),
+and the skill prints it exactly as drawn. Both examples below come from the same three fixture sessions: one that waits on
 the user, one still running with no recorded total, and one finished session, which collapses into
 the ended table. Gauges, ids, titles, dates and names come from the records; only the connecting
 words change with the language.

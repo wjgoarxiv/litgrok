@@ -420,7 +420,7 @@ describe("lit-adhd enrollment", () => {
     const parity = JSON.parse(read("tools", "payload-substance-parity.json"));
     assert.ok(parity.products.p33.skills.includes("lit-adhd"), "parity inventory");
     assert.equal(parity.products.p33.inventory.count, readdirSync(skillsRoot).length, "inventory count follows the skills tree");
-    for (const file of ["SKILL.md", "scripts/rewind.mjs", "scripts/lib/collect.mjs", "scripts/lib/transcripts.mjs", "scripts/lib/gauge.mjs", "scripts/lib/brief.mjs", "scripts/lib/suggest.mjs", "scripts/lib/next-step.mjs", "scripts/lib/redact.mjs", "scripts/lib/plan-task-rows.mjs", "scripts/lib/project-state-root.mjs", "references/card-examples.md", "references/status-taxonomy.md"]) {
+    for (const file of ["SKILL.md", "scripts/rewind.mjs", "scripts/lib/collect.mjs", "scripts/lib/transcripts.mjs", "scripts/lib/gauge.mjs", "scripts/lib/brief.mjs", "scripts/lib/board.mjs", "scripts/lib/suggest.mjs", "scripts/lib/next-step.mjs", "scripts/lib/redact.mjs", "scripts/lib/plan-task-rows.mjs", "scripts/lib/project-state-root.mjs", "references/card-examples.md", "references/status-taxonomy.md"]) {
       assert.ok(skillFiles.includes(file), `${file} ships`);
     }
   });

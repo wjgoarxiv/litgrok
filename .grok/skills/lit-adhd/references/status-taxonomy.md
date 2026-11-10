@@ -22,12 +22,31 @@ Order in the brief: waiting sessions first, then active, idle, done, ended and u
 inside each group. Waiting, active and idle sessions get cards; done and ended ones share the history
 table, a done row marked ✓.
 
+## Board buckets
+
+The KPI board never prints a status code. It counts plan rows and other live sessions into four buckets
+and says each in the user's language:
+
+| Bucket | What it counts | English | 한국어 |
+| --- | --- | --- | --- |
+| ✅ | ticked plan rows in the window | Done | 끝남 |
+| 🔄 | other sessions that are `active` or `idle` | In progress | 진행 중 |
+| ⏳ | other sessions that are `waiting-on-user`, plus start-work approvals | Waiting on you | 나를 기다림 |
+| ⬜ | unticked plan rows in the window | Left | 남음 |
+
+`done` and `ended` sessions are history: they count in no bucket and appear only in the detail table.
+A milestone (one plan) reads ✅ when every row is ticked, 🔄 when some are, ⬜ (Not started / 남음) when
+none are. The overall bar is ticked rows over all rows; with no rows on record the line says so in words.
+
 ## Plans
 
 A plan counts when its file changed inside the window; this worktree's plans are held to the window
 too. A plan with every row checked stays in the roadmap as finished (`complete: true`, no current item)
 and is counted in `roadmap.plansDone`. A plan outside the window, or one the read budget could not cover,
-is not read and is counted in `roadmap.plansSkipped`; the brief's last line says how many.
+is not read and is counted in `roadmap.plansSkipped`; the brief's last line says how many. Of the plans
+outside the window, the six most recently saved are still read for one fact, whether rows are left;
+`roadmap.stalePlans` lists every plan with rows left that nobody touched for seven days or more, with
+its title and `days`, and the board turns each into a 🕰️ reminder.
 
 ## Sources
 
