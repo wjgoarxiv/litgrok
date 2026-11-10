@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.34 — 2026-11-11
+
 - `lit adhd` now answers with a KPI board. It opens with the one thing to do now and the exact text to type, or the lane to wait for. Below that come four counts (done, in progress, waiting on you, left) with an overall progress bar, then each plan as a milestone with a ten-cell bar, up to five rows done lately and up to seven still to do. It closes with at most five reminders shaped as thing → what to do: a session waiting on your answer, uncommitted changes or unpushed commits, lanes still working, a plan nobody touched for a week, the handoff's next item. The collector computes every count, bar and reminder, and `--json` carries them with the board text. The board shows no session ids, commit hashes, status codes or internal paths. The per-session cards, roadmap and next-step box are still there with `lit adhd detail` (`--detail`), under the board. The next-step choice and `go` are unchanged.
 
 ## 1.0.33 — 2026-11-09
