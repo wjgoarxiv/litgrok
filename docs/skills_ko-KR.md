@@ -104,7 +104,7 @@
 <tr>
 <td><img src="./assets/skills/lit-docx.webp" width="240" alt="서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 문서에 맞춰 절제된 여섯 가지 방향 가운데 하나를 고르거나, 지정한 학술지 서식을 씁니다. 문체 검사와 페이지 단위 검사를 돌리며 LibreOffice가 있으면 페이지도 확인합니다." /></td>
 <td><code>lit-docx</code><br /><sub><code>/lit-docx &lt;document request&gt;</code></sub></td>
-<td>서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 문서에 맞춰 절제된 여섯 가지 방향 가운데 하나를 고르거나, 지정한 학술지 서식을 씁니다. 문체 검사와 페이지 단위 검사를 돌리며 LibreOffice가 있으면 페이지도 확인합니다.</td>
+<td>wjgoarxiv-skills의 <code>documents</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인: 서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 문서에 맞춰 절제된 여섯 가지 방향 가운데 하나를 고르거나, 지정한 학술지 서식을 씁니다. 문체 검사와 페이지 단위 검사를 돌리며 LibreOffice가 있으면 페이지도 확인합니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/frontend-ui-ux.webp" width="240" alt="실제로 동작하는 화면을 만들고, 프로브로 일곱 가지 보기를 렌더링합니다. 네 가지 폭, 다크 모드, 모션 줄이기, 200% 확대입니다." /></td>

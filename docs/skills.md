@@ -104,7 +104,7 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/lit-docx.webp" width="240" alt="A styled Word document with its Markdown source, set in one of six restrained directions picked for the document, or in a publisher profile you name. Prose lint and a page-level gate run, and pages are inspected when LibreOffice is present." /></td>
 <td><code>lit-docx</code><br /><sub><code>/lit-docx &lt;document request&gt;</code></sub></td>
-<td>A styled Word document with its Markdown source, set in one of six restrained directions picked for the document, or in a publisher profile you name. Prose lint and a page-level gate run, and pages are inspected when LibreOffice is present.</td>
+<td>Moved to the <code>documents</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin: A styled Word document with its Markdown source, set in one of six restrained directions picked for the document, or in a publisher profile you name. Prose lint and a page-level gate run, and pages are inspected when LibreOffice is present.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/frontend-ui-ux.webp" width="240" alt="Builds a working interface, then a probe renders it in seven views: four widths, dark, reduced motion and 200% zoom." /></td>

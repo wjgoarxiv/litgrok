@@ -114,9 +114,9 @@
       "maxBytes": 5117000
     },
     "lit-docx": {
-      "minSkillBytes": 17300,
+      "minSkillBytes": 4000,
       "maxSkillBytes": 27000,
-      "minFiles": 63,
+      "minFiles": 1,
       "maxFiles": 95,
       "maxBytes": 1054000
     },
@@ -443,12 +443,12 @@
     },
     "lit-docx": {
       "skillMd": {
-        "bytes": 17364,
-        "sha256": "c3b1fe7fa07445dad69183c17b4500a85d595a9c9125e224ea053ad4d135aca6"
+        "bytes": 4051,
+        "sha256": "e4221ebdbb0c3d048b11a30503e6d7c21a3ed2ba4a3f5f493685f5ee44b69913"
       },
-      "files": 63,
-      "bytes": 702360,
-      "sha256": "6e98480fa51068b6efb57dc1f004c7663dd7ced90085cbf86e6768c3dceafc51"
+      "files": 1,
+      "bytes": 4051,
+      "sha256": "49fd68478f90e261fbe7bf63eda0356e617065b4a86a007b1e6a549d37a2ff4b"
     },
     "lit-handoff": {
       "skillMd": {
@@ -560,12 +560,12 @@
     },
     "litgrok": {
       "skillMd": {
-        "bytes": 13210,
-        "sha256": "7fb3ca2acf90fd3e25a063b9ffc693add4fa6622397ead7162c3761199596a09"
+        "bytes": 13318,
+        "sha256": "1e481c7e3acc194f2ce277dea5d05dc7535d19517be39d62ce50751dfaf9bc1f"
       },
       "files": 2,
-      "bytes": 22532,
-      "sha256": "72661a717c0e2f711934725c2c2f30e835558527c40b07dd6f8e425cb330e785"
+      "bytes": 22640,
+      "sha256": "86fbf2560223c79f266b8374889e8f5ca12c047b1b68c9c249b06f066579a9b6"
     },
     "litresearch": {
       "skillMd": {
@@ -901,69 +901,7 @@
     ".grok/skills/lit-comprehend/references/worked-explainer.md",
     ".grok/skills/lit-crucible/SKILL.md",
     ".grok/skills/lit-diagram-drawer/SKILL.md",
-    ".grok/skills/lit-docx/LICENSE",
-    ".grok/skills/lit-docx/NOTICE.md",
     ".grok/skills/lit-docx/SKILL.md",
-    ".grok/skills/lit-docx/examples/01-report-ko.md",
-    ".grok/skills/lit-docx/examples/02-brief-ko.md",
-    ".grok/skills/lit-docx/examples/03-manual-ko.md",
-    ".grok/skills/lit-docx/examples/04-proposal-ko.md",
-    ".grok/skills/lit-docx/examples/05-memo-en.md",
-    ".grok/skills/lit-docx/examples/06-journal-en.md",
-    ".grok/skills/lit-docx/examples/07-report-en.md",
-    ".grok/skills/lit-docx/examples/08-proposal-en.md",
-    ".grok/skills/lit-docx/examples/09-memo-ko.md",
-    ".grok/skills/lit-docx/references/components.md",
-    ".grok/skills/lit-docx/references/direction-step.md",
-    ".grok/skills/lit-docx/references/frontmatter_schema.md",
-    ".grok/skills/lit-docx/references/journal_style_spec.md",
-    ".grok/skills/lit-docx/references/markdown_quality_checklist.md",
-    ".grok/skills/lit-docx/references/page-composition.md",
-    ".grok/skills/lit-docx/references/slop_phrase_list.yaml",
-    ".grok/skills/lit-docx/references/slop_rules.md",
-    ".grok/skills/lit-docx/references/tonalities/brief.md",
-    ".grok/skills/lit-docx/references/tonalities/journal.md",
-    ".grok/skills/lit-docx/references/tonalities/manual.md",
-    ".grok/skills/lit-docx/references/tonalities/memo.md",
-    ".grok/skills/lit-docx/references/tonalities/proposal.md",
-    ".grok/skills/lit-docx/references/tonalities/report.md",
-    ".grok/skills/lit-docx/requirements.lock",
-    ".grok/skills/lit-docx/scripts/clean_markdown.py",
-    ".grok/skills/lit-docx/scripts/convert_md_to_docx.py",
-    ".grok/skills/lit-docx/scripts/convert_md_to_pdf.py",
-    ".grok/skills/lit-docx/scripts/convert_pdf.py",
-    ".grok/skills/lit-docx/scripts/docx_design.py",
-    ".grok/skills/lit-docx/scripts/docx_gate.py",
-    ".grok/skills/lit-docx/scripts/docx_layout.py",
-    ".grok/skills/lit-docx/scripts/edit_docx.py",
-    ".grok/skills/lit-docx/scripts/embed_images.py",
-    ".grok/skills/lit-docx/scripts/generate_docx_templates.py",
-    ".grok/skills/lit-docx/scripts/pdf_fonts.py",
-    ".grok/skills/lit-docx/scripts/run.mjs",
-    ".grok/skills/lit-docx/scripts/slop_lint.py",
-    ".grok/skills/lit-docx/scripts/visual_audit.py",
-    ".grok/skills/lit-docx/templates/docx/acs.docx",
-    ".grok/skills/lit-docx/templates/docx/elsevier.docx",
-    ".grok/skills/lit-docx/templates/docx/ieee.docx",
-    ".grok/skills/lit-docx/templates/docx/korean-generic.docx",
-    ".grok/skills/lit-docx/templates/docx/nature.docx",
-    ".grok/skills/lit-docx/templates/latex/acs/README.md",
-    ".grok/skills/lit-docx/templates/latex/acs/template.tex",
-    ".grok/skills/lit-docx/templates/latex/elsevier/README.md",
-    ".grok/skills/lit-docx/templates/latex/elsevier/template.tex",
-    ".grok/skills/lit-docx/templates/latex/ieee/README.md",
-    ".grok/skills/lit-docx/templates/latex/ieee/template.tex",
-    ".grok/skills/lit-docx/templates/latex/korean-generic/README.md",
-    ".grok/skills/lit-docx/templates/latex/korean-generic/template.tex",
-    ".grok/skills/lit-docx/templates/latex/nature/README.md",
-    ".grok/skills/lit-docx/templates/latex/nature/template.tex",
-    ".grok/skills/lit-docx/templates/registry.yaml",
-    ".grok/skills/lit-docx/templates/tonalities/brief.yaml",
-    ".grok/skills/lit-docx/templates/tonalities/journal.yaml",
-    ".grok/skills/lit-docx/templates/tonalities/manual.yaml",
-    ".grok/skills/lit-docx/templates/tonalities/memo.yaml",
-    ".grok/skills/lit-docx/templates/tonalities/proposal.yaml",
-    ".grok/skills/lit-docx/templates/tonalities/report.yaml",
     ".grok/skills/lit-handoff/SKILL.md",
     ".grok/skills/lit-handoff/evals/evals.json",
     ".grok/skills/lit-handoff/examples/HANDOFF-example-generic-auth-refactor.md",

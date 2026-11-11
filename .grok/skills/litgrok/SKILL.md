@@ -31,7 +31,7 @@ LitGrok is a dependency-free package containing:
 - `bin/litgrok.mjs`, exposed as the `litgrok` and `litgrok-ai` commands of `@litfamily/litgrok` (run it with `npm exec --yes --package @litfamily/litgrok@latest -- litgrok`);
 - package documentation, license, and changelog; cover artwork stays in the repository.
 
-The `lit-pptx` and `lit-docx` skill folders also ship explicitly invoked engines, templates, QA scripts, the official Pretendard Regular and Bold faces, and pinned dependency locks. They provision a product-owned cache on first use. The npm installer itself still has no runtime dependencies and does not run those engines during installation.
+The `lit-pptx` skill folder also ships explicitly invoked engines, templates, QA scripts, the official Pretendard Regular and Bold faces, and pinned dependency locks. It provisions a product-owned cache on first use. The `lit-docx` folder holds only a same-name note: the document engine moved to the `documents` plugin of wjgoarxiv-skills. The npm installer itself still has no runtime dependencies and does not run those engines during installation.
 
 The `lit-typographic-motion` and `readme-studio` folders hold only same-name notes: the film director and README studio moved to the `video-covers` plugin of wjgoarxiv-skills, and each note gives the one-line `grok plugin install` for it. LitGrok no longer has a `litgrok motion-runtime` command; the plugin pre-warms its own engine.
 

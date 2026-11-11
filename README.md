@@ -64,7 +64,8 @@ KPI rows and tables with Pretendard embedded, and its deck QA checks the result 
 
 lit-docx writes a Word file you can keep editing: a cover or title block, key figures, ruled tables
 and numbered sections in one of six restrained tonalities. It renders the pages and runs its layout
-gate before it hands the file over.
+gate before it hands the file over. It now ships in the `documents` plugin of wjgoarxiv-skills
+(see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="The first three pages of a Korean Word report on the first year of a rooftop solar installation: a bold title block, a key-figure strip, section headings and ruled data tables." /><br /><b>lit-docx · Korean report, Report tonality</b><br /><sub>From the bundled example <code>01-report-ko.md</code> by the skill&#39;s own converter; the layout gate passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="The first three pages of a Korean Word proposal for a bicycle-commuting support pilot: a cover page, a summary with three key figures, body sections, a schedule table and a budget table." /><br /><b>lit-docx · Korean proposal, Proposal tonality</b><br /><sub>From the bundled example <code>04-proposal-ko.md</code>; the layout gate passed.</sub></td></tr>
@@ -497,6 +498,7 @@ LitGrok cleanly. Once it is installed, the skill answers as `<family>:<skill>`.
 | `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
 | `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
 | `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
+| `lit-docx` | `documents` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust` |
 
 ## Requirements, update and uninstall
 

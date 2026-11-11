@@ -162,77 +162,13 @@ test('the office runtime builds its venv from the supported-Python pick, not wha
 });
 
 test('doctor of the office skills lists its tools without a which child process', () => {
-  for (const skill of ['lit-pptx', 'lit-docx']) {
+  for (const skill of ['lit-pptx']) {
     const source = readFileSync(join(skills, skill, 'scripts', 'run.mjs'), 'utf8');
     assert.doesNotMatch(source, /spawnSync\('which'/u, `${skill} still shells out to which`);
     const result = spawnSync(process.execPath, [join(skills, skill, 'scripts', 'run.mjs'), 'doctor'], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^pandoc: .+$/mu);
     assert.doesNotMatch(result.stdout, /\r/u);
-  }
-});
-
-// ---- PDF profiles -----------------------------------------------------------------------------
-
-const PYTHON = spawnSync('python3', ['-c', 'pass']).status === 0 ? false : 'python3 not installed';
-const pythonJson = (code) => {
-  const result = spawnSync('python3', ['-I', '-B', '-c', `import sys, json; sys.path.insert(0, ${JSON.stringify(join(skills, 'lit-docx', 'scripts'))})\n${code}`], { encoding: 'utf8', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
-  assert.equal(result.status, 0, result.stderr);
-  return JSON.parse(result.stdout);
-};
-
-test('the PDF font preflight names every missing font, the install hint and the profile', { skip: PYTHON }, () => {
-  const out = pythonJson(`
-import pdf_fonts
-from types import SimpleNamespace
-publisher = {"docx": {"font": {"body": {"family": "Times New Roman"}}}, "latex": {"cjk": {"main_font": "Pretendard"}}}
-def fake_run(command, workdir=None):
-    tex = (workdir / "fonts.tex").read_text(encoding="utf-8")
-    assert "Pretendard" in tex and "Times New Roman" in tex
-    return SimpleNamespace(returncode=0, stdout="LITGROK-MISSING-FONT: Pretendard\\r\\nok\\r\\n", stderr="")
-print(json.dumps({
-    "ko": pdf_fonts.families(publisher, "ko"), "en": pdf_fonts.families(publisher, "en"),
-    "missing": pdf_fonts.missing_fonts(pdf_fonts.families(publisher, "ko"), fake_run),
-    "message": pdf_fonts.blocked_message(["Pretendard"], "korean-generic"),
-}))
-`);
-  assert.deepEqual(out.ko, ['Times New Roman', 'Pretendard']);
-  assert.deepEqual(out.en, ['Times New Roman']);
-  assert.deepEqual(out.missing, ['Pretendard']);
-  assert.match(out.message, /^BLOCKED_MISSING_FONT: /u);
-  assert.match(out.message, /Pretendard/u);
-  assert.match(out.message, /korean-generic/u);
-  assert.match(out.message, /github\.com\/orioncactus\/pretendard/u);
-});
-
-test('a font probe that cannot run is reported as the compiler error, not as a missing font', { skip: PYTHON }, () => {
-  const out = pythonJson(`
-import pdf_fonts
-from types import SimpleNamespace
-def broken(command, workdir=None):
-    return SimpleNamespace(returncode=1, stdout="! LaTeX Error: File 'fontspec.sty' not found.\\r\\n", stderr="")
-try:
-    pdf_fonts.missing_fonts(["Pretendard"], broken)
-    print(json.dumps({"raised": False}))
-except SystemExit as exc:
-    print(json.dumps({"raised": True, "text": str(exc)}))
-`);
-  assert.equal(out.raised, true);
-  assert.match(out.text, /fontspec\.sty/u);
-});
-
-test('every LaTeX profile loads longtable before pandoc writes a table', { skip: spawnSync('pandoc', ['--version']).status === 0 ? false : 'pandoc not installed' }, () => {
-  const dir = temp('litgrok-longtable-');
-  const source = join(dir, 'table.md');
-  writeFileSync(source, '# T\n\n| a | b |\n|---|---|\n| 1 | 2 |\n');
-  for (const profile of ['elsevier', 'acs', 'ieee', 'nature', 'korean-generic']) {
-    const out = join(dir, `${profile}.tex`);
-    const result = spawnSync('pandoc', [source, '--standalone', '--from', 'markdown', '--to', 'latex', '--template', join(skills, 'lit-docx', 'templates', 'latex', profile, 'template.tex'), '-V', 'documentclass=article', '-V', 'mainfont=Times New Roman', '--output', out], { encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stderr);
-    const tex = readFileSync(out, 'utf8');
-    const loaded = tex.search(/\\usepackage(?:\[[^\]]*\])?\{[^}]*\blongtable\b[^}]*\}/u);
-    assert.ok(tex.includes('\\begin{longtable}'), `${profile}: the probe table must come out as a longtable`);
-    assert.ok(loaded >= 0 && loaded < tex.indexOf('\\begin{document}'), `${profile}: longtable is not loaded in the preamble`);
   }
 });
 

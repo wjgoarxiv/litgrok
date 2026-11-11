@@ -5,8 +5,8 @@
 This root is an independent package for Grok Build guidance. Runtime code is
 limited to the dependency-free `bin/litgrok.mjs` installer, documented,
 package-owned hook commands under `.grok/hooks/`, and explicitly invoked skill
-scripts. The `lit-pptx` and `lit-docx` scripts install pinned first-use dependencies
-only into a LitGrok office cache. The drawing skills moved to the `figures` plugin of wjgoarxiv-skills behind same-name notes. The film and README skills
+scripts. The `lit-pptx` scripts install pinned first-use dependencies
+only into a LitGrok office cache; `lit-docx` moved to the `documents` plugin of wjgoarxiv-skills. The drawing skills moved to the `figures` plugin of wjgoarxiv-skills behind same-name notes. The film and README skills
 moved to the `video-covers` plugin of wjgoarxiv-skills; LitGrok ships only their same-name notes. The installer may copy or
 remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the

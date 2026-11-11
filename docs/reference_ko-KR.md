@@ -39,7 +39,7 @@ flowchart TD
 ## 무엇을 제공하나요?
 
 - `.grok/skills/<name>/SKILL.md`에 Grok-native skill 문서 42개
-- `lit-pptx`와 `lit-docx`에는 문서 엔진, 템플릿, 첫 사용 시 고정된 의존성을 캐시에 설치하는 도구와 품질 검사 안내가 포함됩니다. `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization`은 같은 이름의 안내만 남았고, 그림 스킬과 과학 시각화 자료는 wjgoarxiv-skills의 `figures` 플러그인에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust`). `lit-hijack`은 남의 글에 공개된 기법을 출처 기록, 라이선스 검사, 동등성 증명과 함께 가져옵니다. `lit-adhd`는 최근 세션 전체를 KPI 보드 한 장(지금 할 일과 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 진행 막대가 붙은 마일스톤, 최근 끝낸 일, 남은 일, 잊지 말 것)으로 보여 주고, `lit adhd 자세히`라고 하면 세션별 카드를 덧붙이며, 아무것도 고치지 않습니다. 맨 끝의 `lit` 선택은 project rule 안내이며 실제 Grok 세션에서 확인해야 합니다.
+- `lit-pptx`에는 덱 엔진, 템플릿, 첫 사용 시 고정된 의존성을 캐시에 설치하는 도구와 품질 검사 안내가 포함됩니다. `lit-docx`는 같은 이름의 안내만 남았고, 문서 엔진은 wjgoarxiv-skills의 `documents` 플러그인에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust`). `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization`은 같은 이름의 안내만 남았고, 그림 스킬과 과학 시각화 자료는 wjgoarxiv-skills의 `figures` 플러그인에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust`). `lit-hijack`은 남의 글에 공개된 기법을 출처 기록, 라이선스 검사, 동등성 증명과 함께 가져옵니다. `lit-adhd`는 최근 세션 전체를 KPI 보드 한 장(지금 할 일과 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 진행 막대가 붙은 마일스톤, 최근 끝낸 일, 남은 일, 잊지 말 것)으로 보여 주고, `lit adhd 자세히`라고 하면 세션별 카드를 덧붙이며, 아무것도 고치지 않습니다. 맨 끝의 `lit` 선택은 project rule 안내이며 실제 Grok 세션에서 확인해야 합니다.
 - `.grok/rules/00-litgrok.md` project rule
 - 설치된 payload를 짧게 알리는 `SessionStart` hook
 - reader-facing write의 hedge 표현을 차단하되 quoted state enum, JSON/YAML scalar, fenced code, status table은 제외하는 `PreToolUse` hook. Host는 명시적인 deny와 exit 2만 차단으로 처리합니다. exit 0은 허용이고 timeout, crash, malformed output은 fail-open이므로 write가 진행됩니다.

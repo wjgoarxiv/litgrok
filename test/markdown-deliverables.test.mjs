@@ -47,7 +47,7 @@ test('the rule asks Korean deliverables for full sentences and keeps noun ending
   assert.match(prose, /table cells and short list labels/);
 });
 
-for (const [skill, file] of [['lit-docx', '.docx or PDF'], ['lit-pptx', '.pptx']]) {
+for (const [skill, file] of [['lit-pptx', '.pptx']]) {
   test(`${skill} names the Markdown deliverable case before its source format`, () => {
     const body = read(`.grok/skills/${skill}/SKILL.md`);
     const plain = section(body, 'Markdown or plain-text deliverables');
@@ -62,19 +62,6 @@ for (const [skill, file] of [['lit-docx', '.docx or PDF'], ['lit-pptx', '.pptx']
   });
 }
 
-test('lit-docx forbids meeting the sentence-variance lint with fragment sentences', () => {
-  const body = read('.grok/skills/lit-docx/SKILL.md');
-  assert.match(body, /rule-05-sentence-variance/);
-  assert.match(body, /never by splitting sentences into fragments/);
-});
-
-test('the Brief tonality keeps 개조식 endings to a requested 개조식 and to tables and labels', () => {
-  const brief = read('.grok/skills/lit-docx/references/tonalities/brief.md');
-  assert.doesNotMatch(brief, /Write them as dash lists in 개조식, noun or `~함`\/`~임` endings, one fact per item\./);
-  assert.match(brief, /items are full sentences/);
-  assert.match(brief, /`~함`\/`~임` endings only when the user asks for 개조식/);
-});
-
 test('an installed project carries the Markdown deliverable and Korean sentence rules', async () => {
   const scratch = mkdtempSync(join(tmpdir(), 'litgrok-md-deliverable-'));
   try {
@@ -86,7 +73,7 @@ test('an installed project carries the Markdown deliverable and Korean sentence 
     const rule = readFileSync(join(scratch, '.grok', 'rules', '00-litgrok.md'), 'utf8');
     assert.match(rule, /load neither skill/);
     assert.match(rule, /full, natural sentences/);
-    for (const skill of ['lit-docx', 'lit-pptx']) {
+    for (const skill of ['lit-pptx']) {
       const body = readFileSync(join(scratch, '.grok', 'skills', skill, 'SKILL.md'), 'utf8');
       assert.match(body, /## Markdown or plain-text deliverables/);
     }

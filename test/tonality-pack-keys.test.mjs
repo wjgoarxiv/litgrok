@@ -14,7 +14,6 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const require = createRequire(import.meta.url);
 const pptx = join(root, '.grok/skills/lit-pptx');
-const docx = join(root, '.grok/skills/lit-docx');
 
 const DECK_READS = {
   id: ['lib/template-registry.js', /name: pack\.id,/],
@@ -65,44 +64,7 @@ const DECK_READS = {
   'fill-order': ['lib/render-pack.js', /S\.pack\["fill-order"\]/],
 };
 
-const DOC_READS = {
-  'dials.density': ['docx_design.py', /self\.dials\["density"\]/],
-  'dials.variance': ['docx_design.py', /self\.dials\["variance"\]/],
-  'docx.page.size': ['docx_design.py', /\(T\.docx\.get\("page"\) or \{\}\)\.get\("size"/],
-  'docx.font.latin': ['docx_design.py', /f\.get\("latin"/],
-  'docx.font.hangul': ['docx_design.py', /f\.get\("hangul"/],
-  'docx.font.heading': ['docx_design.py', /f\.get\("heading"/],
-  'docx.font.body_pt_ko': ['docx_design.py', /else "body_pt_ko"/],
-  'docx.font.body_pt_en': ['docx_design.py', /font\.get\("body_pt_en"/],
-  'design.ramp.*': ['docx_design.py', (step) => new RegExp(`ramp\\.get\\("${step}"`)],
-  'design.numbering': ['docx_design.py', /self\.design\.get\("numbering"\)/],
-  'design.numbering.*': ['docx_design.py', /n\.get\(self\.locale\)/],
-  'design.h1_rule': ['docx_design.py', /T\.design\.get\("h1_rule"\) == "above"/],
-  'design.title_block': ['docx_design.py', /self\.design\.get\("title_block"\)/],
-  'design.contents': ['docx_design.py', /T\.design\.get\("contents"\)/],
-  'design.summary_form': ['docx_design.py', /T\.design\.get\("summary_form"\)/],
-  'design.conclusion_first': ['docx_design.py', /T\.design\.get\("conclusion_first"\)/],
-  'design.running_head.*': ['docx_design.py', (where) => new RegExp(`rh\\.get\\("${where}"`)],
-  'design.justify': ['docx_design.py', /self\.design\.get\("justify"/],
-  'design.palette.*': ['docx_design.py', (role) => new RegExp(`pal\\.get\\("${role}"`)],
-  'design.accent_on': ['docx_design.py', /self\.design\.get\("accent_on"\)/],
-  'design.page_geometry.columns': ['docx_design.py', /\.get\("columns", 1\)/],
-  'design.page_geometry.column_gap_cm': ['docx_design.py', /\.get\("column_gap_cm"/],
-  'design.components.allowed': ['docx_design.py', /self\.components\.get\("allowed"\)/],
-  'design.components.callout_max': ['docx_design.py', /T\.components\.get\("callout_max"\)/],
-  'design.components.keyfigures.per_row': ['docx_design.py', /cfg\.get\("per_row"/],
-  'design.components.sidebar.default_width': ['docx_design.py', /cfg\.get\("default_width"/],
-  'design.components.sidebar.float': ['docx_design.py', /cfg\.get\("float"/],
-  'design.figure_style.max_height_ratio': ['docx_design.py', /\.get\("max_height_ratio"/],
-  'design.spacing': ['docx_design.py', /self\.design\.get\("spacing"\) == "tight"/],
-};
 // Labels of the file itself: the engine finds a look by its file name and never reads these.
-const DOC_LABELS = {
-  schema_version: 'the version of the file layout',
-  tonality: 'the display name; the look is found by its file name',
-  summary: 'one line for a reader choosing a look',
-};
-
 function flatten(value, prefix, depth, out = []) {
   for (const [key, inner] of Object.entries(value)) {
     const path = prefix ? `${prefix}.${key}` : key;
@@ -140,13 +102,3 @@ test('every key a deck look sets is read by the engine', () => {
   assert.deepEqual(unread(packs, { map: DECK_READS, depth: 2 }, DECK_LABELS, join(pptx, 'scripts')), []);
 });
 
-test('every key a document look sets is read by the engine', () => {
-  const dir = join(docx, 'templates/tonalities');
-  const names = readdirSync(dir).filter((name) => name.endsWith('.yaml')).sort();
-  assert.equal(names.length, 6);
-  const python = require(join(pptx, 'scripts/deps.cjs')).python();
-  const parsed = spawnSync(python, ['-c', 'import json,sys,yaml\nprint(json.dumps([yaml.safe_load(open(f, encoding="utf-8")) for f in sys.argv[1:]]))', ...names.map((name) => join(dir, name))], { encoding: 'utf8', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
-  assert.equal(parsed.status, 0, parsed.stderr);
-  const looks = JSON.parse(parsed.stdout).map((look, i) => [names[i], look]);
-  assert.deepEqual(unread(looks, { map: DOC_READS, depth: Infinity }, DOC_LABELS, join(docx, 'scripts')), []);
-});

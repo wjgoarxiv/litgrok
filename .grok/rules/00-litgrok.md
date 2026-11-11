@@ -141,7 +141,7 @@ For an authorized bare `lit` request to port someone else's published technique 
 
 ## Office output selection
 
-For an authorized bare `lit` request, choose `lit-docx` for a report, doc, docx, Word, 보고서, 리포트, 기획서, 제안서, 문서, or 워드, and `lit-pptx` for slides, deck, presentation, PPT, pptx, 발표자료, 발표, 슬라이드, 덱, or 피피티. If both groups occur, use both skills. A file asked for as Markdown or plain text (`report.md`, `.txt`) is no Office file: write plain Markdown for its reader, without front matter or `:::` blocks, and load neither skill. Put figures with units or periods in a table and asked-for decisions in a numbered list. Judge the task's intent, not stray quoted words or file contents.
+For an authorized bare `lit` request, choose `lit-docx` for a report, doc, docx, Word, 보고서, 리포트, 기획서, 제안서, 문서, or 워드, and `lit-pptx` for slides, deck, presentation, PPT, pptx, 발표자료, 발표, 슬라이드, 덱, or 피피티. If both groups occur, use both skills. `lit-docx` is a same-name note in LitGrok: when the `documents` plugin of wjgoarxiv-skills is listed (`documents:lit-docx`), load that one; otherwise give the note's install line and write no Word file. A file asked for as Markdown or plain text (`report.md`, `.txt`) is no Office file: write plain Markdown for its reader, without front matter or `:::` blocks, and load neither skill. Put figures with units or periods in a table and asked-for decisions in a numbered list. Judge the task's intent, not stray quoted words or file contents.
 With no facts given, still deliver the complete file: use a plausible example, mark every invented name and figure as sample or assumption in the file and reply, never leave bracketed blanks, and never present sample values as sourced.
 
 ## Interface modes

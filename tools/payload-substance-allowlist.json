@@ -42,6 +42,7 @@
     "readme-studio": "Same-name note for the skill that moved to the video-covers plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and writes no README itself.",
     "lit-diagram-drawer": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and draws nothing itself.",
     "lit-schematic": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and draws nothing itself.",
-    "lit-scientific-visualization": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and tells the user to start the moved skill by its plugin name."
+    "lit-scientific-visualization": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and tells the user to start the moved skill by its plugin name.",
+    "lit-docx": "Same-name note for the skill that moved to the documents plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and writes no Word file itself."
   }
 }

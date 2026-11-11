@@ -65,7 +65,7 @@ lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, �
 
 lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 톤 여섯 가지 가운데 하나로 표지나
 제목 블록, 핵심 수치, 괘선 표, 번호 붙은 절을 짜고, 건네기 전에 페이지를 렌더링해 레이아웃 검사를
-거칩니다.
+거칩니다. 이제는 wjgoarxiv-skills의 `documents` 플러그인에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="옥상 태양광 설치 첫해를 다룬 한국어 Word 보고서의 앞 세 쪽. 굵은 제목 블록, 핵심 수치 띠, 절 제목, 괘선 데이터 표." /><br /><b>lit-docx · 한국어 보고서, Report 톤</b><br /><sub>함께 든 예제 <code>01-report-ko.md</code>를 스킬의 변환기로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="자전거 출퇴근 지원 시범 사업을 다룬 한국어 Word 제안서의 앞 세 쪽. 표지, 핵심 수치 세 개가 있는 요약, 본문 절, 일정 표, 예산 표." /><br /><b>lit-docx · 한국어 제안서, Proposal 톤</b><br /><sub>함께 든 예제 <code>04-proposal-ko.md</code>로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td></tr>
@@ -488,6 +488,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 | `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
 | `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
 | `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
+| `lit-docx` | `documents` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

@@ -9,21 +9,6 @@ const PRODUCT_ROOT = dirname(TEST_DIRECTORY);
 const SKILLS_DIRECTORY = join(PRODUCT_ROOT, '.grok', 'skills');
 
 const REFERENCE_SETS = new Map([
-  ['lit-docx', [
-    'components.md',
-    'direction-step.md',
-    'frontmatter_schema.md',
-    'journal_style_spec.md',
-    'markdown_quality_checklist.md',
-    'page-composition.md',
-    'slop_rules.md',
-    'tonalities/brief.md',
-    'tonalities/journal.md',
-    'tonalities/manual.md',
-    'tonalities/memo.md',
-    'tonalities/proposal.md',
-    'tonalities/report.md',
-  ]],
   ['lit-pptx', [
     'density-and-fill.md',
     'direction-step.md',
