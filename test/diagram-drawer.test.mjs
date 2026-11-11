@@ -40,7 +40,6 @@ test('registers one Grok skill root and the exact marketplace skill entry', () =
   assert.match(skill, /## #contract\.output_channels/);
   assert.match(skill, /\/lit-diagram-drawer <brief>/);
   assert.match(skill, /live-host route.*unverified|route.*host-dependent/is);
-  assert.match(readFileSync(join(PRODUCT_ROOT, '.grok/skills/frontend-ui-ux/SKILL.md'), 'utf8'), /lit-diagram-drawer/);
   assert.match(readFileSync(join(PRODUCT_ROOT, '.grok/skills/lit-scientific-visualization/SKILL.md'), 'utf8'), /lit-diagram-drawer/);
 });
 

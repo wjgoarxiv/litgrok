@@ -109,7 +109,7 @@
 <tr>
 <td><img src="./assets/skills/frontend-ui-ux.webp" width="240" alt="실제로 동작하는 화면을 만들고, 프로브로 일곱 가지 보기를 렌더링합니다. 네 가지 폭, 다크 모드, 모션 줄이기, 200% 확대입니다." /></td>
 <td><code>frontend-ui-ux</code><br /><sub><code>/frontend-ui-ux &lt;surface and outcome&gt;</code></sub></td>
-<td>실제로 동작하는 화면을 만들고, 프로브로 일곱 가지 보기를 렌더링합니다. 네 가지 폭, 다크 모드, 모션 줄이기, 200% 확대입니다.</td>
+<td>wjgoarxiv-skills의 <code>design</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인은 실제로 동작하는 화면을 만들고, 프로브로 일곱 가지 보기를 렌더링합니다. 네 가지 폭, 다크 모드, 모션 줄이기, 200% 확대입니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/readme-studio.webp" width="240" alt="사실에 맞는 README와 커버, 윤곽선 글자, 로컬 모션을 만듭니다." /></td>
@@ -194,7 +194,7 @@
 <tr>
 <td><img src="./assets/skills/visual-qa.webp" width="240" alt="렌더링된 화면을 스크린샷 근거로 검토합니다." /></td>
 <td><code>visual-qa</code><br /><sub><code>/visual-qa &lt;target&gt;</code></sub></td>
-<td>렌더링된 화면을 스크린샷 근거로 검토합니다.</td>
+<td>wjgoarxiv-skills의 <code>design</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인은 렌더링된 화면을 스크린샷 근거로 검토합니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/browser-drive.webp" width="240" alt="브라우저 드라이버를 먼저 확인한 뒤 실제 페이지를 조작합니다. 드라이버가 없으면 그렇다고 말합니다." /></td>

@@ -53,33 +53,13 @@ test('both cover recipes stage depth and retain a second static light layer', ()
   assert.match(hyperframes,/#background-far/); assert.match(hyperframes,/#background-mid/); assert.match(hyperframes,/#foreground-plane/); assert.match(hyperframes,/#rim-light/);
   assert.equal(source.effects.midBlur,5); assert.ok(source.effects.rimLight>0);
 });
-test('authored frontend profile defaults to a crisp task-specific pixel anchor', () => {
-  const profile=read(join(root,'.grok/skills/frontend-ui-ux/references/production.md'));
-  assert.match(profile,/default primary visual anchor/i);
-  assert.match(profile,/task-specific pixel[- ]art/i);
-  assert.match(profile,/8(?:\s|&nbsp;)*CSS pixels?/i);
-  assert.match(profile,/nearest[- ]neighbor|image-rendering:\s*pixelated/i);
-  assert.match(profile,/no smoothing|non[- ]smoothed/i);
-});
-test('design and README skills route a bounded interview across retained answer rounds', () => {
+test('the README skill routes a bounded interview across retained answer rounds', () => {
   const catalog=JSON.parse(read(join(root,'.grok-plugin/plugin.json')));
-  const frontend=read(join(root,'.grok/skills/frontend-ui-ux/SKILL.md'));
-  const production=read(join(root,'.grok/skills/frontend-ui-ux/references/production.md'));
   const readme=read(join(root,'.grok/skills/readme-studio/SKILL.md'));
   const readmeProduction=read(join(root,'.grok/skills/readme-studio/references/production.md'));
   const files=JSON.parse(read(join(root,'package.json'))).files;
-  assert.ok(catalog.skills.includes('./.grok/skills/frontend-ui-ux'));
   assert.ok(catalog.skills.includes('./.grok/skills/readme-studio'));
   assert.ok(files.includes('.grok/skills'), 'the package must ship selected skills and references');
-  assert.match(frontend,/Read references\/production\.md/i, 'frontend skill must route to its production guidance');
-  for (const rule of [
-    /one high-impact question at a time/i,
-    /as many (?:rounds )?as materially necessary/i,
-    /retain (?:(?:the|prior|earlier) )?answers? .{0,50}across rounds/i,
-    /do not re-ask|never ask again/i,
-    /when the brief is already bounded.{0,100}default.{0,100}continue/is,
-    /review-only.{0,100}plan-only.{0,100}read-only/is,
-  ]) assert.match(production,rule);
   assert.match(readme,/Read references\/production\.md before deciding whether to ask or build/i);
   for (const rule of [
     /one high-impact question per turn/i,
@@ -92,11 +72,6 @@ test('design and README skills route a bounded interview across retained answer 
   const cwd=workspace();
   const installed=run([join(root,'bin/litgrok.mjs'),'install','--yes'],cwd);
   assert.equal(installed.status,0,installed.stderr);
-  assert.equal(
-    read(join(cwd,'.grok/skills/frontend-ui-ux/references/production.md')),
-    production,
-    'the routed frontend production reference must ship in the installed skill payload',
-  );
   assert.equal(
     read(join(cwd,'.grok/skills/readme-studio/references/production.md')),
     readmeProduction,
@@ -111,7 +86,7 @@ test('a competing visual direction the brief leaves open gets its own round inst
     /do not (?:announce|state).{0,120}before the (?:user )?answers?(?: arrives)?/is,
     /visual direction.{0,80}still.{0,80}default.{0,60}without (?:a question|asking)/is,
   ];
-  for (const rel of ['.grok/skills/frontend-ui-ux/references/production.md','.grok/skills/readme-studio/references/production.md']) {
+  for (const rel of ['.grok/skills/readme-studio/references/production.md']) {
     const body=read(join(root,rel));
     for (const rule of rules) assert.match(body,rule,`${rel} must satisfy ${rule}`);
   }

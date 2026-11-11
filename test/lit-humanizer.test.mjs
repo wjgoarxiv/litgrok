@@ -72,27 +72,6 @@ test('five existing Korean agents select lit-humanizer and retain their review s
   assert.match(readFileSync(join(ROOT, '.grok', 'agents', 'litgrok-polish-orchestrator.md'), 'utf8'), /style[ -]analyzer[\s\S]*prose-editor[\s\S]*meaning-preservation-auditor[\s\S]*native-flow-reviewer/i);
 });
 
-test('frontend motion guidance is wired from the skill read map', () => {
-  const frontend = join(ROOT, '.grok', 'skills', 'frontend-ui-ux');
-  assert.ok(existsSync(join(frontend, 'references', 'motion-guide.md')));
-  const skill = readFileSync(join(frontend, 'SKILL.md'), 'utf8');
-  assert.match(skill, /motion-guide\.md/);
-});
-
-test('frontend reference guides no longer pad to the 4 KB activation-size boundary', () => {
-  const references = join(ROOT, '.grok', 'skills', 'frontend-ui-ux', 'references');
-  const guides = [
-    'adaptive-layout.md', 'brand-and-imagery.md', 'composition.md', 'creative-directions.md',
-    'implementation-platforms.md', 'inclusive-interface.md', 'interaction-motion.md',
-    'performance-delivery.md', 'product-direction.md', 'redesign-playbook.md',
-    'system-foundations.md', 'visual-language.md', 'visual-reconstruction.md',
-  ];
-  for (const file of guides) {
-    assert.ok(existsSync(join(references, file)), `${file} exists`);
-    assert.ok(readFileSync(join(references, file)).byteLength < 4096, `${file} should be edited for substance, not a size cap`);
-  }
-});
-
 test('comprehension template uses citations and keeps ledgers outside the deliverable', () => {
   const template = readFileSync(join(ROOT, '.grok', 'skills', 'lit-comprehend', 'references', 'artifact-template.md'), 'utf8');
   assert.match(template, /footnote or reference entry/i);

@@ -72,7 +72,8 @@ gate before it hands the file over.
 
 ### Build it and keep track of it
 
-frontend-ui-ux builds a page from a brief and then checks it at several widths. When the work has
+frontend-ui-ux builds a page from a brief and then checks it at several widths. It now ships in the
+`design` plugin of wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). When the work has
 spread over several sessions, `lit adhd` reads them all and prints one brief with a next step.
 
 <table>
@@ -475,6 +476,21 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # put
 `install --no-ground` skips it for that one run. For a single repository, an approved lit-init
 can add the same agreement as its own project file, `.grok/rules/10-litgrok-ground.md`, by
 running `litgrok ground project`.
+
+## Skills that moved to wjgoarxiv-skills
+
+The skills that make finished artefacts, such as interfaces, now live in a separate repository,
+wjgoarxiv-skills, as one plugin per family, so you add only the families you use. LitGrok keeps a
+short note under each old name. `/frontend-ui-ux`, the bare `lit` routes and the agents that
+preload these skills still answer; the note tells you what moved and gives you one line to install
+it. wjgoarxiv-skills is not published yet, so the line installs from a local clone. After it is
+published the source becomes `wjgoarxiv/wjgoarxiv-skills#plugins/<family>`. The plugin goes into
+Grok Build's own plugin store, never into `.grok/skills/`, so `litgrok install` keeps updating
+LitGrok cleanly. Once it is installed, the skill answers as `<family>:<skill>`.
+
+| Skill | Plugin | Install line |
+| --- | --- | --- |
+| `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
 
 ## Requirements, update and uninstall
 

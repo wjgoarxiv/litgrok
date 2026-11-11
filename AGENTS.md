@@ -53,7 +53,6 @@ Run these commands from this product root:
 ```text
 node --check test/skills-and-rules.test.mjs
 node --check bin/litgrok.mjs
-node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
 npm test
 npm pack --dry-run --json
 ```

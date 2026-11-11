@@ -2,8 +2,8 @@
   "schema": "litfamily.payload-substance/v1",
   "parityDivergences": {
     "visual-qa": {
-      "date": "2026-08-30",
-      "reason": "The Grok visual review surface intentionally ships a focused capture, contract, verdict, and evidence-manifest closure; its host has no bundled binary visual runtime, so the larger sibling script suites are not portable substance and this reduced scope is explicitly reviewed."
+      "date": "2026-11-11",
+      "reason": "visual-qa moved to the design plugin of wjgoarxiv-skills; LitGrok ships only its same-name note, which points at that plugin and its install line, so its closure is the note alone by design."
     },
     "wikify": {
       "date": "2026-08-30",
@@ -12,6 +12,10 @@
     "lit-humanizer": {
       "date": "2026-09-05",
       "reason": "The Grok port keeps the self-contained editing procedure while adding detector rules, Korean metrics, Office extraction, references, examples, and harness integration. Its closure is measured from the local product rather than padded to match sibling layouts."
+    },
+    "frontend-ui-ux": {
+      "date": "2026-11-11",
+      "reason": "frontend-ui-ux moved to the design plugin of wjgoarxiv-skills; LitGrok ships only its same-name note, which points at that plugin and its install line, so its closure is the note alone by design."
     }
   },
   "skills": {
@@ -27,6 +31,8 @@
     "refactor": "Worktree choice, intake, characterization, structural moves, safety, verification, and cleanup are complete bounded instructions.",
     "lit-burnoff": "Test locking, cleanup categories, meaning preservation, batch discipline, and completion evidence are fully specified.",
     "start-work": "Approved-plan loading, native validation helpers, authority and lifecycle gates, evidence, and cleanup are complete in the skill.",
-    "structural-search": "The honest host search fallback, intent gating, bounded probing, review, and evidence contract are complete."
+    "structural-search": "The honest host search fallback, intent gating, bounded probing, review, and evidence contract are complete.",
+    "frontend-ui-ux": "Same-name note for the skill that moved to the design plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and builds nothing itself.",
+    "visual-qa": "Same-name note for the skill that moved to the design plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and records a missing visual check inside reviews."
   }
 }

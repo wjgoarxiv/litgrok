@@ -73,7 +73,8 @@ lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 
 
 ### 화면 만들기와 흐름 챙기기
 
-frontend-ui-ux는 의뢰문으로 페이지를 만든 뒤 여러 너비에서 직접 확인합니다. 일이 여러 세션에
+frontend-ui-ux는 의뢰문으로 페이지를 만든 뒤 여러 너비에서 직접 확인합니다. 이제는
+wjgoarxiv-skills의 `design` 플러그인에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). 일이 여러 세션에
 흩어졌다면 `lit adhd`가 그 세션을 모두 읽고 다음 단계가 담긴 브리프 한 장을 보여 줍니다.
 
 <table>
@@ -468,6 +469,20 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 `install --no-ground`는 그 한 번만 건너뜁니다. 저장소 하나에만 두고 싶다면, 승인한 lit-init이
 `litgrok ground project`로 같은 약속을 프로젝트 파일 `.grok/rules/10-litgrok-ground.md`에 둘 수
 있습니다.
+
+## wjgoarxiv-skills로 옮긴 스킬
+
+화면처럼 완성된 결과물을 만드는 스킬은 이제 별도 저장소 wjgoarxiv-skills에 묶음별 플러그인으로
+있습니다. 쓰는 묶음만 골라 설치하면 됩니다. LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다.
+`/frontend-ui-ux`, `lit`으로 시작하는 요청, 이 스킬을 미리 불러오는 에이전트는 그대로 동작하고,
+안내가 무엇이 옮겨 갔는지와 설치 한 줄을 알려 줍니다. wjgoarxiv-skills는 아직 공개 전이라
+지금은 로컬 클론에서 설치합니다. 공개되면 소스는 `wjgoarxiv/wjgoarxiv-skills#plugins/<묶음>`이 됩니다.
+플러그인은 `.grok/skills/`가 아니라 Grok Build의 플러그인 저장소에 들어가므로 `litgrok install`은
+계속 깔끔하게 업데이트됩니다. 설치하면 스킬은 `<묶음>:<스킬>` 이름으로 불립니다.
+
+| 스킬 | 플러그인 | 설치 한 줄 |
+| --- | --- | --- |
+| `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

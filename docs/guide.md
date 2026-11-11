@@ -211,7 +211,7 @@ That ledger records session ids, folders and tool names, so the `.grok/litgrok/`
 
 ## Pages, slides, documents and prose
 
-Use `/frontend-ui-ux <surface and outcome>` to build and inspect an interface you are allowed to change. With a clear brief it goes straight to working code; when something important is unclear, it asks one focused question first. If you only ask for a review or a plan, it changes no files.
+Use `/frontend-ui-ux <surface and outcome>` to build and inspect an interface you are allowed to change. With a clear brief it goes straight to working code; when something important is unclear, it asks one focused question first. If you only ask for a review or a plan, it changes no files. frontend-ui-ux and visual-qa now ship in the `design` plugin of wjgoarxiv-skills; without it, `/frontend-ui-ux` answers with the line `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` and builds nothing.
 
 For concept and technical diagrams, use the `lit-diagram-drawer` skill. Its slash route, `/lit-diagram-drawer`, hasn't been confirmed in a live Grok Build session yet, so find it through `/skills`. Ordinary interfaces go to `/frontend-ui-ux`, and plots of measured data go to `/lit-scientific-visualization`. For drawings of real equipment — a P&ID, an equipment layout, a journal apparatus figure or an isometric cutaway — use the `lit-schematic` skill. To port someone else's published technique into your skill or system, use the `lit-hijack` skill: it captures with provenance, gates the licence, and proves parity on the real surface.
 

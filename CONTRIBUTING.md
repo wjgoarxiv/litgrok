@@ -7,7 +7,6 @@ Use Node.js 22, Git, and npm. There is no dependency install or lockfile. Run fr
 ```sh
 node --check bin/litgrok.mjs
 node --check test/skills-and-rules.test.mjs
-node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
 npm run check:version
 npm test
 npm pack --dry-run --json

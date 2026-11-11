@@ -184,37 +184,6 @@ const REFERENCE_SETS = new Map([
     'explore-packet.md',
     'plan-packet.md',
   ]],
-  ['frontend-ui-ux', [
-    'production.md',
-    'complete-contract.md',
-    'adaptive-layout.md',
-    'brand-and-imagery.md',
-    'composition.md',
-    'craft-floor.md',
-    'creative-directions.md',
-    'evidence-review.md',
-    'house-styles.md',
-    'implementation-platforms.md',
-    'inclusive-interface.md',
-    'interaction-motion.md',
-    'motion-guide.md',
-    'operating-lanes.md',
-    'performance-delivery.md',
-    'product-direction.md',
-    'production-interview.md',
-    'probe-loop.md',
-    'redesign-playbook.md',
-    'slop-register.md',
-    'system-foundations.md',
-    'taste-direction.md',
-    'visual-language.md',
-    'visual-reconstruction.md',
-  ]],
-  ['visual-qa', [
-    'complete-contract.md',
-    'capture-playbook.md',
-    'verdict-taxonomy.md',
-  ]],
   ['readme-studio', ['complete-contract.md', 'production.md', 'facts.md', 'typography.md', 'motion.md', 'decoration-patterns.md', 'choice-first.md']],
   ['lit-comprehend', [
     'artifact-format.md',
@@ -461,26 +430,14 @@ test('depth references are reachable from their skill entry points', () => {
   }
 });
 
-test('motion guide reserves the verified Phase 3 README A/B example format', () => {
-  const frontendRoot = join(SKILLS_DIRECTORY, 'frontend-ui-ux');
-  const guide = source(join(frontendRoot, 'references', 'motion-guide.md'));
-  const example = source(join(frontendRoot, 'examples', 'phase-3-readme-motion-ab.md'));
-  assert.match(guide, /examples\/phase-3-readme-motion-ab\.md/);
-  assert.match(example, /Run evidence:[^\n]*Phase 3 evidence path/);
-  assert.match(example, /### Before[\s\S]*```md[\s\S]*### After[\s\S]*```md/);
-  assert.match(example, /### Observed change/);
-});
-
 test('every reference file is enumerated by the depth contract', () => {
   const actual = [];
-  const skippedFrontendRoots = new Set(['design', 'designpowers', 'perfection', 'ui-ux-db', '_canonical-corpus']);
 
   function walkReferences(skill, directory, prefix = '') {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const child = join(directory, entry.name);
       const childRelative = prefix ? `${prefix}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
-        if (skill === 'frontend-ui-ux' && prefix === '' && skippedFrontendRoots.has(entry.name)) continue;
         walkReferences(skill, child, childRelative);
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
         actual.push(`${skill}/${childRelative}`);
@@ -573,38 +530,6 @@ test('lit-team owns a bounded packet format for every built-in subagent type', (
     assert.match(content, /^## Worked packet$/m, `${filename} must include a worked packet`);
     assert.match(content, /^## Invalid packet$/m, `${filename} must include an invalid packet`);
   }
-});
-
-test('frontend design references carry the complete contract and focused decision guidance', () => {
-  const directory = join(SKILLS_DIRECTORY, 'frontend-ui-ux', 'references');
-  const contract = source(join(directory, 'complete-contract.md'));
-  const taste = source(join(directory, 'taste-direction.md'));
-
-  assert.match(contract, /## #contract\.output_channels/);
-  assert.ok(Buffer.byteLength(contract, 'utf8') >= 15000, 'complete contract must retain the carried depth');
-  for (const heading of ['#contract.inputs', '#contract.procedure', '#contract.evidence']) {
-    assert.match(contract, new RegExp(`^## ${heading}$`, 'm'));
-  }
-  for (const field of ['schema_id', 'contract_id', 'source_hash', 'intent', 'direction', 'inventory', 'acceptance_criteria']) {
-    assert.match(contract, new RegExp(`\\b${field}\\b`), `complete contract must define ${field}`);
-  }
-  for (const dial of ['variance', 'motion', 'density']) {
-    assert.match(taste, new RegExp(`\\b${dial}\\b`), `taste direction must define ${dial}`);
-  }
-});
-
-test('visual QA references define capture, evidence, and verdict contracts', () => {
-  const directory = join(SKILLS_DIRECTORY, 'visual-qa', 'references');
-  const contract = source(join(directory, 'complete-contract.md'));
-  const playbook = source(join(directory, 'capture-playbook.md'));
-  const taxonomy = source(join(directory, 'verdict-taxonomy.md'));
-
-  assert.match(contract, /## #contract\.output_channels/);
-  for (const heading of ['Evidence packet', 'Methodology paragraph', 'Finding record']) {
-    assert.match(contract, new RegExp(`^## ${heading}$`, 'm'));
-  }
-  assert.ok(tableBodyRows(playbook, 'Capture decision table') >= 8, 'capture playbook needs eight decisions');
-  assert.ok(tableBodyRows(taxonomy, 'Verdict taxonomy') >= 8, 'verdict taxonomy needs eight outcomes');
 });
 
 test('comprehension references define a durable artifact and worked explainers', () => {

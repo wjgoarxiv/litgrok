@@ -42,11 +42,10 @@ jobs:
         run: npm install -g npm@11.21.1
 
       # LitGrok declares no dependencies and ships no lockfile, so there is no install step.
-      - name: Syntax and canonical corpus
+      - name: Syntax
         run: |
           node --check bin/litgrok.mjs
           node --check test/skills-and-rules.test.mjs
-          node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
 
       - name: Version lockstep
         run: npm run check:version

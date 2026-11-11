@@ -15,19 +15,11 @@ const SCRIPTS = [
   ['rules', 'scripts/resolve-guidance.mjs'],
   ['lit-plan', 'scripts/validate-plan.mjs'],
   ['lit-plan', 'scripts/scaffold-plan.mjs'],
-  ['visual-qa', 'scripts/verify-evidence-manifest.mjs'],
   ['review-work', 'scripts/check-lanes.mjs'],
-  ['frontend-ui-ux', 'scripts/verify-canonical-corpus.mjs'],
   ['lit-scientific-visualization', 'scripts/verify-canonical-corpus.mjs'],
   ['lit-handoff', 'scripts/verify-canonical-corpus.mjs'],
   ['autoresearch', 'scripts/verify-canonical-corpus.mjs'],
   ['autoconference', 'scripts/verify-canonical-corpus.mjs'],
-  ['frontend-ui-ux', 'scripts/validate-design-contract.mjs'],
-  ['frontend-ui-ux', 'scripts/query-design-intelligence.mjs'],
-  ['frontend-ui-ux', 'scripts/import-design-intelligence.mjs'],
-  ['frontend-ui-ux', 'scripts/design-lock.mjs'],
-  ['frontend-ui-ux', 'scripts/pixel-art.mjs'],
-  ['frontend-ui-ux', 'scripts/interface-probe.mjs'],
   ['lit-diagram-drawer', 'scripts/verify-diagram.mjs'],
   ['lit-diagram-drawer', 'scripts/verify-type.mjs'],
   ['lit-diagram-drawer', 'scripts/verify-brief.mjs'],
@@ -106,23 +98,6 @@ test('every skill script is executable and routed from each owning entry point',
 
   const startWork = readFileSync(join(SKILLS_ROOT, 'start-work', 'SKILL.md'), 'utf8');
   assert.match(startWork, /(?:run|execute)[^\n]*\.\.\/lit-plan\/scripts\/validate-plan\.mjs[^\n]*(?:when|before|to)/i);
-});
-
-test('frontend canonical corpus verifier accepts the pinned corpus', () => {
-  const result = run('frontend-ui-ux', 'scripts/verify-canonical-corpus.mjs', []);
-  assert.equal(result.status, 0, result.stderr || result.error?.message);
-  assert.match(result.stdout, /^PASS\b/m);
-});
-
-test('frontend canonical corpus verifier rejects a tampered corpus copy', () => {
-  const root = temporaryDirectory('frontend-corpus-tamper');
-  const copiedSkill = join(root, 'frontend-ui-ux');
-  cpSync(join(SKILLS_ROOT, 'frontend-ui-ux'), copiedSkill, { recursive: true });
-  appendFileSync(join(copiedSkill, 'references', 'design', 'ollama.md'), '\n');
-
-  const result = run('frontend-ui-ux', 'scripts/verify-canonical-corpus.mjs', ['--root', copiedSkill]);
-  assert.equal(result.status, 1, result.stderr || result.error?.message);
-  assert.match(`${result.stdout}${result.stderr}`, /FAIL/);
 });
 
 test('rules resolver reports guidance in scope order and allowed project config sections', () => {
@@ -287,94 +262,6 @@ test('plan checker rejects a dependency cycle', () => {
   const result = run('lit-plan', 'scripts/validate-plan.mjs', [plan]);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /FAIL DEPENDENCY_CYCLE: checker -> verify -> checker/);
-});
-
-test('visual evidence verifier accepts a complete manifest with reachable evidence', () => {
-  const root = temporaryDirectory('visual-pass');
-  write(join(root, 'captures', 'ready.png'), 'fixture image bytes\n');
-  const manifest = {
-    artifact: { id: 'search-editor', revision: 'working-tree' },
-    methodology: 'Captured one deterministic ready state at the required viewport.',
-    evidence: [{
-      id: 'E1',
-      target: '/saved-search/editor',
-      dimensions: '1440x900',
-      state: 'ready',
-      fixture: 'saved-search-long-name',
-      capture_method: 'authorized screenshot capture',
-      captured_at: '2026-08-27T12:00:00Z',
-      path: 'captures/ready.png',
-      criterion: 'Primary action is visible with the saved search identity.',
-      observation: 'Identity and primary action are visible without clipping.',
-      automated_checks: ['route fixture test'],
-      visual_judgments: ['hierarchy inspected at final scale'],
-    }],
-    findings: [],
-    verdict: 'pass',
-  };
-  const path = join(root, 'evidence.json');
-  write(path, `${JSON.stringify(manifest, null, 2)}\n`);
-
-  const result = run('visual-qa', 'scripts/verify-evidence-manifest.mjs', [path]);
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /PASS evidence=1 findings=0 verdict=pass/);
-});
-
-test('visual evidence verifier rejects a missing evidence artifact', () => {
-  const root = temporaryDirectory('visual-fail');
-  const manifest = {
-    artifact: { id: 'search-editor', revision: 'working-tree' },
-    methodology: 'Capture path is intentionally missing.',
-    evidence: [{
-      id: 'E1', target: '/editor', dimensions: '1440x900', state: 'ready', fixture: 'default',
-      capture_method: 'screenshot', captured_at: '2026-08-27T12:00:00Z', path: 'captures/missing.png',
-      criterion: 'Ready state is visible.', observation: 'Recorded without an artifact.', automated_checks: [], visual_judgments: [],
-    }],
-    findings: [],
-    verdict: 'pass',
-  };
-  const path = join(root, 'evidence.json');
-  write(path, `${JSON.stringify(manifest, null, 2)}\n`);
-
-  const result = run('visual-qa', 'scripts/verify-evidence-manifest.mjs', [path]);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /FAIL EVIDENCE_FILE_MISSING: E1 captures\/missing\.png/);
-});
-
-test('visual evidence verifier rejects a symlink that escapes the manifest directory', () => {
-  const root = temporaryDirectory('visual-symlink-fail');
-  const outside = temporaryDirectory('visual-symlink-outside');
-  write(join(outside, 'external.png'), 'external evidence\n');
-  mkdirSync(join(root, 'captures'), { recursive: true });
-  symlinkSync(join(outside, 'external.png'), join(root, 'captures', 'external.png'));
-  const manifest = {
-    artifact: { id: 'search-editor', revision: 'working-tree' },
-    methodology: 'The apparent local path resolves outside the packet.',
-    evidence: [{
-      id: 'E1', target: '/editor', dimensions: '1440x900', state: 'ready', fixture: 'default',
-      capture_method: 'screenshot', captured_at: '2026-08-27T12:00:00Z', path: 'captures/external.png',
-      criterion: 'Evidence remains inside the packet.', observation: 'Path is a symlink.', automated_checks: [], visual_judgments: [],
-    }],
-    findings: [],
-    verdict: 'pass',
-  };
-  const path = join(root, 'evidence.json');
-  write(path, `${JSON.stringify(manifest, null, 2)}\n`);
-
-  const result = run('visual-qa', 'scripts/verify-evidence-manifest.mjs', [path]);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /FAIL EVIDENCE_PATH_UNSAFE: E1 captures\/external\.png/);
-});
-
-test('visual evidence verifier rejects a non-object manifest deterministically', () => {
-  const root = temporaryDirectory('visual-null-fail');
-  const path = join(root, 'evidence.json');
-  write(path, 'null\n');
-
-  const result = run('visual-qa', 'scripts/verify-evidence-manifest.mjs', [path]);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /FAIL MANIFEST_INVALID: top level must be an object/);
-  assert.doesNotMatch(result.stderr, /TypeError/);
 });
 
 function reviewPacket(lanes) {

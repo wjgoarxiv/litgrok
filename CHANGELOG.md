@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- frontend-ui-ux and visual-qa moved to the `design` plugin of wjgoarxiv-skills. LitGrok keeps a same-name note for each: `/frontend-ui-ux`, the interface routes in the project rule, litwork's hand-off and the reviewer agents' preload still reach it, and it gives the one line that installs the plugin (`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` until the repository is published). Without the plugin, a lit workflow that changes an interface records that the probe is missing instead of claiming it ran, and a review gives no visual verdict. The canonical-corpus check left CI with the skill.
 - An update or uninstall now also removes files an earlier install wrote that this release no longer ships, when they are still byte-identical to what was installed, and prunes the folders that leaves empty. Until now such files stayed behind after an update. A file you changed is kept and the update stops with its path. The shared process helper the skill scripts use moved from `lit-pptx` to the `litgrok` skill folder, so core skills no longer depend on the deck skill.
 
 ## 1.0.34 — 2026-11-11

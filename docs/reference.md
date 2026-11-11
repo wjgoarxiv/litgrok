@@ -286,7 +286,6 @@ From this repository:
 ```bash
 node --check test/skills-and-rules.test.mjs
 node --check bin/litgrok.mjs
-node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
 npm test
 npm run check:version
 npm pack --dry-run --json
@@ -320,6 +319,6 @@ See [privacy](./privacy.md), [support](../SUPPORT.md), and [contributing](../CON
 
 ## Design and README production
 
-Use `/frontend-ui-ux <surface and outcome>` to build and inspect an authorized interface. A clear brief proceeds to working code; material ambiguity prompts a focused question. Review-only and plan-only requests remain read-only.
+Use `/frontend-ui-ux <surface and outcome>` to build and inspect an authorized interface. A clear brief proceeds to working code; material ambiguity prompts a focused question. Review-only and plan-only requests remain read-only. frontend-ui-ux and visual-qa ship in the `design` plugin of wjgoarxiv-skills; LitGrok keeps a same-name note for each that gives `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` and builds nothing. Installed, they answer as `design:frontend-ui-ux` and `design:visual-qa`.
 
 Use `/readme-studio <repository and outcome>` for a source-checked README, outlined Pretendard/Meslo typography, and portable cover/motion recipes. Check `/skills` after installation. Native image generation depends on the tools exposed in your Grok session; `IMAGE_GENERATION_UNAVAILABLE` permits an explicitly supplied background path. Fonts and renderers are task-local prerequisites. Local output is separate from live host and GitHub/npm acceptance. [README Studio](./../.grok/skills/readme-studio/SKILL.md).

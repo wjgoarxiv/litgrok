@@ -28,11 +28,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Check syntax and canonical corpus
+      - name: Check syntax
         run: |
           node --check bin/litgrok.mjs
           node --check test/skills-and-rules.test.mjs
-          node .grok/skills/frontend-ui-ux/scripts/verify-canonical-corpus.mjs
 
       - name: Check version lockstep
         run: npm run check:version

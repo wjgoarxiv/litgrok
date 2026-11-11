@@ -14,7 +14,7 @@ const OUTPUT_CHANNELS = new Map([
   ['working_note', new Set(['inline', 'reply'])],
   ['no_artifact', 'reply'],
 ]);
-const REFERENCE_CONTRACT_SKILLS = new Set(['frontend-ui-ux', 'visual-qa', 'readme-studio', 'lit-typographic-motion']);
+const REFERENCE_CONTRACT_SKILLS = new Set(['readme-studio', 'lit-typographic-motion']);
 
 function topLevelYamlValues(source, label) {
   const values = new Map();

@@ -52,7 +52,7 @@ test('CI bounds validation, disables persisted credentials, and retains failure 
   assert.match(source, /persist-credentials: false/u);
   assert.match(source, /node --check bin\/litgrok\.mjs/u);
   assert.match(source, /node --check test\/skills-and-rules\.test\.mjs/u);
-  assert.match(source, /node \.grok\/skills\/frontend-ui-ux\/scripts\/verify-canonical-corpus\.mjs/u);
+  assert.doesNotMatch(source, /\.grok\/skills\/frontend-ui-ux\/scripts\//u, 'frontend-ui-ux moved to wjgoarxiv-skills; CI runs nothing from its note');
   assert.match(source, /if: always\(\)/u);
   assert.match(source, /shell: bash --noprofile --norc -e -o pipefail \{0\}/u);
   assert.match(source, /uses: actions\/upload-artifact@v4/u);
