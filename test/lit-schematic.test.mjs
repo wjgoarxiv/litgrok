@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-// lit-schematic moved to the figures plugin of wjgoarxiv-skills; LitGrok keeps its same-name note, and the
+// lit-schematic moved to wjgoarxiv-skills (variants/litgrok/lit-schematic); LitGrok keeps its same-name note, and the
 // project rule's Equipment drawings route still selects it. Only the route lives here now.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const body = readFileSync(join(root, ".grok", "skills", "lit-schematic", "SKILL.md"), "utf8");

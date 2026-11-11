@@ -39,7 +39,7 @@ flowchart TD
 ## 무엇을 제공하나요?
 
 - `.grok/skills/<name>/SKILL.md`에 Grok-native skill 문서 42개
-- `lit-pptx`와 `lit-docx`는 같은 이름의 안내만 남았습니다. 덱 엔진은 wjgoarxiv-skills의 `decks` 플러그인(`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/decks" --trust`)에, 문서 엔진은 wjgoarxiv-skills의 `documents` 플러그인에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust`). `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization`은 같은 이름의 안내만 남았고, 그림 스킬과 과학 시각화 자료는 wjgoarxiv-skills의 `figures` 플러그인에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust`). `lit-hijack`은 남의 글에 공개된 기법을 출처 기록, 라이선스 검사, 동등성 증명과 함께 가져옵니다. `lit-adhd`는 최근 세션 전체를 KPI 보드 한 장(지금 할 일과 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 진행 막대가 붙은 마일스톤, 최근 끝낸 일, 남은 일, 잊지 말 것)으로 보여 주고, `lit adhd 자세히`라고 하면 세션별 카드를 덧붙이며, 아무것도 고치지 않습니다. 맨 끝의 `lit` 선택은 project rule 안내이며 실제 Grok 세션에서 확인해야 합니다.
+- `lit-pptx`와 `lit-docx`는 같은 이름의 안내만 남았습니다. 덱 엔진은 wjgoarxiv-skills(`grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust`)에, 문서 엔진은 wjgoarxiv-skills에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-docx" --trust`). `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization`은 같은 이름의 안내만 남았고, 그림 스킬과 과학 시각화 자료는 wjgoarxiv-skills에 있습니다(`grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/<skill>" --trust`). `lit-hijack`은 남의 글에 공개된 기법을 출처 기록, 라이선스 검사, 동등성 증명과 함께 가져옵니다. `lit-adhd`는 최근 세션 전체를 KPI 보드 한 장(지금 할 일과 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 진행 막대가 붙은 마일스톤, 최근 끝낸 일, 남은 일, 잊지 말 것)으로 보여 주고, `lit adhd 자세히`라고 하면 세션별 카드를 덧붙이며, 아무것도 고치지 않습니다. 맨 끝의 `lit` 선택은 project rule 안내이며 실제 Grok 세션에서 확인해야 합니다.
 - `.grok/rules/00-litgrok.md` project rule
 - 설치된 payload를 짧게 알리는 `SessionStart` hook
 - reader-facing write의 hedge 표현을 차단하되 quoted state enum, JSON/YAML scalar, fenced code, status table은 제외하는 `PreToolUse` hook. Host는 명시적인 deny와 exit 2만 차단으로 처리합니다. exit 0은 허용이고 timeout, crash, malformed output은 fail-open이므로 write가 진행됩니다.
@@ -315,6 +315,6 @@ MIT. [LICENSE](../LICENSE)를 보세요.
 
 ## 화면과 README 제작
 
-`/frontend-ui-ux <화면과 목표>`는 요청 범위의 화면을 구현하고 렌더링을 확인합니다. 충분한 요구사항이면 바로 제작하고, 중요한 방향이 불명확할 때만 질문합니다. 검토·계획 전용 요청에서는 파일을 수정하지 않습니다. frontend-ui-ux와 visual-qa는 wjgoarxiv-skills의 `design` 플러그인에 있습니다. LitGrok에는 같은 이름의 안내만 남아 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다. 설치하면 `design:frontend-ui-ux`, `design:visual-qa`로 불립니다.
+`/frontend-ui-ux <화면과 목표>`는 요청 범위의 화면을 구현하고 렌더링을 확인합니다. 충분한 요구사항이면 바로 제작하고, 중요한 방향이 불명확할 때만 질문합니다. 검토·계획 전용 요청에서는 파일을 수정하지 않습니다. frontend-ui-ux와 visual-qa는 wjgoarxiv-skills에 있습니다. LitGrok에는 같은 이름의 안내만 남아 `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/<skill>" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다. 설치하면 `frontend-ui-ux:frontend-ui-ux`, `visual-qa:visual-qa`로 불립니다.
 
-`/readme-studio`와 `/lit-typographic-motion`은 wjgoarxiv-skills의 `video-covers` 플러그인에 있습니다. LitGrok에는 같은 이름의 안내만 남아 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다. 설치하면 `video-covers:readme-studio`, `video-covers:lit-typographic-motion`으로 불립니다.
+`/readme-studio`와 `/lit-typographic-motion`은 wjgoarxiv-skills에 있습니다. LitGrok에는 같은 이름의 안내만 남아 `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/<skill>" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다. 설치하면 `readme-studio:readme-studio`, `lit-typographic-motion:lit-typographic-motion`으로 불립니다.

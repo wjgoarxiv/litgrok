@@ -5,19 +5,21 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-// Content-production skills moved to the wjgoarxiv-skills repository, one plugin per family. LitGrok keeps a
+// Content-production skills moved to the wjgoarxiv-skills repository. Its Grok Build edition of each is one folder,
+// `variants/litgrok/<id>/`, which is a one-skill plugin, so a user installs only that skill. LitGrok keeps a
 // same-name SKILL.md for each, so `/<id>`, the project rule's bare `lit` routes, agent preloads and the status row
 // still answer. Each note says three things: the skill moved, where it lives now, and Grok Build's one-line install.
+// The install goes through the plugin store because LitGrok's installer owns `.grok/skills/<id>/`, where the note is.
 const MOVED = {
-  'frontend-ui-ux': 'design',
-  'visual-qa': 'design',
-  'lit-typographic-motion': 'video-covers',
-  'readme-studio': 'video-covers',
-  'lit-diagram-drawer': 'figures',
-  'lit-schematic': 'figures',
-  'lit-scientific-visualization': 'figures',
-  'lit-docx': 'documents',
-  'lit-pptx': 'decks',
+  'frontend-ui-ux': true,
+  'visual-qa': true,
+  'lit-typographic-motion': true,
+  'readme-studio': true,
+  'lit-diagram-drawer': true,
+  'lit-schematic': true,
+  'lit-scientific-visualization': true,
+  'lit-docx': true,
+  'lit-pptx': true,
 };
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -36,19 +38,22 @@ test('each moved skill is a same-name note, SKILL.md alone', () => {
   }
 });
 
-test('each note says it moved, where it lives now, and the one-line Grok Build install', () => {
-  for (const [id, family] of Object.entries(MOVED)) {
+test('each note says it moved, where it lives now, and the one-line Grok Build install of that one skill', () => {
+  for (const id of Object.keys(MOVED)) {
     const text = note(id);
     assert.match(text, new RegExp(`^---\\nname: ${id}\\n`, 'u'), `${id} keeps its name`);
     assert.match(text, /\ndescription: "Moved: /u, `${id} description starts with Moved:`);
     assert.match(text, /\nuser-invocable: true\n/u);
     assert.ok(text.includes('wjgoarxiv-skills'), `${id} names the repository`);
-    assert.ok(text.includes(`plugins/${family}/skills/${id}/`), `${id} names its folder in the repository`);
-    assert.ok(text.includes(`grok plugin install "${PLACEHOLDER}#plugins/${family}" --trust`), `${id} carries the local install line`);
-    assert.ok(text.includes(`grok plugin install wjgoarxiv/wjgoarxiv-skills#plugins/${family} --trust`), `${id} carries the published form`);
+    assert.ok(text.includes(`wjgoarxiv-skills/variants/litgrok/${id}/`), `${id} names its folder in the repository`);
+    assert.ok(text.includes(`grok plugin install "${PLACEHOLDER}#variants/litgrok/${id}" --trust`), `${id} carries the local install line`);
+    assert.ok(text.includes(`grok plugin install wjgoarxiv/wjgoarxiv-skills#variants/litgrok/${id} --trust`), `${id} carries the published form`);
     assert.match(text, /not published yet/u, `${id} says the repository is not published yet`);
-    assert.ok(text.includes(`\`${family}:${id}\``), `${id} names the qualified plugin skill`);
-    assert.ok(text.includes(`grok plugin uninstall ${family}`), `${id} says how to remove the plugin`);
+    assert.ok(text.includes(`\`${id}:${id}\``), `${id} names the qualified plugin skill`);
+    assert.ok(text.includes(`grok plugin uninstall ${id}`), `${id} says how to remove the plugin`);
+    assert.match(text, /installer owns `\.grok\/skills\//u, `${id} says why the install avoids the note's folder`);
+    assert.doesNotMatch(text, /#plugins\/|plugins\/[a-z-]+\/skills\//u, `${id} names no family plugin`);
+    assert.doesNotMatch(text, /first written for another/u, `${id} no longer warns about another harness's text`);
   }
 });
 

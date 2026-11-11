@@ -3,7 +3,7 @@
   "parityDivergences": {
     "visual-qa": {
       "date": "2026-11-11",
-      "reason": "visual-qa moved to the design plugin of wjgoarxiv-skills; LitGrok ships only its same-name note, which points at that plugin and its install line, so its closure is the note alone by design."
+      "reason": "visual-qa moved to wjgoarxiv-skills; LitGrok ships only its same-name note, which points at its folder and install line, so its closure is the note alone by design."
     },
     "wikify": {
       "date": "2026-08-30",
@@ -15,11 +15,11 @@
     },
     "frontend-ui-ux": {
       "date": "2026-11-11",
-      "reason": "frontend-ui-ux moved to the design plugin of wjgoarxiv-skills; LitGrok ships only its same-name note, which points at that plugin and its install line, so its closure is the note alone by design."
+      "reason": "frontend-ui-ux moved to wjgoarxiv-skills; LitGrok ships only its same-name note, which points at its folder and install line, so its closure is the note alone by design."
     },
     "lit-scientific-visualization": {
       "date": "2026-11-11",
-      "reason": "lit-scientific-visualization and its scientific-visualization source moved to the figures plugin of wjgoarxiv-skills; LitGrok ships only its same-name note, which points at that plugin and its install line, so its closure is the note alone by design."
+      "reason": "lit-scientific-visualization and its scientific-visualization source moved to wjgoarxiv-skills; LitGrok ships only its same-name note, which points at its folder and install line, so its closure is the note alone by design."
     }
   },
   "skills": {
@@ -36,14 +36,14 @@
     "lit-burnoff": "Test locking, cleanup categories, meaning preservation, batch discipline, and completion evidence are fully specified.",
     "start-work": "Approved-plan loading, native validation helpers, authority and lifecycle gates, evidence, and cleanup are complete in the skill.",
     "structural-search": "The honest host search fallback, intent gating, bounded probing, review, and evidence contract are complete.",
-    "frontend-ui-ux": "Same-name note for the skill that moved to the design plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and builds nothing itself.",
-    "visual-qa": "Same-name note for the skill that moved to the design plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and records a missing visual check inside reviews.",
-    "lit-typographic-motion": "Same-name note for the skill that moved to the video-covers plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and makes no film itself.",
-    "readme-studio": "Same-name note for the skill that moved to the video-covers plugin of wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and writes no README itself.",
-    "lit-diagram-drawer": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and draws nothing itself.",
-    "lit-schematic": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and draws nothing itself.",
-    "lit-scientific-visualization": "Same-name note for the skill that moved to the figures plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and tells the user to start the moved skill by its plugin name.",
-    "lit-docx": "Same-name note for the skill that moved to the documents plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and writes no Word file itself.",
-    "lit-pptx": "Same-name note for the skill that moved to the decks plugin of wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and builds no deck itself."
+    "frontend-ui-ux": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and builds nothing itself.",
+    "visual-qa": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and records a missing visual check inside reviews.",
+    "lit-typographic-motion": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and makes no film itself.",
+    "readme-studio": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives and gives the one-line install, and writes no README itself.",
+    "lit-diagram-drawer": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and draws nothing itself.",
+    "lit-schematic": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and draws nothing itself.",
+    "lit-scientific-visualization": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and hands a figure request to the moved skill once it is installed.",
+    "lit-docx": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and writes no Word file itself.",
+    "lit-pptx": "Same-name note for the skill that moved to wjgoarxiv-skills: it says where the skill lives, gives the one-line install, and builds no deck itself."
   }
 }

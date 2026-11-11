@@ -211,18 +211,18 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 ## 화면, 슬라이드, 문서, 글
 
-`/frontend-ui-ux <화면과 목표>`는 고쳐도 되는 화면을 만들고 렌더링을 확인합니다. 요구사항이 분명하면 바로 동작하는 코드로 가고, 중요한 방향이 모호할 때만 질문합니다. 검토나 계획만 요청하면 파일을 고치지 않습니다. frontend-ui-ux와 visual-qa는 이제 wjgoarxiv-skills의 `design` 플러그인에 있습니다. 설치하지 않았다면 `/frontend-ui-ux`는 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다.
+`/frontend-ui-ux <화면과 목표>`는 고쳐도 되는 화면을 만들고 렌더링을 확인합니다. 요구사항이 분명하면 바로 동작하는 코드로 가고, 중요한 방향이 모호할 때만 질문합니다. 검토나 계획만 요청하면 파일을 고치지 않습니다. frontend-ui-ux와 visual-qa는 이제 wjgoarxiv-skills에 있습니다. 설치하지 않았다면 `/frontend-ui-ux`는 `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/frontend-ui-ux" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다.
 
-개념도나 기술 다이어그램에는 `lit-diagram-drawer` 스킬을 씁니다. 슬래시 경로(`/lit-diagram-drawer`)는 아직 실제 Grok Build 세션에서 확인하지 못했으니 `/skills`에서 찾아 쓰세요. 일반 화면은 `/frontend-ui-ux`, 측정 데이터 그래프는 `/lit-scientific-visualization`이 맡습니다. 실제 설비 그림(P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도)은 `lit-schematic` 스킬을 씁니다. 남의 글에 공개된 기법을 내 스킬이나 시스템으로 가져올 때는 `lit-hijack` 스킬을 씁니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다. 세 그림 스킬은 이제 wjgoarxiv-skills의 `figures` 플러그인에 있고, LitGrok에서 각 이름은 플러그인을 설치하기 전까지 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` 한 줄을 알려 줍니다.
+개념도나 기술 다이어그램에는 `lit-diagram-drawer` 스킬을 씁니다. 슬래시 경로(`/lit-diagram-drawer`)는 아직 실제 Grok Build 세션에서 확인하지 못했으니 `/skills`에서 찾아 쓰세요. 일반 화면은 `/frontend-ui-ux`, 측정 데이터 그래프는 `/lit-scientific-visualization`이 맡습니다. 실제 설비 그림(P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도)은 `lit-schematic` 스킬을 씁니다. 남의 글에 공개된 기법을 내 스킬이나 시스템으로 가져올 때는 `lit-hijack` 스킬을 씁니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다. 세 그림 스킬은 이제 wjgoarxiv-skills에 있고, LitGrok에서 각 이름은 플러그인을 설치하기 전까지 `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/<skill>" --trust` 한 줄을 알려 줍니다.
 
-발표자료는 `lit-pptx`, 보고서와 Word 문서는 `lit-docx`를 씁니다. 두 스킬은 이제 wjgoarxiv-skills의 `decks`, `documents` 플러그인에 있고, LitGrok에서 각 이름은 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/decks" --trust` 같은 설치 한 줄을 알려 줍니다. `lit`만 입력하고 원하는 것을 설명하면, 요청 문구를 보고 둘 중 하나나 둘 다를 고르라고 프로젝트 규칙이 Grok Build에 안내합니다. 어느 쪽을 골랐는지는 세션에서 보입니다. 
+발표자료는 `lit-pptx`, 보고서와 Word 문서는 `lit-docx`를 씁니다. 두 스킬은 이제 wjgoarxiv-skills에 있고, LitGrok에서 각 이름은 `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust` 같은 설치 한 줄을 알려 줍니다. `lit`만 입력하고 원하는 것을 설명하면, 요청 문구를 보고 둘 중 하나나 둘 다를 고르라고 프로젝트 규칙이 Grok Build에 안내합니다. 어느 쪽을 골랐는지는 세션에서 보입니다. 
 두 스킬 모두 정해진 한 가지 모양으로 시작하지 않습니다. 슬라이드나 페이지를 쓰기 전에 요청을 먼저 읽습니다. 누가 읽는지, 발표하는지 미리 돌려 읽는지, 표와 그림과 단계가 얼마나 되는지를 보고 그 일에 맞는 디자인 방향을 고릅니다. 답변에는 고른 방향과 이유 한 문장, 그리고 함께 어울리는 다른 두 방향이 나옵니다. 마음에 들지 않으면 그 이름만 말하면 바뀝니다. `lit`만 입력한 요청이라면 아무것도 묻지 않고 이 과정을 거칩니다.
 
 발표자료에는 열세 가지 방향이 있고, 방향마다 색, 제목 위치, 슬라이드 배치가 다릅니다. 숫자 중심의 실적 보고, 슬라이드마다 한 가지만 말하는 피치, 사진 중심 발표, 강의, 연구 발표, 한국어 보고서형 덱, 잡지형 편집 배치, 어두운 배경의 기조연설, 엔지니어링 리뷰, 강렬한 출시 피치, 바우하우스풍 디자인 강의, 리소 인쇄풍 커뮤니티 프로그램, 뉴스룸식 데이터 이야기가 있습니다. 슬라이드 제목은 주제를 이름으로 붙이고, 주장은 수치의 근거와 출처와 함께 본문에 둡니다. 그래서 슬라이드 아래쪽이 비지 않습니다. 문서에는 절제된 여섯 가지 방향이 있습니다. 보고서, 개조식 보고, 매뉴얼, 제안서, 메모, 저널형입니다. 여섯 방향은 먹색 제목과 선만 쓰는 표로 된 차분한 인쇄 페이지를 함께 쓰고, 첫 페이지, 요약, 제목 번호, 쓸 수 있는 몇 가지 구성 요소, 머리글 같은 구조로 서로 구별됩니다. 한국어 문서는 날짜, 표 제목, 번호를 한국식으로 씁니다. 학술지 서식(Elsevier, ACS, IEEE, Nature, korean-generic)과 예전 AZURE·BOILERPLATE 덱 템플릿은 이름을 대면 그대로 씁니다. 글꼴은 처음부터 끝까지 Pretendard입니다.
 
 두 스킬에는 엔진과 템플릿, 품질 검사 스크립트가 함께 들어 있습니다. 처음 쓸 때는 버전이 고정된 의존성을 전용 캐시에 설치합니다. 슬라이드에는 Node.js 20.9 이상이 필요하지만, Word 문서 작업과 기본 설치는 이 조건과 상관없습니다. 명령어와 선택적 렌더 도구는 각 스킬 문서에 있습니다.
 
-`/readme-studio <저장소와 목표>`와 `/lit-typographic-motion`은 이제 wjgoarxiv-skills의 `video-covers` 플러그인에 있습니다. LitGrok에서 두 이름은 설치 한 줄 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust`을 알려 주고, 플러그인을 설치하기 전에는 아무것도 만들지 않습니다. [readme-studio 안내](../.grok/skills/readme-studio/SKILL.md)
+`/readme-studio <저장소와 목표>`와 `/lit-typographic-motion`은 이제 wjgoarxiv-skills에 있습니다. LitGrok에서 두 이름은 설치 한 줄 `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/<skill>" --trust`을 알려 주고, 플러그인을 설치하기 전에는 아무것도 만들지 않습니다. [readme-studio 안내](../.grok/skills/readme-studio/SKILL.md)
 
 긴 글을 다듬거나 한국어를 꼼꼼히 교정할 때는 `lit-humanizer`를 쓰세요. 이와 별개로, Grok이 독자가 읽을 파일에 새 글을 쓰기 전에 검사 훅이 그 글을 먼저 읽습니다. 확실한 문제는 고쳐야 저장되고, 가벼운 문제는 제안으로만 돌아옵니다. Word와 PowerPoint 파일은 만들어진 직후에, PDF는 `pdftotext`가 설치되어 있을 때 검사합니다. 읽지 못한 파일은 그대로 두고, 무엇을 건너뛰었는지 알려 줍니다.
 
@@ -232,7 +232,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 ### 과학 그림
 
-`lit-scientific-visualization`과 그 스킬이 따르는 과학 시각화 자료는 wjgoarxiv-skills의 `figures` 플러그인으로 옮겼고, LitGrok은 더 이상 `.grok/vendor/`를 싣지 않습니다. 플러그인을 설치한 뒤 `/figures:lit-scientific-visualization <요청>`으로 직접 시작하세요.
+`lit-scientific-visualization`과 그 스킬이 따르는 과학 시각화 자료는 wjgoarxiv-skills로 옮겼고, LitGrok은 더 이상 `.grok/vendor/`를 싣지 않습니다. 설치한 뒤에는 안내가 요청을 넘기고, `/lit-scientific-visualization:lit-scientific-visualization <요청>`으로 직접 시작할 수도 있습니다.
 
 ## 잘 안 될 때
 

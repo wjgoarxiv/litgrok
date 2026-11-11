@@ -54,8 +54,7 @@ lit src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘
 ### 발표하기
 
 lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, 편집할 수 있는 네이티브 차트와 KPI 행,
-표를 Pretendard를 넣어 만들고, 건네기 전에 덱 QA로 검사합니다. 이제는 wjgoarxiv-skills의 `decks`
-플러그인에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
+표를 Pretendard를 넣어 만들고, 건네기 전에 덱 QA로 검사합니다. 이제는 wjgoarxiv-skills에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="주민에게 구의 집값과 이사 계획을 설명하는 뉴스룸 스타일 한국어 슬라이드 열 장의 모음. 미색 바탕에 녹슨 주황 강조, 핵심 수치 표지, 순서, 선 그래프, 수치 카드가 붙은 막대 그래프, 가로 막대 그래프, 동별 표, 일정, 자료 출처." /><br /><b>lit-pptx · 뉴스룸, 주민 설명 자료</b><br /><sub>함께 든 예제 <code>17-public-data-briefing-newsroom-ko.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="모바일 뱅킹 앱 3분기 데이터 리뷰 슬라이드 열 장의 모음. 짙은 남색 바탕에 호박색 강조, KPI 표지, 선과 막대 그래프, 리텐션 코호트 표, 구간 표지, 지표 정의, Android와 iOS 비교, 4분기 출시 일정." /><br /><b>lit-pptx · 나이트, 데이터 리뷰</b><br /><sub>함께 든 예제 <code>05-data-review-night-en.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td></tr>
@@ -66,7 +65,7 @@ lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, �
 
 lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 톤 여섯 가지 가운데 하나로 표지나
 제목 블록, 핵심 수치, 괘선 표, 번호 붙은 절을 짜고, 건네기 전에 페이지를 렌더링해 레이아웃 검사를
-거칩니다. 이제는 wjgoarxiv-skills의 `documents` 플러그인에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
+거칩니다. 이제는 wjgoarxiv-skills에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="옥상 태양광 설치 첫해를 다룬 한국어 Word 보고서의 앞 세 쪽. 굵은 제목 블록, 핵심 수치 띠, 절 제목, 괘선 데이터 표." /><br /><b>lit-docx · 한국어 보고서, Report 톤</b><br /><sub>함께 든 예제 <code>01-report-ko.md</code>를 스킬의 변환기로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="자전거 출퇴근 지원 시범 사업을 다룬 한국어 Word 제안서의 앞 세 쪽. 표지, 핵심 수치 세 개가 있는 요약, 본문 절, 일정 표, 예산 표." /><br /><b>lit-docx · 한국어 제안서, Proposal 톤</b><br /><sub>함께 든 예제 <code>04-proposal-ko.md</code>로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td></tr>
@@ -75,7 +74,7 @@ lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 
 ### 화면 만들기와 흐름 챙기기
 
 frontend-ui-ux는 의뢰문으로 페이지를 만든 뒤 여러 너비에서 직접 확인합니다. 이제는
-wjgoarxiv-skills의 `design` 플러그인에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). 일이 여러 세션에
+wjgoarxiv-skills에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). 일이 여러 세션에
 흩어졌다면 `lit adhd`가 그 세션을 모두 읽고 다음 단계가 담긴 브리프 한 장을 보여 줍니다.
 
 <table>
@@ -323,7 +322,7 @@ Grok Build를 시작하는 환경에서 정할 수도 있습니다. 셸 하나�
 갖춘 Word 문서를 만들고, 둘 다 Markdown 원본을 옆에 남깁니다. 발표자료는 열세 가지 톤, 문서는 절제된
 여섯 가지 톤 가운데 일에 맞는 것을 고르고, 답에
 고른 톤과 이유, 한마디로 바꿔 볼 수 있는 다른 톤 두 가지를 적습니다. 파일을 건네기 전에는 페이지를
-직접 렌더링하고 레이아웃 검사를 거칩니다. 두 스킬은 이제 wjgoarxiv-skills의 `decks`, `documents` 플러그인에
+직접 렌더링하고 레이아웃 검사를 거칩니다. 두 스킬은 이제 wjgoarxiv-skills에
 있고, LitGrok에서 두 이름은 설치 한 줄을 알려 줍니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 담긴 사실은
 그대로 두고 자연스럽게 고쳐 씁니다.
 
@@ -338,8 +337,7 @@ lit 새 온보딩 흐름에 대한 두 쪽짜리 제안서를 Word 파일로 써
 `lit-diagram-drawer`는 아키텍처, 흐름, 시퀀스, 타임라인 같은 개념도와 기술 다이어그램을 그립니다.
 실제 장치라면 `lit-schematic`이 맡습니다. ISA-5.1 태그와 제어 루프가 있는 P&ID, 장치 배치도, 등각
 단면도, 논문용 실험 장치 그림을 편집 가능한 SVG와 PDF, 600 dpi PNG로 그리고, 보고하기 전에 자체
-QA 스크립트로 검사합니다. 두 스킬은 `lit-scientific-visualization`과 함께 이제 wjgoarxiv-skills의
-`figures` 플러그인에 있습니다. 아래 프롬프트는 LitGrok에서 여전히 `lit-schematic`에 닿고, 그 안내가
+QA 스크립트로 검사합니다. 두 스킬은 `lit-scientific-visualization`과 함께 이제 wjgoarxiv-skills에 있습니다. 아래 프롬프트는 LitGrok에서 여전히 `lit-schematic`에 닿고, 그 안내가
 설치 한 줄을 알려 줍니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
 
 ```text
@@ -374,7 +372,7 @@ go
 
 ### 영상과 README 커버
 
-영상과 README 커버는 이제 wjgoarxiv-skills의 `video-covers` 플러그인이 만듭니다. 이 플러그인에는
+영상과 README 커버는 이제 wjgoarxiv-skills가 만듭니다. 그 저장소에는
 `lit-typographic-motion`(연출안을 먼저 쓰고 QA 검사를 거친 짧은 영상, 또는 소리 없는 README 커버 루프)과
 `readme-studio`가 들어 있습니다. 영상을 요청하면 LitGrok에서 여전히 `lit-typographic-motion`이 잡히고,
 그 안내가 설치 한 줄을 알려 줍니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). `litgrok motion-runtime`
@@ -477,21 +475,27 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 
 ## wjgoarxiv-skills로 옮긴 스킬
 
-화면처럼 완성된 결과물을 만드는 스킬은 이제 별도 저장소 wjgoarxiv-skills에 묶음별 플러그인으로
-있습니다. 쓰는 묶음만 골라 설치하면 됩니다. LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다.
+화면처럼 완성된 결과물을 만드는 스킬은 이제 별도 저장소 wjgoarxiv-skills에 있습니다. Grok Build용은
+스킬마다 `variants/litgrok/` 아래 자기 폴더가 있고, 그 폴더 하나가 필요한 파일을 모두 담은 스킬 하나짜리
+플러그인입니다. 쓰는 스킬만 골라 설치하면 됩니다. LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다.
 `/frontend-ui-ux`, `lit`으로 시작하는 요청, 이 스킬을 미리 불러오는 에이전트는 그대로 동작하고,
 안내가 무엇이 옮겨 갔는지와 설치 한 줄을 알려 줍니다. wjgoarxiv-skills는 아직 공개 전이라
-지금은 로컬 클론에서 설치합니다. 공개되면 소스는 `wjgoarxiv/wjgoarxiv-skills#plugins/<묶음>`이 됩니다.
-플러그인은 `.grok/skills/`가 아니라 Grok Build의 플러그인 저장소에 들어가므로 `litgrok install`은
-계속 깔끔하게 업데이트됩니다. 설치하면 스킬은 `<묶음>:<스킬>` 이름으로 불립니다.
+지금은 로컬 클론에서 설치합니다. 공개되면 소스는 `wjgoarxiv/wjgoarxiv-skills#variants/litgrok/<스킬>`이 됩니다.
+플러그인은 LitGrok 설치기가 안내를 두는 `.grok/skills/`가 아니라 Grok Build의 플러그인 저장소에 들어가므로
+`litgrok install`은 계속 깔끔하게 업데이트됩니다. 설치하면 스킬은 안내 옆에 `<스킬>:<스킬>` 이름으로 불리고,
+`grok plugin uninstall <스킬>`로 지웁니다.
 
-| 스킬 | 플러그인 | 설치 한 줄 |
+| 스킬 | wjgoarxiv-skills 안의 폴더 | 설치 한 줄 |
 | --- | --- | --- |
-| `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
-| `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
-| `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
-| `lit-docx` | `documents` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust` |
-| `lit-pptx` | `decks` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/decks" --trust` |
+| `frontend-ui-ux` | `variants/litgrok/frontend-ui-ux/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/frontend-ui-ux" --trust` |
+| `visual-qa` | `variants/litgrok/visual-qa/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/visual-qa" --trust` |
+| `lit-typographic-motion` | `variants/litgrok/lit-typographic-motion/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-typographic-motion" --trust` |
+| `readme-studio` | `variants/litgrok/readme-studio/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/readme-studio" --trust` |
+| `lit-diagram-drawer` | `variants/litgrok/lit-diagram-drawer/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-diagram-drawer" --trust` |
+| `lit-schematic` | `variants/litgrok/lit-schematic/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-schematic" --trust` |
+| `lit-scientific-visualization` | `variants/litgrok/lit-scientific-visualization/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-scientific-visualization" --trust` |
+| `lit-docx` | `variants/litgrok/lit-docx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-docx" --trust` |
+| `lit-pptx` | `variants/litgrok/lit-pptx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

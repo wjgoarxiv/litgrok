@@ -74,7 +74,7 @@ async function install(home) {
   return { code, ...io.read() };
 }
 
-// The scientific-visualization source moved to the figures plugin of wjgoarxiv-skills, so no release ships
+// The scientific-visualization source moved to wjgoarxiv-skills with its skill, so no release ships
 // `.grok/vendor/` any more. An install that still holds the old numbered vendor tree loses it on upgrade the way
 // any other no-longer-shipped file goes: removed while it matches the manifest, refused when the user changed it.
 test('an upgrade removes the old numbered vendor tree, which this release no longer ships', async () => {

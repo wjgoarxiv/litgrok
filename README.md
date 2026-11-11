@@ -54,7 +54,7 @@ architecture. Every one passed its skill's QA script before it was exported.
 
 lit-pptx picks one of thirteen tonalities for the audience, then compiles native, editable charts,
 KPI rows and tables with Pretendard embedded, and its deck QA checks the result before you get it.
-It now ships in the `decks` plugin of wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
+It now ships in wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="Contact sheet of ten off-white Korean newsroom-style slides with rust-orange accents, briefing residents on district housing prices and moving plans: a headline KPI cover, an agenda, a line chart, a bar chart with stat cards, a horizontal bar chart, a neighbourhood table, a timeline and a sources page." /><br /><b>lit-pptx · newsroom, Korean public briefing</b><br /><sub>From the bundled example <code>17-public-data-briefing-newsroom-ko.md</code>; the deck QA passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="Contact sheet of ten dark navy slides with amber accents from a Q3 mobile banking app data review: a KPI title slide, line and bar charts, a retention cohort table, a section divider, metric definitions, an Android and iOS comparison and a Q4 release timeline." /><br /><b>lit-pptx · night, data review</b><br /><sub>From the bundled example <code>05-data-review-night-en.md</code>; the deck QA passed.</sub></td></tr>
@@ -65,7 +65,7 @@ It now ships in the `decks` plugin of wjgoarxiv-skills (see [Skills that moved](
 
 lit-docx writes a Word file you can keep editing: a cover or title block, key figures, ruled tables
 and numbered sections in one of six restrained tonalities. It renders the pages and runs its layout
-gate before it hands the file over. It now ships in the `documents` plugin of wjgoarxiv-skills
+gate before it hands the file over. It now ships in wjgoarxiv-skills
 (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
 
 <table>
@@ -74,8 +74,7 @@ gate before it hands the file over. It now ships in the `documents` plugin of wj
 
 ### Build it and keep track of it
 
-frontend-ui-ux builds a page from a brief and then checks it at several widths. It now ships in the
-`design` plugin of wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). When the work has
+frontend-ui-ux builds a page from a brief and then checks it at several widths. It now ships in wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). When the work has
 spread over several sessions, `lit adhd` reads them all and prints one brief with a next step.
 
 <table>
@@ -329,7 +328,7 @@ styled Word document, each with its Markdown source beside it. Neither starts fr
 look: decks choose among thirteen tonalities and documents among six restrained ones, and the
 reply names the choice, the reason and two alternatives you can switch to with one word. Both
 render their pages and run a layout gate before they hand the file over. Both now come from
-the `decks` and `documents` plugins of wjgoarxiv-skills; in LitGrok their names give the install line. `lit-humanizer`
+wjgoarxiv-skills; in LitGrok their names give the install line. `lit-humanizer`
 rewrites stiff English or Korean prose and keeps the facts.
 
 ```text
@@ -344,7 +343,7 @@ lit write a two-page proposal for the new onboarding flow, as a Word file
 timelines. For real equipment, `lit-schematic` draws a P&ID with ISA-5.1 tags and control loops,
 an equipment layout, an isometric cutaway or a journal figure of an experimental setup, as
 editable SVG with PDF and a 600 dpi PNG, and checks it with its own QA script before it reports.
-Both, with `lit-scientific-visualization`, now ship in the `figures` plugin of wjgoarxiv-skills; the
+Both, with `lit-scientific-visualization`, now ship in wjgoarxiv-skills; the
 prompt below still reaches `lit-schematic` in LitGrok, and its note gives the install line (see
 [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
 
@@ -383,7 +382,7 @@ go
 
 ### Films and README covers
 
-Films and README covers now come from the `video-covers` plugin of wjgoarxiv-skills, which carries
+Films and README covers now come from wjgoarxiv-skills, which carries
 `lit-typographic-motion` (a treatment first, then a short film checked by a QA gate, or a silent README
 cover loop) and `readme-studio`. A film request still finds `lit-typographic-motion` in LitGrok, and its
 note gives the install line (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). The
@@ -487,21 +486,27 @@ running `litgrok ground project`.
 ## Skills that moved to wjgoarxiv-skills
 
 The skills that make finished artefacts, such as interfaces, now live in a separate repository,
-wjgoarxiv-skills, as one plugin per family, so you add only the families you use. LitGrok keeps a
-short note under each old name. `/frontend-ui-ux`, the bare `lit` routes and the agents that
-preload these skills still answer; the note tells you what moved and gives you one line to install
-it. wjgoarxiv-skills is not published yet, so the line installs from a local clone. After it is
-published the source becomes `wjgoarxiv/wjgoarxiv-skills#plugins/<family>`. The plugin goes into
-Grok Build's own plugin store, never into `.grok/skills/`, so `litgrok install` keeps updating
-LitGrok cleanly. Once it is installed, the skill answers as `<family>:<skill>`.
+wjgoarxiv-skills. For Grok Build each one is its own folder under `variants/litgrok/`, a one-skill
+plugin with everything it reads inside it, so you add only the skills you use. LitGrok keeps a short
+note under each old name. `/frontend-ui-ux`, the bare `lit` routes and the agents that preload these
+skills still answer; the note tells you what moved and gives you one line to install it.
+wjgoarxiv-skills is not published yet, so the line installs from a local clone. After it is
+published the source becomes `wjgoarxiv/wjgoarxiv-skills#variants/litgrok/<skill>`. The plugin goes
+into Grok Build's own plugin store, never into `.grok/skills/`, where LitGrok's installer keeps the
+note, so `litgrok install` keeps updating LitGrok cleanly. Once it is installed, the skill answers
+as `<skill>:<skill>` beside the note, and `grok plugin uninstall <skill>` removes it.
 
-| Skill | Plugin | Install line |
+| Skill | Folder in wjgoarxiv-skills | Install line |
 | --- | --- | --- |
-| `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
-| `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
-| `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
-| `lit-docx` | `documents` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust` |
-| `lit-pptx` | `decks` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/decks" --trust` |
+| `frontend-ui-ux` | `variants/litgrok/frontend-ui-ux/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/frontend-ui-ux" --trust` |
+| `visual-qa` | `variants/litgrok/visual-qa/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/visual-qa" --trust` |
+| `lit-typographic-motion` | `variants/litgrok/lit-typographic-motion/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-typographic-motion" --trust` |
+| `readme-studio` | `variants/litgrok/readme-studio/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/readme-studio" --trust` |
+| `lit-diagram-drawer` | `variants/litgrok/lit-diagram-drawer/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-diagram-drawer" --trust` |
+| `lit-schematic` | `variants/litgrok/lit-schematic/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-schematic" --trust` |
+| `lit-scientific-visualization` | `variants/litgrok/lit-scientific-visualization/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-scientific-visualization" --trust` |
+| `lit-docx` | `variants/litgrok/lit-docx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-docx" --trust` |
+| `lit-pptx` | `variants/litgrok/lit-pptx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust` |
 
 ## Requirements, update and uninstall
 

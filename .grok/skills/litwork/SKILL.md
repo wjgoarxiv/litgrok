@@ -86,7 +86,7 @@ Use the supplied goal as a working note, then keep the next action small and obs
 7. Clean disposable files only after their receipt is written, and report what was removed.
 8. At the end of the session, state the next action or the concrete blocker. Do not infer completion from a quiet process or a passive event.
 
-If a session creates or changes a user-facing web interface, plan its UI part with frontend-ui-ux and load that skill before implementation and verification. The full skill ships in the `design` plugin of wjgoarxiv-skills; when it is installed, run its seven-view RS matrix probe on the built page, inspect the required screenshots, and keep remaining HIGH findings as a block on "done". If only LitGrok's same-name note is present, or the browser or page cannot be probed, record the blocker; a static fallback is not rendered proof. For a CLI or backend-only task, run no interface probe. This is a conditional hand-off in the working note, not a hook-driven skill switch.
+If a session creates or changes a user-facing web interface, plan its UI part with frontend-ui-ux and load that skill before implementation and verification. The full skill ships as its own one-skill plugin in wjgoarxiv-skills (`variants/litgrok/frontend-ui-ux`); when it is installed, run its seven-view RS matrix probe on the built page, inspect the required screenshots, and keep remaining HIGH findings as a block on "done". If only LitGrok's same-name note is present, or the browser or page cannot be probed, record the blocker; a static fallback is not rendered proof. For a CLI or backend-only task, run no interface probe. This is a conditional hand-off in the working note, not a hook-driven skill switch.
 
 A working note can use this compact shape:
 

@@ -100,7 +100,7 @@ test('rule text states every word the routing model uses, ahead of Office and In
   assert.match(section, /(?:모션|motion)[^\n]*(?:인트로|intro)[^\n]*(?:alone|by themselves)/i);
   assert.match(section, /exclusions? (?:are checked|apply) before/i);
   assert.match(section, /\.grok\/skills\/lit-typographic-motion\//);
-  assert.match(section, /`video-covers` plugin of wjgoarxiv-skills/);
+  assert.match(section, /own one-skill plugin in wjgoarxiv-skills/);
   assert.match(section, /never claim a hook (?:deterministically )?routed/i);
   assert.match(rule, /Video, 영상, 모션, and 발표 alone never activate frontend-ui-ux/);
   assert.match(rule.slice(rule.indexOf('## Office output selection')), /발표자료, 발표, 슬라이드/, 'office words stay; the collision is fixed by ordering');
@@ -130,7 +130,7 @@ test('the film context is neutral, at most 700 bytes of prose, names both roots 
   assert.match(prose, /this is a film request/i);
   assert.match(prose, /`\.grok\/skills\/lit-typographic-motion\/` \(project\)/);
   assert.match(prose, /`~\/\.grok\/skills\/lit-typographic-motion\/` \(user\)/);
-  assert.match(prose, /`video-covers:lit-typographic-motion`/);
+  assert.match(prose, /`lit-typographic-motion:lit-typographic-motion`/);
   assert.match(prose, /install line and make no film/);
   assert.match(prose, /hand-encoded film is never a substitute/);
   for (const banned of [/only the engine/i, /kinetic-typography film/i, /HTML film is not a deliverable/i, /Only a gate result counts/i, /type-led cue found/i, /motion-runtime/]) assert.doesNotMatch(prose, banned);
