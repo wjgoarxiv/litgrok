@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import proc from '../../lit-pptx/scripts/proc.cjs';
+import proc from '../../litgrok/scripts/proc.cjs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildBlockRegistry } from './block-registry.mjs';
 import { unescapeXmlCharacterReferences, officeCssUrlsAreSafe, officeHrefRefsAreSafe } from './office-safety.mjs';

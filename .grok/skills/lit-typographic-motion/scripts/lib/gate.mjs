@@ -4,7 +4,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import hostProc from '../../../lit-pptx/scripts/proc.cjs';
+import hostProc from '../../../litgrok/scripts/proc.cjs';
 import { COLOUR, FLASH, OUTPUT, PASS_CAPS, PERF, SAFE, TIMING, TYPE, DARK } from './constants.mjs';
 import { countUnits, eojeol, readingFloor } from './text.mjs';
 import { transitionsOf, worstWindowLinear, worstWindowLooping } from './flash.mjs';

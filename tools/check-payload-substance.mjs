@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import proc from "../.grok/skills/lit-pptx/scripts/proc.cjs";
+import proc from "../.grok/skills/litgrok/scripts/proc.cjs";
 
 const PRODUCT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_ROOT_RELATIVE = join(".grok", "skills");

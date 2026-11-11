@@ -5,7 +5,7 @@ const { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSy
 const os = require('node:os');
 const path = require('node:path');
 const Module = require('node:module');
-const proc = require('./proc.cjs');
+const proc = require('../../litgrok/scripts/proc.cjs');
 
 const skill = path.resolve(__dirname, '..');
 const pythonLock = path.join(skill, 'requirements.lock');

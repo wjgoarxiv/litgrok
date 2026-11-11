@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import proc from '../../lit-pptx/scripts/proc.cjs';
+import proc from '../../litgrok/scripts/proc.cjs';
 import { fileURLToPath } from 'node:url';
 import { exitCode, parseRules, scanText } from './core.mjs';
 import { extractTextForFile } from './extract.mjs';

@@ -10,7 +10,7 @@ import test from 'node:test';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const require = createRequire(import.meta.url);
 const skills = join(root, '.grok', 'skills');
-const proc = require(join(skills, 'lit-pptx', 'scripts', 'proc.cjs'));
+const proc = require(join(skills, 'litgrok', 'scripts', 'proc.cjs'));
 const deps = require(join(skills, 'lit-pptx', 'scripts', 'deps.cjs'));
 const WIN = { platform: 'win32' };
 const present = (...files) => (file) => files.includes(file);

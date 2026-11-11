@@ -4,7 +4,7 @@
 // licence files by URL + sha256, and (opt-in) the hash-pinned librosa venv. `litgrok install`
 // stays copy-only; a render never installs, fetches or repairs anything.
 import { spawnSync } from 'node:child_process';
-import hostProc from '../../lit-pptx/scripts/proc.cjs';
+import hostProc from '../../litgrok/scripts/proc.cjs';
 import { closeSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';

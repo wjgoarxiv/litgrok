@@ -23,7 +23,6 @@
     "lit-init": "Instruction-surface discovery, placement, conflict analysis, mutation gating, and verification are fully specified.",
     "lit-recap": "Read-only reconstruction from session history and current files, evidence precedence, and stale-state handling are complete.",
     "litgoal": "The narrowed document shapes a checkable objective and hands the user an exact native goal line; no runtime is claimed.",
-    "litgrok": "It documents the actual package, installer, hooks, skills, rules, and supported boundaries; explanation is the capability.",
     "litwork": "The narrowed document records intent and surfaces host-backed session evidence without claiming an unshipped execution runtime.",
     "refactor": "Worktree choice, intake, characterization, structural moves, safety, verification, and cleanup are complete bounded instructions.",
     "lit-burnoff": "Test locking, cleanup categories, meaning preservation, batch discipline, and completion evidence are fully specified.",

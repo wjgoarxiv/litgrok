@@ -158,7 +158,7 @@
     "lit-pptx": {
       "minSkillBytes": 21100,
       "maxSkillBytes": 32000,
-      "minFiles": 115,
+      "minFiles": 114,
       "maxFiles": 173,
       "maxBytes": 7237000
     },
@@ -207,9 +207,9 @@
     "litgrok": {
       "minSkillBytes": 12900,
       "maxSkillBytes": 20000,
-      "minFiles": 1,
-      "maxFiles": 2,
-      "maxBytes": 20000
+      "minFiles": 2,
+      "maxFiles": 3,
+      "maxBytes": 34000
     },
     "litresearch": {
       "minSkillBytes": 4400,
@@ -321,8 +321,8 @@
         "sha256": "d9466ea8b3f77c4cbe3978b43c763f3fecc4680d946bb1b760bb0dc69da97bc6"
       },
       "files": 3,
-      "bytes": 15641,
-      "sha256": "119998af4933bbb53206ca65c1037360603009eed922569ac3572dd7ce3920d8"
+      "bytes": 15640,
+      "sha256": "89590869f9554c29484183b2cd11ab13aa7c8bf84f9edc62dcc5b8840e1a6eeb"
     },
     "comment-checker": {
       "skillMd": {
@@ -438,8 +438,8 @@
         "sha256": "2a6a1fec49303c7b182ba443748472e92f587843a9fd2a4bd08543250eb069dd"
       },
       "files": 318,
-      "bytes": 3411317,
-      "sha256": "b5518a77eb2ecf0cebfd16a50e9a86ff455be0287a522f5cc29b0f95fa3bca2e"
+      "bytes": 3411315,
+      "sha256": "b33f8003d2a4b1b53bb22a9b8a0a4a00c60f2a1ad112adea6e0cdb783bb8e432"
     },
     "lit-docx": {
       "skillMd": {
@@ -447,8 +447,8 @@
         "sha256": "c3b1fe7fa07445dad69183c17b4500a85d595a9c9125e224ea053ad4d135aca6"
       },
       "files": 63,
-      "bytes": 702361,
-      "sha256": "c98d9e3c7a60831be59aa2858182f8bdfc3f0fc8791a7ca8dff8a89fefb5835b"
+      "bytes": 702360,
+      "sha256": "6e98480fa51068b6efb57dc1f004c7663dd7ced90085cbf86e6768c3dceafc51"
     },
     "lit-handoff": {
       "skillMd": {
@@ -474,8 +474,8 @@
         "sha256": "0b4f56b53ee47abf75eb095869a393448cd0a90be74f6a1f44f5683cce303d2f"
       },
       "files": 72,
-      "bytes": 332073,
-      "sha256": "863523ab054e66880c8c763dd5ba916b00f552e000378ab23878ee28e91df2d5"
+      "bytes": 332071,
+      "sha256": "540f21dafd02cfe6408ef1fbbff357365cb4879191dc2a0d6d090f362184a04f"
     },
     "lit-init": {
       "skillMd": {
@@ -500,9 +500,9 @@
         "bytes": 21175,
         "sha256": "304d44dd8eca7dd1136415c7ab711594f2b30d10b03555fb76a6e43856101386"
       },
-      "files": 115,
-      "bytes": 4824273,
-      "sha256": "ca8d5eb706e27440a7744f014b1e679e495a93369e72a6a05f5f736016da95b1"
+      "files": 114,
+      "bytes": 4814991,
+      "sha256": "80f0424f9d3f7d9b073a9a113611d216b20fcfefa38ff86f95c5514152a7d8b1"
     },
     "lit-recap": {
       "skillMd": {
@@ -546,8 +546,8 @@
         "sha256": "af6de88252322781ab49e86d104c8c3d0a9957a833ee9b2243402db53d0d2d28"
       },
       "files": 128,
-      "bytes": 3897023,
-      "sha256": "7316df29c363a001d12d4106a8fee65834ec6c977792595fdc424a2df7237815"
+      "bytes": 3897020,
+      "sha256": "b1b9d53ce7ef8549d940aa606d4d38158614476dda201ee9ce0c7d1a47395db1"
     },
     "litgoal": {
       "skillMd": {
@@ -560,12 +560,12 @@
     },
     "litgrok": {
       "skillMd": {
-        "bytes": 12979,
-        "sha256": "e243aaaef134768db2dc31ebb514dcccd7b31f0b502413b8dcd0681d0240bc66"
+        "bytes": 13217,
+        "sha256": "ad8fdedca56f5d362c0bbaa6f8415b40ce97eadb252f62033a02c56a89d4588e"
       },
-      "files": 1,
-      "bytes": 12979,
-      "sha256": "afc8f09e310e763ea5e24984b4ea6615426919938094d476f085f5ad19743bd7"
+      "files": 2,
+      "bytes": 22539,
+      "sha256": "a218fc41f4a795431083721b328a07619af9c817bf7a630592a9c4d57dac4ebc"
     },
     "litresearch": {
       "skillMd": {
@@ -600,8 +600,8 @@
         "sha256": "fb270d09605aa588014d5e313a282d9e5b4e06a277de4523eb342016b91be5c3"
       },
       "files": 24,
-      "bytes": 79259,
-      "sha256": "18578531a6697392d8756acb4a5547b750faa4c5789d18a9f17e6468da8f8795"
+      "bytes": 79258,
+      "sha256": "9643e8888600b06bc981eda271abe94f48ffac1c9a3dc7dae5f8ea2c14f42d5b"
     },
     "readme-studio": {
       "skillMd": {
@@ -1695,7 +1695,6 @@
     ".grok/skills/lit-pptx/scripts/lib/spec-validator.js",
     ".grok/skills/lit-pptx/scripts/lib/template-registry.js",
     ".grok/skills/lit-pptx/scripts/ooxml_integrity.py",
-    ".grok/skills/lit-pptx/scripts/proc.cjs",
     ".grok/skills/lit-pptx/scripts/qa_deck.py",
     ".grok/skills/lit-pptx/scripts/run.mjs",
     ".grok/skills/lit-pptx/scripts/validate_pptx.py",
@@ -1900,6 +1899,7 @@
     ".grok/skills/lit-typographic-motion/styles/tidal.json",
     ".grok/skills/litgoal/SKILL.md",
     ".grok/skills/litgrok/SKILL.md",
+    ".grok/skills/litgrok/scripts/proc.cjs",
     ".grok/skills/litresearch/SKILL.md",
     ".grok/skills/litresearch/references/mcp-tool-use-patterns.md",
     ".grok/skills/litresearch/references/source-verdict-taxonomy.md",

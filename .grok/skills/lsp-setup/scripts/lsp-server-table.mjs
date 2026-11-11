@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import proc from '../../lit-pptx/scripts/proc.cjs';
+import proc from '../../litgrok/scripts/proc.cjs';
 import { lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';

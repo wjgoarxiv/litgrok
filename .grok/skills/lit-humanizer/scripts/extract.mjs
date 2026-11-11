@@ -1,4 +1,4 @@
-import proc from '../../lit-pptx/scripts/proc.cjs';
+import proc from '../../litgrok/scripts/proc.cjs';
 import { readFileSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

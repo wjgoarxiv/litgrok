@@ -3,7 +3,7 @@
 // -> determinism re-render and perf -> full gate -> promote or withhold (Build 7, MO-C-15/16).
 // Adapted in method from pdoom-video app/scripts/render.ts (MIT, see NOTICE).
 import { createHash } from 'node:crypto';
-import hostProc from '../../../lit-pptx/scripts/proc.cjs';
+import hostProc from '../../../litgrok/scripts/proc.cjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, appendFileSync, readdirSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';

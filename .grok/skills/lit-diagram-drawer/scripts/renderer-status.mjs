@@ -1,4 +1,4 @@
-import proc from '../../lit-pptx/scripts/proc.cjs';
+import proc from '../../litgrok/scripts/proc.cjs';
 
 const MINIMUM = [0, 38, 1];
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import proc from '../../lit-pptx/scripts/proc.cjs';
+import proc from '../../litgrok/scripts/proc.cjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

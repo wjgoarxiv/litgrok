@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const deps = require('./deps.cjs');
-const proc = require('./proc.cjs');
+const proc = require('../../litgrok/scripts/proc.cjs');
 const directory = dirname(fileURLToPath(import.meta.url));
 const [name, ...args] = process.argv.slice(2);
 const allowed = new Set(['qa_deck.py', 'validate_pptx.py', 'inventory.py', 'ooxml_integrity.py', 'embed_fonts.py', 'learn_template.py', 'deck_output.py', 'craft_extras.py']);

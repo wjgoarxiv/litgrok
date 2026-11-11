@@ -18,7 +18,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import proc from '../.grok/skills/lit-pptx/scripts/proc.cjs';
+import proc from '../.grok/skills/litgrok/scripts/proc.cjs';
 
 export const PRODUCT_ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const LOCK_FILE = 'skills.lock.json';
