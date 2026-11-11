@@ -54,7 +54,8 @@ lit src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘
 ### 발표하기
 
 lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, 편집할 수 있는 네이티브 차트와 KPI 행,
-표를 Pretendard를 넣어 만들고, 건네기 전에 덱 QA로 검사합니다.
+표를 Pretendard를 넣어 만들고, 건네기 전에 덱 QA로 검사합니다. 이제는 wjgoarxiv-skills의 `decks`
+플러그인에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="주민에게 구의 집값과 이사 계획을 설명하는 뉴스룸 스타일 한국어 슬라이드 열 장의 모음. 미색 바탕에 녹슨 주황 강조, 핵심 수치 표지, 순서, 선 그래프, 수치 카드가 붙은 막대 그래프, 가로 막대 그래프, 동별 표, 일정, 자료 출처." /><br /><b>lit-pptx · 뉴스룸, 주민 설명 자료</b><br /><sub>함께 든 예제 <code>17-public-data-briefing-newsroom-ko.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="모바일 뱅킹 앱 3분기 데이터 리뷰 슬라이드 열 장의 모음. 짙은 남색 바탕에 호박색 강조, KPI 표지, 선과 막대 그래프, 리텐션 코호트 표, 구간 표지, 지표 정의, Android와 iOS 비교, 4분기 출시 일정." /><br /><b>lit-pptx · 나이트, 데이터 리뷰</b><br /><sub>함께 든 예제 <code>05-data-review-night-en.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td></tr>
@@ -322,7 +323,8 @@ Grok Build를 시작하는 환경에서 정할 수도 있습니다. 셸 하나�
 갖춘 Word 문서를 만들고, 둘 다 Markdown 원본을 옆에 남깁니다. 발표자료는 열세 가지 톤, 문서는 절제된
 여섯 가지 톤 가운데 일에 맞는 것을 고르고, 답에
 고른 톤과 이유, 한마디로 바꿔 볼 수 있는 다른 톤 두 가지를 적습니다. 파일을 건네기 전에는 페이지를
-직접 렌더링하고 레이아웃 검사를 거칩니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 담긴 사실은
+직접 렌더링하고 레이아웃 검사를 거칩니다. 두 스킬은 이제 wjgoarxiv-skills의 `decks`, `documents` 플러그인에
+있고, LitGrok에서 두 이름은 설치 한 줄을 알려 줍니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 담긴 사실은
 그대로 두고 자연스럽게 고쳐 씁니다.
 
 ```text
@@ -354,7 +356,7 @@ lit 논문용 흡착 실험 장치 모식도 그려줘
 그 이유가 남습니다.
 
 ```text
-lit hijack https://example.com/post 와 docs/paper.pdf 를 .grok/skills/lit-pptx 로
+lit hijack https://example.com/post 와 docs/paper.pdf 를 .grok/skills/lit-humanizer 로
 ```
 
 ### 어디까지 했더라?
@@ -489,6 +491,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 | `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
 | `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
 | `lit-docx` | `documents` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust` |
+| `lit-pptx` | `decks` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/decks" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

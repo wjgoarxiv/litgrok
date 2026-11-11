@@ -99,7 +99,7 @@
 <tr>
 <td><img src="./assets/skills/lit-pptx.webp" width="240" alt="편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다." /></td>
 <td><code>lit-pptx</code><br /><sub><code>/lit-pptx &lt;presentation request&gt;</code></sub></td>
-<td>편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다.</td>
+<td>wjgoarxiv-skills의 <code>decks</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인: 편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-docx.webp" width="240" alt="서식을 갖춘 Word 문서와 원고 Markdown을 만듭니다. 문서에 맞춰 절제된 여섯 가지 방향 가운데 하나를 고르거나, 지정한 학술지 서식을 씁니다. 문체 검사와 페이지 단위 검사를 돌리며 LibreOffice가 있으면 페이지도 확인합니다." /></td>

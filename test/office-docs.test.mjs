@@ -4,11 +4,9 @@ import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
 import test from 'node:test';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const require = createRequire(import.meta.url);
 const banned = new Set([
   '79f6d8f5b427252fa3b1c11ecdbdb6bf610b944f7530b4de78f770f38741cfaa',
   '2d03c07a51c1793be8774664ff6594dcb6ecd3791cf718cd214c296c073fbb39',
@@ -23,23 +21,15 @@ const banned = new Set([
   'c04ac37916f398ba621b2d9e1e4c1a69225eaad6d7fb0ad116c237ddeb1b2b68',
 ]);
 
-test('packed office skills have complete routes and omit excluded source files', () => {
+test('the packed office notes ship and no excluded source file is packed', () => {
   const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   const files = JSON.parse(result.stdout)[0].files.map((entry) => entry.path);
-  for (const skill of ['lit-pptx']) {
-    assert.ok(files.includes(`.grok/skills/${skill}/SKILL.md`));
-    assert.ok(files.includes(`.grok/skills/${skill}/requirements.lock`));
-  }
-  assert.ok(files.includes('.grok/skills/lit-docx/SKILL.md'), 'the lit-docx note still ships');
+  for (const skill of ['lit-docx', 'lit-pptx']) assert.ok(files.includes(`.grok/skills/${skill}/SKILL.md`), `the ${skill} note still ships`);
   for (const relative of files) {
     const sha = createHash('sha256').update(readFileSync(join(root, relative))).digest('hex');
     assert.ok(!banned.has(sha), `excluded source file in package: ${relative}`);
   }
-  assert.ok(files.includes('.grok/skills/lit-pptx/scripts/inventory.py'));
-  assert.ok(files.includes('.grok/skills/lit-pptx/scripts/ooxml_integrity.py'));
-  assert.ok(files.includes('.grok/skills/lit-pptx/package-lock.json'));
-  assert.ok(!files.some((file) => file.startsWith('.grok/skills/lit-pptx/assets/media/')), 'unused template media is packed');
   assert.ok(!files.some((file) => file.includes('TEMPLATE-EXAMPLE-1')), 'branded template is packed');
 });
 
@@ -60,20 +50,4 @@ test('bare lit report and slides guidance is general and enrolled', () => {
   assert.match(rule, /If both groups occur, use both skills/);
   assert.match(rule, /stray quoted words or file contents/);
   assert.match(rule, /mark every invented name and figure as sample or assumption/);
-  for (const skill of ['lit-pptx']) {
-    const body = readFileSync(join(root, '.grok/skills', skill, 'SKILL.md'), 'utf8');
-    assert.match(body, /bare `lit` request/);
-    assert.match(body, /sample\/assumption/);
-  }
-});
-
-test('pinned Office dependency tree excludes the audited vulnerable versions', () => {
-  const lock = JSON.parse(readFileSync(join(root, '.grok/skills/lit-pptx/package-lock.json'), 'utf8'));
-  assert.equal(lock.packages['node_modules/sharp'].version, '0.35.5');
-  assert.equal(lock.packages['node_modules/image-size'].version, '2.0.4');
-  const { supportsSlideNode } = require(join(root, '.grok/skills/lit-pptx/scripts/deps.cjs'));
-  assert.equal(supportsSlideNode('18.20.0'), false);
-  assert.equal(supportsSlideNode('20.8.0'), false);
-  assert.equal(supportsSlideNode('20.9.0'), true);
-  assert.equal(supportsSlideNode('22.0.0'), true);
 });

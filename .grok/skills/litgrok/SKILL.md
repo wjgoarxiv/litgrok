@@ -31,7 +31,7 @@ LitGrok is a dependency-free package containing:
 - `bin/litgrok.mjs`, exposed as the `litgrok` and `litgrok-ai` commands of `@litfamily/litgrok` (run it with `npm exec --yes --package @litfamily/litgrok@latest -- litgrok`);
 - package documentation, license, and changelog; cover artwork stays in the repository.
 
-The `lit-pptx` skill folder also ships explicitly invoked engines, templates, QA scripts, the official Pretendard Regular and Bold faces, and pinned dependency locks. It provisions a product-owned cache on first use. The `lit-docx` folder holds only a same-name note: the document engine moved to the `documents` plugin of wjgoarxiv-skills. The npm installer itself still has no runtime dependencies and does not run those engines during installation.
+The `lit-pptx` and `lit-docx` folders hold only same-name notes: the deck and document engines, their templates, QA scripts, fonts and pinned locks moved to the `decks` and `documents` plugins of wjgoarxiv-skills, and each note gives the one-line `grok plugin install` for it. The npm installer itself has no runtime dependencies, and no LitGrok skill provisions an office cache any more.
 
 The `lit-typographic-motion` and `readme-studio` folders hold only same-name notes: the film director and README studio moved to the `video-covers` plugin of wjgoarxiv-skills, and each note gives the one-line `grok plugin install` for it. LitGrok no longer has a `litgrok motion-runtime` command; the plugin pre-warms its own engine.
 
@@ -96,7 +96,7 @@ When a skill step names a Grok Build tool, use the host's nearest equivalent or 
 - Trust prompts: `/hooks-trust` and `--trust` exist only in Grok Build. Skip trust steps and do not ask the user to run them.
 - Live evidence commands: `/skills`, `/hooks` and `grok inspect` are Grok Build commands. In these hosts the plugin's detail page and the host's skill list show what loaded.
 - Delegated lanes or subagents: if the host cannot start one, run the lanes yourself in order and say they ran in sequence.
-- Bundled scripts, such as the slide and document engines: check that `node` or `python3` exists in the host before running one. If the plugin folder is read-only, write outputs to a scratch or workspace path. When the runtime is missing, say the step is unavailable and name what it needs.
+- Bundled scripts, such as the research and LSP helpers: check that `node` or `python3` exists in the host before running one. If the plugin folder is read-only, write outputs to a scratch or workspace path. When the runtime is missing, say the step is unavailable and name what it needs.
 
 - Moved skills: some LitGrok skill names are now short notes, because the full skill moved to a family plugin in the wjgoarxiv-skills repository (for example the `design` or `video-covers` plugin). The note's `grok plugin install` line runs only in Grok Build. Here, name that plugin folder and let the user add it the way this host adds a plugin; never paste the moved folder over the note, and never do the moved skill's work from the note alone.
 

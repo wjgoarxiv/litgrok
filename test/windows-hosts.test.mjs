@@ -11,7 +11,6 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const require = createRequire(import.meta.url);
 const skills = join(root, '.grok', 'skills');
 const proc = require(join(skills, 'litgrok', 'scripts', 'proc.cjs'));
-const deps = require(join(skills, 'lit-pptx', 'scripts', 'deps.cjs'));
 const WIN = { platform: 'win32' };
 const present = (...files) => (file) => files.includes(file);
 
@@ -108,14 +107,6 @@ test('win32: the interpreter gets UTF-8 stdio so Korean output cannot crash a ga
   assert.equal(seen.env.PYTHONIOENCODING, 'utf-8');
 });
 
-test('an install step that fails reports its exit code and the cause the child wrote', () => {
-  assert.throws(
-    () => deps.command(process.execPath, ['-e', 'process.stderr.write("npm warn noise\\r\\nnpm error code E404 not in registry\\r\\n"); process.exit(7)']),
-    (error) => /exit 7/u.test(error.message) && /E404 not in registry/u.test(error.message) && !error.message.includes('\r'),
-  );
-  assert.throws(() => deps.command('litgrok-no-such-command', []), /ENOENT/u);
-});
-
 test('venv interpreters and system pythons follow the platform', () => {
   assert.equal(proc.venvPython('C:\\cache\\python', 'win32'), 'C:\\cache\\python\\Scripts\\python.exe');
   assert.equal(proc.venvPython('/cache/python', 'linux'), '/cache/python/bin/python');
@@ -153,23 +144,6 @@ test('win32: the supported-Python pick asks the py launcher for each listed mino
   const picked = proc.pickPython([14, 13], { ...WIN, env: { PATH: 'C:\\py', PATHEXT: '.EXE' }, exists: present('C:\\py\\py.EXE'), probe });
   assert.deepEqual(picked, { command: 'C:\\py\\py.EXE', args: ['-3.13'], version: '3.13.4' });
   assert.deepEqual(asked, ['C:\\py\\py.EXE -3.14', 'C:\\py\\py.EXE -3.13']);
-});
-
-test('the office runtime builds its venv from the supported-Python pick, not whatever python3 is first', () => {
-  const source = readFileSync(join(skills, 'lit-pptx', 'scripts', 'deps.cjs'), 'utf8');
-  assert.match(source, /proc\.pickPython\(OFFICE_PYTHON_MINORS\)/u);
-  assert.doesNotMatch(source, /proc\.findPython\(/u);
-});
-
-test('doctor of the office skills lists its tools without a which child process', () => {
-  for (const skill of ['lit-pptx']) {
-    const source = readFileSync(join(skills, skill, 'scripts', 'run.mjs'), 'utf8');
-    assert.doesNotMatch(source, /spawnSync\('which'/u, `${skill} still shells out to which`);
-    const result = spawnSync(process.execPath, [join(skills, skill, 'scripts', 'run.mjs'), 'doctor'], { encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /^pandoc: .+$/mu);
-    assert.doesNotMatch(result.stdout, /\r/u);
-  }
 });
 
 // ---- the places that start npm or a shim ------------------------------------------------------

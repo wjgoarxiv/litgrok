@@ -17,6 +17,7 @@ const MOVED = {
   'lit-schematic': 'figures',
   'lit-scientific-visualization': 'figures',
   'lit-docx': 'documents',
+  'lit-pptx': 'decks',
 };
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));

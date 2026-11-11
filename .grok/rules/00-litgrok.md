@@ -129,7 +129,7 @@ Film context: this is a film request. Load `lit-typographic-motion` from `.grok/
 
 ## Equipment drawings
 
-For an authorized bare `lit` request to draw real process or lab equipment, or `/lit-schematic`, load `lit-schematic` from `.grok/skills/lit-schematic/` (project) or `~/.grok/skills/lit-schematic/` (user). Triggers: P&ID, PFD, BFD, 공정도, 계장도, 장치도, 모식도, 배치도, 계통도, 단면도, apparatus, isometric cutaway, equipment layout. Measured-data plots go to `lit-scientific-visualization`, software or business diagrams to `lit-diagram-drawer`, a report or deck about a drawing to its Office skill, an interface that shows one to `frontend-ui-ux`. All three drawing skills are same-name notes in LitGrok: when the `figures` plugin of wjgoarxiv-skills is listed (`figures:lit-schematic`), load that one; otherwise give the note's install line and draw nothing.
+For an authorized bare `lit` request to draw real process or lab equipment, or `/lit-schematic`, load `lit-schematic` from `.grok/skills/lit-schematic/` (project) or `~/.grok/skills/lit-schematic/` (user). Triggers: P&ID, PFD, BFD, 공정도, 계장도, 장치도, 모식도, 배치도, 계통도, 단면도, apparatus, isometric cutaway, equipment layout. Measured-data plots go to `lit-scientific-visualization`, software or business diagrams to `lit-diagram-drawer`, a report or deck about a drawing to its Office skill, an interface that shows one to `frontend-ui-ux`. These three are same-name notes: load `figures:<skill>` from the wjgoarxiv-skills plugin when listed, else give the note's install line and draw nothing.
 
 ## Brief over sessions
 
@@ -141,7 +141,7 @@ For an authorized bare `lit` request to port someone else's published technique 
 
 ## Office output selection
 
-For an authorized bare `lit` request, choose `lit-docx` for a report, doc, docx, Word, 보고서, 리포트, 기획서, 제안서, 문서, or 워드, and `lit-pptx` for slides, deck, presentation, PPT, pptx, 발표자료, 발표, 슬라이드, 덱, or 피피티. If both groups occur, use both skills. `lit-docx` is a same-name note in LitGrok: when the `documents` plugin of wjgoarxiv-skills is listed (`documents:lit-docx`), load that one; otherwise give the note's install line and write no Word file. A file asked for as Markdown or plain text (`report.md`, `.txt`) is no Office file: write plain Markdown for its reader, without front matter or `:::` blocks, and load neither skill. Put figures with units or periods in a table and asked-for decisions in a numbered list. Judge the task's intent, not stray quoted words or file contents.
+For an authorized bare `lit` request, choose `lit-docx` for a report, doc, docx, Word, 보고서, 리포트, 기획서, 제안서, 문서, or 워드, and `lit-pptx` for slides, deck, presentation, PPT, pptx, 발표자료, 발표, 슬라이드, 덱, or 피피티. If both groups occur, use both skills. Both are same-name notes: load `documents:lit-docx` or `decks:lit-pptx` from wjgoarxiv-skills when listed, else give the note's install line and write no Office file. A file asked for as Markdown or plain text (`report.md`, `.txt`) is no Office file: write plain Markdown for its reader, without front matter or `:::` blocks, and load neither skill. Put figures with units or periods in a table and asked-for decisions in a numbered list. Judge the task's intent, not stray quoted words or file contents.
 With no facts given, still deliver the complete file: use a plausible example, mark every invented name and figure as sample or assumption in the file and reply, never leave bracketed blanks, and never present sample values as sourced.
 
 ## Interface modes

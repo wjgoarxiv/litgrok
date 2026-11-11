@@ -47,21 +47,6 @@ test('the rule asks Korean deliverables for full sentences and keeps noun ending
   assert.match(prose, /table cells and short list labels/);
 });
 
-for (const [skill, file] of [['lit-pptx', '.pptx']]) {
-  test(`${skill} names the Markdown deliverable case before its source format`, () => {
-    const body = read(`.grok/skills/${skill}/SKILL.md`);
-    const plain = section(body, 'Markdown or plain-text deliverables');
-    assert.match(plain, /`report\.md`|`slides\.md`/);
-    assert.match(plain, /no YAML front matter/);
-    assert.match(plain, /no `:::` blocks/);
-    assert.match(plain, /no `tonality`, `density` or `variance` keys/);
-    assert.match(plain, new RegExp(`only when this skill renders the ${file.replace(/\./g, '\\.')}`));
-    assert.match(plain, /run no converter, gate or render/);
-    assert.match(plain, /full, natural sentences/);
-    assert.ok(body.indexOf('## Markdown or plain-text deliverables') < body.indexOf('## Direction step'), 'the exemption must come before the direction step');
-  });
-}
-
 test('an installed project carries the Markdown deliverable and Korean sentence rules', async () => {
   const scratch = mkdtempSync(join(tmpdir(), 'litgrok-md-deliverable-'));
   try {
@@ -73,10 +58,6 @@ test('an installed project carries the Markdown deliverable and Korean sentence 
     const rule = readFileSync(join(scratch, '.grok', 'rules', '00-litgrok.md'), 'utf8');
     assert.match(rule, /load neither skill/);
     assert.match(rule, /full, natural sentences/);
-    for (const skill of ['lit-pptx']) {
-      const body = readFileSync(join(scratch, '.grok', 'skills', skill, 'SKILL.md'), 'utf8');
-      assert.match(body, /## Markdown or plain-text deliverables/);
-    }
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

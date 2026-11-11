@@ -54,6 +54,7 @@ architecture. Every one passed its skill's QA script before it was exported.
 
 lit-pptx picks one of thirteen tonalities for the audience, then compiles native, editable charts,
 KPI rows and tables with Pretendard embedded, and its deck QA checks the result before you get it.
+It now ships in the `decks` plugin of wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="Contact sheet of ten off-white Korean newsroom-style slides with rust-orange accents, briefing residents on district housing prices and moving plans: a headline KPI cover, an agenda, a line chart, a bar chart with stat cards, a horizontal bar chart, a neighbourhood table, a timeline and a sources page." /><br /><b>lit-pptx · newsroom, Korean public briefing</b><br /><sub>From the bundled example <code>17-public-data-briefing-newsroom-ko.md</code>; the deck QA passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="Contact sheet of ten dark navy slides with amber accents from a Q3 mobile banking app data review: a KPI title slide, line and bar charts, a retention cohort table, a section divider, metric definitions, an Android and iOS comparison and a Q4 release timeline." /><br /><b>lit-pptx · night, data review</b><br /><sub>From the bundled example <code>05-data-review-night-en.md</code>; the deck QA passed.</sub></td></tr>
@@ -327,7 +328,8 @@ Ask for a deck or a report and `lit-pptx` builds an editable PowerPoint file or 
 styled Word document, each with its Markdown source beside it. Neither starts from one fixed
 look: decks choose among thirteen tonalities and documents among six restrained ones, and the
 reply names the choice, the reason and two alternatives you can switch to with one word. Both
-render their pages and run a layout gate before they hand the file over. `lit-humanizer`
+render their pages and run a layout gate before they hand the file over. Both now come from
+the `decks` and `documents` plugins of wjgoarxiv-skills; in LitGrok their names give the install line. `lit-humanizer`
 rewrites stiff English or Korean prose and keeps the facts.
 
 ```text
@@ -361,7 +363,7 @@ surface against a baseline that cannot see the new work. The report says what wa
 was left and why.
 
 ```text
-lit hijack https://example.com/post and docs/paper.pdf into .grok/skills/lit-pptx
+lit hijack https://example.com/post and docs/paper.pdf into .grok/skills/lit-humanizer
 ```
 
 ### Where was I?
@@ -499,6 +501,7 @@ LitGrok cleanly. Once it is installed, the skill answers as `<family>:<skill>`.
 | `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
 | `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
 | `lit-docx` | `documents` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/documents" --trust` |
+| `lit-pptx` | `decks` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/decks" --trust` |
 
 ## Requirements, update and uninstall
 

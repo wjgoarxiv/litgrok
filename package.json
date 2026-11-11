@@ -15,8 +15,7 @@
     "code-review",
     "research",
     "context-handoff",
-    "korean",
-    "office-documents"
+    "korean"
   ],
   "type": "module",
   "bin": {

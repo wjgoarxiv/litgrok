@@ -99,7 +99,7 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/lit-pptx.webp" width="240" alt="An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present." /></td>
 <td><code>lit-pptx</code><br /><sub><code>/lit-pptx &lt;presentation request&gt;</code></sub></td>
-<td>An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present.</td>
+<td>Moved to the <code>decks</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin: An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-docx.webp" width="240" alt="A styled Word document with its Markdown source, set in one of six restrained directions picked for the document, or in a publisher profile you name. Prose lint and a page-level gate run, and pages are inspected when LibreOffice is present." /></td>
