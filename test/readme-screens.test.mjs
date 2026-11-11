@@ -14,11 +14,11 @@ const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 // Carbon-style window cards of LitGrok's own installer, SessionStart hook, prompt hook and status-line command.
 // The card is the same on both page themes, so each -dark/-light pair holds the same picture.
 const screens = {
-  'install-done-dark.webp': '2284c663f069f60c4160f6cdeaede1e7574040a2990ea19ba7c9c98baaa725a1',
-  'install-done-light.webp': '2284c663f069f60c4160f6cdeaede1e7574040a2990ea19ba7c9c98baaa725a1',
-  'install-dry-run-dark.webp': '0da434cf37cd224016597d359e29e738265551d684da3b95c276a769bf31a43b',
-  'install-dry-run-light.webp': '0da434cf37cd224016597d359e29e738265551d684da3b95c276a769bf31a43b',
-  'install-plan-dark.webp': '08dd8776fb9841595767e688be35e21e1ff0a7e9d6fb73141141ccbf46fdac6a',
+  'install-done-dark.webp': 'd0dc21f99b47b1a627e49336cb5143addf65ed4ce2f95181602f63780897b3df',
+  'install-done-light.webp': 'd0dc21f99b47b1a627e49336cb5143addf65ed4ce2f95181602f63780897b3df',
+  'install-dry-run-dark.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
+  'install-dry-run-light.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
+  'install-plan-dark.webp': 'ad9afa5cf46559229db9ddc0dcba50391be1175253c087a829021d3bd0f9fb72',
   'session-start-dark.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
   'session-start-light.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
   'status-row-dark.webp': '5cc43af2e7623e6f6ba0375f4821bcdd6d2022df3bedef7401b90e016ea2f0c8',
@@ -28,9 +28,9 @@ const MAX_SCREEN_BYTES = 245_760;
 
 // What each picture must quote in its alt text, in the language of the page.
 const quotes = {
-  'install-plan': ['INSTALL', '02 · Payload', 'byte-identical copies only', 'Model selection: host-owned'],
-  'install-dry-run': ['DRY RUN — no files written', '02 · Payload', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
-  'install-done': ['INSTALL STEPS', 'PAYLOAD', 'WRITE', 'INSTALL RECEIPT', 'Status: Ready', 'Next: restart Grok Build'],
+  'install-plan': ['INSTALL', '02 · Payload 380 files · byte-identical copies only', 'Model selection: host-owned'],
+  'install-dry-run': ['DRY RUN — no files written', '02 · Payload 380 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
+  'install-done': ['INSTALL STEPS', 'PAYLOAD · 380 files discovered', 'WRITE · 380 written', 'INSTALL RECEIPT', 'Status: Ready', 'Next: restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
   'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $0.43 │ git main', '· litwork', '3 tools · 1 agent ● 1m42s', 'plan ✓ ━━━━', 'work 3/7', 'review · ──── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash 0:12'],
 };
@@ -198,7 +198,7 @@ test('the guide names no removed command and quotes no stale payload count, in p
   for (const file of ['docs/guide.md', 'docs/guide_ko-KR.md']) {
     const content = read(file);
     for (const removed of [/motion-runtime/u, /pre-warm/u, /video tools/u, /영상 도구/u]) assert.doesNotMatch(content, removed, `${file}: ${removed}`);
-    // The pictures predate the diet; their alt text names what they show without the old file count.
+    // The pictures were recaptured after the diet; no alt may fall back to the old file count.
     for (const [, alt] of content.matchAll(/alt="([^"]+)"/gu)) assert.doesNotMatch(alt, /\b1315\b/u, `${file}: an alt still quotes the 1315-file payload`);
   }
 });
