@@ -3,15 +3,12 @@ import { createHash } from 'node:crypto';
 import {
   existsSync,
   lstatSync,
-  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,9 +18,6 @@ import { restoreHistoricalFixture } from './fixtures/historical-installs/restore
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const LEGACY_RELATIVE = '.grok/vendor/045_scientific-visualization';
-const CANONICAL_RELATIVE = '.grok/vendor/scientific-visualization';
-const LEGACY_ROOT = join(PRODUCT_ROOT, LEGACY_RELATIVE);
-const CANONICAL_ROOT = join(PRODUCT_ROOT, CANONICAL_RELATIVE);
 
 function digest(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
@@ -80,80 +74,38 @@ async function install(home) {
   return { code, ...io.read() };
 }
 
-test('the scientific vendor tree uses the canonical unnumbered path in active surfaces', () => {
-  assert.equal(existsSync(CANONICAL_ROOT), true);
-  assert.equal(existsSync(LEGACY_ROOT), false);
-  const activeFiles = [
-    '.grok/skills/lit-scientific-visualization/SKILL.md',
-    '.grok/skills/lit-scientific-visualization/scripts/verify-canonical-corpus.mjs',
-    '.grok/vendor/NOTICE.md',
-    '.grok/vendor/provenance/045_scientific-visualization.md',
-    'test/depth-references.test.mjs',
-    'test/canonical-scientific-corpus.test.mjs',
-    'test/scientific-provenance.test.mjs',
-  ];
-  for (const relative of activeFiles) {
-    const content = readFileSync(join(PRODUCT_ROOT, relative), 'utf8');
-    assert.match(content, /scientific-visualization/iu);
-    if (!relative.includes('provenance') && !relative.endsWith('NOTICE.md')) {
-      assert.doesNotMatch(content, /vendor\/045_scientific-visualization/iu, relative);
-    }
-  }
-});
-
-test('a pristine manifest-owned numbered vendor install migrates without byte or mode loss', async () => {
+// The scientific-visualization source moved to the figures plugin of wjgoarxiv-skills, so no release ships
+// `.grok/vendor/` any more. An install that still holds the old numbered vendor tree loses it on upgrade the way
+// any other no-longer-shipped file goes: removed while it matches the manifest, refused when the user changed it.
+test('an upgrade removes the old numbered vendor tree, which this release no longer ships', async () => {
   const home = seedLegacyInstall();
   try {
-    const before = snapshot(join(home, '.grok'));
+    assert.equal(existsSync(join(home, LEGACY_RELATIVE)), true, 'the seed holds the numbered vendor tree');
+    assert.equal(existsSync(join(PRODUCT_ROOT, '.grok', 'vendor')), false, 'the payload ships no vendor tree');
     const result = await install(home);
     assert.equal(result.code, 0, result.stderr);
-    assert.equal(existsSync(join(home, CANONICAL_RELATIVE)), true);
-    assert.equal(existsSync(join(home, LEGACY_RELATIVE)), false);
-    for (const [path, entry] of Object.entries(before)) {
-      if (!path.startsWith(`${LEGACY_RELATIVE}/`) || entry.type !== 'file') continue;
-      const canonical = `${CANONICAL_RELATIVE}${path.slice(LEGACY_RELATIVE.length)}`;
-      const actual = snapshot(join(home, '.grok'))[canonical];
-      assert.deepEqual(actual, entry, canonical);
-    }
+    assert.equal(existsSync(join(home, '.grok', 'vendor')), false, 'the emptied vendor folders are pruned');
+    const manifest = JSON.parse(readFileSync(join(home, '.grok/.litgrok-install-manifest.json'), 'utf8'));
+    assert.deepEqual(Object.keys(manifest.files).filter((path) => path.startsWith('vendor/')), []);
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
 });
 
-for (const kind of ['modified', 'foreign', 'symlink', 'nonregular', 'unsupported']) {
-  test(`legacy vendor migration refuses ${kind} before any write`, async () => {
-    const home = seedLegacyInstall();
-    const legacy = join(home, LEGACY_RELATIVE);
+test('an upgrade keeps a numbered vendor file the user changed and writes nothing', async () => {
+  const home = seedLegacyInstall();
+  try {
+    const changed = Object.keys(snapshot(join(home, LEGACY_RELATIVE))).find((path) => path.endsWith('.md'));
+    const target = join(home, LEGACY_RELATIVE, changed);
+    writeFileSync(target, 'my own notes\n');
     const manifest = join(home, '.grok/.litgrok-install-manifest.json');
     const beforeManifest = readFileSync(manifest);
-    try {
-      if (kind === 'modified') writeFileSync(join(legacy, 'assets/nature.mplstyle'), `${readFileSync(join(legacy, 'assets/nature.mplstyle'), 'utf8')}\nuser edit\n`);
-      if (kind === 'foreign') writeFileSync(join(legacy, 'foreign.txt'), 'user-owned\n');
-      if (kind === 'symlink') {
-        const outside = join(home, 'outside-vendor');
-        mkdirSync(outside);
-        writeFileSync(join(outside, 'foreign.txt'), 'outside\n');
-        rmSync(legacy, { recursive: true, force: true });
-        symlinkSync(outside, legacy, 'dir');
-      }
-      if (kind === 'nonregular') {
-        const fifo = join(legacy, 'assets/nature.mplstyle');
-        rmSync(fifo);
-        const made = spawnSync('/usr/bin/mkfifo', [fifo]);
-        assert.equal(made.status, 0, made.stderr?.toString());
-      }
-      if (kind === 'unsupported') {
-        rmSync(legacy, { recursive: true, force: true });
-        writeFileSync(legacy, 'legacy vendor root is not a directory\n');
-      }
-      const result = await install(home);
-      assert.equal(result.code, 1, result.stdout);
-      assert.equal(existsSync(join(home, CANONICAL_RELATIVE)), false);
-      assert.deepEqual(readFileSync(manifest), beforeManifest);
-      if (kind === 'symlink') assert.equal(lstatSync(legacy).isSymbolicLink(), true);
-      if (kind === 'unsupported') assert.equal(lstatSync(legacy).isFile(), true);
-    } finally {
-      rmSync(home, { recursive: true, force: true });
-    }
-  });
-}
+    const result = await install(home);
+    assert.equal(result.code, 1, result.stdout);
+    assert.match(result.stderr, /no longer ships/u);
+    assert.equal(readFileSync(target, 'utf8'), 'my own notes\n');
+    assert.deepEqual(readFileSync(manifest), beforeManifest);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

@@ -213,7 +213,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 `/frontend-ui-ux <화면과 목표>`는 고쳐도 되는 화면을 만들고 렌더링을 확인합니다. 요구사항이 분명하면 바로 동작하는 코드로 가고, 중요한 방향이 모호할 때만 질문합니다. 검토나 계획만 요청하면 파일을 고치지 않습니다. frontend-ui-ux와 visual-qa는 이제 wjgoarxiv-skills의 `design` 플러그인에 있습니다. 설치하지 않았다면 `/frontend-ui-ux`는 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다.
 
-개념도나 기술 다이어그램에는 `lit-diagram-drawer` 스킬을 씁니다. 슬래시 경로(`/lit-diagram-drawer`)는 아직 실제 Grok Build 세션에서 확인하지 못했으니 `/skills`에서 찾아 쓰세요. 일반 화면은 `/frontend-ui-ux`, 측정 데이터 그래프는 `/lit-scientific-visualization`이 맡습니다. 실제 설비 그림(P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도)은 `lit-schematic` 스킬을 씁니다. 남의 글에 공개된 기법을 내 스킬이나 시스템으로 가져올 때는 `lit-hijack` 스킬을 씁니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다.
+개념도나 기술 다이어그램에는 `lit-diagram-drawer` 스킬을 씁니다. 슬래시 경로(`/lit-diagram-drawer`)는 아직 실제 Grok Build 세션에서 확인하지 못했으니 `/skills`에서 찾아 쓰세요. 일반 화면은 `/frontend-ui-ux`, 측정 데이터 그래프는 `/lit-scientific-visualization`이 맡습니다. 실제 설비 그림(P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도)은 `lit-schematic` 스킬을 씁니다. 남의 글에 공개된 기법을 내 스킬이나 시스템으로 가져올 때는 `lit-hijack` 스킬을 씁니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다. 세 그림 스킬은 이제 wjgoarxiv-skills의 `figures` 플러그인에 있고, LitGrok에서 각 이름은 플러그인을 설치하기 전까지 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` 한 줄을 알려 줍니다.
 
 발표자료는 `lit-pptx`, 보고서와 Word 문서는 `lit-docx`를 씁니다. `lit`만 입력하고 원하는 것을 설명하면, 요청 문구를 보고 둘 중 하나나 둘 다를 고르라고 프로젝트 규칙이 Grok Build에 안내합니다. 어느 쪽을 골랐는지는 세션에서 보입니다. 
 두 스킬 모두 정해진 한 가지 모양으로 시작하지 않습니다. 슬라이드나 페이지를 쓰기 전에 요청을 먼저 읽습니다. 누가 읽는지, 발표하는지 미리 돌려 읽는지, 표와 그림과 단계가 얼마나 되는지를 보고 그 일에 맞는 디자인 방향을 고릅니다. 답변에는 고른 방향과 이유 한 문장, 그리고 함께 어울리는 다른 두 방향이 나옵니다. 마음에 들지 않으면 그 이름만 말하면 바뀝니다. `lit`만 입력한 요청이라면 아무것도 묻지 않고 이 과정을 거칩니다.
@@ -232,7 +232,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 ### 과학 그림
 
-과학 시각화 자료는 `.grok/vendor/scientific-visualization/`에 들어 있습니다. 숫자가 붙은 `045_scientific-visualization` 표기는 라이선스와 출처 파일 이름에만 남아 있습니다.
+`lit-scientific-visualization`과 그 스킬이 따르는 과학 시각화 자료는 wjgoarxiv-skills의 `figures` 플러그인으로 옮겼고, LitGrok은 더 이상 `.grok/vendor/`를 싣지 않습니다. 플러그인을 설치한 뒤 `/figures:lit-scientific-visualization <요청>`으로 직접 시작하세요.
 
 ## 잘 안 될 때
 

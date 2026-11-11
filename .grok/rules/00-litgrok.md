@@ -129,7 +129,7 @@ Film context: this is a film request. Load `lit-typographic-motion` from `.grok/
 
 ## Equipment drawings
 
-For an authorized bare `lit` request to draw real process or lab equipment, or `/lit-schematic`, load `lit-schematic` from `.grok/skills/lit-schematic/` (project) or `~/.grok/skills/lit-schematic/` (user). Triggers: P&ID, PFD, BFD, 공정도, 계장도, 장치도, 모식도, 배치도, 계통도, 단면도, apparatus, isometric cutaway, equipment layout. Measured-data plots go to `lit-scientific-visualization`, software or business diagrams to `lit-diagram-drawer`, a report or deck about a drawing to its Office skill, an interface that shows one to `frontend-ui-ux`.
+For an authorized bare `lit` request to draw real process or lab equipment, or `/lit-schematic`, load `lit-schematic` from `.grok/skills/lit-schematic/` (project) or `~/.grok/skills/lit-schematic/` (user). Triggers: P&ID, PFD, BFD, 공정도, 계장도, 장치도, 모식도, 배치도, 계통도, 단면도, apparatus, isometric cutaway, equipment layout. Measured-data plots go to `lit-scientific-visualization`, software or business diagrams to `lit-diagram-drawer`, a report or deck about a drawing to its Office skill, an interface that shows one to `frontend-ui-ux`. All three drawing skills are same-name notes in LitGrok: when the `figures` plugin of wjgoarxiv-skills is listed (`figures:lit-schematic`), load that one; otherwise give the note's install line and draw nothing.
 
 ## Brief over sessions
 

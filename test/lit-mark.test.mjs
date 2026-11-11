@@ -182,7 +182,7 @@ test('SessionStart rejects modified or symlinked ignition markers', (t) => {
   assert.equal(readFileSync(outside, 'utf8'), 'keep');
 });
 
-for (const skill of ['lit-handoff', 'lit-scientific-visualization', 'autoresearch', 'autoconference', 'litwork']) {
+for (const skill of ['lit-handoff', 'autoresearch', 'autoconference', 'litwork']) {
   test(`${skill} declares an advisory one-line activation contract`, () => {
     const text = readFileSync(join(ROOT, '.grok/skills', skill, 'SKILL.md'), 'utf8');
     const expectedBanner = activationBanner(skill);

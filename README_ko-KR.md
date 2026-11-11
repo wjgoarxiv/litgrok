@@ -336,7 +336,9 @@ lit 새 온보딩 흐름에 대한 두 쪽짜리 제안서를 Word 파일로 써
 `lit-diagram-drawer`는 아키텍처, 흐름, 시퀀스, 타임라인 같은 개념도와 기술 다이어그램을 그립니다.
 실제 장치라면 `lit-schematic`이 맡습니다. ISA-5.1 태그와 제어 루프가 있는 P&ID, 장치 배치도, 등각
 단면도, 논문용 실험 장치 그림을 편집 가능한 SVG와 PDF, 600 dpi PNG로 그리고, 보고하기 전에 자체
-QA 스크립트로 검사합니다.
+QA 스크립트로 검사합니다. 두 스킬은 `lit-scientific-visualization`과 함께 이제 wjgoarxiv-skills의
+`figures` 플러그인에 있습니다. 아래 프롬프트는 LitGrok에서 여전히 `lit-schematic`에 닿고, 그 안내가
+설치 한 줄을 알려 줍니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
 
 ```text
 lit 상용·예비 펌프가 있는 차아염소산나트륨 도징 스키드 P&ID를 그려줘
@@ -485,6 +487,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 | --- | --- | --- |
 | `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
 | `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
+| `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

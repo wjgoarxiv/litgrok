@@ -7,8 +7,6 @@ import test from 'node:test';
 const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PRODUCT_ROOT = dirname(TEST_DIRECTORY);
 const SKILLS_DIRECTORY = join(PRODUCT_ROOT, '.grok', 'skills');
-const SCIENTIFIC_VENDOR_REFERENCES = join(PRODUCT_ROOT, '.grok', 'vendor', 'scientific-visualization', 'references');
-const SCIENTIFIC_VENDOR_PREFIX = '../../vendor/scientific-visualization/references';
 
 const REFERENCE_SETS = new Map([
   ['lit-docx', [
@@ -207,87 +205,6 @@ const REFERENCE_SETS = new Map([
     'rewrite-playbook.md',
     'taxonomy.md',
   ]],
-  ['lit-diagram-drawer', [
-    'accessibility.md',
-    'export.md',
-    'import-drawio.md',
-    'import-excalidraw.md',
-    'import-mermaid.md',
-    'import-schema.md',
-    'korean-typography.md',
-    'motion.md',
-    'office-pptx-docx.md',
-    'output-spec.md',
-    'primitive-annotation.md',
-    'primitive-icons.md',
-    'primitive-sketchy.md',
-    'primitive-terminal.md',
-    'profiles.md',
-    'semantic-patterns.md',
-    'style-guide.md',
-    'type-architecture.md',
-    'type-bar.md',
-    'type-beeswarm.md',
-    'type-bubble.md',
-    'type-bump.md',
-    'type-data-flow.md',
-    'type-datalake.md',
-    'type-db-schema.md',
-    'type-dependency.md',
-    'type-deployment.md',
-    'type-dp-integration.md',
-    'type-dp-security-matrix.md',
-    'type-er.md',
-    'type-fishbone.md',
-    'type-flowchart.md',
-    'type-gantt.md',
-    'type-heatmap.md',
-    'type-high-level-vertical.md',
-    'type-high-level.md',
-    'type-import-drawio.md',
-    'type-import-excalidraw.md',
-    'type-import-mermaid.md',
-    'type-it-state.md',
-    'type-journey.md',
-    'type-kanban.md',
-    'type-layers.md',
-    'type-line.md',
-    'type-loop-terminal.md',
-    'type-loop.md',
-    'type-marimekko.md',
-    'type-medallion.md',
-    'type-nested.md',
-    'type-org-chart.md',
-    'type-paved-road-animated.md',
-    'type-polar.md',
-    'type-policy-trace-animated.md',
-    'type-process.md',
-    'type-pyramid.md',
-    'type-quadrant-consultant.md',
-    'type-quadrant.md',
-    'type-queue-animated.md',
-    'type-radar.md',
-    'type-ridgeline.md',
-    'type-sankey.md',
-    'type-scatter.md',
-    'type-sequence-oauth.md',
-    'type-sequence.md',
-    'type-slopegraph.md',
-    'type-state-lifecycle.md',
-    'type-state.md',
-    'type-story-map.md',
-    'type-streamgraph.md',
-    'type-swimlane.md',
-    'type-timeline.md',
-    'type-tree-block-decomposition.md',
-    'type-tree.md',
-    'type-treemap.md',
-    'type-uml-class.md',
-    'type-venn.md',
-    'type-wardley.md',
-    'type-waterfall.md',
-    'verifier-guide.md',
-  ]],
   ['litresearch', [
     'source-verdict-taxonomy.md',
     'mcp-tool-use-patterns.md',
@@ -319,24 +236,6 @@ const REFERENCE_SETS = new Map([
   ['lit-plan', [
     'plan-schema.md',
     'start-work-handoff-contract.md',
-  ]],
-  ['lit-scientific-visualization', [
-    'color_palettes.md',
-    'journal_requirements.md',
-    'matplotlib_examples.md',
-    'mdanalysis_martini_visualization.md',
-    'publication_guidelines.md',
-    'seaborn_for_publications.md',
-  ]],
-  ['lit-schematic', [
-    'cutaway-outputs.md',
-    'isometric-craft.md',
-    'journal-figures.md',
-    'kit-api.md',
-    'pfd-and-layout.md',
-    'pid-drafting.md',
-    'pid-symbols.md',
-    'verification.md',
   ]],
   ['lit-hijack', [
     'capture-and-provenance.md',
@@ -370,10 +269,7 @@ function source(path) {
   return readFileSync(path, 'utf8');
 }
 
-function routePattern(link, skill) {
-  if (skill === 'lit-diagram-drawer' && /^references\/type-[\w-]+\.md$/.test(link)) {
-    return /Load the selected references\/type-<id>\.md guide when/i;
-  }
+function routePattern(link) {
   const referencePath = link.includes('references/') ? link : `references/${link}`;
   const escapedPath = referencePath
     .split('/')
@@ -399,16 +295,11 @@ test('depth references are reachable from their skill entry points', () => {
     const entry = source(join(skillDirectory, 'SKILL.md'));
 
     for (const filename of references) {
-      const link = skill === 'lit-scientific-visualization'
-        ? `${SCIENTIFIC_VENDOR_PREFIX}/${filename}`
-        : `references/${filename}`;
-      const referenceRoot = skill === 'lit-scientific-visualization'
-        ? SCIENTIFIC_VENDOR_REFERENCES
-        : join(skillDirectory, 'references');
-      source(join(referenceRoot, filename));
+      const link = `references/${filename}`;
+      source(join(skillDirectory, 'references', filename));
       assert.match(
         entry,
-        routePattern(link, skill),
+        routePattern(link),
         `${skill}/SKILL.md must say when to load ${link}`,
       );
     }
@@ -448,7 +339,6 @@ test('every reference file is enumerated by the depth contract', () => {
     if (!existsSync(references)) continue;
     walkReferences(skill.name, references);
   }
-  walkReferences('lit-scientific-visualization', SCIENTIFIC_VENDOR_REFERENCES);
 
   const declared = [...REFERENCE_SETS].flatMap(([skill, references]) => references.map((name) => `${skill}/${name}`));
   assert.deepEqual(actual.sort(), declared.sort(), 'every packaged reference must be owned by the depth contract');

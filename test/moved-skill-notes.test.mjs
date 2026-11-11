@@ -13,6 +13,9 @@ const MOVED = {
   'visual-qa': 'design',
   'lit-typographic-motion': 'video-covers',
   'readme-studio': 'video-covers',
+  'lit-diagram-drawer': 'figures',
+  'lit-schematic': 'figures',
+  'lit-scientific-visualization': 'figures',
 };
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));

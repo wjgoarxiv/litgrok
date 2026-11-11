@@ -89,12 +89,12 @@
 <tr>
 <td><img src="./assets/skills/lit-diagram-drawer.webp" width="240" alt="슬라이드와 문서에 넣을 다이어그램을 편집 가능한 형태로 그리고, 검사한 뒤 PNG와 SVG로 내보냅니다." /></td>
 <td><code>lit-diagram-drawer</code><br /><sub><code>/lit-diagram-drawer &lt;brief&gt;</code></sub></td>
-<td>슬라이드와 문서에 넣을 다이어그램을 편집 가능한 형태로 그리고, 검사한 뒤 PNG와 SVG로 내보냅니다.</td>
+<td>wjgoarxiv-skills의 <code>figures</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인: 슬라이드와 문서에 넣을 다이어그램을 편집 가능한 형태로 그리고, 검사한 뒤 PNG와 SVG로 내보냅니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-schematic.webp" width="240" alt="P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도를 검사된 편집 가능 SVG와 PDF, 600 dpi PNG로 만듭니다." /></td>
 <td><code>lit-schematic</code><br /><sub><code>/lit-schematic &lt;equipment or apparatus brief&gt;</code></sub></td>
-<td>P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도를 검사된 편집 가능 SVG와 PDF, 600 dpi PNG로 만듭니다.</td>
+<td>wjgoarxiv-skills의 <code>figures</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인: P&ID, 설비 배치도, 논문용 장치도, 아이소메트릭 단면도를 검사된 편집 가능 SVG와 PDF, 600 dpi PNG로 만듭니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-pptx.webp" width="240" alt="편집 가능한 PowerPoint 발표자료와 원고 Markdown을 만듭니다. 청중에 맞춰 여덟 가지 디자인 방향 가운데 하나를 고르고, 다른 두 방향도 함께 알려 줍니다. 파일에 품질 검사를 돌리며 LibreOffice가 있으면 슬라이드도 확인합니다." /></td>
@@ -124,7 +124,7 @@
 <tr>
 <td><img src="./assets/skills/lit-scientific-visualization.webp" width="240" alt="검증된 데이터로 논문용 그림과 캡션을 만듭니다. 그래프 종류는 데이터 성격에 맞춰 고릅니다." /></td>
 <td><code>lit-scientific-visualization</code><br /><sub><code>/lit-scientific-visualization</code></sub></td>
-<td>검증된 데이터로 논문용 그림과 캡션을 만듭니다. 그래프 종류는 데이터 성격에 맞춰 고릅니다.</td>
+<td>wjgoarxiv-skills의 <code>figures</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인: 검증된 데이터로 논문용 그림과 캡션을 만듭니다. 그래프 종류는 데이터 성격에 맞춰 고릅니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-team.webp" width="240" alt="작업을 범위가 정해진 묶음으로 나눠 Grok Build 기본 서브에이전트에 맡깁니다. 통합과 검증은 부모가 맡습니다." /></td>

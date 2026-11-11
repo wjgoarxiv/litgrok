@@ -89,12 +89,12 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/lit-diagram-drawer.webp" width="240" alt="A checked, editable diagram for slides and documents, with PNG and Office-safe SVG exports." /></td>
 <td><code>lit-diagram-drawer</code><br /><sub><code>/lit-diagram-drawer &lt;brief&gt;</code></sub></td>
-<td>A checked, editable diagram for slides and documents, with PNG and Office-safe SVG exports.</td>
+<td>Moved to the <code>figures</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin: A checked, editable diagram for slides and documents, with PNG and Office-safe SVG exports.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-schematic.webp" width="240" alt="A checked P&ID, equipment layout, journal apparatus figure or isometric cutaway as editable SVG with PDF and 600 dpi PNG." /></td>
 <td><code>lit-schematic</code><br /><sub><code>/lit-schematic &lt;equipment or apparatus brief&gt;</code></sub></td>
-<td>A checked P&ID, equipment layout, journal apparatus figure or isometric cutaway as editable SVG with PDF and 600 dpi PNG.</td>
+<td>Moved to the <code>figures</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin: A checked P&ID, equipment layout, journal apparatus figure or isometric cutaway as editable SVG with PDF and 600 dpi PNG.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-pptx.webp" width="240" alt="An editable PowerPoint deck with its Markdown source, built in one of eight design directions picked for the audience and named with two alternatives. A QA gate checks the file, and slides are inspected when LibreOffice is present." /></td>
@@ -124,7 +124,7 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/lit-scientific-visualization.webp" width="240" alt="A publication-ready figure and caption from verified data. The chart type follows the data." /></td>
 <td><code>lit-scientific-visualization</code><br /><sub><code>/lit-scientific-visualization</code></sub></td>
-<td>A publication-ready figure and caption from verified data. The chart type follows the data.</td>
+<td>Moved to the <code>figures</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin: A publication-ready figure and caption from verified data. The chart type follows the data.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-team.webp" width="240" alt="Splits work into bounded task packets for Grok Build's built-in subagents. The parent integrates and verifies." /></td>

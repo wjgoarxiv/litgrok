@@ -22,24 +22,3 @@ test('lit-pptx asks for the tonality choice before building', () => {
   assert.match(text, /skip[^.\n]*(names|you choose)/i, 'skip only when the prompt names it or says you choose');
 });
 
-test('lit-schematic asks for the palette choice before building', () => {
-  const text = skill('lit-schematic');
-  const ask = /ask[^.\n]*choice[^.\n]*palette|numbered choice[^.\n]*palette/i;
-  assert.match(text, ask, 'SKILL.md names the ask-first palette choice');
-  assert.match(text, /recommended first/i, 'the recommended palette comes first');
-  const askAt = text.search(ask);
-  const buildAt = text.indexOf('**Truth first.**');
-  assert.ok(askAt !== -1 && buildAt !== -1 && askAt < buildAt, 'the choice step precedes the truth-first build step');
-  assert.match(text, /skip[^.\n]*(names|you choose)/i, 'skip only when the prompt names it or says you choose');
-});
-
-test('lit-diagram-drawer asks for the type choice before drafting', () => {
-  const text = skill('lit-diagram-drawer');
-  assert.match(text, /### Choose the design first/u, 'SKILL.md has the design step');
-  const askAt = text.indexOf('### Choose the design first');
-  const buildAt = text.indexOf('1. **Choose a type.**');
-  assert.ok(askAt !== -1 && buildAt !== -1 && askAt < buildAt, 'the choice step precedes the type step');
-  assert.match(text, /recommended/i, 'a recommended option is marked');
-  assert.match(text, /skip[^.\n]*(names|you choose)/i, 'skip only when the prompt names it or says you choose');
-});
-

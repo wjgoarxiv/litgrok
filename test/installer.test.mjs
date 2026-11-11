@@ -137,7 +137,7 @@ test('dry-run previews the project install without creating .grok state', async 
   }
 });
 
-test('an older ownership manifest installs new diagram scripts and preserves a later user edit', async () => {
+test('an older ownership manifest installs new skill scripts and preserves a later user edit', async () => {
   const project = mkdtempSync(join(tmpdir(), 'litgrok-diagram-old-manifest-project-'));
   const home = mkdtempSync(join(tmpdir(), 'litgrok-diagram-old-manifest-home-'));
   const env = { ...process.env, HOME: home };
@@ -145,10 +145,10 @@ test('an older ownership manifest installs new diagram scripts and preserves a l
   delete env.NO_COLOR;
   const manifestPath = join(project, '.grok', '.litgrok-install-manifest.json');
   const scriptPaths = [
-    'skills/lit-diagram-drawer/scripts/drawio-extract.mjs',
-    'skills/lit-diagram-drawer/scripts/mermaid-extract.mjs',
-    'skills/lit-diagram-drawer/scripts/excalidraw-extract.mjs',
-    'skills/lit-diagram-drawer/scripts/renderer-status.mjs',
+    'skills/lsp-setup/scripts/detect-lsp.mjs',
+    'skills/lsp-setup/scripts/verify-lsp.mjs',
+    'skills/rules/scripts/resolve-guidance.mjs',
+    'skills/litgrok/scripts/proc.cjs',
   ];
 
   try {
@@ -370,8 +370,6 @@ const PRE_MANIFEST_UPGRADE_PATHS = [
   'skills/autoresearch/scripts/init_research.py',
   'skills/autoresearch/scripts/verify-canonical-corpus.mjs',
   'skills/lit-scientific-visualization/SKILL.md',
-  'skills/lit-scientific-visualization/scripts/verify-canonical-corpus.mjs',
-  'vendor/scientific-visualization/references/_canonical-corpus/manifest.json',
 ];
 
 const PRE_MANIFEST_LEGACY_PATHS = [
@@ -397,6 +395,9 @@ const PRE_MANIFEST_LEGACY_PATHS = [
   'skills/skill-observer/scripts/review.mjs',
   'skills/skill-observer/scripts/skill-loop.mjs',
   'skills/skill-observer/scripts/validate-skills.mjs',
+  // lit-scientific-visualization became a same-name note, so these body files also leave on upgrade.
+  'skills/lit-scientific-visualization/scripts/verify-canonical-corpus.mjs',
+  'vendor/scientific-visualization/references/_canonical-corpus/manifest.json',
 ];
 
 test('upgrades a pristine pre-manifest 0.2.5 install and records current ownership', async () => {

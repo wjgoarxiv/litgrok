@@ -341,6 +341,9 @@ lit write a two-page proposal for the new onboarding flow, as a Word file
 timelines. For real equipment, `lit-schematic` draws a P&ID with ISA-5.1 tags and control loops,
 an equipment layout, an isometric cutaway or a journal figure of an experimental setup, as
 editable SVG with PDF and a 600 dpi PNG, and checks it with its own QA script before it reports.
+Both, with `lit-scientific-visualization`, now ship in the `figures` plugin of wjgoarxiv-skills; the
+prompt below still reaches `lit-schematic` in LitGrok, and its note gives the install line (see
+[Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
 
 ```text
 lit draw a P&ID of a hypochlorite dosing skid with duty and standby pumps
@@ -493,6 +496,7 @@ LitGrok cleanly. Once it is installed, the skill answers as `<family>:<skill>`.
 | --- | --- | --- |
 | `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
 | `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
+| `lit-diagram-drawer`, `lit-schematic`, `lit-scientific-visualization` | `figures` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/figures" --trust` |
 
 ## Requirements, update and uninstall
 
