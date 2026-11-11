@@ -480,22 +480,24 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 플러그인입니다. 쓰는 스킬만 골라 설치하면 됩니다. LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다.
 `/frontend-ui-ux`, `lit`으로 시작하는 요청, 이 스킬을 미리 불러오는 에이전트는 그대로 동작하고,
 안내가 무엇이 옮겨 갔는지와 설치 한 줄을 알려 줍니다. wjgoarxiv-skills는 아직 공개 전이라
-지금은 로컬 클론에서 설치합니다. 공개되면 소스는 `wjgoarxiv/wjgoarxiv-skills#variants/litgrok/<스킬>`이 됩니다.
+지금은 로컬 클론에서 설치합니다. 공개된 뒤에도 저장소를 클론하고 같은 줄을 쓰면 됩니다. 이 줄은 스킬 폴더 경로를
+가리키므로 Grok Build는 그 폴더만 복사하고, 크기는 많아야 몇 MB입니다. `#` 하위 폴더 소스(`<clone>#<folder>`나
+`owner/repo#<folder>`)를 쓰면 `.git`까지 저장소 전체를 스킬마다 복사해서 200 MB가 넘습니다.
 플러그인은 LitGrok 설치기가 안내를 두는 `.grok/skills/`가 아니라 Grok Build의 플러그인 저장소에 들어가므로
 `litgrok install`은 계속 깔끔하게 업데이트됩니다. 설치하면 스킬은 안내 옆에 `<스킬>:<스킬>` 이름으로 불리고,
 `grok plugin uninstall <스킬>`로 지웁니다.
 
 | 스킬 | wjgoarxiv-skills 안의 폴더 | 설치 한 줄 |
 | --- | --- | --- |
-| `frontend-ui-ux` | `variants/litgrok/frontend-ui-ux/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/frontend-ui-ux" --trust` |
-| `visual-qa` | `variants/litgrok/visual-qa/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/visual-qa" --trust` |
-| `lit-typographic-motion` | `variants/litgrok/lit-typographic-motion/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-typographic-motion" --trust` |
-| `readme-studio` | `variants/litgrok/readme-studio/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/readme-studio" --trust` |
-| `lit-diagram-drawer` | `variants/litgrok/lit-diagram-drawer/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-diagram-drawer" --trust` |
-| `lit-schematic` | `variants/litgrok/lit-schematic/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-schematic" --trust` |
-| `lit-scientific-visualization` | `variants/litgrok/lit-scientific-visualization/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-scientific-visualization" --trust` |
-| `lit-docx` | `variants/litgrok/lit-docx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-docx" --trust` |
-| `lit-pptx` | `variants/litgrok/lit-pptx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust` |
+| `frontend-ui-ux` | `variants/litgrok/frontend-ui-ux/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/frontend-ui-ux" --trust` |
+| `visual-qa` | `variants/litgrok/visual-qa/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/visual-qa" --trust` |
+| `lit-typographic-motion` | `variants/litgrok/lit-typographic-motion/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-typographic-motion" --trust` |
+| `readme-studio` | `variants/litgrok/readme-studio/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/readme-studio" --trust` |
+| `lit-diagram-drawer` | `variants/litgrok/lit-diagram-drawer/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-diagram-drawer" --trust` |
+| `lit-schematic` | `variants/litgrok/lit-schematic/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-schematic" --trust` |
+| `lit-scientific-visualization` | `variants/litgrok/lit-scientific-visualization/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-scientific-visualization" --trust` |
+| `lit-docx` | `variants/litgrok/lit-docx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-docx" --trust` |
+| `lit-pptx` | `variants/litgrok/lit-pptx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

@@ -10,6 +10,8 @@ import test from 'node:test';
 // same-name SKILL.md for each, so `/<id>`, the project rule's bare `lit` routes, agent preloads and the status row
 // still answer. Each note says three things: the skill moved, where it lives now, and Grok Build's one-line install.
 // The install goes through the plugin store because LitGrok's installer owns `.grok/skills/<id>/`, where the note is.
+// It names the folder path itself: given `<repo>#variants/litgrok/<id>`, Grok Build 1.0.13 copies the whole repository
+// (over 200 MB, .git included) into its plugin store for every skill, while a folder path copies that folder alone.
 const MOVED = {
   'frontend-ui-ux': true,
   'visual-qa': true,
@@ -46,8 +48,9 @@ test('each note says it moved, where it lives now, and the one-line Grok Build i
     assert.match(text, /\nuser-invocable: true\n/u);
     assert.ok(text.includes('wjgoarxiv-skills'), `${id} names the repository`);
     assert.ok(text.includes(`wjgoarxiv-skills/variants/litgrok/${id}/`), `${id} names its folder in the repository`);
-    assert.ok(text.includes(`grok plugin install "${PLACEHOLDER}#variants/litgrok/${id}" --trust`), `${id} carries the local install line`);
-    assert.ok(text.includes(`grok plugin install wjgoarxiv/wjgoarxiv-skills#variants/litgrok/${id} --trust`), `${id} carries the published form`);
+    assert.ok(text.includes(`grok plugin install "${PLACEHOLDER}/variants/litgrok/${id}" --trust`), `${id} carries the one-folder install line`);
+    assert.doesNotMatch(text, /#variants\//u, `${id} never offers the #subdir form, which copies the whole repository`);
+    assert.match(text, /whole repository/u, `${id} says why the line names the folder path`);
     assert.match(text, /not published yet/u, `${id} says the repository is not published yet`);
     assert.ok(text.includes(`\`${id}:${id}\``), `${id} names the qualified plugin skill`);
     assert.ok(text.includes(`grok plugin uninstall ${id}`), `${id} says how to remove the plugin`);
@@ -118,6 +121,17 @@ test('no shipped file or doc names a private machine path', () => {
     if (bytes.includes(0)) continue;
     const text = bytes.toString('utf8');
     for (const pattern of privatePath) if (pattern.test(text)) offenders.push(`${relative(PRODUCT_ROOT, file)} ${pattern}`);
+  }
+  assert.deepEqual(offenders, []);
+});
+
+test('no doc or skill offers the #variants subdir install, which copies the whole repository per skill', () => {
+  const files = ['README.md', 'README_ko-KR.md', 'CHANGELOG.md', 'AGENTS.md', ...walk(join(PRODUCT_ROOT, 'docs')).map((file) => relative(PRODUCT_ROOT, file)), ...walk(join(PRODUCT_ROOT, '.grok')).map((file) => relative(PRODUCT_ROOT, file))];
+  const offenders = [];
+  for (const file of files) {
+    const bytes = readFileSync(join(PRODUCT_ROOT, file));
+    if (bytes.includes(0)) continue;
+    if (/(?:clone>|wjgoarxiv-skills)#variants\//u.test(bytes.toString('utf8'))) offenders.push(file);
   }
   assert.deepEqual(offenders, []);
 });

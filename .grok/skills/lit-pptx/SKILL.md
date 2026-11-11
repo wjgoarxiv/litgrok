@@ -40,10 +40,10 @@ limitations_channel: reply
 wjgoarxiv-skills is not published yet, so the line installs this one skill from a local clone of it:
 
 ```bash
-grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust
+grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust
 ```
 
-The folder is a one-skill Grok Build plugin: its `.grok-plugin/plugin.json` lists only the folder itself, with no hooks, rules or MCP servers, and everything the skill reads (scripts, references, fonts) sits inside it. Grok Build refuses a local plugin install without `--trust`. After the repository is published, the same line reads `grok plugin install wjgoarxiv/wjgoarxiv-skills#variants/litgrok/lit-pptx --trust`. `grok plugin uninstall lit-pptx` removes it.
+The folder is a one-skill Grok Build plugin: its `.grok-plugin/plugin.json` lists only the folder itself, with no hooks, rules or MCP servers, and everything the skill reads (scripts, references, fonts) sits inside it. Grok Build refuses a local plugin install without `--trust`. The line names the folder path on purpose: Grok Build copies that folder alone into its plugin store, about the size of the folder. Given a `#` subfolder instead (`<clone>#<folder>`, or `owner/repo#<folder>` once the repository is published), it copies the whole repository, `.git` included, for each skill, over 200 MB. After the repository is published, clone it and use the same line. `grok plugin uninstall lit-pptx` removes it.
 
 Why a plugin and not a copy into a skills folder: the LitGrok installer owns `.grok/skills/lit-pptx/` and `~/.grok/skills/lit-pptx/`, where this note lives, and refuses its next update when a file there changed; a copy in the shared agents skills folder in your home would carry the same bare name as this note with nothing to tell them apart. The plugin lands in Grok Build's own plugin store and is listed as `lit-pptx:lit-pptx` beside this note, so it never writes into this folder and `litgrok install` keeps updating LitGrok cleanly.
 

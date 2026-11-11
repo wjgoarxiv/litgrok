@@ -490,23 +490,25 @@ wjgoarxiv-skills. For Grok Build each one is its own folder under `variants/litg
 plugin with everything it reads inside it, so you add only the skills you use. LitGrok keeps a short
 note under each old name. `/frontend-ui-ux`, the bare `lit` routes and the agents that preload these
 skills still answer; the note tells you what moved and gives you one line to install it.
-wjgoarxiv-skills is not published yet, so the line installs from a local clone. After it is
-published the source becomes `wjgoarxiv/wjgoarxiv-skills#variants/litgrok/<skill>`. The plugin goes
+wjgoarxiv-skills is not published yet, so the line installs from a local clone; once it is published,
+clone it and use the same line. The line names the skill's folder path, so Grok Build copies only that
+folder, a few megabytes at most. A `#` subfolder source (`<clone>#<folder>` or `owner/repo#<folder>`)
+would copy the whole repository, `.git` included, over 200 MB for each skill. The plugin goes
 into Grok Build's own plugin store, never into `.grok/skills/`, where LitGrok's installer keeps the
 note, so `litgrok install` keeps updating LitGrok cleanly. Once it is installed, the skill answers
 as `<skill>:<skill>` beside the note, and `grok plugin uninstall <skill>` removes it.
 
 | Skill | Folder in wjgoarxiv-skills | Install line |
 | --- | --- | --- |
-| `frontend-ui-ux` | `variants/litgrok/frontend-ui-ux/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/frontend-ui-ux" --trust` |
-| `visual-qa` | `variants/litgrok/visual-qa/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/visual-qa" --trust` |
-| `lit-typographic-motion` | `variants/litgrok/lit-typographic-motion/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-typographic-motion" --trust` |
-| `readme-studio` | `variants/litgrok/readme-studio/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/readme-studio" --trust` |
-| `lit-diagram-drawer` | `variants/litgrok/lit-diagram-drawer/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-diagram-drawer" --trust` |
-| `lit-schematic` | `variants/litgrok/lit-schematic/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-schematic" --trust` |
-| `lit-scientific-visualization` | `variants/litgrok/lit-scientific-visualization/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-scientific-visualization" --trust` |
-| `lit-docx` | `variants/litgrok/lit-docx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-docx" --trust` |
-| `lit-pptx` | `variants/litgrok/lit-pptx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>#variants/litgrok/lit-pptx" --trust` |
+| `frontend-ui-ux` | `variants/litgrok/frontend-ui-ux/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/frontend-ui-ux" --trust` |
+| `visual-qa` | `variants/litgrok/visual-qa/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/visual-qa" --trust` |
+| `lit-typographic-motion` | `variants/litgrok/lit-typographic-motion/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-typographic-motion" --trust` |
+| `readme-studio` | `variants/litgrok/readme-studio/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/readme-studio" --trust` |
+| `lit-diagram-drawer` | `variants/litgrok/lit-diagram-drawer/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-diagram-drawer" --trust` |
+| `lit-schematic` | `variants/litgrok/lit-schematic/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-schematic" --trust` |
+| `lit-scientific-visualization` | `variants/litgrok/lit-scientific-visualization/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-scientific-visualization" --trust` |
+| `lit-docx` | `variants/litgrok/lit-docx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-docx" --trust` |
+| `lit-pptx` | `variants/litgrok/lit-pptx/` | `grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust` |
 
 ## Requirements, update and uninstall
 
