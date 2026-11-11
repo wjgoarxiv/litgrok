@@ -138,7 +138,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 - `--user`는 `~/.grok/`에 설치해서, 어느 프로젝트를 열어도 스킬과 규칙이 있게 합니다. 같은 명령에
   `--status-line`을 붙이면 LIT 상태 행도 켜집니다. Grok은 상태 행을 사용자 설정에서만 읽기
   때문입니다.
-- `@latest` 자리에 `--package @litfamily/litgrok@1.0.34`을 쓰면 이 릴리스로 고정됩니다. 팀 전체가
+- `@latest` 자리에 `--package @litfamily/litgrok@1.0.35`을 쓰면 이 릴리스로 고정됩니다. 팀 전체가
   같은 파일을 쓰게 하고 싶을 때 좋습니다.
 
 [다른 설치 방법, 로컬 패키지, 안전 장치](./docs/guide_ko-KR.md#설치-옵션)
