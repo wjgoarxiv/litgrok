@@ -28,9 +28,9 @@ const MAX_SCREEN_BYTES = 245_760;
 
 // What each picture must quote in its alt text, in the language of the page.
 const quotes = {
-  'install-plan': ['INSTALL', '02 · Payload 1315 files · byte-identical copies only', 'Model selection: host-owned'],
-  'install-dry-run': ['DRY RUN — no files written', '02 · Payload 1315 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
-  'install-done': ['INSTALL STEPS', 'PAYLOAD · 1315 files discovered', 'WRITE · 1315 written', 'INSTALL RECEIPT', 'Status: Ready', 'Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@', '-- litgrok motion-runtime install', 'Next: restart Grok Build'],
+  'install-plan': ['INSTALL', '02 · Payload', 'byte-identical copies only', 'Model selection: host-owned'],
+  'install-dry-run': ['DRY RUN — no files written', '02 · Payload', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
+  'install-done': ['INSTALL STEPS', 'PAYLOAD', 'WRITE', 'INSTALL RECEIPT', 'Status: Ready', 'Next: restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
   'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $0.43 │ git main', '· litwork', '3 tools · 1 agent ● 1m42s', 'plan ✓ ━━━━', 'work 3/7', 'review · ──── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash 0:12'],
 };
@@ -192,4 +192,13 @@ test('both GitHub pages show every automatic-handoff capture in its section, the
   const pkg = JSON.parse(read('package.json'));
   assert.equal(pkg.files.some((entry) => !entry.startsWith('!') && /docs\/assets\/auto-handoff|docs\/assets$|^docs$/u.test(entry)), false, 'the captures stay out of the package');
   for (const card of ['docs/npm/README.md', 'docs/npm/README_ko-KR.md']) assert.doesNotMatch(read(card), /assets\/auto-handoff/u);
+});
+
+test('the guide names no removed command and quotes no stale payload count, in prose or in a picture', () => {
+  for (const file of ['docs/guide.md', 'docs/guide_ko-KR.md']) {
+    const content = read(file);
+    for (const removed of [/motion-runtime/u, /pre-warm/u, /video tools/u, /영상 도구/u]) assert.doesNotMatch(content, removed, `${file}: ${removed}`);
+    // The pictures predate the diet; their alt text names what they show without the old file count.
+    for (const [, alt] of content.matchAll(/alt="([^"]+)"/gu)) assert.doesNotMatch(alt, /\b1315\b/u, `${file}: an alt still quotes the 1315-file payload`);
+  }
 });
