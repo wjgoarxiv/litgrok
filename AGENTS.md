@@ -71,6 +71,18 @@ It must exclude all other `docs/assets/` entries,
 release-only checklists, tests, `generate_cover.py`, and this agent-only `AGENTS.md`.
 A passing installer test does not prove a live Grok Build route.
 
+`skills.lock.json` (tracked, never packed) records every `.grok/skills/<id>`
+by SKILL.md size and hash, file count, total bytes and one digest, plus the
+sorted `npm pack --dry-run --json --ignore-scripts` file list. After any skill
+or pack change, run `npm run sync:lock` and commit the lock with the change;
+`test/skills-lock.test.mjs` fails while it is stale. Its `budgets` are
+hand-owned floors and ceilings. A sync never seeds, drops or lowers one: a new
+skill needs `npm run sync:lock -- --accept-new <id>`, a removed one
+`npm run sync:lock -- --drop <id>`, and a skill that shrinks on purpose (for
+example into a stub) needs its floor edited by hand in the same commit. Only
+Git-tracked files are measured, so `git add` a new skill before syncing; the
+sync also refuses a pack that would ship an untracked file.
+
 ## State and cleanup
 
 Preserve unrelated dirty files. Do not clean, reset, stash, or reinitialize Git.

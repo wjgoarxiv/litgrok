@@ -28,6 +28,7 @@
     "prepack": "node scripts/readme-for-npm.mjs apply",
     "postpack": "node scripts/readme-for-npm.mjs restore",
     "test": "node --test test/*.test.mjs",
+    "sync:lock": "node tools/sync-skills-lock.mjs",
     "probe:browser-drive": "node .grok/skills/browser-drive/scripts/capability-probe.mjs",
     "check:version": "node tools/check-version-lockstep.mjs",
     "check:npm-readme": "node scripts/readme-for-npm.mjs check",
