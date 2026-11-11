@@ -377,10 +377,11 @@ go
 
 ### Films and README covers
 
-`lit-typographic-motion` writes a treatment first, then renders a short film with LitGrok's own
-type engine or stage capture and checks it with a QA gate; it also makes silent README cover loops
-that repeat without a visible seam. Its engine installs once, when you ask for it, with `litgrok motion-runtime install`
-run from the version you installed; the install receipt prints that exact line for you.
+Films and README covers now come from the `video-covers` plugin of wjgoarxiv-skills, which carries
+`lit-typographic-motion` (a treatment first, then a short film checked by a QA gate, or a silent README
+cover loop) and `readme-studio`. A film request still finds `lit-typographic-motion` in LitGrok, and its
+note gives the install line (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). The
+`litgrok motion-runtime` command left with the skill; the plugin pre-warms its own engine.
 
 ### The routes at a glance
 
@@ -491,6 +492,7 @@ LitGrok cleanly. Once it is installed, the skill answers as `<family>:<skill>`.
 | Skill | Plugin | Install line |
 | --- | --- | --- |
 | `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
+| `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
 
 ## Requirements, update and uninstall
 

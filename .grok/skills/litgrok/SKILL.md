@@ -33,7 +33,7 @@ LitGrok is a dependency-free package containing:
 
 The `lit-pptx` and `lit-docx` skill folders also ship explicitly invoked engines, templates, QA scripts, the official Pretendard Regular and Bold faces, and pinned dependency locks. They provision a product-owned cache on first use. The npm installer itself still has no runtime dependencies and does not run those engines during installation.
 
-The `lit-typographic-motion` skill folder ships a film director (a treatment validator, a type engine for films that are the words themselves, a stage capture for authored films, a generated sound bed, look rounds, and a cover mode for silent, seamless README cover loops gated on the decoded WebP), its QA gate and pinned locks; it never installs on first use: run `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` once outside a Grok session to pre-warm its cache (`npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime status` shows the six pre-render probes, the cover encoder among them). Typographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit `ca251e3`.
+The `lit-typographic-motion` and `readme-studio` folders hold only same-name notes: the film director and README studio moved to the `video-covers` plugin of wjgoarxiv-skills, and each note gives the one-line `grok plugin install` for it. LitGrok no longer has a `litgrok motion-runtime` command; the plugin pre-warms its own engine.
 
 The skills, agents, and rule are static guidance loaded from documented Grok Build paths. Hook commands and the opt-in status-line command are the package code executed by the host. The installer discovers, compares, copies, and removes package-owned `.grok/` files; only `install --user --status-line` and `install --user --notify` also merge a value into user config after preserving a backup.
 
@@ -96,7 +96,9 @@ When a skill step names a Grok Build tool, use the host's nearest equivalent or 
 - Trust prompts: `/hooks-trust` and `--trust` exist only in Grok Build. Skip trust steps and do not ask the user to run them.
 - Live evidence commands: `/skills`, `/hooks` and `grok inspect` are Grok Build commands. In these hosts the plugin's detail page and the host's skill list show what loaded.
 - Delegated lanes or subagents: if the host cannot start one, run the lanes yourself in order and say they ran in sequence.
-- Bundled scripts, such as the slide, document and motion engines: check that `node` or `python3` exists in the host before running one. If the plugin folder is read-only, write outputs to a scratch or workspace path. When the runtime is missing, say the step is unavailable and name what it needs.
+- Bundled scripts, such as the slide and document engines: check that `node` or `python3` exists in the host before running one. If the plugin folder is read-only, write outputs to a scratch or workspace path. When the runtime is missing, say the step is unavailable and name what it needs.
+
+- Moved skills: some LitGrok skill names are now short notes, because the full skill moved to a family plugin in the wjgoarxiv-skills repository (for example the `design` or `video-covers` plugin). The note's `grok plugin install` line runs only in Grok Build. Here, name that plugin folder and let the user add it the way this host adds a plugin; never paste the moved folder over the note, and never do the moved skill's work from the note alone.
 
 Whatever a step could not do in this host, report it as unavailable with the reason. A skipped Grok Build step is never reported as passed.
 

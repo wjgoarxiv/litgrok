@@ -6,9 +6,8 @@ This root is an independent package for Grok Build guidance. Runtime code is
 limited to the dependency-free `bin/litgrok.mjs` installer, documented,
 package-owned hook commands under `.grok/hooks/`, and explicitly invoked skill
 scripts. The `lit-pptx` and `lit-docx` scripts install pinned first-use dependencies
-only into a LitGrok office cache. The `lit-schematic` scripts render through the user's own Chrome, ffmpeg and img2webp and never install or fetch. The `lit-typographic-motion` runtime installs only through the explicit
-`npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install` pre-warm into `${XDG_CACHE_HOME:-~/.cache}/litgrok/motion-runtime`;
-its renders never install or fetch. The installer may copy or
+only into a LitGrok office cache. The `lit-schematic` scripts render through the user's own Chrome, ffmpeg and img2webp and never install or fetch. The film and README skills
+moved to the `video-covers` plugin of wjgoarxiv-skills; LitGrok ships only their same-name notes. The installer may copy or
 remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
 user's request, and the opt-in status-line command keeps a per-session context record in the

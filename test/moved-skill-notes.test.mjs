@@ -11,6 +11,8 @@ import test from 'node:test';
 const MOVED = {
   'frontend-ui-ux': 'design',
   'visual-qa': 'design',
+  'lit-typographic-motion': 'video-covers',
+  'readme-studio': 'video-covers',
 };
 
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));

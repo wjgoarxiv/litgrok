@@ -425,13 +425,13 @@
       }
     },
     "lit-scientific-visualization": {
-      "median": 26,
+      "median": 25,
       "closures": {
         "p27": 20,
         "p28": 28,
         "p31": 26,
         "p32": 20,
-        "p33": 26
+        "p33": 25
       }
     },
     "lit-team": {

@@ -200,9 +200,9 @@ test('both reference manuals describe the Cursor manifest instead of claiming no
 // host-neutral and each skill that leans on a Grok Build-only tool says what to do without it.
 const GROK_SUBJECT_SKILLS = new Set(['litgrok', 'lsp', 'lsp-setup', 'rules']);
 const HOST_NOTE_SKILLS = [
-  'autoconference', 'autoresearch', 'browser-drive', 'comment-checker', 'debugging', 'deep-interview',
+  'autoconference', 'autoresearch', 'browser-drive', 'comment-checker', 'debugging', 'deep-interview', 'frontend-ui-ux',
   'lit-brainstorm', 'lit-docx', 'lit-handoff', 'lit-pptx', 'lit-recap', 'lit-typographic-motion', 'litgoal', 'litresearch',
-  'litwork', 'lsp-setup', 'lsp', 'refactor', 'rules', 'structural-search', 'wikify',
+  'litwork', 'lsp-setup', 'lsp', 'readme-studio', 'refactor', 'rules', 'structural-search', 'visual-qa', 'wikify',
 ];
 
 test('skill descriptions name Grok only where Grok Build is the subject', () => {
@@ -215,9 +215,7 @@ test('skill descriptions name Grok only where Grok Build is the subject', () => 
 });
 
 test('skills that need a Grok Build-only tool carry one short host note that points at litgrok', () => {
-  // The motion SKILL.md has a 4096-byte activation budget, so its note sits in the runtime reference
-  // that a missing runtime sends the reader to.
-  const noteFile = (id) => (id === 'lit-typographic-motion' ? join('references', 'runtime.md') : 'SKILL.md');
+  const noteFile = () => 'SKILL.md';
   for (const id of HOST_NOTE_SKILLS) {
     const lines = readFileSync(join(PRODUCT_ROOT, '.grok', 'skills', id, noteFile(id)), 'utf8').split('\n');
     const notes = lines.filter((line) => line.startsWith('Outside Grok Build (Grok Bot, Cursor):'));

@@ -88,13 +88,6 @@ test('child output with CRLF line ends keeps no carriage return', () => {
   assert.equal(proc.lastLine(''), '');
 });
 
-test('the motion tool lookup applies PATHEXT on win32 and the helper keeps a POSIX lookup', async () => {
-  const { findTool } = await import(join(skills, 'lit-typographic-motion', 'scripts', 'lib', 'render.mjs'));
-  const env = { PATH: 'C:\\ff', PATHEXT: '.EXE;.CMD' };
-  assert.equal(findTool('ffmpeg', env, { platform: 'win32', exists: present('C:\\ff\\ffmpeg.EXE') }), 'C:\\ff\\ffmpeg.EXE');
-  assert.equal(findTool('definitely-not-a-tool', { PATH: '/nonexistent' }), null);
-});
-
 // ---- exit codes and causes --------------------------------------------------------------------
 
 test('a script run through the helper returns the exit code the child chose', () => {

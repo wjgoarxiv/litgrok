@@ -45,7 +45,6 @@ const REFERENCE_SETS = new Map([
     'tonalities/signal.md',
     'tonalities/studio.md',
   ]],
-  ['lit-typographic-motion', ['choice-first.md', 'complete-contract.md', 'cover.md', 'craft-loop.md', 'depth.md', 'runtime.md', 'scene-contract.md', 'stage.md', 'style-bible.md', 'treatment.md', 'type-craft.md']],
   ['autoresearch', [
     'core-principles.md',
     'family-contract.md',
@@ -184,7 +183,6 @@ const REFERENCE_SETS = new Map([
     'explore-packet.md',
     'plan-packet.md',
   ]],
-  ['readme-studio', ['complete-contract.md', 'production.md', 'facts.md', 'typography.md', 'motion.md', 'decoration-patterns.md', 'choice-first.md']],
   ['lit-comprehend', [
     'artifact-format.md',
     'honesty-ledger-contract.md',

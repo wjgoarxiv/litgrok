@@ -317,4 +317,4 @@ MIT. [LICENSE](../LICENSE)를 보세요.
 
 `/frontend-ui-ux <화면과 목표>`는 요청 범위의 화면을 구현하고 렌더링을 확인합니다. 충분한 요구사항이면 바로 제작하고, 중요한 방향이 불명확할 때만 질문합니다. 검토·계획 전용 요청에서는 파일을 수정하지 않습니다. frontend-ui-ux와 visual-qa는 wjgoarxiv-skills의 `design` 플러그인에 있습니다. LitGrok에는 같은 이름의 안내만 남아 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다. 설치하면 `design:frontend-ui-ux`, `design:visual-qa`로 불립니다.
 
-`/readme-studio <저장소와 목표>`는 저장소 사실에 근거한 README, Pretendard/Meslo 윤곽선 글자와 커버·모션 소스를 만듭니다. 설치 후 `/skills`에서 확인하세요. 이미지 도구가 없으면 `IMAGE_GENERATION_UNAVAILABLE`을 알리고 명시적으로 제공된 배경으로 제작할 수 있습니다. 폰트와 렌더러는 작업 폴더에서 준비합니다. 로컬 결과는 실제 호스트 동작 및 GitHub/npm 게시 후 검증과 구분합니다.
+`/readme-studio`와 `/lit-typographic-motion`은 wjgoarxiv-skills의 `video-covers` 플러그인에 있습니다. LitGrok에는 같은 이름의 안내만 남아 `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` 한 줄을 알려 주고 아무것도 만들지 않습니다. 설치하면 `video-covers:readme-studio`, `video-covers:lit-typographic-motion`으로 불립니다.

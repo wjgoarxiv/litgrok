@@ -125,9 +125,7 @@ Exclusions are checked before the trigger and route away even when a video noun 
 - (v) motion on an interface with no video noun — 버튼, 호버, button, hover, motion tokens, reduced motion: `frontend-ui-ux`.
 - (vi) a drawing of real equipment, even as an HTML page or a loop: `lit-schematic`.
 
-Film context: this is a film request. Load `lit-typographic-motion` from `.grok/skills/lit-typographic-motion/` (project) or `~/.grok/skills/lit-typographic-motion/` (user) and write `treatment.json` in the run's output directory first. Path rule: the type path when the words themselves are the film; the stage path for every other film, including anything with shapes, drawn objects, diagrams or imagery; a 9:16 film always takes the stage path. Every frame and track passes through the skill's renderer; hand-encoded films are not the deliverable. Never claim a hook routed the prompt.
-
-Film commands, run from the skill root: `node scripts/motion.mjs` with `make`, `stage`, `sound`, `look`, `gate`, `verify` (each takes `--out <dir>`); a README cover loop uses `cover` and `cover-gate` (references/cover.md); pre-warm outside the session with `npm exec --yes --package @litfamily/litgrok@<installed version> -- litgrok motion-runtime install`.
+Film context: this is a film request. Load `lit-typographic-motion` from `.grok/skills/lit-typographic-motion/` (project) or `~/.grok/skills/lit-typographic-motion/` (user). LitGrok ships it as a same-name note: the film director moved to the `video-covers` plugin of wjgoarxiv-skills. When that plugin's skill is listed (`video-covers:lit-typographic-motion`), load it and follow it; otherwise give the note's install line and make no film. A hand-encoded film is never a substitute. Never claim a hook routed the prompt.
 
 ## Equipment drawings
 

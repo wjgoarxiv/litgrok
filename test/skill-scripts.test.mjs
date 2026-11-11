@@ -11,7 +11,6 @@ const PRODUCT_ROOT = dirname(TEST_DIRECTORY);
 const SKILLS_ROOT = join(PRODUCT_ROOT, '.grok', 'skills');
 
 const SCRIPTS = [
-  ['readme-studio', 'scripts/validate-facts.mjs'],
   ['rules', 'scripts/resolve-guidance.mjs'],
   ['lit-plan', 'scripts/validate-plan.mjs'],
   ['lit-plan', 'scripts/scaffold-plan.mjs'],

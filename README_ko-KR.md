@@ -370,10 +370,11 @@ go
 
 ### 영상과 README 커버
 
-`lit-typographic-motion`은 먼저 연출안을 쓰고, LitGrok 자체의 타이포 엔진이나 스테이지 캡처로 짧은
-영상을 렌더링한 뒤 QA 검사를 거칩니다. 소리 없이 끊김 없이 반복되는 README 커버 루프도 만듭니다.
-엔진은 원할 때 한 번, 설치한 버전으로 `litgrok motion-runtime install`을 실행해 설치합니다. 정확한
-명령 줄은 설치 결과에 나와 있습니다.
+영상과 README 커버는 이제 wjgoarxiv-skills의 `video-covers` 플러그인이 만듭니다. 이 플러그인에는
+`lit-typographic-motion`(연출안을 먼저 쓰고 QA 검사를 거친 짧은 영상, 또는 소리 없는 README 커버 루프)과
+`readme-studio`가 들어 있습니다. 영상을 요청하면 LitGrok에서 여전히 `lit-typographic-motion`이 잡히고,
+그 안내가 설치 한 줄을 알려 줍니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). `litgrok motion-runtime`
+명령은 스킬과 함께 빠졌고, 플러그인이 자기 엔진을 직접 준비합니다.
 
 ### 명령 한눈에 보기
 
@@ -483,6 +484,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 | 스킬 | 플러그인 | 설치 한 줄 |
 | --- | --- | --- |
 | `frontend-ui-ux`, `visual-qa` | `design` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/design" --trust` |
+| `lit-typographic-motion`, `readme-studio` | `video-covers` | `grok plugin install "<path to your wjgoarxiv-skills clone>#plugins/video-covers" --trust` |
 
 ## 필요한 것, 업데이트, 제거
 

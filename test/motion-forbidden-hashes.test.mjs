@@ -6,7 +6,6 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { cacheRoot } from '../.grok/skills/lit-typographic-motion/scripts/lib/fonts.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const DATA_FILE = join(root, 'test/motion-forbidden-hashes.json');
@@ -66,20 +65,6 @@ test('the scanner follows a symlink to a forbidden file (negative control)', () 
   }
 });
 
-test('shipped engine files never carry the method-only timeline scene ids', () => {
-  const engineRoot = join(root, '.grok/skills/lit-typographic-motion');
-  const offenders = [];
-  const walk = (path) => {
-    const stat = statSync(path);
-    if (stat.isDirectory()) { for (const entry of readdirSync(path)) walk(join(path, entry)); return; }
-    if (path === DATA_FILE || /\.(ttf|otf)$/.test(path)) return;
-    const text = readFileSync(path, 'utf8').toLowerCase();
-    for (const id of data.timelineSceneIds) if (new RegExp(`\\b${id}\\b`).test(text)) offenders.push(`${relative(root, path)}: ${id}`);
-  };
-  walk(engineRoot);
-  assert.deepEqual(offenders, []);
-});
-
 test('the extracted npm pack contains no forbidden bytes and no guard data', () => {
   const scratch = mkdtempSync(join(tmpdir(), 'litgrok-motion-pack-'));
   try {
@@ -92,14 +77,3 @@ test('the extracted npm pack contains no forbidden bytes and no guard data', () 
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 });
 
-test('a test-installed pre-warm cache contains no forbidden bytes', async (t) => {
-  const base = mkdtempSync(join(tmpdir(), 'litgrok-motion-guard-cache-'));
-  try {
-    const env = { ...process.env, LITGROK_MOTION_CACHE: base, npm_config_offline: 'true' };
-    mkdirSync(cacheRoot(env), { recursive: true });
-    const { installDeps } = await import('../.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
-    try { await installDeps(env); } catch (error) { t.skip(`npm cache lacks the pinned deps offline (${error.message})`); return; }
-    assert.ok(existsSync(join(cacheRoot(env), 'node', 'node_modules', 'opentype.js')));
-    assert.deepEqual(scanTree(base), []);
-  } finally { rmSync(base, { recursive: true, force: true }); }
-});

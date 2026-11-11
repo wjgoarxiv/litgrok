@@ -114,12 +114,12 @@
 <tr>
 <td><img src="./assets/skills/readme-studio.webp" width="240" alt="사실에 맞는 README와 커버, 윤곽선 글자, 로컬 모션을 만듭니다." /></td>
 <td><code>readme-studio</code><br /><sub><code>/readme-studio &lt;repository and outcome&gt;</code></sub></td>
-<td>사실에 맞는 README와 커버, 윤곽선 글자, 로컬 모션을 만듭니다.</td>
+<td>wjgoarxiv-skills의 <code>video-covers</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인은 사실에 맞는 README와 커버, 윤곽선 글자, 로컬 모션을 만듭니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-typographic-motion.webp" width="240" alt="트리트먼트로 짧은 영상을 완성합니다. LitGrok의 타입 엔진이나 무대 캡처로 렌더링하고, 품질 검사를 거칩니다." /></td>
 <td><code>lit-typographic-motion</code><br /><sub><code>/lit-typographic-motion &lt;request&gt;</code></sub></td>
-<td>트리트먼트로 짧은 영상을 완성합니다. LitGrok의 타입 엔진이나 무대 캡처로 렌더링하고, 품질 검사를 거칩니다. 커버 모드는 소리 없이 끊김 없이 도는 README 커버 루프를 만들고, 디코딩한 파일로 검사합니다.</td>
+<td>wjgoarxiv-skills의 <code>video-covers</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인은 트리트먼트로 품질 검사를 거친 짧은 영상을 완성하고, 소리 없이 끊김 없이 도는 README 커버 루프를 만듭니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-scientific-visualization.webp" width="240" alt="검증된 데이터로 논문용 그림과 캡션을 만듭니다. 그래프 종류는 데이터 성격에 맞춰 고릅니다." /></td>

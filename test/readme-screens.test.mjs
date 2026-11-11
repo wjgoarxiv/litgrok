@@ -138,7 +138,7 @@ test('README prose never states a payload count that differs from what the insta
   });
   assert.equal(code, 0);
   const discovered = stdout.split('\n').filter((line) => line.startsWith('would install ')).length;
-  assert.ok(discovered > 1000, 'the dry run lists the payload');
+  assert.ok(discovered > 200, 'the dry run lists the payload');
   for (const file of ['README.md', 'README_ko-KR.md', 'docs/guide.md', 'docs/guide_ko-KR.md']) {
     // Picture alt text quotes the capture run, which the section labels as such; only prose is checked here.
     const prose = read(file).replace(/<p align="center">[\s\S]*?<\/p>/gu, '');

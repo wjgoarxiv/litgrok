@@ -114,12 +114,12 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/readme-studio.webp" width="240" alt="A factual README with a cover, outlined type and local motion." /></td>
 <td><code>readme-studio</code><br /><sub><code>/readme-studio &lt;repository and outcome&gt;</code></sub></td>
-<td>A factual README with a cover, outlined type and local motion.</td>
+<td>Moved to the <code>video-covers</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin writes a factual README with a cover, outlined type and local motion.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-typographic-motion.webp" width="240" alt="A finished short film from a treatment, rendered by LitGrok's own type engine or stage capture and checked by its QA gate." /></td>
 <td><code>lit-typographic-motion</code><br /><sub><code>/lit-typographic-motion &lt;request&gt;</code></sub></td>
-<td>A finished short film from a treatment, rendered by LitGrok's own type engine or stage capture and checked by its QA gate. Cover mode makes a silent, seamless README cover loop and gates the decoded file.</td>
+<td>Moved to the <code>video-covers</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin makes a finished short film from a treatment, checked by its QA gate, and silent, seamless README cover loops.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-scientific-visualization.webp" width="240" alt="A publication-ready figure and caption from verified data. The chart type follows the data." /></td>

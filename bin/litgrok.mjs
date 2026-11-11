@@ -428,7 +428,7 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/visual-qa/scripts/verify-evidence-manifest.mjs': '94be132b01eff2af91775a6e9c6841c6ecf008d44f641c61a4bf16726c11f779',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok motion-runtime install|status\nTypographic-motion engine adapted from mexicat/pdoom-video (MIT, Giacomo Magnanini), commit ca251e3.\n';
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -598,7 +598,6 @@ function receiptCard(options, root, colors, { status, written, current }) {
     '  │ Hooks: project hooks require trust from a Git project root',
     '  │ Trust: use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json',
     '  │ Installer never runs git init or changes trust',
-    `  │ Motion runtime: install stays copy-only; pre-warm lit-typographic-motion with npm exec --yes --package @litfamily/litgrok@${packageVersion()} -- litgrok motion-runtime install`,
     '  │ Next: restart Grok Build',
     `  ${paint('╰─', titleColor, colors)}`,
     '',
@@ -1071,10 +1070,6 @@ async function runDoctor(args, { env, stdout, stderr, fetchFn }) {
 }
 
 export async function run(args, context = {}) {
-  if (args[0] === 'motion-runtime') {
-    const { runMotionRuntime } = await import('../.grok/skills/lit-typographic-motion/scripts/prewarm.mjs');
-    return runMotionRuntime(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr });
-  }
   if (args[0] === 'auto-handoff') {
     const { runAutoHandoff } = await import('../.grok/hooks/auto-handoff.mjs');
     return runAutoHandoff(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr, cwd: context.cwd ?? process.cwd() });

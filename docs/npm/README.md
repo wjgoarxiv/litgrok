@@ -69,7 +69,7 @@ Long sessions can write their own handoff. Turn on automatic handoff with `litgr
 
 `/skills` lists everything your session loaded. The [skills gallery on GitHub](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) shows all 42 with a picture of each result.
 
-Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (thirteen for decks, six restrained ones for documents); `/frontend-ui-ux` points you to the `design` plugin of wjgoarxiv-skills, which builds and checks interfaces, `/readme-studio` writes source-checked READMEs, `lit-humanizer` rewrites stiff English or Korean prose, `lit-schematic` draws checked P&IDs, equipment layouts and isometric cutaways, `lit-hijack` ports published techniques clean-room with provenance, licence gate and parity proof, and `lit-adhd` briefs every recent session on one read-only screen.
+Beyond code, `lit-pptx` makes slide decks and `lit-docx` makes reports and Word documents, each in a design direction it picks for the job and names in the reply with two alternatives (thirteen for decks, six restrained ones for documents); `/frontend-ui-ux` points you to the `design` plugin of wjgoarxiv-skills, which builds and checks interfaces, `/readme-studio` points you to the `video-covers` plugin of wjgoarxiv-skills, which writes source-checked READMEs, `lit-humanizer` rewrites stiff English or Korean prose, `lit-schematic` draws checked P&IDs, equipment layouts and isometric cutaways, `lit-hijack` ports published techniques clean-room with provenance, licence gate and parity proof, and `lit-adhd` briefs every recent session on one read-only screen.
 
 ## What changes after install
 

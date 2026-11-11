@@ -14,7 +14,6 @@ const OUTPUT_CHANNELS = new Map([
   ['working_note', new Set(['inline', 'reply'])],
   ['no_artifact', 'reply'],
 ]);
-const REFERENCE_CONTRACT_SKILLS = new Set(['readme-studio', 'lit-typographic-motion']);
 
 function topLevelYamlValues(source, label) {
   const values = new Map();
@@ -49,15 +48,7 @@ test('every packaged skill has valid Grok frontmatter and an output-channel cont
     assert.ok(unquote(fields.get('description') ?? '').trim(), `${label} must have a description`);
     assert.equal(fields.get('user-invocable'), 'true', `${label} user-invocable must be the literal true`);
 
-    const inlineContract = content.match(/## #contract\.output_channels\s*\n+```ya?ml\s*\n([\s\S]*?)\n```/i);
-    if (REFERENCE_CONTRACT_SKILLS.has(directory.name)) {
-      assert.equal(inlineContract, null, `${label} must keep its activation-budget contract out of SKILL.md`);
-      assert.ok(Buffer.byteLength(content, 'utf8') <= 4096, `${label} must stay within the 4096-byte activation budget`);
-    }
-    const contractSource = REFERENCE_CONTRACT_SKILLS.has(directory.name)
-      ? readFileSync(join(SKILLS_DIRECTORY, directory.name, 'references', 'complete-contract.md'), 'utf8')
-      : content;
-    const contract = contractSource.match(/## #contract\.output_channels\s*\n+```ya?ml\s*\n([\s\S]*?)\n```/i);
+    const contract = content.match(/## #contract\.output_channels\s*\n+```ya?ml\s*\n([\s\S]*?)\n```/i);
     assert.ok(contract, `${label} must have a YAML #contract.output_channels block`);
     const output = topLevelYamlValues(contract[1], `${label} output contract`);
     const genre = unquote(output.get('artifact_genre') ?? '');
