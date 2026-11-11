@@ -51,7 +51,8 @@ test('each note says it moved, where it lives now, and the one-line Grok Build i
     assert.ok(text.includes(`grok plugin install "${PLACEHOLDER}/variants/litgrok/${id}" --trust`), `${id} carries the one-folder install line`);
     assert.doesNotMatch(text, /#variants\//u, `${id} never offers the #subdir form, which copies the whole repository`);
     assert.match(text, /whole repository/u, `${id} says why the line names the folder path`);
-    assert.match(text, /not published yet/u, `${id} says the repository is not published yet`);
+    assert.ok(text.includes('git clone https://github.com/wjgoarxiv/wjgoarxiv-skills\n'), `${id} gives the clone line of the public repository`);
+    assert.doesNotMatch(text, /not published|once the repository is published/u, `${id} no longer calls the repository unpublished`);
     assert.ok(text.includes(`\`${id}:${id}\``), `${id} names the qualified plugin skill`);
     assert.ok(text.includes(`grok plugin uninstall ${id}`), `${id} says how to remove the plugin`);
     assert.match(text, /installer owns `\.grok\/skills\//u, `${id} says why the install avoids the note's folder`);

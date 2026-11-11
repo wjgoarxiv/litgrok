@@ -490,9 +490,10 @@ wjgoarxiv-skills. For Grok Build each one is its own folder under `variants/litg
 plugin with everything it reads inside it, so you add only the skills you use. LitGrok keeps a short
 note under each old name. `/frontend-ui-ux`, the bare `lit` routes and the agents that preload these
 skills still answer; the note tells you what moved and gives you one line to install it.
-wjgoarxiv-skills is not published yet, so the line installs from a local clone; once it is published,
-clone it and use the same line. The line names the skill's folder path, so Grok Build copies only that
-folder, a few megabytes at most. A `#` subfolder source (`<clone>#<folder>` or `owner/repo#<folder>`)
+wjgoarxiv-skills is public at https://github.com/wjgoarxiv/wjgoarxiv-skills. Clone it once
+(`git clone https://github.com/wjgoarxiv/wjgoarxiv-skills`), then run the line against your
+clone. The line names the skill's folder path, so Grok Build copies only that folder, a few
+megabytes at most. A `#` subfolder source (`<clone>#<folder>` or `owner/repo#<folder>`)
 would copy the whole repository, `.git` included, over 200 MB for each skill. The plugin goes
 into Grok Build's own plugin store, never into `.grok/skills/`, where LitGrok's installer keeps the
 note, so `litgrok install` keeps updating LitGrok cleanly. Once it is installed, the skill answers

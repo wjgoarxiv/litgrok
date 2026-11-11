@@ -479,8 +479,8 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 스킬마다 `variants/litgrok/` 아래 자기 폴더가 있고, 그 폴더 하나가 필요한 파일을 모두 담은 스킬 하나짜리
 플러그인입니다. 쓰는 스킬만 골라 설치하면 됩니다. LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다.
 `/frontend-ui-ux`, `lit`으로 시작하는 요청, 이 스킬을 미리 불러오는 에이전트는 그대로 동작하고,
-안내가 무엇이 옮겨 갔는지와 설치 한 줄을 알려 줍니다. wjgoarxiv-skills는 아직 공개 전이라
-지금은 로컬 클론에서 설치합니다. 공개된 뒤에도 저장소를 클론하고 같은 줄을 쓰면 됩니다. 이 줄은 스킬 폴더 경로를
+안내가 무엇이 옮겨 갔는지와 설치 한 줄을 알려 줍니다. wjgoarxiv-skills는
+https://github.com/wjgoarxiv/wjgoarxiv-skills 에 공개되어 있습니다. 한 번 클론한 뒤(`git clone https://github.com/wjgoarxiv/wjgoarxiv-skills`) 그 클론을 가리켜 아래 줄을 실행합니다. 이 줄은 스킬 폴더 경로를
 가리키므로 Grok Build는 그 폴더만 복사하고, 크기는 많아야 몇 MB입니다. `#` 하위 폴더 소스(`<clone>#<folder>`나
 `owner/repo#<folder>`)를 쓰면 `.git`까지 저장소 전체를 스킬마다 복사해서 200 MB가 넘습니다.
 플러그인은 LitGrok 설치기가 안내를 두는 `.grok/skills/`가 아니라 Grok Build의 플러그인 저장소에 들어가므로
