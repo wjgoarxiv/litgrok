@@ -179,6 +179,70 @@ test('an older ownership manifest installs new diagram scripts and preserves a l
   }
 });
 
+// A skill that shrinks between releases (a moved skill becoming its same-name stub, or a helper moving to
+// another skill) leaves files the previous install owned but this payload no longer ships. They are
+// package-owned by the manifest's hash, so an upgrade or uninstall removes them; a changed one is kept and refused.
+async function withDroppedFile(content, recordedHash, body) {
+  const project = mkdtempSync(join(tmpdir(), 'litgrok-dropped-project-'));
+  const home = mkdtempSync(join(tmpdir(), 'litgrok-dropped-home-'));
+  const env = { ...process.env, HOME: home };
+  delete env.CI;
+  delete env.NO_COLOR;
+  const manifestPath = join(project, '.grok', '.litgrok-install-manifest.json');
+  const dropped = 'skills/litgrok/references/retired/old-note.md';
+  const mine = join(project, '.grok', 'skills', 'litgrok', 'mine.md');
+  try {
+    const { run } = await import('../bin/litgrok.mjs');
+    const first = captureIo();
+    assert.equal(await run(['install', '--project', '--yes'], { ...first, cwd: project, env }), 0, first.read().stderr);
+    mkdirSync(join(project, '.grok', dirname(dropped)), { recursive: true });
+    writeFileSync(join(project, '.grok', dropped), content);
+    writeFileSync(mine, 'a user note the manifest never owned\n');
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    manifest.files[dropped] = recordedHash;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    await body({ run, project, env, manifestPath, dropped, mine });
+  } finally {
+    rmSync(project, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }
+}
+const sha256Text = (text) => createHash('sha256').update(text).digest('hex');
+
+test('an upgrade removes a file the previous install owned and this payload no longer ships', async () => {
+  const content = 'an old body reference\n';
+  await withDroppedFile(content, sha256Text(content), async ({ run, project, env, manifestPath, dropped, mine }) => {
+    const io = captureIo();
+    assert.equal(await run(['install', '--project', '--yes'], { ...io, cwd: project, env }), 0, io.read().stderr);
+    assert.equal(existsSync(join(project, '.grok', dropped)), false, 'the dropped owned file is removed');
+    assert.equal(existsSync(join(project, '.grok', dirname(dropped))), false, 'its emptied folder is removed');
+    assert.equal(readFileSync(mine, 'utf8'), 'a user note the manifest never owned\n', 'a file the manifest never owned stays');
+    assert.equal(Object.hasOwn(JSON.parse(readFileSync(manifestPath, 'utf8')).files, dropped), false);
+  });
+});
+
+test('an upgrade refuses to remove a dropped file the user changed, and writes nothing', async () => {
+  await withDroppedFile('the user rewrote this\n', sha256Text('the shipped text\n'), async ({ run, project, env, manifestPath, dropped }) => {
+    const before = readFileSync(manifestPath, 'utf8');
+    const io = captureIo();
+    assert.equal(await run(['install', '--project', '--yes'], { ...io, cwd: project, env }), 1);
+    assert.match(io.read().stderr, /no longer ships/u);
+    assert.equal(readFileSync(join(project, '.grok', dropped), 'utf8'), 'the user rewrote this\n');
+    assert.equal(readFileSync(manifestPath, 'utf8'), before, 'the manifest is not rewritten');
+  });
+});
+
+test('uninstall also removes a file the previous install owned and this payload no longer ships', async () => {
+  const content = 'an old body script\n';
+  await withDroppedFile(content, sha256Text(content), async ({ run, project, env, dropped, mine }) => {
+    const io = captureIo();
+    assert.equal(await run(['uninstall', '--project', '--yes'], { ...io, cwd: project, env }), 0, io.read().stderr);
+    assert.equal(existsSync(join(project, '.grok', dropped)), false);
+    assert.equal(existsSync(join(project, '.grok', dirname(dropped))), false);
+    assert.equal(readFileSync(mine, 'utf8'), 'a user note the manifest never owned\n');
+  });
+});
+
 test('--no-color is a non-mutating preview', async () => {
   const home = mkdtempSync(join(tmpdir(), 'litgrok-no-color-'));
 

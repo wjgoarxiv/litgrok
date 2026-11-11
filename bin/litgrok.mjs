@@ -569,7 +569,10 @@ function retiredPayload(root, files, manifest) {
   const vendorRoots = Object.entries(VENDOR_RENAMES)
     .filter(([, name]) => [...currentPaths].some((path) => path.startsWith(`vendor/${name}/`)))
     .map(([old]) => `vendor/${old}`);
-  const retiredPath = (path) => skillRoots.some((directory) => path.startsWith(`${directory}/`))
+  // A path the previous manifest owned that this payload no longer ships (a skill that shrank into a
+  // stub, a helper that moved) retires like a renamed skill's files: removed while its hash matches.
+  const droppedPath = (path) => manifest !== null && !currentPaths.has(path);
+  const retiredPath = (path) => droppedPath(path) || skillRoots.some((directory) => path.startsWith(`${directory}/`))
     || vendorRoots.some((directory) => path.startsWith(`${directory}/`))
     || agentPaths.includes(path) || Object.hasOwn(PRE_MANIFEST_LEGACY_PAYLOAD_HASHES, path);
   const previous = manifest?.hashes ?? new Map(Object.entries(PRE_MANIFEST_LEGACY_PAYLOAD_HASHES));
@@ -637,7 +640,7 @@ function retiredPayload(root, files, manifest) {
   for (const path of vendorRoots) visit(path);
   const entries = [...hashes]
     .filter(([path]) => !preservedSkills.some((directory) => path.startsWith(`${directory}/`)))
-    .map(([relativePath, expectedHash]) => ({ root, relativePath, expectedHash, target: join(root, relativePath) }));
+    .map(([relativePath, expectedHash]) => ({ root, relativePath, expectedHash, target: join(root, relativePath), dropped: droppedPath(relativePath) }));
   return { entries, directories, preservedSkills: preservedSkills.map((path) => join(root, path)) };
 }
 
@@ -1028,6 +1031,10 @@ export async function run(args, context = {}) {
           const retiredSkill = retiredDirectories.some((directory) => (
             directory.startsWith(`${join(root, 'skills')}${sep}`) && entry.target.startsWith(`${directory}${sep}`)
           ));
+          if (entry.dropped && !retiredSkill && entry.expectedHash !== undefined) {
+            stderrLines.push(`Refusing to remove changed file: ${entry.target} is a file this LitGrok release no longer ships, and it differs from the copy the last install wrote. Move it out or remove it yourself, then rerun the install.`);
+            continue;
+          }
           const retiredDirectory = retiredSkill ? 'the retired skill directory' : 'the retired payload directory';
           stderrLines.push(`Refusing legacy conflict: ${entry.target} is not package-owned. Move it out of ${retiredDirectory} or remove it yourself, then rerun the install so the directory can be cleaned.`);
         }
@@ -1070,7 +1077,7 @@ export async function run(args, context = {}) {
         }
         removed += removeLegacyFiles(states.legacyEntries);
         removeRetiredDirectories(states.retiredDirectories);
-        removeEmptyPayloadDirectories(payloadDirectories(root, files));
+        removeEmptyPayloadDirectories(payloadDirectories(root, [...files, ...states.legacyEntries]));
         removeOwnershipManifest(root, states.manifest);
         const statusDetail = configDetail(statusLineResult, notifyResult);
         progress.finish('ok', 'WRITE', `${removed} removed · ${states.counts.missing} already absent${statusDetail}`, elapsedSince(writeStarted));
@@ -1122,6 +1129,7 @@ export async function run(args, context = {}) {
       }
       const removedLegacy = removeLegacyFiles(states.legacyEntries);
       removeRetiredDirectories(states.retiredDirectories);
+      removeEmptyPayloadDirectories(payloadDirectories(root, states.legacyEntries));
       writeOwnershipManifest(root, files, states.manifest);
       const statusLineResult = options.statusLine ? installStatusLine(root) : null;
       const notifyResult = options.notify ? installNotifications(root) : null;

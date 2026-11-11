@@ -218,6 +218,13 @@ empty old skill directories, and records the new paths and SHA-256 hashes. Forei
 modified, and symlinked destinations refuse the whole update. Preview modes keep
 the old tree unchanged.
 
+The same check covers any other file the previous install recorded that this
+release no longer ships, such as the body files of a skill that became a
+same-name stub. An update or uninstall removes each one whose hash still matches
+the manifest and then prunes the folders it emptied. A file you changed is kept,
+and the update stops and names it, so you can move it out first. Files the
+manifest never recorded are not touched.
+
 ## First use
 
 After install, trust project hooks, then open or restart Grok Build in that project. Skills and the rule are guidance surfaces; hook commands are the payload code run automatically by the host, and they receive documented event JSON on stdin. Skill-owned scripts run only as part of an explicitly authorized task.
