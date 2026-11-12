@@ -16,14 +16,16 @@
 <a href="https://github.com/wjgoarxiv/litgrok/stargazers"><img src="https://img.shields.io/github/stars/wjgoarxiv/litgrok?style=flat" alt="GitHub 스타" /></a>
 </p>
 
-Grok Build 프롬프트를 `lit`으로 시작하면 세션이 정해진 순서를 따릅니다. 고치기 전에 테스트부터 쓰고, 실제 결과를
+Grok Build 프롬프트를 `lit`으로 시작하면 세션이 정해진 순서대로 일합니다. 고치기 전에 테스트부터 쓰고, 실제 결과를
 확인하고, 확인하지 못한 부분은 못 했다고 분명히 적습니다. 멈출 때 인수인계를 부탁해 두면 내일 세션은 오늘 멈춘 자리를
-적은 그 문서부터 읽고 시작하며, 세션을 돌리고 모델을 고르는 일은 여전히 Grok Build가 하고 LitGrok은 일하는 방식을
-프로젝트의 `.grok/` 폴더에 일반 파일로 더합니다.
+적은 그 문서부터 읽고 시작합니다.
+
+세션을 돌리고 모델을 고르는 일은 여전히 Grok Build가 합니다. LitGrok은 일하는 방식을 프로젝트의 `.grok/` 폴더에 일반
+파일로 더할 뿐입니다.
 
 > [!TIP]
-> [30초 설치](#30초-설치)의 한 줄로 프로젝트에 설치하고, Git 루트에서 Grok Build를 다시 시작한 뒤 Grok에게 일을 하나
-> 맡겨 보세요: `lit src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘`
+> [30초 설치](#30초-설치)의 한 줄로 프로젝트에 설치하고 [빠른 시작](#빠른-시작)을 따른 뒤, Grok에게 일을 하나 맡겨
+> 보세요: `lit src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘`
 
 <p align="center"><a href="#30초-설치">설치</a> &nbsp; <a href="#빠른-시작">빠른 시작</a> &nbsp; <a href="#만들-수-있는-것">결과물</a> &nbsp; <a href="./docs/guide_ko-KR.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 안내서</a> &nbsp; <a href="./docs/skills_ko-KR.md">스킬</a> &nbsp; <a href="./docs/guide_ko-KR.md#움직임으로-보기"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> 영상</a> &nbsp; <a href="./docs/guide_ko-KR.md#안전하게-설치하고-지우기"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> 안전</a> &nbsp; <a href="./docs/reference_ko-KR.md">상세 안내</a> &nbsp; <a href="./README.md">English</a></p>
 
@@ -78,10 +80,8 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 설치 프로그램은 LitGrok의 스킬, 에이전트, 프로젝트 규칙, 훅을 `<project>/.grok/`에 복사하고 다른 곳은 건드리지
-않습니다. 마지막에 나오는 설치 결과에는 `Status: Ready`가 있어야 하고, 사용자만 할 수 있는 두 가지를 다시 알려 줍니다.
-프로젝트의 Git 루트에서 Grok Build를 열고 훅을 신뢰하는 일이며, 나중에 같은 명령을 다시 실행하면 업데이트됩니다.
-
-옵션마다 쓰는 때가 다릅니다.
+않습니다. 설치 결과에는 `Status: Ready`가 있어야 하고, 사용자만 할 수 있는 두 단계([빠른 시작](#빠른-시작) 1단계)도
+함께 나옵니다. 나중에 같은 명령을 다시 실행하면 업데이트됩니다.
 
 | 옵션 | 하는 일 | 쓰는 때 |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 | 두는 곳 | 추가하는 방법 | 파일이 있는 곳 |
 | --- | --- | --- |
-| Grok Build, 이 프로젝트 | `npm exec --yes --package @litfamily/litgrok@latest -- litgrok install` | `<project>/.grok/` |
+| Grok Build, 이 프로젝트 | [설치 한 줄](#30초-설치) | `<project>/.grok/` |
 | Grok Build, 사용자 계정 | `litgrok install --user`, 상태 행까지 원하면 `--status-line` | `~/.grok/` |
 | Grok Bot, Cursor를 통해 | Add Marketplace, From GitHub Repository, 그다음 Connect apps | 이 저장소의 `.cursor-plugin/plugin.json` |
 
@@ -105,16 +105,15 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 
 ### 설치가 쓰는 것과 남겨 두는 것
 
-설치 프로그램은 패키지에서 LitGrok 파일을 모으고, `.grok/`까지 가는 경로의 폴더가 모두 실제 폴더인지 확인한 뒤, 쓰려는
-파일을 하나씩 `.litgrok-install-manifest.json`(지난 설치 때 남긴 해시 목록)과 대조합니다. 아직 없는 파일은 새로 쓰고,
-해시가 그대로인 파일은 LitGrok이 넣은 것이므로 교체하거나 이미 최신이면 손대지 않습니다. 그 사이에 직접 고친 파일이
-하나라도 있으면 아무것도 쓰기 전에 멈추고 그 파일 이름을 알려 주므로, 고친 내용이 조용히 덮어써지는 일은 없습니다.
+설치 프로그램은 패키지에서 파일을 모은 뒤, `.grok/`까지 가는 경로의 폴더가 모두 실제 폴더인지 확인하고 파일마다
+`.litgrok-install-manifest.json`(지난 설치 때 남긴 해시 목록)과 대조합니다. 아직 없는 파일은 새로 쓰고, 해시가 그대로인
+파일은 LitGrok이 넣은 것이므로 교체하거나 이미 최신이면 그대로 둡니다. 직접 고친 파일이 하나라도 있으면 아무것도 쓰기
+전에 멈추고 그 파일 이름을 알려 줍니다.
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/installer.ko.dark.png" /><img src="./docs/assets/readme/diagrams/installer.ko.light.png" width="960" alt="litgrok install이 쓰는 것과 남겨 두는 것을 그린 흐름도. litgrok install(--dry-run이면 쓰지 않고 보여 줌)은 PAYLOAD(패키지의 .grok/에서 스킬·에이전트·규칙·훅을 찾음), SAFETY(경로의 폴더가 모두 실제 폴더인지 확인, 심볼릭 링크면 거부), OWNERSHIP(파일마다 매니페스트와 대조) 순서로 진행한다. 아직 없음이면 새로 씀, LitGrok 파일이 그대로면 교체하거나 그대로 둠, 설치 뒤에 바뀌었으면 쓰기 전에 멈춤이며 Refusing to overwrite different existing file: path를 보여 준다. 새로 쓴 파일과 교체한 파일은 WRITE, 그리고 설치 결과로 가고, Status: Ready와 함께 .litgrok-install-manifest.json이 파일마다 해시를 기록한다. 옆 카드에는 기본 위치 project/.grok/, --user면 ~/.grok/이라고 적혀 있다. Next: restart Grok Build 다음은 설치 프로그램이 남겨 두는 두 단계로, Git 루트에서 Grok Build 열기(일반 폴더라면 git init은 직접 실행)와 /hooks-trust로 훅 신뢰하기(그 전까지 프로젝트 훅은 꺼져 있음)다. 설치 프로그램은 git init도, 신뢰 변경도 하지 않는다." /></picture></p>
 
-많이들 걸리는 곳은 마지막 두 칸입니다. LitGrok은 훅을 복사해 둘 수는 있지만, Grok Build는 신뢰한 Git 루트에서만
-프로젝트 훅을 실행하고 설치 프로그램은 둘 중 어느 것도 대신 정하지 않으니, 둘 다 하기 전까지 스킬과 규칙은 동작하고
-훅은 기다립니다. 두 단계는 [빠른 시작](#빠른-시작) 1단계에 있습니다.
+많이들 걸리는 곳은 마지막 두 칸입니다. 설치 프로그램은 둘 다 사용자에게 남겨 두고, 둘 다 하기 전까지 스킬과 규칙은
+동작하지만 훅은 기다립니다. 두 단계는 [빠른 시작](#빠른-시작) 1단계에 있습니다.
 
 ### 코딩 에이전트에게 설치 맡기기
 
@@ -158,10 +157,12 @@ xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
 /litwork 외부 의존성 없이 index.html 하나로 할 일 목록을 만들어줘. 추가·완료·삭제 동작을 구현하고, 확인한 내용과 다음 할 일을 남겨줘. 브라우저를 자동으로 열지 말고 내가 확인할 순서를 알려줘.
 ```
 
+4. `index.html`을 직접 열어 항목을 추가하고, 완료로 표시하고, 지워 보세요. 이렇게 직접 눌러 보는 것이 실제 확인이고,
+   해 보지 못한 부분은 미확인으로 남습니다.
+
 훅이 로드되면 새 세션이 LIT 마크와 `LitGrok payload present: skills, project rules, hooks, and the
 npx installer.` 줄로 시작합니다. `/litwork`는 모델에게 답을 🔥 **LIT IGNITED · litwork** 🔥로 시작해 체크리스트를
-따라가고, 확인한 내용과 다음 할 일로 끝내라고 요청합니다. 그다음 `index.html`을 직접 열어 항목을 추가하고, 완료로
-표시하고, 지워 보세요. 이렇게 직접 눌러 보는 것이 실제 확인이고, 해 보지 못한 부분은 미확인으로 남습니다.
+따라가고, 확인한 내용과 다음 할 일로 끝내라고 요청합니다.
 [LitGrok이 출력하는 화면 모음](./docs/guide_ko-KR.md#화면에-나오는-모습)
 
 메시지를 그냥 `lit`으로 시작하고 할 일을 적어도 됩니다. 그러면 프로젝트 규칙이 Grok Build에 알맞은 스킬을 고르라고
@@ -177,14 +178,18 @@ npx installer.` 줄로 시작합니다. `/litwork`는 모델에게 답을 🔥 *
 
 ## 만들 수 있는 것
 
-아래 그림은 모두 LitGrok이 실제로 만든 결과입니다. 그림 아래에 프롬프트가 있으면 Grok Build 세션에서 그 요청으로 나온
-것이고, 프롬프트가 없으면 스킬에 들어 있는 예제를 그 스킬의 엔진으로 만든 것이며 어떤 예제인지 설명에 적었습니다.
-목업은 하나도 없으니, LitGrok을 설치하고 같은 요청을 하면 같은 종류의 결과가 나옵니다.
+아래 그림은 모두 [확장 스킬](#확장-스킬)을 함께 설치한 LitGrok이 실제로 만든 결과이고, `lit adhd` 브리프를 뺀 나머지는
+확장 스킬에서 나왔습니다. 그림 아래에 프롬프트가 있으면 Grok Build 세션에서 그 요청으로 나온 것이고, 없으면 스킬에 든
+예제를 그 스킬의 엔진으로 만든 것이며 어떤 예제인지 설명에 적었습니다. 목업은 하나도 없으니, 같은 요청을 하면 같은 종류의 결과가 나옵니다.
 
 ### 그리기
 
-그림마다 그 분야의 규칙을 아는 스킬이 그립니다. P&ID에는 ISA-5.1 태그와 타이틀 블록이, 단면도에는 재질 색과 지시선
-라벨이, 아키텍처에는 신뢰 경계와 번호 붙은 흐름이 들어갑니다. 모두 내보내기 전에 스킬 자체의 QA 스크립트를 통과했습니다.
+그림마다 그 분야의 규칙을 아는 스킬이 그렸고, 모두 내보내기 전에 그 스킬의 QA 스크립트를 통과했습니다.
+
+- **`lit-diagram-drawer`**는 아키텍처, 흐름, 시퀀스, 타임라인 같은 개념도와 기술 다이어그램을 그립니다. 아키텍처에는
+  신뢰 경계와 번호 붙은 흐름이 들어갑니다.
+- **`lit-schematic`**은 실제 장치를 편집 가능한 SVG와 PDF, 600 dpi PNG로 그립니다. ISA-5.1 태그와 제어 루프, 타이틀
+  블록이 있는 P&ID, 장치 배치도, 재질 색과 지시선 라벨이 있는 등각 단면도, 논문용 실험 장치 그림입니다.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/pid.webp" width="400" alt="차아염소산나트륨 도징 스키드 A3 P&amp;ID: 탱크, 상용·예비 정량 펌프, 안전 밸브, 계기와 제어 루프, 아래쪽 타이틀 블록." /><br /><b>lit-schematic · P&amp;ID</b><br /><sub>스킬에 들어 있는 동작 예제 <code>pid-dosing-skid</code>를 자체 키트로 만들었습니다. QA 게이트를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/schematic-iso-heat-exchanger.webp" width="400" alt="녹색 새들 받침 위에 놓인 파란 셸 앤 튜브 열교환기의 등각 단면도. 셸을 열어 구리 튜브와 회색 배플을 보여 주고, 입구, 튜브 묶음, 채널 플랜지, 셸, 배플, 새들 받침에 지시선 라벨이 붙어 있습니다." /><br /><b>lit-schematic · 등각 단면도</b><br /><sub>함께 든 예제 <code>iso-heat-exchanger</code>로 만들었습니다. SVG와 600 dpi PNG, PDF 모두 QA를 통과했습니다.</sub></td></tr>
@@ -193,8 +198,8 @@ npx installer.` 줄로 시작합니다. `/litwork`는 모델에게 답을 🔥 *
 
 ### 발표하기
 
-lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, 편집할 수 있는 네이티브 차트와 KPI 행, 표를 Pretendard를
-넣어 만들고, 건네기 전에 덱 QA로 검사합니다. 이제는 wjgoarxiv-skills에 있습니다([확장 스킬](#확장-스킬)).
+`lit-pptx`는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, 편집할 수 있는 네이티브 차트와 KPI 행, 표를 Pretendard를
+넣어 만듭니다. 건네기 전에 덱 QA로 결과를 검사합니다.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="주민에게 구의 집값과 이사 계획을 설명하는 뉴스룸 스타일 한국어 슬라이드 열 장의 모음. 미색 바탕에 녹슨 주황 강조, 핵심 수치 표지, 순서, 선 그래프, 수치 카드가 붙은 막대 그래프, 가로 막대 그래프, 동별 표, 일정, 자료 출처." /><br /><b>lit-pptx · 뉴스룸, 주민 설명 자료</b><br /><sub>함께 든 예제 <code>17-public-data-briefing-newsroom-ko.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="모바일 뱅킹 앱 3분기 데이터 리뷰 슬라이드 열 장의 모음. 짙은 남색 바탕에 호박색 강조, KPI 표지, 선과 막대 그래프, 리텐션 코호트 표, 구간 표지, 지표 정의, Android와 iOS 비교, 4분기 출시 일정." /><br /><b>lit-pptx · 나이트, 데이터 리뷰</b><br /><sub>함께 든 예제 <code>05-data-review-night-en.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td></tr>
@@ -203,9 +208,9 @@ lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, �
 
 ### 문서 쓰기
 
-lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 톤 여섯 가지 가운데 하나로 표지나 제목 블록, 핵심 수치,
-괘선 표, 번호 붙은 절을 짜고, 건네기 전에 페이지를 렌더링해 레이아웃 검사를 거칩니다. 이제는 wjgoarxiv-skills에
-있습니다([확장 스킬](#확장-스킬)).
+`lit-docx`는 계속 고쳐 쓸 수 있는 Word 파일을 절제된 톤 여섯 가지 가운데 하나로 만듭니다. 표지나 제목 블록, 핵심 수치,
+괘선 표, 번호 붙은 절이 들어갑니다. 두 스킬 모두 Markdown 원본을 파일 옆에 남기고, 건네기 전에 페이지를 렌더링해
+레이아웃 검사를 거칩니다. 답에는 고른 톤과 이유, 한마디로 바꿔 볼 수 있는 다른 톤 두 가지가 적힙니다.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="옥상 태양광 설치 첫해를 다룬 한국어 Word 보고서의 앞 세 쪽. 굵은 제목 블록, 핵심 수치 띠, 절 제목, 괘선 데이터 표." /><br /><b>lit-docx · 한국어 보고서, Report 톤</b><br /><sub>함께 든 예제 <code>01-report-ko.md</code>를 스킬의 변환기로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="자전거 출퇴근 지원 시범 사업을 다룬 한국어 Word 제안서의 앞 세 쪽. 표지, 핵심 수치 세 개가 있는 요약, 본문 절, 일정 표, 예산 표." /><br /><b>lit-docx · 한국어 제안서, Proposal 톤</b><br /><sub>함께 든 예제 <code>04-proposal-ko.md</code>로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td></tr>
@@ -213,142 +218,75 @@ lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 
 
 ### 화면 만들기와 흐름 챙기기
 
-frontend-ui-ux는 의뢰문으로 페이지를 만든 뒤 여러 너비에서 직접 확인하며, 이제는 wjgoarxiv-skills에
-있습니다([확장 스킬](#확장-스킬)). 일이 여러 세션에 흩어졌다면 `lit adhd`가 그 세션을 모두 읽고 다음 단계가 담긴
-브리프 한 장을 보여 줍니다.
+`frontend-ui-ux`는 의뢰문으로 페이지를 만든 뒤 여러 너비에서 직접 확인합니다. 옆 그림은 일이 여러 세션에 흩어졌을 때
+`lit adhd`가 보여 주는 브리프입니다.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/page.webp" width="400" alt="frontend-ui-ux가 만든 랜딩 페이지: 설치 명령이 있는 히어로, 순서 안내, 요금제와 자주 묻는 질문. 휴대폰 너비에서 가로 스크롤 없이 보입니다." /><br /><b>frontend-ui-ux · 랜딩 페이지</b><br /><sub>짧은 의뢰문으로 만들었습니다. 프로브가 일곱 화면으로 렌더링해 넘침, 대비, 모션을 검사합니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/brief.webp" width="400" alt="lit-adhd 브리프를 보여주는 터미널: 머릿말 세션 하나, 표로 정리된 끝난 세션 하나, 체크 표시가 있는 로드맵, 상자로 감싼 다음 할 일." /><br /><b>lit-adhd · 브리프</b><br /><code>lit adhd</code></td></tr>
 </table>
 
-## 무엇을 할 수 있나요
-
-스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열두 개가 들어 있고, 평소에는 그중 몇 가지만 써도 충분합니다.
-가장 자주 입력하는 명령은 다음과 같습니다.
-
-| 이렇게 입력하면 | 일어나는 일 |
-| --- | --- |
-| `/litwork` | 범위가 정해진 작업에 쓸 체크리스트를 시작합니다. |
-| `handoff` 또는 `/lit-handoff` | 확인한 결과와 다음 할 일을 다음 세션으로 건넵니다. |
-| `/lit-brainstorm` | 열린 질문을 여러 선택지와 고를 수 있는 짧은 목록으로 펼칩니다. |
-| `/lit-plan` | 확인 기준이 붙은 계획을 씁니다. |
-| `/start-work <승인된 계획>` | 승인한 계획을 실행합니다. |
-| `/review-work` | 작업 전에는 계획을, 작업 후에는 변경 사항을 근거와 함께 검토합니다. |
-| `/litresearch` | 출처를 따라갈 수 있는 범위 안에서 조사하고, 근거보다 크게 말하지 않습니다. |
-| `lit adhd` | 최근 세션 전부를 읽기 전용 한 화면으로 정리하고 다음 단계 하나를 권합니다. |
-
-[스킬 42개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
-
-네 종류의 파일이 각자 맡은 일을 합니다.
-
-| 구성 | 하는 일 |
-| --- | --- |
-| 스킬 | 이름으로 부르거나 프롬프트를 `lit`으로 시작할 때 세션이 읽는 지침 |
-| `.grok/agents`의 에이전트 | 계획, 검토, 문장 다듬기처럼 범위가 정해진 일을 맡음 |
-| 프로젝트 규칙 `.grok/rules/00-litgrok.md` | 요청에 맞는 스킬이 무엇인지 Grok Build에 알려 줌 |
-| 훅 | LIT 마크를 띄우고, 상태 행을 갱신하고, 결과물에 들어갈 문장을 쓰기 전에 검사하고, 이벤트 순서를 기록함 |
-
-### 작업 하나를 위한 체크리스트
-
-`/litwork`는 범위가 정해진 작업을 짧은 체크리스트로 바꾸고, 세션이 끝까지 그 순서를 따르게 합니다. 실행한 확인과
-다음 할 일을 남기니, 실제로 한 일과 짐작으로 넘어간 일을 구별할 수 있습니다.
-
-```text
-/litwork src/dates.js의 날짜 파싱 버그를 고치고, 수정 전에는 실패하는 테스트를 하나 추가해줘.
-```
-
-### 계획하고 나서 만들기
-
-큰 변경이라면 `/lit-plan`이 번호 붙은 행과 행마다의 확인 기준을 담은 계획 파일을 쓰고, 아직 아무것도 고치지 않습니다.
-계획을 읽고 승인하면 `/start-work`가 한 행씩 실행하고, 확인을 통과한 행에만 체크합니다.
-
-```text
-/lit-plan 보고서 페이지에 CSV 내보내기를 테스트와 함께 추가해줘.
-/start-work <출력된 계획 경로>
-```
-
-### 합치기 전에 한 번 더 보기
-
-`/review-work`는 작업을 시작하기 전에는 계획을, 끝난 뒤에는 변경 사항을 검토하며, 파일은 고치지 않고 고치는 일은 따로
-합니다. 브랜치나 diff, 체크된 계획 항목이 있으면 변경을, 체크된 항목이 없는 계획만 있으면 계획을 검토하고,
-`/review-work plan`과 `/review-work work`로 직접 정할 수도 있습니다. 변경 사항은 읽기 전용 검토 레인 여섯 개로 살펴보고,
-찾은 문제를 근거가 강한 순서로 정리합니다.
-
-```text
-/review-work 이 브랜치의 변경 사항
-```
-
-### 출처를 따라갈 수 있는 조사
-
-`/litresearch`는 조사 범위를 정해 두고, 모든 주장을 출처와 연결하며, 근거가 약하면 약하다고 말합니다.
-
-```text
-/litresearch 작은 웹 앱에서 쓰기 속도에 가장 영향을 주는 SQLite 설정은 무엇인지 출처와 함께 알려줘.
-```
-
-### 슬라이드, 문서, 글
-
-발표자료나 보고서를 부탁하면 `lit-pptx`는 편집할 수 있는 PowerPoint 파일을, `lit-docx`는 서식을 갖춘 Word 문서를
-만들고, 둘 다 Markdown 원본을 옆에 남깁니다. 발표자료는 열세 가지 톤, 문서는 절제된 여섯 가지 톤 가운데 일에 맞는 것을
-고르고, 답에 고른 톤과 이유, 한마디로 바꿔 볼 수 있는 다른 톤 두 가지를 적으며, 파일을 건네기 전에는 페이지를 직접
-렌더링하고 레이아웃 검사를 거칩니다. 두 스킬은 이제 wjgoarxiv-skills에 있고 LitGrok에서 두 이름은 설치 한 줄을 알려
-주며, `lit-humanizer`는 딱딱한 한국어나 영어 문장을 담긴 사실은 그대로 두고 자연스럽게 고쳐 씁니다.
+이런 프롬프트가 위 확장 스킬에 닿습니다.
 
 ```text
 /lit-pptx 월요일 팀 회의용으로 이번 분기 고객 문의 현황을 6장짜리 발표자료로 만들어줘.
 lit 새 온보딩 흐름에 대한 두 쪽짜리 제안서를 Word 파일로 써줘
-/lit-humanizer docs/intro.md
-```
-
-### 다이어그램, P&ID, 단면도
-
-`lit-diagram-drawer`는 아키텍처, 흐름, 시퀀스, 타임라인 같은 개념도와 기술 다이어그램을 그립니다. 실제 장치라면
-`lit-schematic`이 ISA-5.1 태그와 제어 루프가 있는 P&ID, 장치 배치도, 등각 단면도, 논문용 실험 장치 그림을 편집 가능한
-SVG와 PDF, 600 dpi PNG로 그리고, 보고하기 전에 자체 QA 스크립트로 검사합니다. 두 스킬은 `lit-scientific-visualization`과
-함께 이제 wjgoarxiv-skills에 있고, 아래 프롬프트는 LitGrok에서 여전히 `lit-schematic`에 닿으며 그 안내가 설치 한 줄을
-알려 줍니다([확장 스킬](#확장-스킬)).
-
-```text
 lit 상용·예비 펌프가 있는 차아염소산나트륨 도징 스키드 P&ID를 그려줘
 lit 논문용 흡착 실험 장치 모식도 그려줘
 ```
 
-### 읽은 기법을 내 스킬로 옮겨 오기
+## 무엇을 할 수 있나요
 
-내 스킬에는 없는 일을 해내는 글이나 기사, 저장소를 읽었다면, `lit hijack`이 그 글을 베끼지 않고 노하우만 가져옵니다.
-자료마다 출처를 기록하고, 라이선스가 무엇을 허락하는지 확인하고, 사양을 자기 말로 새로 쓴 뒤, 변경은 `lit-plan`과
-`start-work`로 만들고 새 작업을 보지 못한 기준선과 실제 화면에서 비교해 증명합니다. 보고서에는 가져온 것, 두고 온 것,
-그 이유가 남습니다.
+스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열두 개가 들어 있고, 평소에는 아래 명령 몇 가지만 입력해도
+충분합니다.
+
+| 이렇게 입력하면 | 일어나는 일 |
+| --- | --- |
+| `/litwork` | 범위가 정해진 작업을 체크리스트로 바꾸고, 확인한 것과 다음 할 일을 남깁니다. |
+| `handoff` 또는 `/lit-handoff` | 확인한 결과와 다음 할 일을 다음 세션으로 건넵니다. |
+| `/lit-brainstorm` | 열린 질문을 여러 선택지와 고를 수 있는 짧은 목록으로 펼칩니다. |
+| `/lit-plan` | 번호 붙은 행과 확인 기준을 담은 계획 파일을 쓰고, 아직 아무것도 고치지 않습니다. |
+| `/start-work <승인된 계획>` | 승인한 계획을 한 행씩 실행하고, 확인을 통과한 행에만 체크합니다. |
+| `/review-work` | 작업 전에는 계획을, 작업 후에는 변경 사항을 검토하며 파일은 고치지 않습니다. |
+| `/litresearch` | 범위를 정해 조사하고, 모든 주장을 출처와 연결합니다. |
+| `lit hijack <자료> 를 <스킬> 로` | 읽은 기법을 글은 베끼지 않고 내 스킬로 옮겨 옵니다. |
+| `/lit-humanizer <파일>` | 딱딱한 한국어나 영어 문장을 사실은 그대로 두고 자연스럽게 고칩니다. |
+| `lit adhd` | 최근 세션 전부를 읽기 전용 보드 한 장으로 정리하고, `go`로 다음 단계를 진행합니다. |
+
+[스킬 42개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
+
+Grok Build에 하나를 붙여 넣어 명령을 써 보세요.
 
 ```text
+/litwork src/dates.js의 날짜 파싱 버그를 고치고, 수정 전에는 실패하는 테스트를 하나 추가해줘.
+/lit-plan 보고서 페이지에 CSV 내보내기를 테스트와 함께 추가해줘.
+/start-work <출력된 계획 경로>
+/review-work 이 브랜치의 변경 사항
+/litresearch 작은 웹 앱에서 쓰기 속도에 가장 영향을 주는 SQLite 설정은 무엇인지 출처와 함께 알려줘.
 lit hijack https://example.com/post 와 docs/paper.pdf 를 .grok/skills/lit-humanizer 로
-```
-
-### 어디까지 했더라?
-
-창 여러 개와 끊김이 이어진 하루를 보냈다면 `lit adhd`(또는 `lit rewind`)가 이 저장소의 최근 에이전트 세션을 모두 읽고
-보드 한 장으로 정리하며, 아무것도 바꾸지 않습니다. 권하는 단계가 마음에 들면 `go`를 입력하세요. 세션이 그 일을 이어
-가고, `lit adhd 자세히`라고 하면 보드 아래에 세션별 카드가 붙습니다.
-
-```text
+/lit-humanizer docs/intro.md
 lit adhd
 go
 ```
 
 <details>
-<summary>보드에 나오는 것</summary>
+<summary>명령마다 동작하는 방식</summary>
 
-지금 할 일 하나와 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 계획마다 진행 막대가 붙은 마일스톤, 최근 끝낸 일과
-남은 일, 그리고 답을 기다리는 세션이나 커밋 안 된 변경, 멈춘 계획처럼 잊지 말아야 할 일이 나옵니다.
+- **`/litwork`**는 세션이 체크리스트를 끝까지 따르게 하므로, 실제로 한 일과 짐작으로 넘어간 일을 구별할 수 있습니다.
+- **`/lit-plan`과 `/start-work`**는 큰 변경에 맞습니다. 계획을 읽고 승인해야 `/start-work`가 실행합니다.
+- **`/review-work`**는 있는 것을 보고 대상을 고릅니다. 브랜치나 diff, 체크된 계획 항목이 있으면 변경을, 체크된 항목이
+  없는 계획만 있으면 계획을 검토하고, `/review-work plan`과 `/review-work work`로 직접 정할 수도 있습니다. 변경 사항은
+  읽기 전용 검토 레인 여섯 개로 살펴보고, 찾은 문제를 근거가 강한 순서로 정리하며, 고치는 일은 따로 합니다.
+- **`/litresearch`**는 조사 범위를 지키고, 근거가 약하면 약하다고 말하며 근거보다 크게 말하지 않습니다.
+- **`lit hijack`**은 내 스킬에는 없는 일을 해내는 글이나 기사, 저장소를 읽었을 때 씁니다. 자료마다 출처를 기록하고,
+  라이선스가 무엇을 허락하는지 확인하고, 사양을 자기 말로 새로 쓴 뒤, 변경은 `lit-plan`과 `start-work`로 만들고 새
+  작업을 보지 못한 기준선과 실제 화면에서 비교해 증명합니다. 보고서에는 가져온 것, 두고 온 것, 그 이유가 남습니다.
+- **`lit adhd`**(또는 `lit rewind`)는 창 여러 개와 끊김이 이어진 하루 뒤에 씁니다. 이 저장소의 최근 에이전트 세션을 모두
+  읽고 보드 한 장으로 정리하며, 아무것도 바꾸지 않습니다. 권하는 단계가 마음에 들면 `go`를 입력해 세션이 그 일을 이어
+  가게 하고, `lit adhd 자세히`라고 하면 보드 아래에 세션별 카드가 붙습니다.
+- **보드**에는 지금 할 일 하나와 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 계획마다 진행 막대가 붙은 마일스톤,
+  최근 끝낸 일과 남은 일, 그리고 답을 기다리는 세션이나 커밋 안 된 변경, 멈춘 계획처럼 잊지 말아야 할 일이 나옵니다.
 
 </details>
-
-### 영상과 README 커버
-
-영상과 README 커버는 이제 wjgoarxiv-skills가 만듭니다. 그 저장소에는 `lit-typographic-motion`(연출안을 먼저 쓰고 QA
-검사를 거친 짧은 영상, 또는 소리 없는 README 커버 루프)과 `readme-studio`가 들어 있고, 영상을 요청하면 LitGrok에서
-여전히 `lit-typographic-motion`이 잡혀 그 안내가 설치 한 줄을 알려 줍니다([확장 스킬](#확장-스킬)). `litgrok motion-runtime`
-명령은 스킬과 함께 빠졌고, 플러그인이 자기 엔진을 직접 준비합니다.
 
 ## LIT 상태 행
 
@@ -368,25 +306,24 @@ LitGrok 스킬을 부르는 프롬프트가 나오기 전까지는 모델과 추
 
 턴이 끝나면 카드는 다시 한 줄로 접히고, 작업이 어디까지 왔는지는 그대로 남습니다. 계획 턴이 계획을 아직 저장하지
 않았을 때, 핸드오프를 요청했을 때, 컨텍스트가 정해 둔 핸드오프 퍼센트에 가까워졌을 때처럼 손봐야 할 일이 생기면
-노란색으로 바뀝니다. 턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 설치 명령에 `--notify`를 붙이세요. 화면을
-보고 있을 때도 알림이 오고, 두 기능 모두 직접 켜기 전에는 꺼져 있습니다.
+노란색으로 바뀝니다.
+
+턴이 끝날 때마다 Grok의 터미널 알림도 받고 싶다면 같은 설치 명령에 `--notify`를 붙이세요. 화면을 보고 있을 때도 알림이
+오고, 두 기능 모두 직접 켜기 전에는 꺼져 있습니다.
 [가만히 있을 때와 일할 때의 모습, 색과 글리프를 바꾸는 설정](./docs/guide_ko-KR.md#화면에-나오는-모습)
 
 ## 자동 핸드오프
 
 세션이 길어지면 Grok의 컨텍스트 창이 조금씩 찹니다. 거의 다 차면 Grok이 대화를 압축하고, 하던 일의 세부 내용이 그 과정에서 빠져나갑니다. 자동 핸드오프는 모델이 아직 모든 것을 기억할 때 인수인계 문서를 쓰게 해서, 압축이 끝난 뒤에도 하던 자리에서 바로 이어 가게 합니다.
 
-동작하려면 네 가지가 맞아야 합니다.
-
 - **직접 켜기 전까지 꺼짐.** 이 기능은 직접 켜기 전까지 꺼져 있고, 퍼센트도 언제나 직접 정합니다.
 - **프로젝트마다 따로.** 설정은 그 프로젝트의 `.grok/litgrok/auto-handoff.json`에 저장됩니다.
-- **상태 행 먼저.** Grok이 컨텍스트가 얼마나 찼는지를 상태 행에만 알려 주고 훅에는 알려 주지 않으므로 상태 행부터 켜 두세요. 사용자 설정에 들어가므로 한 번만 하면 됩니다.
+- **상태 행 먼저.** Grok이 컨텍스트가 얼마나 찼는지를 상태 행에만 알려 주고 훅에는 알려 주지 않으므로 [상태 행](#lit-상태-행)부터 켜 두세요. 사용자 설정에 들어가므로 한 번만 하면 됩니다.
 - **신뢰한 훅.** 요청을 보내는 Stop 훅도 다른 프로젝트 훅과 같아서, 신뢰한 Git 루트(`/hooks-trust`)에서 동작합니다.
 
-둘째 줄은 프로젝트 안에서 실행하세요. 하위 폴더에서 실행해도 Git 루트를 알아서 찾습니다.
+프로젝트 안에서 실행하세요. 하위 폴더에서 실행해도 Git 루트를 알아서 찾습니다.
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 ```
 
@@ -396,11 +333,13 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 ### 세션에서 보이는 것
 
-컨텍스트가 정한 퍼센트의 10포인트 안으로 들어오면 상태 행에 노란 경고가 붙어 얼마나 가까운지 보여 줍니다. 턴이 끝났을 때 컨텍스트가 정한 퍼센트 이상이면 Stop 훅이 모델에게 한 단계 더 작업을 시키고 `lit-handoff` 절차대로 인수인계 문서를 쓰라고 한 번 요청하며, 그러면 카드에 `⚠ handoff requested`가 뜹니다. 문서가 저장되면 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리합니다.
+컨텍스트가 정한 퍼센트의 10포인트 안으로 들어오면 상태 행에 노란 경고가 붙어 얼마나 가까운지 보여 줍니다. 턴이 끝났을 때 컨텍스트가 정한 퍼센트 이상이면 Stop 훅이 모델에게 한 단계 더 작업을 시키고 `lit-handoff` 절차대로 인수인계 문서를 쓰라고 한 번 요청하고, 카드에는 `⚠ handoff requested`가 뜹니다.
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="960" alt="demo — grok status line이라는 제목의 터미널 카드. /litwork 턴 동안의 상태 카드 세 장이 있습니다. 카드마다 제목 줄에 [🔥LIT] | 🔥 LIT · litwork가, 오른쪽 끝에 2 tools와 1m04s가 있고, 그 아래 plan, work, review, done 단계 줄에서는 work가 켜져 있으며, 마지막 줄은 Grok 4.5 [high] │ ctx 54%/2m 또는 61%/2m │ handoff@60%입니다. 54%일 때 경고 줄은 ctx 54% → handoff at 60%, 61%일 때는 ctx 61% ≥ handoff at 60%입니다. Stop 훅이 핸드오프를 요청한 뒤에는 handoff requested가 됩니다." /></picture></p>
 
-이때 `/compact`를 직접 입력하세요. 훅으로는 Grok의 압축을 시작할 수 없습니다. 압축이 끝나고 다음 턴이 끝날 때 LitGrok은 이 세션이 저장한 인수인계 문서를 모델에게 알려 주고 현재 파일을 확인한 뒤 문서에 적힌 다음 단계부터 이어 가라고 요청하며, Grok도 설정을 바꾸지 않았다면 85퍼센트에서 스스로 압축하니 그보다 낮은 퍼센트를 고르세요.
+문서가 저장되면 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리합니다. 훅으로는 Grok의 압축을 시작할 수 없으니 이때 `/compact`를 직접 입력하세요. 그다음 턴이 끝날 때 LitGrok은 저장된 인수인계 문서를 모델에게 알려 주고, 현재 파일을 확인한 뒤 문서에 적힌 다음 단계부터 이어 가라고 요청합니다.
+
+Grok도 설정을 바꾸지 않았다면 85퍼센트에서 스스로 압축하니, 그보다 낮은 퍼센트를 고르세요.
 
 ### 끄기, 셸마다 정하기
 
@@ -426,12 +365,12 @@ Grok Build를 시작하는 환경에서 정할 수도 있습니다. 셸 하나�
 하지 않는다는 것입니다.
 
 이 기본 약속 부분은 LitGrok이 관리하고, 남겨 둘지는 사용자가 정합니다. `litgrok doctor`와 `litgrok ground status`가
-구간이 있는지와 버전을 `GROUND:` 줄로 보여 줍니다.
+구간이 있는지와 버전을 `GROUND:` 줄로 보여 주고, `ground off`는 빼고 계속 빼 두며, `ground on`은 다시 넣습니다.
 
 ```bash
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground status
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground off   # 빼고 계속 빼 둠
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다시 넣음
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground off
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on
 ```
 
 `install --no-ground`는 그 한 번만 건너뜁니다. 저장소 하나에만 두고 싶다면, 승인한 lit-init이 `litgrok ground project`로
@@ -439,15 +378,18 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 
 ## Grok Bot과 Cursor에서 LitGrok 쓰기
 
-Grok Build를 따로 설치하지 않아도, Grok Bot 안에서 같은 계획과 검토 습관을 쓸 수 있습니다. 이 저장소의
-`.cursor-plugin/plugin.json`이 Grok Bot과 Cursor가 함께 읽는 Cursor 형식의 매니페스트이고, `.grok/skills`의 스킬 42개를
-불러옵니다. "lit-plan으로 이 변경의 계획을 잡아 줘"나 "litwork로 할 일 목록을 만들어 줘"처럼 폴더 이름과 할 일을 같이
-적으면, Bot은 그 스킬을 읽고 이미 가진 도구로 일을 진행합니다.
+Grok Build를 따로 설치하지 않아도, Grok Bot 안에서 같은 계획과 검토 습관을 쓸 수 있습니다. Grok Bot과 Cursor가 함께
+읽는 Cursor 형식 매니페스트 `.cursor-plugin/plugin.json`이 `.grok/skills`의 스킬 42개를 가리킵니다. "lit-plan으로 이
+변경의 계획을 잡아 줘"나 "litwork로 할 일 목록을 만들어 줘"처럼 폴더 이름과 할 일을 같이 적으면, Bot은 그 스킬을 읽고
+이미 가진 도구로 일을 진행합니다.
 
-Grok Bot의 **Connect apps**는 Cursor Marketplace를 읽습니다. 이 저장소에서 LitGrok을 추가합니다.
+Grok Bot의 **Connect apps**는 Cursor Marketplace를 읽으므로, 이 저장소에서 LitGrok을 그곳에 추가합니다.
 
 1. Cursor에서 **Customize**를 열고 **Add Marketplace**를 고릅니다. **From GitHub Repository**를 고른 뒤 `https://github.com/wjgoarxiv/litgrok`을 붙여 넣습니다.
-2. 그러면 Cursor에 LitGrok이 든 마켓플레이스 항목이 생깁니다. 거기서 **Add**를 누릅니다. Grok Bot에서는 **Connect apps**를 열고 **Your plugins**에서 LitGrok을 찾아 추가합니다. Grok Bot이 GitHub 연결을 요청하면 그대로 연결해 주세요. Grok Bot은 시작할 때 마켓플레이스를 읽으므로, LitGrok이 아직 보이지 않으면 Grok Bot을 다시 시작한 뒤 확인해 주세요.
+2. Cursor에 생긴 LitGrok 마켓플레이스 항목에서 **Add**를 누릅니다.
+3. Grok Bot에서 **Connect apps**를 열고 **Your plugins**에서 LitGrok을 찾아 추가합니다. GitHub 연결을 요청하면 연결해 주세요.
+
+Grok Bot은 시작할 때 마켓플레이스를 읽으므로, LitGrok이 아직 보이지 않으면 Grok Bot을 다시 시작한 뒤 확인해 주세요.
 
 훅, 프로젝트 규칙, 상태 행, LIT 마크는 Grok Build 세션에서만 동작합니다. Grok Bot은 플러그인이 가져온 스킬과 커넥터만
 보여 주고, 훅은 Grok Build가 직접 실행하기 때문입니다. 슬라이드나 문서 스킬처럼 함께 든 스크립트를 실행하는 스킬은,
@@ -485,9 +427,16 @@ xai-org #1619는 아직 열려 있으니, 지금 추가하는 항목은 이 저�
 ## 어떻게 동작하나요
 
 `lit`으로 시작한 프롬프트는 세 층을 지나갑니다. 프로젝트 규칙이 요청을 읽고 스킬을 고르면, 워크플로 스킬이 질문, 계획,
-작업, 리뷰, 완료 순서로 단계를 하나씩 밟고 범위가 정해진 일은 `.grok/agents`의 에이전트에게 맡깁니다. 그 아래에서는
+작업, 리뷰, 완료 순서로 단계를 하나씩 밟습니다. 그 아래에서는
 신뢰한 훅이 기록을 남기고 검사에 걸린 턴을 붙잡아 둡니다. 계획 턴은 계획을 저장해야 끝나고, 얼버무리는 말로 가득한
 결과물은 파일에 쓰이기 전에 거절됩니다.
+
+| 구성 | 하는 일 |
+| --- | --- |
+| 스킬 | 이름으로 부르거나 프롬프트를 `lit`으로 시작할 때 세션이 읽는 지침 |
+| `.grok/agents`의 에이전트 | 워크플로 스킬에게서 계획, 검토, 문장 다듬기처럼 범위가 정해진 일을 넘겨받음 |
+| 프로젝트 규칙 `.grok/rules/00-litgrok.md` | 요청에 맞는 스킬이 무엇인지 Grok Build에 알려 줌 |
+| 훅 | LIT 마크를 띄우고, 상태 행을 갱신하고, 결과물에 들어갈 문장을 쓰기 전에 검사하고, 이벤트 순서를 기록함 |
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/route.ko.dark.png" /><img src="./docs/assets/readme/diagrams/route.ko.light.png" width="960" alt="lit을 입력하면 일어나는 일을 그린 도식. lit task나 /litwork task를 입력하면 프롬프트가 프로젝트 규칙 .grok/rules/00-litgrok.md로 가고, 규칙은 요청에 맞는 스킬로 start-work를 고른다. start-work는 범위가 정해진 일을 에이전트(.grok/agents/litgrok-*.md, 정의 11개, 플래너·실행·검증·리뷰)에게 맡긴다. 워크플로 스킬은 단계마다 하나씩 deep-interview(interview), lit-plan(plan), start-work와 litwork(work), review-work(review), 완료(계획 항목 모두 체크) 순서로 늘어서 있다. 그 아래는 hooks/hooks.json의 신뢰한 훅이다. 계획 턴이 끝날 때 Stop의 계획 게이트가 plans/slug.md를 저장할 때까지 턴을 붙잡고, 프로젝트 파일 plans/slug.md와 .handoff/HANDOFF.md 저장을 요구한다. Edit, Write마다 PreToolUse의 deliverable-hedge-guard가 얼버무린 산출물 쓰기를 exit 2로 거부해, 산출물은 쓰기 전에 lit-humanizer 규칙으로 점검된다. UserPromptSubmit은 프롬프트가 가리키는 단계를 기록할 뿐 라우팅도 출력도 하지 않고, 세션 원장 .grok/litgrok/session-ledger/에 한 줄을 추가하며 LIT 상태 행이 이것을 읽는다." /></picture></p>
 
@@ -519,12 +468,13 @@ xai-org #1619는 아직 열려 있으니, 지금 추가하는 항목은 이 저�
 ## 확장 스킬
 
 LitGrok의 코어는 그 자체로 완성되어 있고 혼자서도 동작합니다. 계획, 구현, 리뷰, 조사, 핸드오프 같은 lit 흐름에는 다른
-것이 필요하지 않습니다. 덱, 문서, 그림, 디자인, 영상 커버처럼 완성된 파일을 만드는 스킬 아홉 개는 이제 LitFamily 확장으로
-LitFamily 확장 선반인 wjgoarxiv-skills(https://github.com/wjgoarxiv/wjgoarxiv-skills)에 있고, 쓰는 것만 골라 LitGrok 옆에
-설치하면 LitFamily를 온전히 다 쓸 수 있으며 나머지는 설치하지 않아도 됩니다.
+것이 필요하지 않습니다. 덱, 문서, 그림, 디자인, 영상 커버처럼 완성된 파일을 만드는 스킬 아홉 개는 이제 LitFamily 확장
+선반인 [wjgoarxiv-skills](https://github.com/wjgoarxiv/wjgoarxiv-skills)에 LitFamily 확장으로 있습니다. 쓰는 것만 골라
+LitGrok 옆에 설치하면 LitFamily를 온전히 다 쓸 수 있고, 나머지는 설치하지 않아도 됩니다.
 
-`litgrok install`은 지금도 스킬 폴더 42개를 복사합니다. 그중 33개는 코어 스킬이고, 나머지 아홉 개는 확장의 예전 이름으로
-남겨 둔 짧은 안내입니다. 어떤 스킬이 어디에 있는지, `litgrok extensions install`이 확장 하나를 다시 들이는 네 단계가
+`litgrok install`은 지금도 스킬 폴더 42개를 복사합니다. 33개는 코어 스킬이고, 아홉 개는 확장의 예전 이름으로 남겨 둔 짧은
+안내입니다. 슬래시 이름이나 `lit`으로 시작하는 요청, 그 스킬을 미리 불러오는 에이전트가 확장을 찾으면 이 안내가 받아서
+설치 한 줄을 알려 줍니다. 어떤 스킬이 어디에 있는지, `litgrok extensions install`이 확장 하나를 다시 들이는 네 단계가
 무엇인지 그림으로 정리했습니다.
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.ko.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.ko.light.png" width="960" alt="LitGrok의 코어와 확장을 그린 도식. litgrok install은 .grok/skills에 스킬 폴더 42개를 복사한다. 왼쪽은 이것만으로 완결되는 코어 33개를 다섯 묶음으로 보여 준다. 계획·구현·리뷰: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. 리서치: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. 코드: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. 이어서 일하기: lit-handoff, lit-recap, lit-adhd, wikify. 문장과 호스트: lit-humanizer, litgrok. 가운데는 같은 이름의 안내 9개로, 각각 화살표로 wjgoarxiv-skills의 variants/litgrok/ 폴더를 가리킨다: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. 아래는 litgrok extensions install skill --yes가 확장 하나를 다시 들이는 네 단계다. 1, 확인: grok plugin list --json과 스킬 폴더 8곳을 보고, 개인 사본이 있으면 멈춘다. 2, 옮겨 두기: 저장소의 사본을 통째로 ~/.grok/extension-backups의 날짜 폴더에 둔다. 3, 복사: grok plugin uninstall 다음 grok plugin install folder --trust. 4, 설치 기록: Grok Build의 registry.json을 grok plugin list --json으로 읽으며, 소스와 저장소 경로와 시각이 남는다. 덧붙인 카드: 다른 동사는 litgrok extensions list, check, update, remove, prune-backups이고, 손으로 할 때는 각 안내에 git clone과 설치 줄이 그대로 있다." /></picture></p>
@@ -563,6 +513,10 @@ wjgoarxiv-skills clone>"`으로 그 클론을 씁니다. 그다음 아래 손 �
 
 여러 개를 한 번에 고르려면 `--family decks|documents|figures|design|video-covers`나 `--all`을 씁니다. `litgrok doctor`는
 확인 결과를 한 줄로 요약해 줍니다.
+
+영상과 README 커버는 확장 가운데 두 가지가 만듭니다. `lit-typographic-motion`(연출안을 먼저 쓰고 QA 검사를 거친 짧은
+영상, 또는 소리 없는 README 커버 루프)과 `readme-studio`입니다. `litgrok motion-runtime` 명령은 스킬과 함께 빠졌고,
+플러그인이 자기 엔진을 직접 준비합니다.
 
 <details>
 <summary>확장을 손으로 설치하기</summary>
@@ -660,12 +614,12 @@ Node.js 20.9 이상이 필요하고, 문서 스킬은 처음 쓸 때 버전이 �
 업데이트는 [설치 줄](#30초-설치)을 다시 실행하면 됩니다. 설치를 돌보는 명령은 두 가지가 더 있습니다.
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor      # 설치된 버전, GROUND: 줄, 새 릴리스가 있으면 그 안내
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall   # 사용자 설치였다면 --user를 붙임
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall
 ```
 
-- **`doctor`는 읽기만 합니다.** npm에 새 버전이 있으면 설치 명령을 알려 주기만 합니다.
-- **`uninstall`은 설치 프로그램이 넣은 파일만 지웁니다.** 설치한 범위 그대로 실행하고, 그중 직접 고친 파일이 있으면 아무것도 지우기 전에 멈추고 그 파일을 알려 줍니다.
+- **`doctor`는 읽기만 합니다.** 설치된 버전과 `GROUND:` 줄을 보여 주고, npm에 새 버전이 있으면 설치 명령을 알려 주기만 합니다.
+- **`uninstall`은 설치 프로그램이 넣은 파일만 지웁니다.** 설치한 범위 그대로 실행하고(사용자 설치였다면 `--user`를 붙임), 그중 직접 고친 파일이 있으면 아무것도 지우기 전에 멈추고 그 파일을 알려 줍니다.
 - **사용자 범위로 제거하면** LitGrok이 써 넣은 상태 행 설정이 그대로일 때 그것도 함께 지웁니다.
 
 설치 프로그램은 `git init`, 훅 신뢰, 로그인, 모델 선택을 대신하지 않습니다. 이런 일과 API 키는

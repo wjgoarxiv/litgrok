@@ -18,12 +18,14 @@
 
 Start a Grok Build prompt with `lit` and the session follows a routine: it writes the test before the fix, checks the
 real result, and says plainly what it could not check. Ask for a handoff when you stop, and tomorrow's session opens on
-the note where today's ended. Grok Build still runs the session and picks the model; LitGrok adds the way of working,
-as plain files in your project's `.grok/` folder.
+the note where today's ended.
+
+Grok Build still runs the session and picks the model. LitGrok adds the way of working, as plain files in your
+project's `.grok/` folder.
 
 > [!TIP]
-> Install into one project with the line under [Install in 30 seconds](#install-in-30-seconds), restart Grok Build from
-> the Git root, then hand Grok one task: `lit fix the date parsing bug in src/dates.js, with a test`.
+> Install into one project with the line under [Install in 30 seconds](#install-in-30-seconds), follow
+> [Quick start](#quick-start), then hand Grok one task: `lit fix the date parsing bug in src/dates.js, with a test`.
 
 <p align="center"><a href="#install-in-30-seconds">Install</a> &nbsp; <a href="#quick-start">Quick start</a> &nbsp; <a href="#what-you-can-make">Showcase</a> &nbsp; <a href="./docs/guide.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Guide</a> &nbsp; <a href="./docs/skills.md">Skills</a> &nbsp; <a href="./docs/guide.md#watch-it-in-motion"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> Film</a> &nbsp; <a href="./docs/guide.md#safety-and-uninstall"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> Safety</a> &nbsp; <a href="./docs/reference.md">Reference</a> &nbsp; <a href="./README_ko-KR.md">한국어</a></p>
 
@@ -78,10 +80,8 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 The installer copies LitGrok's skills, agents, project rule and hooks into `<project>/.grok/` and changes nothing else.
-It ends with an install receipt that should read `Status: Ready` and reminds you of the two steps only you can take:
-open Grok Build from the project's Git root, and trust the hooks. Running the same command later updates LitGrok.
-
-Each switch below fits a particular moment:
+Its install receipt should read `Status: Ready` and names the two steps only you can take, which
+[Quick start](#quick-start) step 1 covers. Running the same command later updates LitGrok.
 
 | Switch | What it does | When to use it |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ Each switch below fits a particular moment:
 
 | Place | How you add it | Where it lives |
 | --- | --- | --- |
-| Grok Build, this project | `npm exec --yes --package @litfamily/litgrok@latest -- litgrok install` | `<project>/.grok/` |
+| Grok Build, this project | The [install line](#install-in-30-seconds) | `<project>/.grok/` |
 | Grok Build, your user account | `litgrok install --user`, with `--status-line` for the status row | `~/.grok/` |
 | Grok Bot, through Cursor | Add Marketplace, From GitHub Repository, then Connect apps | `.cursor-plugin/plugin.json` in this repository |
 
@@ -105,17 +105,15 @@ Each switch below fits a particular moment:
 
 ### What the install writes, and what it leaves to you
 
-The installer gathers LitGrok's files from the package, checks that every folder on the way into `.grok/` is a real
-folder, and compares each file with `.litgrok-install-manifest.json`, the list of hashes it kept from the last install.
-A new file is written, and a file that still matches its hash is LitGrok's own, so it is replaced or, when already
-current, left alone. A file you edited since then stops the whole run before anything is written, and the installer
-names it, so your change is never overwritten quietly.
+After gathering its files from the package, the installer checks that every folder on the way into `.grok/` is real
+and compares each file with `.litgrok-install-manifest.json`, the hashes kept from the last install. A new file is
+written, and LitGrok's own unchanged file is replaced or, when current, left alone. A file you edited stops the run
+before anything is written, and the installer names it.
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/installer.en.dark.png" /><img src="./docs/assets/readme/diagrams/installer.en.light.png" width="960" alt="Flowchart titled What litgrok install writes, and what it leaves to you. litgrok install (add --dry-run to look first) runs PAYLOAD (skills, agents, rules, hooks from the package's .grok/), then SAFETY (every folder on the path is real, a symlink is refused), then OWNERSHIP, which compares each file with the manifest. Not there yet leads to Written. LitGrok's, unchanged leads to Replaced or left alone. Changed since install leads to Stops before writing, with the message Refusing to overwrite different existing file: path. Written and replaced files go to WRITE, then the receipt: Status: Ready, with .litgrok-install-manifest.json recording each file's hash. A side card says it writes to project/.grok/ by default and to ~/.grok/ with --user. Next: restart Grok Build leads to two steps the installer leaves to you: open Grok Build from the Git root (in a plain folder, run git init yourself) and trust the hooks with /hooks-trust, since project hooks stay off until you do. The installer never runs git init or changes trust." /></picture></p>
 
-The last two boxes are the part people trip on. LitGrok can copy its hooks, but Grok Build only runs project hooks from
-a Git root you have trusted, and the installer will not decide either of those for you; until you do both, the skills
-and the rule work and the hooks wait. [Quick start](#quick-start) step 1 walks through them.
+The last two boxes are where people trip: the installer leaves both to you, and until you do them the skills and the
+rule work while the hooks wait. [Quick start](#quick-start) step 1 walks through them.
 
 ### Let a coding agent install it
 
@@ -159,11 +157,13 @@ Before you change anything, show me your plan and wait for my yes.
 /litwork Build a to-do list in one index.html with no external dependencies. Implement add, complete, and delete. Leave the checks performed and the next step. Do not open a browser automatically; give me the steps to check it myself.
 ```
 
+4. Open `index.html` yourself and add, complete and delete an item. That click-through is the real test, and anything
+   you didn't get to try stays marked unverified.
+
 When the hooks are loaded, a new session opens with the LIT mark and the line `LitGrok payload present: skills, project
 rules, hooks, and the npx installer.` The reply to `/litwork` is asked to open with 🔥 **LIT IGNITED · litwork** 🔥, work
-through the checklist, and end with what it checked and what comes next. Then open `index.html` yourself and add,
-complete and delete an item: that click-through is the real test, and anything you didn't get to try stays marked
-unverified. [Pictures of what LitGrok prints](./docs/guide.md#what-you-will-see-on-screen).
+through the checklist, and end with what it checked and what comes next.
+[Pictures of what LitGrok prints](./docs/guide.md#what-you-will-see-on-screen).
 
 You can also begin a message with plain `lit` and describe the task. The project rule asks Grok Build to pick the
 matching skill, and your session shows which one it picked. Before you stop for the day, ask for a handoff:
@@ -178,15 +178,19 @@ before continuing. A new Git project keeps it at `.handoff/HANDOFF.md`.
 
 ## What you can make
 
-Every picture below is a real output of LitGrok. Where a prompt sits under a picture, that request produced it in a Grok
-Build session; where none does, the skill's own engine made it from an example the skill ships with, and the caption
-names that example. None of them is a mock-up, so the same request with LitGrok installed gets you the same kind of result.
+Every picture below is real output from LitGrok with its [extensions](#extensions) installed; all but the `lit adhd`
+brief come from extension skills. A prompt under a picture produced it in a Grok Build session; otherwise the skill's own
+engine made it from a bundled example that the caption names. None is a mock-up, so the same request gets you the same kind of result.
 
 ### Draw it
 
-Each drawing comes from the skill that knows its rules: ISA-5.1 tags and a title block on a P&ID, material colours and
-leader labels on a cutaway, a trust boundary and numbered flows on an architecture. Every one passed its skill's QA
-script before it was exported.
+Each drawing comes from the skill that knows its rules, and every one passed that skill's QA script before export.
+
+- **`lit-diagram-drawer`** draws concept and technical diagrams (architectures, flows, sequences, timelines); an
+  architecture gets a trust boundary and numbered flows.
+- **`lit-schematic`** draws real equipment as editable SVG with PDF and a 600 dpi PNG: a P&ID with ISA-5.1 tags, control
+  loops and a title block, an equipment layout, an isometric cutaway with material colours and leader labels, or a
+  journal figure of an experimental setup.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/pid.webp" width="400" alt="A3 P&amp;ID of a hypochlorite dosing skid: tank, duty and standby metering pumps, relief valve, instruments and control loop, title block at the bottom." /><br /><b>lit-schematic · P&amp;ID</b><br /><sub>Built from the skill&#39;s bundled worked example <code>pid-dosing-skid</code> by its own kit; the QA gate passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/schematic-iso-heat-exchanger.webp" width="400" alt="Isometric cutaway of a blue shell-and-tube heat exchanger on green saddle supports, the shell opened to show copper tubes and grey segmental baffles, with leader labels for the inlets, tube bundle, channel flange, shell, baffle and saddle support." /><br /><b>lit-schematic · isometric cutaway</b><br /><sub>From the bundled example <code>iso-heat-exchanger</code>; QA passed on the SVG and on the 600 dpi PNG and PDF exports.</sub></td></tr>
@@ -195,9 +199,8 @@ script before it was exported.
 
 ### Present it
 
-lit-pptx picks one of thirteen tonalities for the audience, then compiles native, editable charts, KPI rows and tables
-with Pretendard embedded, and its deck QA checks the result before you get it. It now ships in wjgoarxiv-skills (see
-[Extensions](#extensions)).
+`lit-pptx` picks one of thirteen tonalities for the audience, then compiles native, editable charts, KPI rows and
+tables with Pretendard embedded. Its deck QA checks the result before you get it.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="Contact sheet of ten off-white Korean newsroom-style slides with rust-orange accents, briefing residents on district housing prices and moving plans: a headline KPI cover, an agenda, a line chart, a bar chart with stat cards, a horizontal bar chart, a neighbourhood table, a timeline and a sources page." /><br /><b>lit-pptx · newsroom, Korean public briefing</b><br /><sub>From the bundled example <code>17-public-data-briefing-newsroom-ko.md</code>; the deck QA passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="Contact sheet of ten dark navy slides with amber accents from a Q3 mobile banking app data review: a KPI title slide, line and bar charts, a retention cohort table, a section divider, metric definitions, an Android and iOS comparison and a Q4 release timeline." /><br /><b>lit-pptx · night, data review</b><br /><sub>From the bundled example <code>05-data-review-night-en.md</code>; the deck QA passed.</sub></td></tr>
@@ -206,9 +209,10 @@ with Pretendard embedded, and its deck QA checks the result before you get it. I
 
 ### Write it
 
-lit-docx writes a Word file you can keep editing: a cover or title block, key figures, ruled tables and numbered sections
-in one of six restrained tonalities. It renders the pages and runs its layout gate before it hands the file over. It now
-ships in wjgoarxiv-skills (see [Extensions](#extensions)).
+`lit-docx` writes a Word file you can keep editing, in one of six restrained tonalities: a cover or title block, key
+figures, ruled tables and numbered sections. Both skills leave the Markdown source beside the file, render the pages and
+run a layout gate before handing it over. The reply names the tonality, the reason and two alternatives you can switch
+to with one word.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="The first three pages of a Korean Word report on the first year of a rooftop solar installation: a bold title block, a key-figure strip, section headings and ruled data tables." /><br /><b>lit-docx · Korean report, Report tonality</b><br /><sub>From the bundled example <code>01-report-ko.md</code> by the skill&#39;s own converter; the layout gate passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="The first three pages of a Korean Word proposal for a bicycle-commuting support pilot: a cover page, a summary with three key figures, body sections, a schedule table and a budget table." /><br /><b>lit-docx · Korean proposal, Proposal tonality</b><br /><sub>From the bundled example <code>04-proposal-ko.md</code>; the layout gate passed.</sub></td></tr>
@@ -216,144 +220,77 @@ ships in wjgoarxiv-skills (see [Extensions](#extensions)).
 
 ### Build it and keep track of it
 
-frontend-ui-ux builds a page from a brief and then checks it at several widths; it now ships in wjgoarxiv-skills (see
-[Extensions](#extensions)). When the work has spread over several sessions, `lit adhd` reads them all and prints one
-brief with a next step.
+`frontend-ui-ux` builds a page from a brief and then checks it at several widths. Beside it is the brief `lit adhd`
+prints when work has spread over several sessions.
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/page.webp" width="400" alt="Landing page built by frontend-ui-ux: hero with install command, how-it-works steps, pricing tiers and FAQ, shown at phone width with no sideways scroll." /><br /><b>frontend-ui-ux · landing page</b><br /><sub>Built from a plain brief; the probe renders it at seven views and checks overflow, contrast and motion.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/brief.webp" width="400" alt="Terminal showing the lit-adhd brief: one headline session, one ended session in a table, a roadmap with checkmarks, and a boxed recommended next step." /><br /><b>lit-adhd · the brief</b><br /><code>lit adhd</code></td></tr>
 </table>
 
-## What you get
-
-It ships 42 skills, 11 agents, one project rule, and twelve hook registrations, and most days you will use a handful of
-them. The routes below are the ones you type most:
-
-| Type this | What happens |
-| --- | --- |
-| `/litwork` | Starts the shipped work checklist for a bounded task. |
-| `handoff` or `/lit-handoff` | Carries the checked result and the next step into another session. |
-| `/lit-brainstorm` | Opens a question into many options and a short list to pick from. |
-| `/lit-plan` | Writes a plan with concrete checks. |
-| `/start-work <approved-plan>` | Executes a plan you approved. |
-| `/review-work` | Reviews a plan before work or a change after it, with its evidence. |
-| `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
-| `lit adhd` | Briefs every recent session on one read-only screen, with one next step. |
-
-[All 42 skills, with a picture of what each one gives you](./docs/skills.md).
-
-Four kinds of file do the work, each with its own job:
-
-| Piece | What it does |
-| --- | --- |
-| Skills | Instructions the session reads when you call one by name or start a prompt with `lit` |
-| Agents in `.grok/agents` | Take a bounded job such as a plan, a review or a prose pass |
-| Project rule `.grok/rules/00-litgrok.md` | Tells Grok Build which skill fits a request |
-| Hooks | Show the LIT mark, keep the status row current, check deliverable wording before it is written, log the order of events |
-
-### A checklist for one task
-
-`/litwork` turns a bounded task into a short checklist the session follows to the end. It records each check it ran and
-names the next step, so you can see what was done and what was only assumed.
-
-```text
-/litwork Fix the date parsing bug in src/dates.js and add a test that fails without the fix.
-```
-
-### Plan first, then build
-
-For a larger change, `/lit-plan` writes a plan file with numbered rows and the checks for each one, and edits nothing
-yet. Once you have read and approved it, `/start-work` runs it row by row and ticks a row only after its checks pass.
-
-```text
-/lit-plan Add CSV export to the reports page, with tests.
-/start-work <the plan path it printed>
-```
-
-### A second look before you merge
-
-`/review-work` reviews a plan before work starts or the finished change after it, and changes no files; fixing is a
-separate step. It picks the mode from what exists: a branch, a diff or ticked plan rows mean the change, a plan with no
-ticked rows means the plan, and `/review-work plan` or `/review-work work` forces one. A change goes through six read-only
-lanes, and the findings are ranked by the evidence behind each one.
-
-```text
-/review-work the changes on this branch
-```
-
-### Research you can trace
-
-`/litresearch` keeps a research question bounded, ties every claim to a source, and says plainly when the evidence is
-thin.
-
-```text
-/litresearch Which SQLite settings matter most for write speed in a small web app? Cite your sources.
-```
-
-### Slides, documents and prose
-
-Ask for a deck or a report and `lit-pptx` builds an editable PowerPoint file or `lit-docx` a styled Word document, each
-with its Markdown source beside it. Decks choose among thirteen tonalities and documents among six restrained ones; the
-reply names the choice, the reason and two alternatives you can switch to with one word, and both render their pages and
-run a layout gate before they hand the file over. Both now come from wjgoarxiv-skills, and in LitGrok their names give the
-install line; `lit-humanizer` rewrites stiff English or Korean prose and keeps the facts.
+Prompts like these reach the extension skills above:
 
 ```text
 /lit-pptx A six-slide update on this quarter's support tickets for Monday's team meeting.
 lit write a two-page proposal for the new onboarding flow, as a Word file
-/lit-humanizer docs/intro.md
-```
-
-### Diagrams, P&IDs and cutaways
-
-`lit-diagram-drawer` draws concept and technical diagrams: architectures, flows, sequences, timelines. For real
-equipment, `lit-schematic` draws a P&ID with ISA-5.1 tags and control loops, an equipment layout, an isometric cutaway or
-a journal figure of an experimental setup, as editable SVG with PDF and a 600 dpi PNG, and checks it with its own QA
-script before it reports. Both, with `lit-scientific-visualization`, now ship in wjgoarxiv-skills; the prompt below still
-reaches `lit-schematic` in LitGrok, and its note gives the install line (see [Extensions](#extensions)).
-
-```text
 lit draw a P&ID of a hypochlorite dosing skid with duty and standby pumps
 lit 논문용 흡착 실험 장치 모식도 그려줘
 ```
 
-### Bring in a technique you read about
+## What you get
 
-When a post, an article or a repository does something your own skill does not, `lit hijack` takes the know-how without
-copying the text. It records where each source came from, checks what its licence allows, writes a spec in its own words,
-has the change built through `lit-plan` and `start-work`, and proves it on the real surface against a baseline that
-cannot see the new work. The report says what was taken, what was left and why.
+It ships 42 skills, 11 agents, one project rule, and twelve hook registrations, and most days you type a handful of
+the routes below.
+
+| Type this | What happens |
+| --- | --- |
+| `/litwork` | Turns a bounded task into a checklist, recording each check and the next step. |
+| `handoff` or `/lit-handoff` | Carries the checked result and the next step into another session. |
+| `/lit-brainstorm` | Opens a question into many options and a short list to pick from. |
+| `/lit-plan` | Writes a plan file of numbered rows with checks, and edits nothing yet. |
+| `/start-work <approved-plan>` | Runs the plan you approved row by row, ticking a row once its checks pass. |
+| `/review-work` | Reviews a plan before work or a change after it, and changes no files. |
+| `/litresearch` | Runs bounded research that ties every claim to a source. |
+| `lit hijack <source> into <skill>` | Brings a technique you read about into your own skill, without copying the text. |
+| `/lit-humanizer <file>` | Rewrites stiff English or Korean prose and keeps the facts. |
+| `lit adhd` | Briefs every recent session on one read-only board; `go` takes its next step. |
+
+[All 42 skills, with a picture of what each one gives you](./docs/skills.md).
+
+Paste one into Grok Build to try a route:
 
 ```text
+/litwork Fix the date parsing bug in src/dates.js and add a test that fails without the fix.
+/lit-plan Add CSV export to the reports page, with tests.
+/start-work <the plan path it printed>
+/review-work the changes on this branch
+/litresearch Which SQLite settings matter most for write speed in a small web app? Cite your sources.
 lit hijack https://example.com/post and docs/paper.pdf into .grok/skills/lit-humanizer
-```
-
-### Where was I?
-
-After a day of several sessions and interruptions, `lit adhd` (or `lit rewind`) reads every recent agent session of this
-repository and prints one board, changing nothing. If the step it suggests is what you want, type `go` and the session
-takes it; `lit adhd detail` adds one card per session under the board.
-
-```text
+/lit-humanizer docs/intro.md
 lit adhd
 go
 ```
 
 <details>
-<summary>What the board shows</summary>
+<summary>How each route works</summary>
 
-The one thing to do now and what to type; how much is done, in progress, waiting on you and left; each plan as a
-milestone with a progress bar; what you finished lately and what is still to do; and a short list of things not to
-forget, such as a session waiting on your answer, uncommitted changes or a plan that stalled.
+- **`/litwork`** follows its checklist to the end, so you can see what was done and what was only assumed.
+- **`/lit-plan` and `/start-work`** suit a larger change: you read and approve the plan before `/start-work` runs it.
+- **`/review-work`** picks the mode from what exists: a branch, a diff or ticked plan rows mean the change, and a plan
+  with no ticked rows means the plan. `/review-work plan` or `/review-work work` forces one. A change goes through six
+  read-only lanes, the findings are ranked by the evidence behind each one, and fixing is a separate step.
+- **`/litresearch`** keeps the question bounded and says plainly when the evidence is thin, without overstating it.
+- **`lit hijack`** is for a post, an article or a repository that does something your own skill does not. It records
+  where each source came from, checks what its licence allows, writes a spec in its own words, has the change built
+  through `lit-plan` and `start-work`, and proves it on the real surface against a baseline that cannot see the new
+  work. The report says what was taken, what was left and why.
+- **`lit adhd`** (or `lit rewind`) is for after a day of several sessions and interruptions: it reads every recent agent
+  session of this repository and prints one board, changing nothing. If the step it suggests is what you want, type
+  `go` and the session takes it; `lit adhd detail` adds one card per session under the board.
+- **The board** shows the one thing to do now and what to type; how much is done, in progress, waiting on you and left;
+  each plan as a milestone with a progress bar; what you finished lately and what is still to do; and a short list of
+  things not to forget, such as a session waiting on your answer, uncommitted changes or a plan that stalled.
 
 </details>
-
-### Films and README covers
-
-Films and README covers now come from wjgoarxiv-skills, which carries `lit-typographic-motion` (a treatment first, then a
-short film checked by a QA gate, or a silent README cover loop) and `readme-studio`. A film request still finds
-`lit-typographic-motion` in LitGrok, and its note gives the install line (see [Extensions](#extensions)). The
-`litgrok motion-runtime` command left with the skill; the plugin pre-warms its own engine.
 
 ## The LIT status row
 
@@ -374,25 +311,24 @@ small LIT card. Read it from top to bottom:
 
 When the turn ends, the card folds back into the single line and keeps where the work got to. It turns yellow when
 something needs you: a planning turn that has not saved its plan, a handoff request, or a context close to your handoff
-percent. Add `--notify` to the same install command if you also want Grok's terminal notification each time a turn
-finishes, even while you are watching; both stay off until you ask for them.
+percent.
+
+Add `--notify` to the same install command if you also want Grok's terminal notification each time a turn finishes,
+even while you are watching. Both stay off until you ask for them.
 [Pictures of the row idle and at work, and the switches for colour and glyphs](./docs/guide.md#what-you-will-see-on-screen).
 
 ## Automatic handoff
 
 A long session slowly fills Grok's context window. When it is nearly full, Grok compacts the conversation, and the details of what you were in the middle of get squeezed out. Automatic handoff has the model write its handoff while it still remembers everything, so after the compaction it can pick up exactly where it was.
 
-Four facts decide whether it works:
-
 - **Off until you ask.** It stays off until you turn it on, and the percent is always your choice.
 - **One project at a time.** The setting lives in that project's `.grok/litgrok/auto-handoff.json`.
-- **Status row first.** Grok shares how full the context is with the status row and with no hook, so add the row first; it lives in your user settings and only needs doing once.
+- **Status row first.** Grok shares how full the context is with the status row and with no hook, so add [the row](#the-lit-status-row) first; it lives in your user settings and only needs doing once.
 - **Trusted hooks.** The Stop hook that does the asking is a project hook like the others, so it runs in a trusted Git root (`/hooks-trust`).
 
-Run the second line inside the project; from a subfolder it finds the Git root on its own:
+Run it inside the project; from a subfolder it finds the Git root on its own:
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 ```
 
@@ -402,11 +338,13 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 ### What you see in a session
 
-Once the context comes within ten points of your percent, the status row shows a yellow warning with how close it is. When a turn ends at or above your percent, the Stop hook keeps the model going for one more step and asks it, once, to write the handoff with the `lit-handoff` procedure, and the card reads `⚠ handoff requested`. When the packet is saved, the model ends with one plain line: "Handoff saved. Run /compact now."
+Once the context comes within ten points of your percent, the status row shows a yellow warning with how close it is. When a turn ends at or above your percent, the Stop hook keeps the model going for one more step and asks it, once, to write the handoff with the `lit-handoff` procedure; the card reads `⚠ handoff requested`.
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="960" alt="Terminal card titled demo — grok status line. Three status cards during a /litwork turn, each titled [🔥LIT] | 🔥 LIT · litwork with 2 tools and 1m04s at the right, the stage map plan, work, review, done with work lit, and a last line reading Grok 4.5 [high] │ ctx 54%/2m or 61%/2m │ handoff@60%. At 54% the warning line reads ctx 54% → handoff at 60%. At 61% it reads ctx 61% ≥ handoff at 60%. After the Stop hook asks for the handoff it reads handoff requested." /></picture></p>
 
-That is your cue to type `/compact`, since Grok lets no hook start a compaction. After it, the next time a turn ends, LitGrok points the model at the handoff this session saved and asks it to check the current files and continue from the next steps written there. Grok also compacts on its own at 85 percent unless you changed that, so choose a percent below it.
+When the packet is saved, the model ends with one plain line: "Handoff saved. Run /compact now." Type `/compact` then, since Grok lets no hook start a compaction; the next time a turn ends, LitGrok points the model at the saved handoff and asks it to check the current files and continue from its next steps.
+
+Grok also compacts on its own at 85 percent unless you changed that, so choose a percent below it.
 
 ### Turning it off, or deciding per shell
 
@@ -432,12 +370,12 @@ word, plans live in `plans/` and the handoff in `.handoff/HANDOFF.md`, and a pus
 waits for your explicit yes.
 
 The section is LitGrok's own, and you decide whether it stays. `litgrok doctor` and `litgrok ground status` print a
-`GROUND:` line with its presence and version:
+`GROUND:` line with its presence and version; `ground off` takes it out and keeps it out, and `ground on` puts it back.
 
 ```bash
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground status
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground off   # take it out and keep it out
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # put it back
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground off
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on
 ```
 
 `install --no-ground` skips it for that one run. For a single repository, an approved lit-init can add the same agreement
@@ -445,15 +383,18 @@ as its own project file, `.grok/rules/10-litgrok-ground.md`, by running `litgrok
 
 ## Use LitGrok in Grok Bot and Cursor
 
-You can use the same planning and review habits inside Grok Bot, without a separate Grok Build install. This repository
-carries a Cursor-format manifest at `.cursor-plugin/plugin.json` that Grok Bot and Cursor both read, and it points them at
-the 42 skills in `.grok/skills`. Ask with the folder name and the job, for example "lit-plan this change" or "litwork the
-to-do list", and the bot reads that skill and does the work with the tools it already has.
+You can use the same planning and review habits inside Grok Bot, without a separate Grok Build install. The
+Cursor-format manifest at `.cursor-plugin/plugin.json`, which Grok Bot and Cursor both read, points them at the 42
+skills in `.grok/skills`. Ask with the folder name and the job, such as "lit-plan this change" or "litwork the to-do
+list", and the bot reads that skill and works with the tools it already has.
 
-Grok Bot's **Connect apps** reads the Cursor Marketplace. Add LitGrok from this repository:
+Grok Bot's **Connect apps** reads the Cursor Marketplace, so add LitGrok there from this repository:
 
 1. In Cursor, open **Customize**, choose **Add Marketplace**, pick **From GitHub Repository** and paste `https://github.com/wjgoarxiv/litgrok`.
-2. Cursor then shows a marketplace section with LitGrok in it; press **Add** there. In Grok Bot, open **Connect apps**, find LitGrok under **Your plugins** and add it; connect GitHub if the Bot asks for it. Grok Bot reads marketplaces when it starts, so if LitGrok is not listed yet, restart Grok Bot and look again.
+2. In the marketplace section Cursor then shows with LitGrok in it, press **Add**.
+3. In Grok Bot, open **Connect apps**, find LitGrok under **Your plugins** and add it; connect GitHub if the Bot asks for it.
+
+Grok Bot reads marketplaces when it starts, so if LitGrok is not listed yet, restart Grok Bot and look again.
 
 The hooks, the project rule, the status row and the LIT mark stay with Grok Build: Grok Bot shows only the skills and
 connectors a plugin brings, and hooks are started by Grok Build itself. Skills that run a bundled script, such as the
@@ -490,10 +431,17 @@ still open, so this is the repository's own marketplace entry.
 
 ## How it works
 
-A `lit` prompt passes through three layers. The project rule reads your words and picks the skill, and the workflow
-skills walk the stages one at a time, from questions to a plan, the work, a review and done, handing bounded jobs to the
-agents in `.grok/agents`. Underneath, the hooks you trusted keep the record and hold a turn when a check fails: a planning
-turn cannot end until its plan is saved, and a deliverable full of hedges is refused before it is written.
+A `lit` prompt passes through three layers. The project rule picks the skill from your words, and the workflow skills
+walk the stages one at a time: questions, plan, work, review, done. Underneath, the trusted hooks keep the record and
+hold a turn when a check fails, so a planning turn cannot end until its plan is saved and a deliverable full of hedges
+is refused before it is written.
+
+| Piece | What it does |
+| --- | --- |
+| Skills | Instructions the session reads when you call one by name or start a prompt with `lit` |
+| Agents in `.grok/agents` | Take a bounded job from a workflow skill, such as a plan, a review or a prose pass |
+| Project rule `.grok/rules/00-litgrok.md` | Tells Grok Build which skill fits a request |
+| Hooks | Show the LIT mark, keep the status row current, check deliverable wording before it is written, log the order of events |
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/route.en.dark.png" /><img src="./docs/assets/readme/diagrams/route.en.light.png" width="960" alt="Diagram titled What happens when you type lit. You type lit task or /litwork task; a prompt goes to the project rule .grok/rules/00-litgrok.md, which matches your words to a skill and picks start-work. start-work hands a bounded job to the agents, .grok/agents/litgrok-*.md, 11 definitions such as planner, executor and verifier. The workflow skills sit in a row, one stage each: deep-interview (interview), lit-plan (plan), start-work with litwork (work), review-work (review) and done (all rows checked). Below them are the trusted hooks from hooks/hooks.json. When a plan turn ends, Stop's plan gate holds the planning turn until plans/slug.md is saved, and asks for the project files plans/slug.md and .handoff/HANDOFF.md. On each Edit or Write, PreToolUse runs deliverable-hedge-guard, which denies a hedged deliverable with exit 2, so the deliverable is checked by lit-humanizer rules before the file is written. UserPromptSubmit records the stage your prompt names, routes nothing and prints nothing, and appends a line to the session ledger .grok/litgrok/session-ledger/, which the LIT status row reads." /></picture></p>
 
@@ -526,13 +474,14 @@ hooks and the files are the real ones from this repository.
 
 LitGrok's core is complete and works on its own: planning, building, review, research, handoff and the rest of the lit
 workflow need nothing else. Nine skills that make finished files, such as decks, documents, figures, design work and
-video covers, are now LitFamily extensions on the LitFamily extension shelf, wjgoarxiv-skills, at
-https://github.com/wjgoarxiv/wjgoarxiv-skills.
-Install the ones you use beside LitGrok and you get the full LitFamily experience back; leave out the rest.
+video covers, are now LitFamily extensions on the LitFamily extension shelf,
+[wjgoarxiv-skills](https://github.com/wjgoarxiv/wjgoarxiv-skills). Install the ones you use beside LitGrok for
+the full LitFamily experience, and leave out the rest.
 
-`litgrok install` still copies 42 skill folders: the 33 core skills, and a short note under the old name of each of the
-nine extensions. The picture shows which skills sit where and the four steps `litgrok extensions install` takes to bring
-one back.
+`litgrok install` still copies 42 skill folders: the 33 core skills and a short note under each extension's old name.
+A request for one, by its slash name, a bare `lit` prompt or an agent that preloads it, still reaches that note, which
+gives the install line. The picture shows which skills sit where and the four steps `litgrok extensions install` takes
+to bring one back.
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-recap, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back with litgrok extensions install skill --yes, in four steps: 1, check: grok plugin list --json and the eight skills folders, and a personal copy stops it; 2, move aside: each store copy, whole, into a dated folder under ~/.grok/extension-backups; 3, copy: grok plugin uninstall, then grok plugin install folder --trust; 4, receipt: Grok Build's registry.json, read back by grok plugin list --json, with source, store path and time. Notes: the other verbs are litgrok extensions list, check, update, remove and prune-backups; by hand, each note keeps the git clone and install lines." /></picture></p>
 
@@ -571,6 +520,10 @@ The other verbs work the same way, printing first and acting only with `--yes`:
 
 Pick several at once with `--family decks|documents|figures|design|video-covers` or `--all`. `litgrok doctor` prints a
 one-line summary of the check.
+
+Films and README covers come from two of the extensions: `lit-typographic-motion` (a treatment first, then a short film
+checked by a QA gate, or a silent README cover loop) and `readme-studio`. The `litgrok motion-runtime` command left with
+the skill, and the plugin pre-warms its own engine.
 
 <details>
 <summary>Install an extension by hand</summary>
@@ -670,12 +623,12 @@ newer, and the office skills install their pinned tools into their own cache the
 To update, run the [install line](#install-in-30-seconds) again. Two more commands look after an install:
 
 ```bash
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor      # installed version, GROUND: line, newer release if any
-npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall   # add --user for a user install
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall
 ```
 
-- **`doctor` only reads:** when npm has a newer version, it prints the command that installs it and leaves the choice to you.
-- **`uninstall` removes only what it put there:** it takes the scope you installed with, and if you edited a file, it stops before removing anything and names that file.
+- **`doctor` only reads:** it prints the installed version and the `GROUND:` line, and when npm has a newer version, the command that installs it, leaving the choice to you.
+- **`uninstall` removes only what it put there:** it takes the scope you installed with (add `--user` for a user install), and if you edited a file, it stops before removing anything and names that file.
 - **A user uninstall** also takes out the status-line keys LitGrok wrote, if you left them unchanged.
 
 The installer never runs `git init`, trusts hooks, signs in or picks a model for you; those
