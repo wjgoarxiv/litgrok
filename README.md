@@ -524,10 +524,13 @@ bring one back.
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-recap, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back: 1, clone the shelf once with git clone github.com/wjgoarxiv/wjgoarxiv-skills; 2, install one folder with grok plugin install clone/variants/litgrok/skill --trust; 3, it answers by name as skill:skill, next to the note, loaded from Grok Build's own plugin store. Notes: point at the folder, because a # subfolder source copies the whole repository, over 200 MB per skill; to take one out, grok plugin uninstall skill." /></picture></p>
 
 For Grok Build each extension is its own folder under `variants/litgrok/`, a one-skill plugin with
-everything it reads inside it. Clone the shelf once, then run one line per skill against your clone:
+everything it reads inside it. Clone the shelf once. Then, from the project root, run two read-only
+checks and the install line for each skill you want (`lit-pptx` here):
 
 ```bash
 git clone https://github.com/wjgoarxiv/wjgoarxiv-skills
+grok plugin list --json | grep -cF '"name": "lit-pptx"'
+grep -L '^description: "Moved: lit-pptx ' {.grok,.agents,.claude,.cursor,~/.grok,~/.agents,~/.claude,~/.cursor}/skills/lit-pptx/SKILL.md 2>/dev/null
 grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust
 ```
 
@@ -539,6 +542,31 @@ the whole repository, `.git` included, over 200 MB for each skill. The plugin go
 plugin store, never into `.grok/skills/`, where LitGrok's installer keeps the note, so `litgrok install`
 keeps updating LitGrok cleanly. Once it is installed, the skill answers as `<skill>:<skill>` beside the
 note, and `grok plugin uninstall <skill>` removes it.
+
+The checks are there because Grok Build keeps one copy per name and does not merge. The first counts
+the plugin copies already installed; above 0, skip the install, because a second install of the same
+folder stops with `already installed` and changes nothing. The second prints any personal `SKILL.md`
+with that name in a skills folder Grok reads (project `.grok`, `.agents`, `.claude`, `.cursor`, and the
+same four in your home), leaving out LitGrok's own note. Such a copy takes the bare `/lit-pptx` name
+ahead of the note, so move its folder (the printed path without `/SKILL.md`) out whole before you
+install. The backup goes to a dated folder Grok does not scan, and nothing is deleted:
+
+```bash
+mkdir -p ~/.grok/extension-backups && mv "<that folder>" "$(mktemp -d ~/.grok/extension-backups/$(date +%Y%m%d-%H%M%S)-XXXXXX)/"
+```
+
+To update an extension, `grok plugin update` is no help: for a local folder it reports the plugin as
+already live and copies nothing. Pull the clone, then uninstall and install again:
+
+```bash
+git -C "<path to your wjgoarxiv-skills clone>" pull
+grok plugin uninstall lit-pptx
+grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust
+```
+
+If the first check counted more than one copy (the same skill installed from two clones), run the
+uninstall line once for each. `grok plugin uninstall <skill>` on its own removes an extension; your
+clone keeps the source. `litgrok install` and its updates never touch Grok Build's plugin store.
 
 The installer tells you this when you install or update. On an update from 1.0.34 or older it also
 names the old engine caches still on disk (`~/.cache/litgrok/office-docs` and

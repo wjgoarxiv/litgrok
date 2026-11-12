@@ -948,6 +948,8 @@ function extensionsCard(colors, caches) {
     '  │ Install the ones you use beside LitGrok for the full LitFamily experience:',
     `  │   git clone ${SHELF_URL}`,
     '  │   grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust',
+    "  │ Run the check in that skill's note first: it finds an installed or personal copy.",
+    '  │ To update one: git -C "<path to your wjgoarxiv-skills clone>" pull, then grok plugin uninstall <skill> and the install line again.',
     ...(caches.length > 0
       ? [`  │ Earlier releases left engine caches at ${caches.join(' and ')}. Nothing reads them now (the extensions keep their own), so you can delete them.`]
       : []),

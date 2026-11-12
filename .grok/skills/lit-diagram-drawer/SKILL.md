@@ -32,21 +32,27 @@ limitations_channel: reply
 2. Otherwise, for a direct request, reply in the user's language with three things and stop, writing no file:
    - one sentence on what lit-diagram-drawer makes: a clear, accessible, Korean-ready diagram of an architecture, workflow, system, data model or timeline as HTML or SVG, with PNG and Office-safe SVG export;
    - that it is now a LitFamily extension, kept in the wjgoarxiv-skills repository in the folder shown above, and installs beside LitGrok;
-   - the install line from Install below, in a code block, and that a new session (or `r` in the Plugins tab) picks the plugin up, after which the user asks again.
+   - the check and install lines from Install below, in a code block, and that a new session (or `r` in the Plugins tab) picks the plugin up, after which the user asks again.
 3. Real equipment, P&IDs and apparatus figures go to the `lit-schematic` note, plots of measured data to the `lit-scientific-visualization` note; each moved to its own folder in wjgoarxiv-skills and installs on its own.
 
 ## Install
 
-wjgoarxiv-skills is public at https://github.com/wjgoarxiv/wjgoarxiv-skills. Clone it once, then install this one skill from its folder in your clone:
+wjgoarxiv-skills is public at https://github.com/wjgoarxiv/wjgoarxiv-skills. Clone it once. Then, from the project root, run the two read-only checks and install this one skill from its folder in your clone:
 
 ```bash
 git clone https://github.com/wjgoarxiv/wjgoarxiv-skills
+grok plugin list --json | grep -cF '"name": "lit-diagram-drawer"'
+grep -L '^description: "Moved: lit-diagram-drawer ' {.grok,.agents,.claude,.cursor,~/.grok,~/.agents,~/.claude,~/.cursor}/skills/lit-diagram-drawer/SKILL.md 2>/dev/null
 grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-diagram-drawer" --trust
 ```
 
-The folder is a one-skill Grok Build plugin: its `.grok-plugin/plugin.json` lists only the folder itself, with no hooks, rules or MCP servers, and everything the skill reads (scripts, references, fonts) sits inside it. Grok Build refuses a local plugin install without `--trust`. The line names the folder path on purpose: Grok Build copies that folder alone into its plugin store, about the size of the folder. Given a `#` subfolder instead (`<clone>#<folder>` or `owner/repo#<folder>`), it copies the whole repository, `.git` included, for each skill, over 200 MB. `grok plugin uninstall lit-diagram-drawer` removes it.
+The first check counts installed copies. Above 0, skip the install: a second one stops with `already installed`. The second check prints any personal copy in a skills folder Grok reads; it takes the bare `/lit-diagram-drawer` name ahead of this note. Move its folder (drop `/SKILL.md`) out whole first: `mkdir -p ~/.grok/extension-backups && mv "<that folder>" "$(mktemp -d ~/.grok/extension-backups/$(date +%Y%m%d-%H%M%S)-XXXXXX)/"`.
 
-Why a plugin and not a copy into a skills folder: the LitGrok installer owns `.grok/skills/lit-diagram-drawer/` and `~/.grok/skills/lit-diagram-drawer/`, where this note lives, and refuses its next update when a file there changed; a copy in the shared agents skills folder in your home would carry the same bare name as this note with nothing to tell them apart. The plugin lands in Grok Build's own plugin store and is listed as `lit-diagram-drawer:lit-diagram-drawer` beside this note, so it never writes into this folder and `litgrok install` keeps updating LitGrok cleanly.
+To update: `grok plugin update` does not copy a local folder again, so run `git -C "<path to your wjgoarxiv-skills clone>" pull`, then `grok plugin uninstall lit-diagram-drawer` once for each counted copy, then the install line. Uninstall alone removes it; the clone keeps the source.
+
+The folder is a one-skill Grok Build plugin with no hooks, rules or MCP servers; everything the skill reads sits inside it, and a local install needs `--trust`. The line names the folder path, which Grok Build copies alone into its plugin store; a `#` subfolder source (`<clone>#<folder>`) copies the whole repository, `.git` included, over 200 MB per skill.
+
+Why a plugin: the LitGrok installer owns `.grok/skills/lit-diagram-drawer/` and `~/.grok/skills/lit-diagram-drawer/`, where this note lives, and refuses its next update when a file there changed. The plugin lands in Grok Build's own plugin store, listed as `lit-diagram-drawer:lit-diagram-drawer` beside this note, so `litgrok install` keeps updating LitGrok and leaves the plugin alone.
 
 ## Hard stops
 

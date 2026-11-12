@@ -18,6 +18,14 @@ const HOOKS = join(PRODUCT_ROOT, '.grok', 'hooks');
 const SHELF = 'https://github.com/wjgoarxiv/wjgoarxiv-skills';
 const CLONE_LINE = `git clone ${SHELF}`;
 const PLUGIN_LINE = 'grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust';
+// Grok Build 1.0.13 re-copies a local plugin only through uninstall plus install: `grok plugin update` reports it as
+// already live, and a second install stops with `already installed`.
+const UPDATE_LINE = 'git -C "<path to your wjgoarxiv-skills clone>" pull, then grok plugin uninstall <skill> and the install line again';
+const PPTX_CHECK = [
+  `grok plugin list --json | grep -cF '"name": "lit-pptx"'`,
+  `grep -L '^description: "Moved: lit-pptx ' {.grok,.agents,.claude,.cursor,~/.grok,~/.agents,~/.claude,~/.cursor}/skills/lit-pptx/SKILL.md 2>/dev/null`,
+];
+const MOVE_ASIDE = 'mkdir -p ~/.grok/extension-backups && mv "<that folder>" "$(mktemp -d ~/.grok/extension-backups/$(date +%Y%m%d-%H%M%S)-XXXXXX)/"';
 const sha256Text = (text) => createHash('sha256').update(text).digest('hex');
 
 function captureIo() {
@@ -86,6 +94,8 @@ test('install output names the extension shelf, the clone line and the plugin li
   assert.ok(block.includes(SHELF), 'names the shelf');
   assert.ok(block.includes(CLONE_LINE), 'gives the clone line');
   assert.ok(block.includes(PLUGIN_LINE), 'gives the plugin line the notes print');
+  assert.ok(block.includes(UPDATE_LINE), 'gives the update route Grok Build really supports');
+  assert.match(block, /Run the check in that skill's note first: it finds an installed or personal copy\./u, 'points at the check in each note');
   assert.match(block, /full LitFamily experience/u);
   for (const id of ['lit-pptx', 'lit-docx', 'lit-scientific-visualization', 'lit-diagram-drawer', 'lit-schematic', 'frontend-ui-ux', 'visual-qa', 'readme-studio', 'lit-typographic-motion']) {
     assert.ok(block.includes(id), `names ${id}`);
@@ -231,6 +241,11 @@ test('README and README_ko-KR carry an Extensions section in the same framing', 
   assert.match(section, /full LitFamily experience/u);
   assert.ok(section.includes(CLONE_LINE));
   assert.ok(section.includes('grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust'));
+  for (const line of PPTX_CHECK) assert.ok(section.includes(`${line}\n`), `the English section gives the check ${line}`);
+  assert.match(section, /already installed/u);
+  assert.ok(section.includes('git -C "<path to your wjgoarxiv-skills clone>" pull'), 'the English section gives the update route');
+  assert.ok(section.includes(MOVE_ASIDE), 'the English section moves a personal copy aside');
+  assert.doesNotMatch(section, /\brm -r/u);
   assert.doesNotMatch(english, /#skills-that-moved-to-wjgoarxiv-skills/u, 'old anchors point at the new section');
   const korean = readFileSync(join(PRODUCT_ROOT, 'README_ko-KR.md'), 'utf8');
   assert.match(korean, /\n## 확장 스킬\n/u);
@@ -238,6 +253,10 @@ test('README and README_ko-KR carry an Extensions section in the same framing', 
   assert.match(koSection, /LitFamily 확장/u);
   assert.match(koSection, /코어/u);
   assert.ok(koSection.includes(CLONE_LINE));
+  for (const line of PPTX_CHECK) assert.ok(koSection.includes(`${line}\n`), `the Korean section gives the check ${line}`);
+  assert.match(koSection, /already installed/u);
+  assert.ok(koSection.includes('git -C "<path to your wjgoarxiv-skills clone>" pull'), 'the Korean section gives the update route');
+  assert.ok(koSection.includes(MOVE_ASIDE), 'the Korean section moves a personal copy aside');
   assert.doesNotMatch(korean, /#wjgoarxiv-skills로-옮긴-스킬/u, 'old anchors point at the new section');
 });
 

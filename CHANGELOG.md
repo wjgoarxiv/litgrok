@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Each extension note now checks before it installs. Two read-only lines come first: `grok plugin list --json | grep -cF '"name": "<skill>"'` counts the plugin copies already installed (a second install of the same folder stops with `already installed`), and a `grep -L` over the eight skills folders Grok Build reads prints any personal copy of the same name, leaving out LitGrok's own note. Such a copy takes the bare `/<skill>` name ahead of the note, so the note gives one line that moves its folder whole into a dated folder under `~/.grok/extension-backups/`, which Grok Build does not scan; nothing is deleted.
+- The notes, both READMEs and the install card now give the update route Grok Build supports: `git -C "<path to your wjgoarxiv-skills clone>" pull`, then `grok plugin uninstall <skill>` once for each installed copy, then the install line again. On Grok Build 1.0.13, `grok plugin update` reports a plugin installed from a local folder as already live and copies nothing, and installing the same skill from a second clone adds a second plugin of that name. `litgrok install` and its updates leave the plugin store alone.
+
 ## 1.0.35 — 2026-11-11
 
 - The nine moved skills are LitFamily extensions now, and LitGrok tells you where you meet the change. LitGrok's core is complete and works on its own. The extensions live on the LitFamily extension shelf, wjgoarxiv-skills, and installing the ones you use beside LitGrok gives you the full LitFamily experience. `litgrok install` ends with a short LITFAMILY EXTENSIONS card that names the nine skills and gives the clone line and the plugin line; on an update from 1.0.34 or older it also names the old engine caches still on disk, which you can delete. If you use the LIT status row, it shows one extensions row for the first session after the install. Grok Build ignores what a SessionStart hook prints, so the status row is the only in-session reminder. Previews (`--dry-run`, `--no-color`, CI) and `uninstall` show no card. Each note now calls its skill a LitFamily extension, and the README section is called Extensions.

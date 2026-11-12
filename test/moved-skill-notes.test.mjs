@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -138,4 +139,79 @@ test('no doc or skill offers the #variants subdir install, which copies the whol
     if (/(?:clone>|wjgoarxiv-skills)#variants\//u.test(bytes.toString('utf8'))) offenders.push(file);
   }
   assert.deepEqual(offenders, []);
+});
+
+// Safe install lines, checked on Grok Build 1.0.13 in a throwaway HOME: a second `grok plugin install` of the same
+// folder stops with `already installed` and changes nothing; `grok plugin update <id>` reports a local install as
+// "already live" without copying the folder again; installing the same id from a second clone adds a second plugin
+// of that name. A same-name skill in any skills folder Grok reads takes the bare `/<id>` name (the plugin stays as
+// `<id>:<id>`). So each note checks before it installs, updates by uninstall plus install, and moves a personal copy
+// whole into a dated folder under ~/.grok/extension-backups, which Grok does not scan.
+const SKILL_DIRS = '{.grok,.agents,.claude,.cursor,~/.grok,~/.agents,~/.claude,~/.cursor}';
+const countLine = (id) => `grok plugin list --json | grep -cF '"name": "${id}"'`;
+const personalLine = (id) => `grep -L '^description: "Moved: ${id} ' ${SKILL_DIRS}/skills/${id}/SKILL.md 2>/dev/null`;
+const moveAsideLine = 'mkdir -p ~/.grok/extension-backups && mv "<that folder>" "$(mktemp -d ~/.grok/extension-backups/$(date +%Y%m%d-%H%M%S)-XXXXXX)/"';
+const updateLine = `git -C "${PLACEHOLDER}" pull`;
+
+test('each note checks before it installs, and gives the update, move-aside and remove lines Grok Build supports', () => {
+  for (const id of Object.keys(MOVED)) {
+    const text = note(id);
+    const install = text.slice(text.indexOf('\n## Install\n'), text.indexOf('\n## Hard stops\n'));
+    const block = install.slice(install.indexOf('```bash\n'), install.indexOf('\n```', install.indexOf('```bash\n') + 7));
+    const lines = block.split('\n').slice(1);
+    assert.deepEqual(lines, [
+      'git clone https://github.com/wjgoarxiv/wjgoarxiv-skills',
+      countLine(id),
+      personalLine(id),
+      `grok plugin install "${PLACEHOLDER}/variants/litgrok/${id}" --trust`,
+    ], `${id} gives clone, check, check, install in that order`);
+    assert.match(install, /already installed/u, `${id} says a second install stops`);
+    assert.match(install, /`grok plugin update` does not copy a local folder again/u, `${id} says update does not re-copy`);
+    assert.ok(install.includes(updateLine), `${id} pulls the clone before updating`);
+    assert.ok(install.includes(`\`grok plugin uninstall ${id}\` once for each counted copy`), `${id} clears every installed copy before reinstalling`);
+    assert.ok(install.includes(`\`/${id}\``), `${id} says which name a personal copy takes`);
+    assert.ok(install.includes(moveAsideLine), `${id} moves a personal copy aside whole`);
+    assert.doesNotMatch(install, /\brm -r|\brm -f|\brm -rf/u, `${id} deletes nothing`);
+    assert.match(text, new RegExp(`\\ndescription: "Moved: ${id} `, 'u'), `${id}'s own description is what the check skips`);
+    assert.ok(statSync(join(SKILLS, id, 'SKILL.md')).size < 6000, `${id} note stays short`);
+  }
+});
+
+test('the check and move-aside lines do what the note says in bash and zsh', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'litgrok-safe-install-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const shells = ['bash', 'zsh'].filter((shell) => spawnSync(shell, ['-c', 'true']).status === 0);
+  assert.ok(shells.includes('bash'), 'bash is available');
+  for (const shell of shells) {
+    for (const id of Object.keys(MOVED)) {
+      const home = join(root, shell, id, 'home');
+      const project = join(root, shell, id, 'project');
+      const own = join(home, '.grok', 'skills', id);
+      const personal = join(home, '.claude', 'skills', id);
+      const projectCopy = join(project, '.agents', 'skills', id);
+      for (const dir of [own, personal, projectCopy]) mkdirSync(dir, { recursive: true });
+      writeFileSync(join(own, 'SKILL.md'), note(id));
+      writeFileSync(join(personal, 'SKILL.md'), `---\nname: ${id}\ndescription: "my own copy"\n---\n`);
+      writeFileSync(join(personal, 'mine.txt'), 'keep me\n');
+      writeFileSync(join(projectCopy, 'SKILL.md'), `---\nname: ${id}\ndescription: "a project copy"\n---\n`);
+      const sh = (line) => spawnSync(shell, shell === 'zsh' ? ['-f', '-c', line] : ['--norc', '--noprofile', '-c', line], { cwd: project, encoding: 'utf8', env: { HOME: home, PATH: process.env.PATH } });
+      const found = sh(personalLine(id)).stdout.trim().split('\n').sort();
+      assert.deepEqual(found, [join(home, '.claude', 'skills', id, 'SKILL.md'), `.agents/skills/${id}/SKILL.md`].sort(), `${shell} ${id}: the check names both personal copies and skips the note`);
+      for (const folder of [personal, projectCopy]) {
+        const moved = sh(moveAsideLine.replace('<that folder>', folder));
+        assert.equal(moved.status, 0, `${shell} ${id}: ${moved.stderr}`);
+        assert.equal(existsSync(folder), false, `${shell} ${id}: ${folder} left its skills folder`);
+      }
+      const backups = join(home, '.grok', 'extension-backups');
+      const saved = readdirSync(backups).map((dated) => join(backups, dated, id));
+      assert.equal(saved.length, 2, `${shell} ${id}: one dated folder per move`);
+      for (const folder of saved) {
+        assert.deepEqual(readdirSync(join(folder, '..')), [id], `${shell} ${id}: the folder moved whole, no nesting`);
+        assert.ok(existsSync(join(folder, 'SKILL.md')));
+      }
+      assert.ok(saved.some((folder) => existsSync(join(folder, 'mine.txt')) && readFileSync(join(folder, 'mine.txt'), 'utf8') === 'keep me\n'), `${shell} ${id}: the user file survives`);
+      assert.ok(saved.every((folder) => !folder.includes(`${join('skills', '')}`)), `${shell} ${id}: no backup sits under a skills folder`);
+      assert.deepEqual(sh(personalLine(id)).stdout.trim(), '', `${shell} ${id}: the check is clean afterwards`);
+    }
+  }
 });
