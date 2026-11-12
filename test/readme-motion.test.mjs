@@ -394,7 +394,7 @@ test('README generator repairs only the copyable mark and preserves runtime byte
 
 test('README generator rejects a missing copyable details block instead of rewriting a user example', (t) => {
   const { root, run } = withGenerator(t);
-  const original = read('README.md').replace('<details>', '<section>');
+  const original = read('README.md').replace('<details>\n<summary>Copy ASCII logo</summary>', '<section>\n<summary>Copy ASCII logo</summary>');
   writeFileSync(join(root, 'README.md'), original);
   const result = run();
   assert.notEqual(result.status, 0);
