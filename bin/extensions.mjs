@@ -22,6 +22,8 @@ const FAMILIES = Object.freeze({
 const SKILL_ROOTS = ['.grok', '.agents', '.claude', '.cursor'];
 const VARIANT = join('variants', 'litgrok');
 const HOST_TIMEOUT_MS = 120_000;
+// doctor only reads the plugin list; a slow host must not hold it for two minutes.
+const DOCTOR_TIMEOUT_MS = 5_000;
 const FETCH_TIMEOUT_MS = 300_000;
 
 export const EXTENSIONS_USAGE = [
@@ -113,6 +115,7 @@ function lstatOrNull(path) {
 function tool(command, args, { env, cwd, timeout = HOST_TIMEOUT_MS }) {
   const result = spawnSync(command, args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout });
   if (result.error?.code === 'ENOENT') return { missing: true, status: null, stdout: '', stderr: '' };
+  if (result.error?.code === 'ETIMEDOUT') return { missing: false, timedOut: true, status: null, stdout: '', stderr: `no answer within ${Math.round(timeout / 1000)} s` };
   if (result.error) return { missing: false, status: null, stdout: result.stdout ?? '', stderr: String(result.error.message) };
   return { missing: false, status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
@@ -136,7 +139,8 @@ function registryTimes(path) {
 }
 
 function installedPlugins(context) {
-  const result = grok(['plugin', 'list', '--json'], context);
+  const result = grok(['plugin', 'list', '--json'], { ...context, timeout: context.hostTimeout ?? HOST_TIMEOUT_MS });
+  if (result.timedOut) throw new ExtensionsError(`grok plugin list --json gave ${result.stderr}`, { cause: 'timeout' });
   if (result.status !== 0) throw new ExtensionsError(`grok plugin list --json failed: ${(result.stderr || result.stdout).trim()}`);
   let rows;
   try {
@@ -237,6 +241,8 @@ function resolveSource(options, context, { refresh }) {
     return { root, kind: 'from', ready: true, note: refresh ? `using ${root} as it is; pull it yourself to get newer extensions` : null };
   }
   const { cache } = context.paths;
+  const own = lstatOrNull(dirname(cache));
+  if (own !== null && (own.isSymbolicLink() || !own.isDirectory())) throw new ExtensionsError(`Refusing ${dirname(cache)}: it is not a plain folder. Move it out of the way, or pass --from.`);
   const status = lstatOrNull(cache);
   if (status !== null) {
     if (status.isSymbolicLink() || !status.isDirectory() || lstatOrNull(join(cache, '.git')) === null || !usableShelf(cache)) {
@@ -248,10 +254,10 @@ function resolveSource(options, context, { refresh }) {
       if (pulled.status !== 0) throw new ExtensionsError(`could not fetch the extensions: ${(pulled.stderr || pulled.stdout).trim()}\n${fetchHint(cache)}`);
       return { root: cache, kind: 'cache', ready: true, note: `pulled ${cache}` };
     }
-    return { root: cache, kind: 'cache', ready: true, note: refresh === 'pull' ? `would pull ${cache}` : null };
+    return { root: cache, kind: 'cache', ready: true, note: refresh === 'pull' ? `compared with the cached copy in ${cache}; --yes pulls it first, so the result may differ` : null };
   }
   if (!refresh) return { root: cache, kind: 'cache', ready: false, note: null };
-  if (!context.write) return { root: cache, kind: 'cache', ready: false, note: `would clone ${SHELF_URL} (variants/litgrok only) into ${cache}` };
+  if (!context.write) return { root: cache, kind: 'cache', ready: false, note: `would clone ${SHELF_URL} (variants/litgrok only) into ${cache}; installed extensions are compared with it after the fetch` };
   const parent = dirname(cache);
   mkdirSync(parent, { recursive: true });
   const staging = mkdtempSync(join(parent, '.extensions-src-'));
@@ -344,14 +350,19 @@ function applyReplace(plan, context) {
   return backup;
 }
 
+function userManagedLine(id, { path, source }, verb) {
+  return `${id}: a user-managed plugin of this name is installed from ${source ?? 'an unknown source'} (${path}); ${verb} leaves it alone. If the shelf copy should replace it, remove it yourself with grok plugin uninstall ${id} (its source folder stays), then rerun.`;
+}
+
 function runInstallOrUpdate(options, context) {
   const { stdout, stderr } = context;
   const update = options.verb === 'update';
-  const source = resolveSource(options, context, { refresh: update ? 'pull' : 'fetch' });
   const plugins = installedPlugins(context);
+  // A bare update or --all collects the ids itself, so a user-managed plugin among them is skipped, not refused.
+  const collected = update && (options.ids.length === 0 || options.all);
   const ids = update && options.ids.length === 0 ? EXTENSION_IDS.filter((id) => plugins.some(({ name }) => name === id)) : options.ids;
   const blocked = [];
-  const plans = [];
+  const wanted = [];
   const skipped = [];
   for (const id of ids) {
     const copies = plugins.filter(({ name }) => name === id);
@@ -359,33 +370,41 @@ function runInstallOrUpdate(options, context) {
       skipped.push(`${id}: not installed, left alone (litgrok extensions install ${id})`);
       continue;
     }
-    if (update && copies.some(({ managed }) => !managed)) {
-      blocked.push({ id, lines: copies.filter(({ managed }) => !managed).map(({ path, source: from }) => `${id}: a user-managed plugin of this name is installed from ${from ?? 'an unknown source'} (${path}); update leaves it alone. Remove it with grok plugin uninstall ${id} first if the shelf copy should replace it.`) });
+    const foreign = copies.filter(({ managed }) => !managed);
+    if (foreign.length > 0) {
+      const lines = foreign.map((copy) => userManagedLine(id, copy, options.verb));
+      if (collected) skipped.push(...lines);
+      else blocked.push({ id, kind: 'user-managed', lines });
       continue;
     }
     const competing = competingCopies(id, context.paths);
     if (competing.length > 0) {
       const lines = competing.map((copy) => `${id}: a same-name skill at ${copy.path} takes the bare /${id} name. ${copy.kind === 'old-litgrok' ? 'Fix' : 'Move it aside'}: ${competingFix(copy, context.paths.backups)}`);
       if (!options.allowShadow && !update) {
-        blocked.push({ id, lines });
+        blocked.push({ id, kind: 'competing', lines });
         continue;
       }
       for (const line of lines) stderr.write(`Warning: ${line}\n`);
     }
-    plans.push(planReplace(id, copies, source));
+    wanted.push({ id, copies });
   }
   if (blocked.length > 0) {
     for (const { lines } of blocked) for (const line of lines) stderr.write(`${line}\n`);
-    if (!update) stderr.write('Nothing was installed. Move the copies named above, or rerun with --allow-shadow to install beside them; LitGrok never moves them itself.\n');
-    else stderr.write('Nothing was updated.\n');
+    if (update) stderr.write('Nothing was updated.\n');
+    else if (blocked.some(({ kind }) => kind === 'competing')) stderr.write('Nothing was installed. Move the copies named above, or rerun with --allow-shadow to install beside them; LitGrok never moves them itself.\n');
+    else stderr.write('Nothing was installed.\n');
     return 1;
   }
+  // The source is fetched only once nothing blocks the run.
+  const source = resolveSource(options, context, { refresh: update ? 'pull' : 'fetch' });
+  const plans = wanted.map(({ id, copies }) => planReplace(id, copies, source));
   if (!context.write) {
     previewBanner(stdout);
     if (source.note) stdout.write(`${source.note}\n`);
     for (const line of skipped) stdout.write(`${line}\n`);
     for (const plan of plans) {
       if (plan.current) stdout.write(`${plan.id}: current (${plan.copies[0].path})\n`);
+      else if (!source.ready && plan.copies.length > 0) stdout.write(`${plan.id}: installed (${plan.copies.map(({ path }) => path).join(', ')}); compared after the fetch, and reinstalled only if it differs\n`);
       else describeReplace(plan, stdout, update ? 'update' : 'install');
     }
     return 0;
@@ -485,7 +504,10 @@ function runPrune(options, context) {
   const cutoff = options.olderThan === null ? null : context.now().getTime() - options.olderThan * 86_400_000;
   const chosen = all.filter(({ modified }) => cutoff === null || modified.getTime() < cutoff);
   const total = chosen.reduce((sum, { bytes }) => sum + bytes, 0);
-  if (!context.write) previewBanner(stdout);
+  if (!context.write) {
+    previewBanner(stdout);
+    if (chosen.length > 0) stdout.write(`A backup may also hold your own skill: check and the extension notes suggest moving a same-name personal skill into ${context.paths.backups}. Look inside before --yes.\n`);
+  }
   for (const backup of all) {
     const picked = chosen.includes(backup);
     if (backup.link) stdout.write(`skip ${backup.path} (a link, never followed)\n`);
@@ -506,12 +528,14 @@ function runPrune(options, context) {
 function survey(context, { withPlugins = true } = {}) {
   let plugins = [];
   let hostError = null;
+  let hostTimedOut = false;
   if (withPlugins) {
     try {
       plugins = installedPlugins(context);
     } catch (error) {
       if (!(error instanceof ExtensionsError)) throw error;
       hostError = error.message;
+      hostTimedOut = error.cause === 'timeout';
     }
   }
   const extensions = EXTENSION_IDS.map((id) => {
@@ -520,7 +544,7 @@ function survey(context, { withPlugins = true } = {}) {
     if (copies.length > 0) status = copies.every(({ managed }) => managed) ? 'installed' : 'user-managed';
     return { id, family: Object.keys(FAMILIES).find((name) => FAMILIES[name].includes(id)), status, plugins: copies, competing: competingCopies(id, context.paths) };
   });
-  return { extensions, hostError };
+  return { extensions, hostError, hostTimedOut };
 }
 
 function findings(context, report) {
@@ -529,7 +553,7 @@ function findings(context, report) {
   if (report.hostError) items.push({ kind: 'host', id: null, action: true, message: `plugin copies not checked: ${report.hostError}`, fix: 'put grok on PATH, then rerun litgrok extensions check' });
   for (const extension of report.extensions) {
     const { id, plugins } = extension;
-    if (plugins.length > 1) items.push({ kind: 'duplicate', id, action: true, message: `${id}: ${plugins.length} plugin copies (${plugins.map(({ source }) => source).join(', ')})`, fix: `litgrok extensions update ${id} --yes` });
+    if (plugins.length > 1) items.push({ kind: 'duplicate', id, action: true, message: `${id}: ${plugins.length} plugin copies (${plugins.map(({ source }) => source).join(', ')})`, fix: plugins.some(({ managed }) => !managed) ? `grok plugin uninstall ${id} once per copy (${plugins.length} times; each source folder stays), then reinstall the one you want, e.g. litgrok extensions install ${id} --yes` : `litgrok extensions update ${id} --yes` });
     for (const plugin of plugins) {
       if (!plugin.managed) items.push({ kind: 'user-managed', id, action: false, message: `${id}: a user-managed plugin from ${plugin.source}; LitGrok leaves it alone`, fix: null });
       else if (!plugin.source_exists) items.push({ kind: 'source-missing', id, action: true, message: `${id}: its source ${plugin.source} no longer exists, so a later update cannot copy from it`, fix: `litgrok extensions update ${id} --yes` });
@@ -587,11 +611,12 @@ function contextFrom({ env, cwd, stdout, stderr, now }, write) {
 // One line for `litgrok doctor`: the check logic, summarised.
 export function extensionsDoctorLine({ env, cwd }) {
   try {
-    const context = contextFrom({ env, cwd }, false);
+    const context = { ...contextFrom({ env, cwd }, false), hostTimeout: DOCTOR_TIMEOUT_MS };
     const report = survey(context);
     const items = findings(context, report);
     const installed = report.extensions.filter(({ status }) => status !== 'not-installed').length;
     const toFix = items.filter(({ action }) => action).length;
+    if (report.hostTimedOut) return `EXTENSIONS: host listing unavailable (${report.hostError}) · run: litgrok extensions check`;
     if (report.hostError) return `EXTENSIONS: grok not checked · ${toFix} to fix (run: litgrok extensions check)`;
     return toFix === 0
       ? `EXTENSIONS: ${installed} of ${EXTENSION_IDS.length} installed · nothing to fix (litgrok extensions list)`

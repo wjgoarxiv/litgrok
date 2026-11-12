@@ -413,3 +413,121 @@ test('the package ships the extensions module', () => {
   assert.ok(pkg.files.includes('bin'));
   assert.ok(existsSync(join(PRODUCT_ROOT, 'bin', 'extensions.mjs')));
 });
+
+async function grokInstall(context, folder) {
+  const { spawnSync } = await import('node:child_process');
+  spawnSync(join(context.root, 'bin', 'grok'), ['plugin', 'install', folder, '--trust'], { env: context.env });
+}
+
+async function userPlugin(context, id) {
+  const own = join(context.root, 'my-plugins', id);
+  cpSync(join(context.shelf, 'variants', 'litgrok', id), own, { recursive: true });
+  await grokInstall(context, own);
+  return own;
+}
+
+test('a bare update or --all skips a user-managed plugin with a note and still updates the rest', async (t) => {
+  const context = sandbox(t);
+  await ext(context, ['install', 'lit-pptx', '--from', context.shelf, '--yes']);
+  const own = await userPlugin(context, 'visual-qa');
+  writeFileSync(join(context.shelf, 'variants', 'litgrok', 'lit-pptx', 'SKILL.md'), '---\nname: lit-pptx\ndescription: "a newer lit-pptx"\n---\n');
+  for (const args of [['update'], ['update', '--all']]) {
+    const preview = await ext(context, [...args, '--from', context.shelf]);
+    assert.equal(preview.code, 0, preview.stderr);
+    assert.match(preview.stdout, /lit-pptx: would update/u, args.join(' '));
+    assert.ok(preview.stdout.includes(own), 'names the user-managed plugin it skips');
+  }
+  const done = await ext(context, ['update', '--from', context.shelf, '--yes']);
+  assert.equal(done.code, 0, done.stderr);
+  assert.match(done.stdout, /lit-pptx: updated/u);
+  assert.match(done.stdout, /visual-qa: a user-managed plugin.*update leaves it alone/u);
+  assert.deepEqual(plugins(context).filter(({ name }) => name === 'visual-qa').map(({ source }) => source), [own], 'the user plugin stays');
+  const named = await ext(context, ['update', 'visual-qa', '--from', context.shelf, '--yes']);
+  assert.equal(named.code, 1, 'naming a user-managed plugin is still refused');
+});
+
+test('install refuses a user-managed plugin of the same name like update and remove do, even with --allow-shadow', async (t) => {
+  const context = sandbox(t);
+  const own = await userPlugin(context, 'visual-qa');
+  for (const extra of [[], ['--allow-shadow']]) {
+    const refused = await ext(context, ['install', 'visual-qa', '--from', context.shelf, '--yes', ...extra]);
+    assert.equal(refused.code, 1, refused.stdout);
+    assert.ok(refused.stderr.includes(own), refused.stderr);
+    assert.match(refused.stderr, /user-managed/u);
+    assert.match(refused.stderr, /grok plugin uninstall visual-qa/u, 'gives the manual line');
+    assert.doesNotMatch(refused.stderr, /--allow-shadow/u, 'does not offer --allow-shadow for a plugin');
+  }
+  assert.deepEqual(plugins(context).map(({ source }) => source), [own], 'the user plugin stays');
+  assert.equal(existsSync(context.backups), false, 'nothing was backed up or uninstalled');
+  assert.doesNotMatch(grokCalls(context), /uninstall/u);
+});
+
+test('doctor gives up on a slow grok plugin list quickly and says the host listing is unavailable', { timeout: 30_000 }, async (t) => {
+  const context = sandbox(t);
+  writeFileSync(join(context.root, 'bin', 'grok'), `#!${process.execPath}\nsetTimeout(() => {}, 60_000);\n`, { mode: 0o755 });
+  const io = captureIo();
+  const started = Date.now();
+  assert.equal(await run(['doctor'], { ...io, cwd: context.project, env: { ...context.env, LITGROK_NO_UPDATE_CHECK: '1' } }), 0);
+  assert.ok(Date.now() - started < 15_000, `doctor took ${Date.now() - started} ms`);
+  assert.match(io.read().stdout, /^EXTENSIONS: host listing unavailable/mu);
+});
+
+test('check gives the grok uninstall line for duplicates when one copy is user-managed', async (t) => {
+  const context = sandbox(t);
+  await ext(context, ['install', 'lit-docx', '--from', context.shelf, '--yes']);
+  await userPlugin(context, 'lit-docx');
+  const result = await ext(context, ['check']);
+  assert.equal(result.code, 1);
+  assert.match(result.stdout, /lit-docx: 2 plugin copies/u);
+  assert.ok(!result.stdout.includes('litgrok extensions update lit-docx --yes'), result.stdout);
+  assert.match(result.stdout, /grok plugin uninstall lit-docx/u);
+});
+
+test('the prune preview warns that a backup may hold a skill the user moved there', async (t) => {
+  const context = sandbox(t);
+  mkdirSync(join(context.backups, '20261101-000000-dddddd', 'lit-pptx'), { recursive: true });
+  writeFileSync(join(context.backups, '20261101-000000-dddddd', 'lit-pptx', 'SKILL.md'), 'mine');
+  const preview = await ext(context, ['prune-backups']);
+  assert.equal(preview.code, 0, preview.stderr);
+  assert.match(preview.stdout, /your own/u);
+  assert.equal(existsSync(join(context.backups, '20261101-000000-dddddd')), true);
+});
+
+test('a blocked install fetches nothing, and a linked LitGrok cache folder is refused', async (t) => {
+  const context = sandbox(t);
+  const personal = join(context.home, '.claude', 'skills', 'lit-docx');
+  mkdirSync(personal, { recursive: true });
+  writeFileSync(join(personal, 'SKILL.md'), '---\nname: lit-docx\ndescription: "mine"\n---\n');
+  const stopped = await ext(context, ['install', 'lit-docx', '--yes'], { FAKE_SHELF: context.shelf });
+  assert.equal(stopped.code, 1);
+  assert.equal(existsSync(join(context.home, 'git-calls.log')), false, 'no clone before the check');
+  assert.equal(existsSync(join(context.env.XDG_CACHE_HOME, 'litgrok')), false);
+
+  const elsewhere = join(context.root, 'elsewhere');
+  mkdirSync(elsewhere);
+  mkdirSync(context.env.XDG_CACHE_HOME, { recursive: true });
+  const { symlinkSync } = await import('node:fs');
+  symlinkSync(elsewhere, join(context.env.XDG_CACHE_HOME, 'litgrok'));
+  const linked = await ext(context, ['install', 'visual-qa', '--yes'], { FAKE_SHELF: context.shelf });
+  assert.equal(linked.code, 1);
+  assert.match(linked.stderr, /Refusing/u);
+  assert.deepEqual(readdirSync(elsewhere), [], 'nothing written through the link');
+});
+
+test('an update dry run fetches nothing and says what it compared with', async (t) => {
+  const context = sandbox(t);
+  await ext(context, ['install', 'lit-pptx', '--from', context.shelf, '--yes']);
+  const noCache = await ext(context, ['update'], { FAKE_SHELF: context.shelf });
+  assert.equal(noCache.code, 0, noCache.stderr);
+  assert.doesNotMatch(noCache.stdout, /lit-pptx: would update/u, noCache.stdout);
+  assert.match(noCache.stdout, /after the fetch/u);
+  assert.equal(existsSync(join(context.home, 'git-calls.log')), false, 'a dry run fetches nothing');
+
+  await ext(context, ['install', 'visual-qa', '--yes'], { FAKE_SHELF: context.shelf });
+  rmSync(join(context.home, 'git-calls.log'));
+  const cached = await ext(context, ['update'], { FAKE_SHELF: context.shelf });
+  assert.equal(cached.code, 0, cached.stderr);
+  assert.match(cached.stdout, /cached copy/u);
+  assert.match(cached.stdout, /--yes/u);
+  assert.equal(existsSync(join(context.home, 'git-calls.log')), false, 'a dry run pulls nothing');
+});
