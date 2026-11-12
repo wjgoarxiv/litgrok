@@ -36,3 +36,10 @@ hold frame (SHA-256 `562001cc45a52062d57c8db0a2f5491e33eba6efe753da1cb3f56df874a
 the landing pages no longer show it. The SVG cover remains the editable,
 low-bandwidth fallback. The WebP files ship in the package so the npmjs page can
 load them.
+
+`diagrams/` holds the three Tokyo Night drawings on the GitHub landing pages
+(the install path, the `lit` route, and the core and extensions), each in
+English and Korean with a light and a dark PNG. `schematic/` holds the same
+route drawn as a small process plant: a looping WebP per language and theme,
+plus a still PNG for readers who prefer reduced motion. These drawings stay
+outside the npm package; the npm pages under `docs/npm/` do not show them.

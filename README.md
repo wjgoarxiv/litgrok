@@ -153,6 +153,23 @@ through Cursor:
 | Grok Build, your user account | `litgrok install --user`, with `--status-line` for the status row | `~/.grok/` |
 | Grok Bot, through Cursor | Add Marketplace, From GitHub Repository, then Connect apps | `.cursor-plugin/plugin.json` in this repository |
 
+### What the install writes, and what it leaves to you
+
+The installer is careful in a way that is easy to miss from its one-line output, so here is the whole path
+in one picture. It gathers LitGrok's files from the package, checks that every folder on the way into
+`.grok/` is a real folder, and then compares each file it is about to write with
+`.litgrok-install-manifest.json`, the list of hashes it kept from the last install. A file that is not
+there yet gets written. A file that still matches its hash is LitGrok's own, so it is replaced or, when
+it is already current, left alone. A file you edited since then stops the whole run before anything is
+written, and the installer names it, so your change is never overwritten quietly.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/installer.en.dark.png" /><img src="./docs/assets/readme/diagrams/installer.en.light.png" width="960" alt="Flowchart titled What litgrok install writes, and what it leaves to you. litgrok install (add --dry-run to look first) runs PAYLOAD (skills, agents, rules, hooks from the package's .grok/), then SAFETY (every folder on the path is real, a symlink is refused), then OWNERSHIP, which compares each file with the manifest. Not there yet leads to Written. LitGrok's, unchanged leads to Replaced or left alone. Changed since install leads to Stops before writing, with the message Refusing to overwrite different existing file: path. Written and replaced files go to WRITE, then the receipt: Status: Ready, with .litgrok-install-manifest.json recording each file's hash. A side card says it writes to project/.grok/ by default and to ~/.grok/ with --user. Next: restart Grok Build leads to two steps the installer leaves to you: open Grok Build from the Git root (in a plain folder, run git init yourself) and trust the hooks with /hooks-trust, since project hooks stay off until you do. The installer never runs git init or changes trust." /></picture></p>
+
+The last two boxes are the part people trip on. LitGrok can copy its hooks, but Grok Build only runs
+project hooks from a Git root you have trusted, and the installer will not decide either of those for
+you. So when the receipt reads `Status: Ready`, restart Grok Build from the project's Git root and trust
+the hooks in `/hooks-trust`. Until then the skills and the rule work, and the hooks wait.
+
 ### Let a coding agent install it
 
 If you would rather hand the install to a coding agent, open it in the project folder and paste
@@ -405,19 +422,13 @@ note gives the install line (see [Extensions](#extensions)). The
 
 ## How it works
 
-```mermaid
-flowchart LR
-    I["litgrok install"] --> P["project .grok/ files"]
-    P --> S["skills · /litwork"]
-    P --> R["rule · 00-litgrok.md"]
-    P --> H["hooks · /hooks-trust required"]
-    S --> G["Grok Build session"]
-    R --> G
-    G -->|trusted hook events| H
-    H --> L["session-ledger · event order"]
-    G -->|checked work · /lit-handoff| N["handoff file in the project"]
-    N -.->|you give the path| G
-```
+A `lit` prompt passes through three layers, and it helps to see them stacked. The project rule reads
+your words and picks the skill. The workflow skills walk the stages one at a time, from questions to a
+plan, the work, a review and done, and hand bounded jobs to the agents in `.grok/agents`. Underneath, the
+hooks you trusted keep the record and hold a turn when a check fails: a planning turn cannot end until
+its plan is saved, and a deliverable full of hedges is refused before it is written.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/route.en.dark.png" /><img src="./docs/assets/readme/diagrams/route.en.light.png" width="960" alt="Diagram titled What happens when you type lit. You type lit task or /litwork task; a prompt goes to the project rule .grok/rules/00-litgrok.md, which matches your words to a skill and picks start-work. start-work hands a bounded job to the agents, .grok/agents/litgrok-*.md, 11 definitions such as planner, executor and verifier. The workflow skills sit in a row, one stage each: deep-interview (interview), lit-plan (plan), start-work with litwork (work), review-work (review) and done (all rows checked). Below them are the trusted hooks from hooks/hooks.json. When a plan turn ends, Stop's plan gate holds the planning turn until plans/slug.md is saved, and asks for the project files plans/slug.md and .handoff/HANDOFF.md. On each Edit or Write, PreToolUse runs deliverable-hedge-guard, which denies a hedged deliverable with exit 2, so the deliverable is checked by lit-humanizer rules before the file is written. UserPromptSubmit records the stage your prompt names, routes nothing and prints nothing, and appends a line to the session ledger .grok/litgrok/session-ledger/, which the LIT status row reads." /></picture></p>
 
 The installer copies plain files into the project's `.grok/` folder and changes nothing else.
 When you call a skill, the session reads its instructions; when you start a prompt with `lit`,
@@ -427,6 +438,21 @@ is written, and log the order of events in `.grok/litgrok/session-ledger/`. Noth
 background: when the session ends, the work waits in the handoff until you, or the next session,
 pick it up. [Where LitGrok keeps its state](./docs/guide.md#where-litgrok-keeps-its-state) and
 [what goes over the network](./docs/privacy.md).
+
+### The same route, drawn as a plant
+
+If you think in process diagrams, this is the same session as a small plant. The prompt comes in on the
+left, and the project rule is the header that feeds it to whichever stage your words named. Each
+workflow skill is a vessel, and the hooks are the instruments on the lines between them. The
+`UserPromptSubmit` meter records every prompt into the session ledger, the `Stop` plan gate holds the
+plan line until `plans/<slug>.md` is saved, and the `PreToolUse` guard closes the work line on a hedged
+deliverable. At the end, `review-work` is a three-way valve: checked work leaves on the right, and
+findings run back to the work vessel for another pass.
+
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="./docs/assets/readme/schematic/lit-plant.en.dark.png" /><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/readme/schematic/lit-plant.en.png" /><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/schematic/lit-plant-loop.en.dark.webp" /><img src="./docs/assets/readme/schematic/lit-plant-loop.en.webp" width="900" alt="Looping process-flow drawing of the lit workflow in Grok Build, with flow marching along the lines. A Prompt enters the header labelled project rule 00-litgrok.md, metered by instrument FQR-101 for UserPromptSubmit, which signals the session ledger. The header feeds four vessels in series: deep-interview, lit-plan, start-work and review-work. Between lit-plan and start-work, analyser AIC-102 (Stop, plan gate) works a control valve, and a side stream takes plans/slug.md off the plan line. Between start-work and review-work, AIC-103 (PreToolUse, hedge guard) works a second valve. After review-work, AIC-104 (review-work verdict) works a three-way valve: Checked work leaves on the right, and a red findings line, stream 6, runs back into start-work. A stream table lists stages interview, plan, work and review, what each line carries (answered questions, an approved plan, the change and its tests, the change to judge, findings) and what gates it. The key reads Prompt, Work in progress, Saved or checked, Findings back to work, Hook signal." /></picture></p>
+
+The tags on the instruments and the stream numbers belong to the drawing. The names on the vessels, the
+hooks and the files are the real ones from this repository.
 
 ## Use LitGrok in Grok Bot and Cursor
 
@@ -490,6 +516,12 @@ the rest of the lit workflow need nothing else. Nine skills that make finished f
 documents, figures, design work and video covers, are now LitFamily extensions. They live on the
 LitFamily extension shelf, wjgoarxiv-skills, at https://github.com/wjgoarxiv/wjgoarxiv-skills. Install
 the ones you use beside LitGrok and you get the full LitFamily experience back; leave out the rest.
+
+`litgrok install` still copies 42 skill folders: the 33 core skills, and a short note under the old
+name of each of the nine extensions. The picture shows which skills sit where and the three steps that
+bring one back.
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-recap, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back: 1, clone the shelf once with git clone github.com/wjgoarxiv/wjgoarxiv-skills; 2, install one folder with grok plugin install clone/variants/litgrok/skill --trust; 3, it answers by name as skill:skill, next to the note, loaded from Grok Build's own plugin store. Notes: point at the folder, because a # subfolder source copies the whole repository, over 200 MB per skill; to take one out, grok plugin uninstall skill." /></picture></p>
 
 For Grok Build each extension is its own folder under `variants/litgrok/`, a one-skill plugin with
 everything it reads inside it. Clone the shelf once, then run one line per skill against your clone:
