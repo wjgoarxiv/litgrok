@@ -518,14 +518,43 @@ LitFamily extension shelf, wjgoarxiv-skills, at https://github.com/wjgoarxiv/wjg
 the ones you use beside LitGrok and you get the full LitFamily experience back; leave out the rest.
 
 `litgrok install` still copies 42 skill folders: the 33 core skills, and a short note under the old
-name of each of the nine extensions. The picture shows which skills sit where and the three steps that
-bring one back.
+name of each of the nine extensions. The picture shows which skills sit where and the four steps
+`litgrok extensions install` takes to bring one back.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-recap, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back: 1, clone the shelf once with git clone github.com/wjgoarxiv/wjgoarxiv-skills; 2, install one folder with grok plugin install clone/variants/litgrok/skill --trust; 3, it answers by name as skill:skill, next to the note, loaded from Grok Build's own plugin store. Notes: point at the folder, because a # subfolder source copies the whole repository, over 200 MB per skill; to take one out, grok plugin uninstall skill." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-recap, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back with litgrok extensions install skill --yes, in four steps: 1, check: grok plugin list --json and the eight skills folders, and a personal copy stops it; 2, move aside: each store copy, whole, into a dated folder under ~/.grok/extension-backups; 3, copy: grok plugin uninstall, then grok plugin install folder --trust; 4, receipt: Grok Build's registry.json, read back by grok plugin list --json, with source, store path and time. Notes: the other verbs are litgrok extensions list, check, update, remove and prune-backups; by hand, each note keeps the git clone and install lines." /></picture></p>
 
 For Grok Build each extension is its own folder under `variants/litgrok/`, a one-skill plugin with
-everything it reads inside it. Clone the shelf once. Then, from the project root, run two read-only
-checks and the install line for each skill you want (`lit-pptx` here):
+everything it reads inside it. LitGrok can bring one in for you. From the project root, ask it what it
+would do, then let it do that:
+
+```bash
+litgrok extensions install lit-pptx
+litgrok extensions install lit-pptx --yes
+```
+
+The first line only prints the plan. With `--yes` it fetches the shelf into its own cache folder
+(`~/.cache/litgrok/extensions-src`, a shallow copy of `variants/litgrok/` only; `--from "<path to your
+wjgoarxiv-skills clone>"` uses a clone you already have), runs the same two checks the manual route below
+uses, and stops when a personal copy of the skill sits in a folder Grok reads. It names that folder and
+the line that moves it aside, and never moves it itself; `--allow-shadow` installs beside it with a
+warning instead. An installed copy that differs from the shelf, or a second copy from another clone, is
+first copied whole into a dated folder under `~/.grok/extension-backups/`, then uninstalled, so exactly
+one live copy is left. The install itself is `grok plugin install "<folder>" --trust`, and Grok Build's own
+plugin list is the receipt: LitGrok writes no record of its own.
+
+The other verbs work the same way, printing first and acting only with `--yes`.
+`litgrok extensions list` shows the nine extensions and what is installed, from which folder and when.
+`litgrok extensions check` reports duplicates, competing same-name skills, copies whose source folder is
+gone and the backups with their size, with the line that fixes each; it exits 1 while something needs
+action. `litgrok extensions update` pulls the shelf and reinstalls only the extensions that differ from
+it. `litgrok extensions remove lit-pptx` backs up and uninstalls a copy that came from a shelf folder and
+refuses a plugin of that name from anywhere else. `litgrok extensions prune-backups --older-than 30`
+lists the backups with their size and deletes them only with `--yes`. Pick several at once with
+`--family decks|documents|figures|design|video-covers` or `--all`. `litgrok doctor` prints a one-line
+summary of the check.
+
+By hand, the same steps look like this. Clone the shelf once. Then, from the project root, run two
+read-only checks and the install line for each skill you want (`lit-pptx` here):
 
 ```bash
 git clone https://github.com/wjgoarxiv/wjgoarxiv-skills
@@ -568,7 +597,8 @@ If the first check counted more than one copy (the same skill installed from two
 uninstall line once for each. `grok plugin uninstall <skill>` on its own removes an extension; your
 clone keeps the source. `litgrok install` and its updates never touch Grok Build's plugin store.
 
-The installer tells you this when you install or update. On an update from 1.0.34 or older it also
+The installer tells you this when you install or update, and when it finds a same-name copy of an
+extension in a skills folder it adds one line that points at `litgrok extensions check`. On an update from 1.0.34 or older it also
 names the old engine caches still on disk (`~/.cache/litgrok/office-docs` and
 `~/.cache/litgrok/motion-runtime`, under `$XDG_CACHE_HOME` if you set it); nothing reads them now,
 because the extensions keep their own cache, so you can delete them. If you use the LIT status row, it

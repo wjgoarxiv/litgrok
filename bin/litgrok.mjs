@@ -7,6 +7,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import { fileURLToPath } from 'node:url';
 import { renderMark, terminalMode } from '../.grok/hooks/lit-mark.mjs';
 import { applyStoredGround, backupIfSectionAbsent, decideGround, groundReport, ruleSourceForInstall, runGround } from './ground-rule.mjs';
+import { competingSummary, extensionsDoctorLine, runExtensions } from './extensions.mjs';
 import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from './status-line-config.mjs';
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -428,7 +429,7 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/visual-qa/scripts/verify-evidence-manifest.mjs': '94be132b01eff2af91775a6e9c6841c6ecf008d44f641c61a4bf16726c11f779',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n';
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok extensions list|check|install|update|remove|prune-backups (litgrok extensions --help)\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -936,7 +937,7 @@ function oldEngineCaches(env, home, manifest, ownedBefore) {
   });
 }
 
-function extensionsCard(colors, caches) {
+function extensionsCard(colors, caches, competing = []) {
   const titleColor = '38;2;255;99;55';
   return [
     `  ${paint('╭─ LITFAMILY EXTENSIONS', titleColor, colors)}`,
@@ -945,11 +946,12 @@ function extensionsCard(colors, caches) {
     `  │ LitFamily extensions, kept on the extension shelf at ${SHELF_URL}:`,
     '  │ lit-pptx, lit-docx, lit-scientific-visualization, lit-diagram-drawer, lit-schematic,',
     '  │ frontend-ui-ux, visual-qa, readme-studio and lit-typographic-motion.',
-    '  │ Install the ones you use beside LitGrok for the full LitFamily experience:',
-    `  │   git clone ${SHELF_URL}`,
-    '  │   grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust',
-    "  │ Run the check in that skill's note first: it finds an installed or personal copy.",
-    '  │ To update one: git -C "<path to your wjgoarxiv-skills clone>" pull, then grok plugin uninstall <skill> and the install line again.',
+    '  │ Install the ones you use for the full LitFamily experience: litgrok extensions install <skill> --yes',
+    '  │ It fetches the shelf, checks for other copies first and runs grok plugin install; litgrok extensions list, update, remove and check work the same way.',
+    `  │ By hand, as each skill's note shows: git clone ${SHELF_URL}, then grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust`,
+    ...(competing.length > 0
+      ? [`  │ Found ${competing.length === 1 ? 'a same-name copy' : `${competing.length} same-name copies`} of these skills outside the plugin store (${competing[0]}${competing.length > 1 ? ', ...' : ''}); run litgrok extensions check for the fix.`]
+      : []),
     ...(caches.length > 0
       ? [`  │ Earlier releases left engine caches at ${caches.join(' and ')}. Nothing reads them now (the extensions keep their own), so you can delete them.`]
       : []),
@@ -1167,13 +1169,13 @@ async function latestRegistryVersion(fetchFn) {
 
 // Read-only: prints the package version and, at most, one notify-only update line.
 // It never installs; the user runs the printed command themselves.
-async function runDoctor(args, { env, stdout, stderr, fetchFn }) {
+async function runDoctor(args, { env, cwd, stdout, stderr, fetchFn }) {
   if (args.some((argument) => argument !== '--no-color')) {
     stderr.write(USAGE);
     return 1;
   }
   const current = packageVersion();
-  stdout.write(`litgrok ${current}\n${groundReport(env)}\n`);
+  stdout.write(`litgrok ${current}\n${groundReport(env)}\n${extensionsDoctorLine({ env, cwd })}\n`);
   if (UPDATE_OPT_OUTS.some((name) => Object.hasOwn(env, name))) return 0;
   let latest;
   try {
@@ -1192,9 +1194,19 @@ export async function run(args, context = {}) {
     return runAutoHandoff(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr, cwd: context.cwd ?? process.cwd() });
   }
   if (args[0] === 'ground') return runGround(args.slice(1), context);
+  if (args[0] === 'extensions') {
+    return runExtensions(args.slice(1), {
+      env: context.env ?? process.env,
+      cwd: context.cwd ?? process.cwd(),
+      stdout: context.stdout ?? process.stdout,
+      stderr: context.stderr ?? process.stderr,
+      now: context.now,
+    });
+  }
   if (args[0] === 'doctor') {
     return runDoctor(args.slice(1), {
       env: context.env ?? process.env,
+      cwd: context.cwd ?? process.cwd(),
       stdout: context.stdout ?? process.stdout,
       stderr: context.stderr ?? process.stderr,
       fetchFn: context.fetch ?? globalThis.fetch,
@@ -1422,7 +1434,7 @@ export async function run(args, context = {}) {
       const receipt = receiptCard(options, displayRoot, colors, { status: 'Already current', written: 0, current: states.counts.current });
       progress.close();
       stdout.write(receipt);
-      stdout.write(extensionsCard(colors, caches));
+      stdout.write(extensionsCard(colors, caches, competingSummary({ env, cwd })));
       return 0;
     }
 
@@ -1459,7 +1471,7 @@ export async function run(args, context = {}) {
     const receipt = receiptCard(options, displayRoot, colors, { status: 'Ready', written: installed, current: states.counts.current });
     progress.close();
     stdout.write(receipt);
-    stdout.write(extensionsCard(colors, caches));
+    stdout.write(extensionsCard(colors, caches, competingSummary({ env, cwd })));
     return 0;
   } catch (error) {
     progress.close();

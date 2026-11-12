@@ -7,7 +7,7 @@ argument-hint: "<what the film is for>"
 
 # lit-typographic-motion
 
-lit-typographic-motion moved out of LitGrok and is now a LitFamily extension. LitGrok's core works without it; installed beside LitGrok, it brings back the full LitFamily experience for this kind of work. Its full skill lives in wjgoarxiv-skills, the LitFamily extension shelf, as its own Grok Build edition: one skill in one folder, installed on its own:
+lit-typographic-motion moved out of LitGrok and is now a LitFamily extension. LitGrok's core works without it; installed beside LitGrok, it brings back the full LitFamily experience for this kind of work. Its full skill lives on the LitFamily extension shelf, wjgoarxiv-skills, in one folder of its own:
 
 ```text
 wjgoarxiv-skills/variants/litgrok/lit-typographic-motion/
@@ -30,7 +30,7 @@ limitations_channel: reply
 
 ## What to do
 
-1. Look at the skills this session lists. A plugin's skill keeps its own name, and Grok Build shows it as `lit-typographic-motion:lit-typographic-motion` (plugin `lit-typographic-motion`, skill `lit-typographic-motion`) while this note has the same name. If a `lit-typographic-motion` skill from the `lit-typographic-motion` plugin is listed, load that one and follow it for the whole request; this note adds nothing to it.
+1. Look at the skills this session lists. A plugin's skill keeps its own name, and Grok Build shows it as `lit-typographic-motion:lit-typographic-motion` while this note has the same name. If a `lit-typographic-motion` skill from the `lit-typographic-motion` plugin is listed, load that one and follow it for the whole request; this note adds nothing to it.
 2. Otherwise, for a direct request, reply in the user's language with three things and stop, writing no file:
    - one sentence on what lit-typographic-motion makes: a finished short film from a one-line request (a treatment, a storyboard round, the type or stage path, an original score, look rounds and a QA gate), or a silent, seamless README cover loop;
    - that it is now a LitFamily extension, kept in the wjgoarxiv-skills repository in the folder shown above, and installs beside LitGrok;
@@ -38,6 +38,8 @@ limitations_channel: reply
 3. A README for a repository, with or without a motion cover, goes to the `readme-studio` note; it installs the same way from its own folder.
 
 ## Install
+
+`litgrok extensions install lit-typographic-motion` does these steps for you: it fetches the shelf, runs both checks, stops at a personal copy and changes nothing until you add `--yes`; `litgrok extensions update` and `remove lit-typographic-motion` do the rest. By hand:
 
 wjgoarxiv-skills is public at https://github.com/wjgoarxiv/wjgoarxiv-skills. Clone it once. Then, from the project root, run the two read-only checks and install this one skill from its folder in your clone:
 
@@ -52,7 +54,7 @@ The first check counts installed copies. Above 0, skip the install: a second one
 
 To update: `grok plugin update` does not copy a local folder again, so run `git -C "<path to your wjgoarxiv-skills clone>" pull`, then `grok plugin uninstall lit-typographic-motion` once for each counted copy, then the install line. Uninstall alone removes it; the clone keeps the source.
 
-The folder is a one-skill Grok Build plugin with no hooks, rules or MCP servers; everything the skill reads sits inside it, and a local install needs `--trust`. The line names the folder path, which Grok Build copies alone into its plugin store; a `#` subfolder source (`<clone>#<folder>`) copies the whole repository, `.git` included, over 200 MB per skill.
+The folder is a one-skill plugin with everything the skill reads inside it; a local install needs `--trust`. The line names the folder path, which Grok Build copies alone into its plugin store; a `#` subfolder source (`<clone>#<folder>`) copies the whole repository, `.git` included, over 200 MB per skill.
 
 Why a plugin: the LitGrok installer owns `.grok/skills/lit-typographic-motion/` and `~/.grok/skills/lit-typographic-motion/`, where this note lives, and refuses its next update when a file there changed. The plugin lands in Grok Build's own plugin store, listed as `lit-typographic-motion:lit-typographic-motion` beside this note, so `litgrok install` keeps updating LitGrok and leaves the plugin alone.
 

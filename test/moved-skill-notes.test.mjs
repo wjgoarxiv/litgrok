@@ -177,6 +177,18 @@ test('each note checks before it installs, and gives the update, move-aside and 
   }
 });
 
+// `litgrok extensions` runs the same steps in code; the hand lines stay as the manual route.
+test('each note names the litgrok extensions verbs before the manual lines', () => {
+  for (const id of Object.keys(MOVED)) {
+    const install = note(id).slice(note(id).indexOf('\n## Install\n'), note(id).indexOf('\n## Hard stops\n'));
+    const verb = install.indexOf(`\`litgrok extensions install ${id}\``);
+    assert.ok(verb !== -1, `${id} names its install verb`);
+    assert.ok(verb < install.indexOf('```bash'), `${id} names the verb before the manual lines`);
+    assert.match(install, /changes nothing until you add `--yes`/u, `${id} says the verb previews first`);
+    assert.ok(install.includes('`litgrok extensions update`') && install.includes(`\`remove ${id}\``), `${id} names update and remove`);
+  }
+});
+
 test('the check and move-aside lines do what the note says in bash and zsh', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'litgrok-safe-install-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));

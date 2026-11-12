@@ -38,6 +38,8 @@ limitations_channel: reply
 
 ## Install
 
+`litgrok extensions install lit-docx` does these steps for you: it fetches the shelf, runs both checks, stops at a personal copy and changes nothing until you add `--yes`; `litgrok extensions update` and `remove lit-docx` do the rest. By hand:
+
 wjgoarxiv-skills is public at https://github.com/wjgoarxiv/wjgoarxiv-skills. Clone it once. Then, from the project root, run the two read-only checks and install this one skill from its folder in your clone:
 
 ```bash
@@ -51,7 +53,7 @@ The first check counts installed copies. Above 0, skip the install: a second one
 
 To update: `grok plugin update` does not copy a local folder again, so run `git -C "<path to your wjgoarxiv-skills clone>" pull`, then `grok plugin uninstall lit-docx` once for each counted copy, then the install line. Uninstall alone removes it; the clone keeps the source.
 
-The folder is a one-skill Grok Build plugin with no hooks, rules or MCP servers; everything the skill reads sits inside it, and a local install needs `--trust`. The line names the folder path, which Grok Build copies alone into its plugin store; a `#` subfolder source (`<clone>#<folder>`) copies the whole repository, `.git` included, over 200 MB per skill.
+The folder is a one-skill plugin with everything the skill reads inside it; a local install needs `--trust`. The line names the folder path, which Grok Build copies alone into its plugin store; a `#` subfolder source (`<clone>#<folder>`) copies the whole repository, `.git` included, over 200 MB per skill.
 
 Why a plugin: the LitGrok installer owns `.grok/skills/lit-docx/` and `~/.grok/skills/lit-docx/`, where this note lives, and refuses its next update when a file there changed. The plugin lands in Grok Build's own plugin store, listed as `lit-docx:lit-docx` beside this note, so `litgrok install` keeps updating LitGrok and leaves the plugin alone.
 

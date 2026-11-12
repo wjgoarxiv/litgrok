@@ -824,7 +824,8 @@ function extensionsLine({ glyphs, paint, maxCells, rail }) {
     left: [
       segment('LitFamily extensions', (text) => paint.fg(text, 'accent', true)),
       segment('github.com/wjgoarxiv/wjgoarxiv-skills', (text) => paint.fg(text, 'accent')),
-      segment('decks, documents, figures, design and video covers install beside LitGrok', (text) => paint.fg(text, 'dim'), { drop: 1 }),
+      segment('litgrok extensions install <skill>', (text) => paint.fg(text, 'accent'), { drop: 1 }),
+      segment('decks, documents, figures, design and video covers install beside LitGrok', (text) => paint.fg(text, 'dim'), { drop: 2 }),
     ],
     separator: { plain: ` ${glyphs.dot} `, painted: ` ${paint.fg(glyphs.dot, 'dim')} ` },
     rail,

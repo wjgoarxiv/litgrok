@@ -18,9 +18,6 @@ const HOOKS = join(PRODUCT_ROOT, '.grok', 'hooks');
 const SHELF = 'https://github.com/wjgoarxiv/wjgoarxiv-skills';
 const CLONE_LINE = `git clone ${SHELF}`;
 const PLUGIN_LINE = 'grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust';
-// Grok Build 1.0.13 re-copies a local plugin only through uninstall plus install: `grok plugin update` reports it as
-// already live, and a second install stops with `already installed`.
-const UPDATE_LINE = 'git -C "<path to your wjgoarxiv-skills clone>" pull, then grok plugin uninstall <skill> and the install line again';
 const PPTX_CHECK = [
   `grok plugin list --json | grep -cF '"name": "lit-pptx"'`,
   `grep -L '^description: "Moved: lit-pptx ' {.grok,.agents,.claude,.cursor,~/.grok,~/.agents,~/.claude,~/.cursor}/skills/lit-pptx/SKILL.md 2>/dev/null`,
@@ -94,8 +91,11 @@ test('install output names the extension shelf, the clone line and the plugin li
   assert.ok(block.includes(SHELF), 'names the shelf');
   assert.ok(block.includes(CLONE_LINE), 'gives the clone line');
   assert.ok(block.includes(PLUGIN_LINE), 'gives the plugin line the notes print');
-  assert.ok(block.includes(UPDATE_LINE), 'gives the update route Grok Build really supports');
-  assert.match(block, /Run the check in that skill's note first: it finds an installed or personal copy\./u, 'points at the check in each note');
+  assert.ok(block.includes('litgrok extensions install <skill> --yes'), 'gives the install verb');
+  assert.match(block, /checks for other copies first/u, 'says the verb checks first');
+  assert.match(block, /litgrok extensions list, update, remove and check/u, 'names the other verbs');
+  assert.match(block, /each skill's note/u, 'points at the manual route in each note');
+  assert.doesNotMatch(block, /same-name cop/u, 'a clean home has no finding line');
   assert.match(block, /full LitFamily experience/u);
   for (const id of ['lit-pptx', 'lit-docx', 'lit-scientific-visualization', 'lit-diagram-drawer', 'lit-schematic', 'frontend-ui-ux', 'visual-qa', 'readme-studio', 'lit-typographic-motion']) {
     assert.ok(block.includes(id), `names ${id}`);
@@ -106,6 +106,20 @@ test('install output names the extension shelf, the clone line and the plugin li
   const again = await install(['install', '--project', '--yes'], context);
   assert.equal(again.code, 0, again.stderr);
   assert.ok(noticeBlock(again.stdout), 'an install that finds everything current still shows the card');
+});
+
+test('the card points at litgrok extensions check when a same-name copy competes with an extension', async (t) => {
+  const context = sandbox(t);
+  const personal = join(context.home, '.agents', 'skills', 'lit-schematic');
+  mkdirSync(personal, { recursive: true });
+  writeFileSync(join(personal, 'SKILL.md'), '---\nname: lit-schematic\ndescription: "my own"\n---\n');
+  const result = await install(['install', '--project', '--yes'], context);
+  assert.equal(result.code, 0, result.stderr);
+  const block = noticeBlock(result.stdout);
+  assert.ok(block.includes(personal), block);
+  assert.match(block, /run litgrok extensions check for the fix/u);
+  assert.ok(block.split('\n').length <= 12);
+  assert.equal(existsSync(join(personal, 'SKILL.md')), true, 'the install never moves it');
 });
 
 test('an update from 1.0.34 also names the old engine caches that are still on disk', async (t) => {
@@ -211,6 +225,8 @@ test('the status row adds one extensions row for the whole first session after a
   const first = statusRows({ root, home, script, sessionId: 'session-one' });
   assert.ok(extensionRow(first), `the first session shows the row:\n${first.join('\n')}`);
   assert.ok(extensionRow(first).includes('github.com/wjgoarxiv/wjgoarxiv-skills'));
+  const wide = statusRows({ root, home, script, sessionId: 'session-one', env: { COLUMNS: '160' } });
+  assert.ok(extensionRow(wide).includes('litgrok extensions install <skill>'), 'a wide row names the install verb');
   assert.ok(first.length >= 2 && !first[0].includes('LitFamily'), 'the HUD row stays first');
   assert.ok(extensionRow(statusRows({ root, home, script, sessionId: 'session-one' })), 'every refresh of that session keeps it');
   assert.equal(extensionRow(statusRows({ root, home, script, sessionId: 'session-two' })), undefined, 'the next session has no row');
@@ -258,6 +274,14 @@ test('README and README_ko-KR carry an Extensions section in the same framing', 
   assert.ok(koSection.includes('git -C "<path to your wjgoarxiv-skills clone>" pull'), 'the Korean section gives the update route');
   assert.ok(koSection.includes(MOVE_ASIDE), 'the Korean section moves a personal copy aside');
   assert.doesNotMatch(korean, /#wjgoarxiv-skills로-옮긴-스킬/u, 'old anchors point at the new section');
+  for (const [name, text] of [['English', section], ['Korean', koSection]]) {
+    for (const verb of ['list', 'check', 'install lit-pptx', 'update', 'remove lit-pptx', 'prune-backups']) {
+      assert.ok(text.includes(`litgrok extensions ${verb}`), `the ${name} section names litgrok extensions ${verb}`);
+    }
+    assert.ok(text.indexOf('litgrok extensions install lit-pptx') < text.indexOf('```bash\ngit clone'), `the ${name} section gives the verb before the manual lines`);
+    assert.match(text, /--allow-shadow/u, `the ${name} section names --allow-shadow`);
+    assert.match(text, /extension-backups/u);
+  }
 });
 
 // In a user install the hooks sit in ~/.grok/hooks, and ~/.grok/litgrok/ is the runtime-state folder that makes the

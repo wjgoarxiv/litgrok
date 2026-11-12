@@ -506,14 +506,41 @@ lit 흐름에는 다른 것이 필요하지 않습니다. 덱, 문서, 그림, �
 LitFamily를 온전히 다 쓸 수 있고, 나머지는 설치하지 않아도 됩니다.
 
 `litgrok install`은 지금도 스킬 폴더 42개를 복사합니다. 그중 33개는 코어 스킬이고, 나머지 아홉 개는
-확장의 예전 이름으로 남겨 둔 짧은 안내입니다. 어떤 스킬이 어디에 있는지, 하나를 다시 들이는 세 단계가 무엇인지 그림으로
-정리했습니다.
+확장의 예전 이름으로 남겨 둔 짧은 안내입니다. 어떤 스킬이 어디에 있는지, `litgrok extensions install`이
+확장 하나를 다시 들이는 네 단계가 무엇인지 그림으로 정리했습니다.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.ko.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.ko.light.png" width="960" alt="LitGrok의 코어와 확장을 그린 도식. litgrok install은 .grok/skills에 스킬 폴더 42개를 복사한다. 왼쪽은 이것만으로 완결되는 코어 33개를 다섯 묶음으로 보여 준다. 계획·구현·리뷰: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. 리서치: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. 코드: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. 이어서 일하기: lit-handoff, lit-recap, lit-adhd, wikify. 문장과 호스트: lit-humanizer, litgrok. 가운데는 같은 이름의 안내 9개로, 각각 화살표로 wjgoarxiv-skills의 variants/litgrok/ 폴더를 가리킨다: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. 아래는 확장 하나를 다시 들이는 세 단계다. 1, git clone github.com/wjgoarxiv/wjgoarxiv-skills로 선반을 한 번 클론한다. 2, grok plugin install clone/variants/litgrok/skill --trust로 폴더 하나를 설치한다. 3, 안내 옆에서 Grok Build의 플러그인 저장소로부터 skill:skill이라는 이름으로 응답한다. 덧붙인 카드: 폴더 경로를 넘기세요, # 하위 폴더 소스는 저장소 전체를 복사하며 스킬마다 200 MB가 넘습니다. 빼고 싶을 때는 grok plugin uninstall skill." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.ko.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.ko.light.png" width="960" alt="LitGrok의 코어와 확장을 그린 도식. litgrok install은 .grok/skills에 스킬 폴더 42개를 복사한다. 왼쪽은 이것만으로 완결되는 코어 33개를 다섯 묶음으로 보여 준다. 계획·구현·리뷰: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. 리서치: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. 코드: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. 이어서 일하기: lit-handoff, lit-recap, lit-adhd, wikify. 문장과 호스트: lit-humanizer, litgrok. 가운데는 같은 이름의 안내 9개로, 각각 화살표로 wjgoarxiv-skills의 variants/litgrok/ 폴더를 가리킨다: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. 아래는 litgrok extensions install skill --yes가 확장 하나를 다시 들이는 네 단계다. 1, 확인: grok plugin list --json과 스킬 폴더 8곳을 보고, 개인 사본이 있으면 멈춘다. 2, 옮겨 두기: 저장소의 사본을 통째로 ~/.grok/extension-backups의 날짜 폴더에 둔다. 3, 복사: grok plugin uninstall 다음 grok plugin install folder --trust. 4, 설치 기록: Grok Build의 registry.json을 grok plugin list --json으로 읽으며, 소스와 저장소 경로와 시각이 남는다. 덧붙인 카드: 다른 동사는 litgrok extensions list, check, update, remove, prune-backups이고, 손으로 할 때는 각 안내에 git clone과 설치 줄이 그대로 있다." /></picture></p>
 
 Grok Build용 확장은 스킬마다 `variants/litgrok/` 아래 자기 폴더가 있고, 그 폴더 하나가 필요한 파일을 모두
-담은 스킬 하나짜리 플러그인입니다. 선반을 한 번 클론한 뒤, 프로젝트 루트에서 읽기만 하는 확인 두 줄과
-설치 한 줄을 스킬마다 실행합니다(아래는 `lit-pptx`).
+담은 스킬 하나짜리 플러그인입니다. 설치는 LitGrok에 맡길 수 있습니다. 프로젝트 루트에서 먼저 무엇을 할지
+물어보고, 그다음 실제로 하게 합니다.
+
+```bash
+litgrok extensions install lit-pptx
+litgrok extensions install lit-pptx --yes
+```
+
+첫 줄은 계획만 보여 줍니다. `--yes`를 붙이면 선반을 LitGrok 자기 캐시 폴더(`~/.cache/litgrok/extensions-src`,
+`variants/litgrok/`만 얕게 받은 사본)로 가져오고, 이미 클론이 있다면 `--from "<path to your
+wjgoarxiv-skills clone>"`으로 그 클론을 씁니다. 그다음 아래 손 설치와 같은 확인 두 가지를 하고, Grok이 읽는
+폴더에 같은 이름의 개인 사본이 있으면 멈춥니다. 그 폴더와 옮기는 줄을 알려 줄 뿐 직접 옮기지는 않으며,
+`--allow-shadow`를 붙이면 경고만 하고 그 옆에 설치합니다. 선반과 다른 사본이나 다른 클론에서 들인 두 번째
+사본은 먼저 `~/.grok/extension-backups/` 아래 날짜 폴더로 통째로 복사해 둔 뒤 지우므로, 살아 있는 사본은
+꼭 하나만 남습니다. 설치 자체는 `grok plugin install "<folder>" --trust`이고, 설치 기록은 Grok Build의
+플러그인 목록입니다. LitGrok은 따로 기록을 쓰지 않습니다.
+
+다른 동사도 같은 방식으로, 먼저 보여 주고 `--yes`가 있을 때만 실행합니다.
+`litgrok extensions list`는 확장 아홉 개와 설치 여부, 어느 폴더에서 언제 설치했는지를 보여 줍니다.
+`litgrok extensions check`는 중복, 같은 이름으로 겹치는 스킬, 소스 폴더가 사라진 사본, 백업과 그 크기를
+고치는 줄과 함께 알려 주고, 손볼 것이 있는 동안에는 1로 끝납니다. `litgrok extensions update`는 선반을 받아
+온 뒤 선반과 달라진 확장만 다시 설치합니다. `litgrok extensions remove lit-pptx`는 선반 폴더에서 온 사본을
+백업하고 지우며, 다른 곳에서 온 같은 이름의 플러그인은 거절합니다. `litgrok extensions prune-backups
+--older-than 30`은 백업과 크기를 보여 주고 `--yes`가 있을 때만 지웁니다. 여러 개를 한 번에 고르려면
+`--family decks|documents|figures|design|video-covers`나 `--all`을 씁니다. `litgrok doctor`는 확인 결과를
+한 줄로 요약해 줍니다.
+
+손으로 할 때는 같은 단계를 이렇게 밟습니다. 선반을 한 번 클론한 뒤, 프로젝트 루트에서 읽기만 하는 확인
+두 줄과 설치 한 줄을 스킬마다 실행합니다(아래는 `lit-pptx`).
 
 ```bash
 git clone https://github.com/wjgoarxiv/wjgoarxiv-skills
@@ -555,7 +582,8 @@ grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-
 확장을 빼기만 할 때는 `grok plugin uninstall <스킬>` 한 줄이면 되고, 원본은 클론에 남습니다. `litgrok install`과
 그 업데이트는 Grok Build의 플러그인 저장소를 건드리지 않습니다.
 
-설치 프로그램은 설치하거나 업데이트할 때 이 내용을 알려 줍니다. 1.0.34 이하에서 업데이트하면 디스크에 남은
+설치 프로그램은 설치하거나 업데이트할 때 이 내용을 알려 주고, 스킬 폴더에서 확장과 같은 이름의 사본을
+찾으면 `litgrok extensions check`를 가리키는 한 줄을 덧붙입니다. 1.0.34 이하에서 업데이트하면 디스크에 남은
 예전 엔진 캐시(`~/.cache/litgrok/office-docs`, `~/.cache/litgrok/motion-runtime`, `$XDG_CACHE_HOME`을
 정했다면 그 아래)도 알려 줍니다. 확장은 자기 캐시를 따로 쓰므로 이제 이 캐시를 읽는 것이 없고, 지워도
 됩니다. LIT 상태 행을 쓴다면 그다음 첫 세션 동안 한 줄짜리 안내가 더 나옵니다. Grok Build는 세션 시작

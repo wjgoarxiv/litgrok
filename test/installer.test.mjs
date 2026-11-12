@@ -69,6 +69,7 @@ function syntheticPackage() {
   mkdirSync(dirname(executable), { recursive: true });
   copyFileSync(join(PRODUCT_ROOT, 'bin', 'status-line-config.mjs'), join(root, 'bin', 'status-line-config.mjs'));
   copyFileSync(join(PRODUCT_ROOT, 'bin', 'ground-rule.mjs'), join(root, 'bin', 'ground-rule.mjs'));
+  copyFileSync(join(PRODUCT_ROOT, 'bin', 'extensions.mjs'), join(root, 'bin', 'extensions.mjs'));
   mkdirSync(join(root, '.grok', 'skills', 'litgrok', 'references'), { recursive: true });
   mkdirSync(join(root, '.grok', 'rules'), { recursive: true });
   mkdirSync(dirname(hookCommand), { recursive: true });
