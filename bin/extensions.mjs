@@ -28,7 +28,7 @@ const FETCH_TIMEOUT_MS = 300_000;
 
 export const EXTENSIONS_USAGE = [
   'Usage: litgrok extensions list [--json]',
-  '       litgrok extensions check [--json]',
+  '       litgrok extensions check [--from <clone>] [--json]',
   '       litgrok extensions install <id...>|--family <name>|--all [--from <clone>] [--allow-shadow] [--yes]',
   '       litgrok extensions update [<id...>|--all] [--from <clone>] [--yes]',
   '       litgrok extensions remove <id...> [--yes]',
@@ -47,7 +47,7 @@ function parse(args) {
   if (!verbs.includes(options.verb)) return null;
   const flags = {
     list: ['--json'],
-    check: ['--json'],
+    check: ['--json', '--from'],
     install: ['--all', '--family', '--from', '--allow-shadow', '--yes', '--dry-run'],
     update: ['--all', '--from', '--yes', '--dry-run'],
     remove: ['--yes', '--dry-run'],
@@ -323,10 +323,12 @@ function previewBanner(stdout) {
 
 // install and update share one plan: an extension whose single store copy matches its source folder is current;
 // any other state (no copy, an older copy, several copies) becomes backup, uninstall each copy, install once.
-function planReplace(id, copies, source) {
+// install also wants Grok Build to record this folder as the source, so a copy installed from another (perhaps gone)
+// folder is reinstalled even when its content matches; update compares content only.
+function planReplace(id, copies, source, { sameSource = false } = {}) {
   const folder = sourceFolder(source.root, id);
   if (source.ready && lstatOrNull(folder) === null) throw new ExtensionsError(`${folder} is missing from the extensions source; nothing was changed.`);
-  const current = source.ready && copies.length === 1 && copies[0].path !== null && lstatOrNull(copies[0].path) !== null && treeDigest(copies[0].path) === treeDigest(folder);
+  const current = source.ready && copies.length === 1 && copies[0].path !== null && lstatOrNull(copies[0].path) !== null && (!sameSource || copies[0].source === folder) && treeDigest(copies[0].path) === treeDigest(folder);
   return { id, folder, copies, current };
 }
 
@@ -397,7 +399,7 @@ function runInstallOrUpdate(options, context) {
   }
   // The source is fetched only once nothing blocks the run.
   const source = resolveSource(options, context, { refresh: update ? 'pull' : 'fetch' });
-  const plans = wanted.map(({ id, copies }) => planReplace(id, copies, source));
+  const plans = wanted.map(({ id, copies }) => planReplace(id, copies, source, { sameSource: !update }));
   if (!context.write) {
     previewBanner(stdout);
     if (source.note) stdout.write(`${source.note}\n`);
@@ -547,8 +549,27 @@ function survey(context, { withPlugins = true } = {}) {
   return { extensions, hostError, hostTimedOut };
 }
 
-function findings(context, report) {
+// The source check compares with: --from when given, otherwise LitGrok's cache when it is there. Nothing is fetched.
+function currentSource(from, context) {
+  try {
+    const source = resolveSource({ from }, context, { refresh: false });
+    return source.ready ? source : null;
+  } catch {
+    return null;
+  }
+}
+
+function sourceMissing(id, plugin, source) {
+  const fix = `litgrok extensions install ${id} --yes${source?.kind === 'from' ? ` --from "${source.root}"` : ''}`;
+  const folder = source ? sourceFolder(source.root, id) : null;
+  const matches = folder !== null && lstatOrNull(folder) !== null && plugin.path !== null && lstatOrNull(plugin.path) !== null && treeDigest(plugin.path) === treeDigest(folder);
+  if (matches) return { kind: 'source-moved', id, action: false, message: `${id}: its recorded source ${plugin.source} no longer exists; the installed copy matches ${folder}`, fix: `${fix} (re-records the source, if you want it recorded)` };
+  return { kind: 'source-missing', id, action: true, message: `${id}: its source ${plugin.source} no longer exists${folder ? ` and the installed copy differs from ${folder}` : ''}`, fix };
+}
+
+function findings(context, report, { from = null } = {}) {
   const { backups } = context.paths;
+  let source;
   const items = [];
   if (report.hostError) items.push({ kind: 'host', id: null, action: true, message: `plugin copies not checked: ${report.hostError}`, fix: 'put grok on PATH, then rerun litgrok extensions check' });
   for (const extension of report.extensions) {
@@ -556,7 +577,10 @@ function findings(context, report) {
     if (plugins.length > 1) items.push({ kind: 'duplicate', id, action: true, message: `${id}: ${plugins.length} plugin copies (${plugins.map(({ source }) => source).join(', ')})`, fix: plugins.some(({ managed }) => !managed) ? `grok plugin uninstall ${id} once per copy (${plugins.length} times; each source folder stays), then reinstall the one you want, e.g. litgrok extensions install ${id} --yes` : `litgrok extensions update ${id} --yes` });
     for (const plugin of plugins) {
       if (!plugin.managed) items.push({ kind: 'user-managed', id, action: false, message: `${id}: a user-managed plugin from ${plugin.source}; LitGrok leaves it alone`, fix: null });
-      else if (!plugin.source_exists) items.push({ kind: 'source-missing', id, action: true, message: `${id}: its source ${plugin.source} no longer exists, so a later update cannot copy from it`, fix: `litgrok extensions update ${id} --yes` });
+      else if (!plugin.source_exists) {
+        if (source === undefined) source = currentSource(from, context);
+        items.push(sourceMissing(id, plugin, source));
+      }
     }
     for (const copy of extension.competing) {
       items.push({ kind: copy.kind === 'old-litgrok' ? 'old-litgrok-copy' : 'competing', id, action: true, message: `${id}: ${copy.kind === 'old-litgrok' ? 'an earlier LitGrok copy' : 'a same-name skill'} at ${copy.path} takes the bare /${id} name`, fix: competingFix(copy, backups) });
@@ -593,7 +617,8 @@ function runList(options, context) {
 
 function runCheck(options, context) {
   const { stdout } = context;
-  const items = findings(context, survey(context));
+  if (options.from !== null) resolveSource(options, context, { refresh: false });
+  const items = findings(context, survey(context), { from: options.from });
   const clean = !items.some(({ action }) => action);
   if (options.json) {
     stdout.write(`${JSON.stringify({ clean, findings: items }, null, 2)}\n`);

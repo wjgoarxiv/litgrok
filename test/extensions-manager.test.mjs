@@ -531,3 +531,62 @@ test('an update dry run fetches nothing and says what it compared with', async (
   assert.match(cached.stdout, /--yes/u);
   assert.equal(existsSync(join(context.home, 'git-calls.log')), false, 'a dry run pulls nothing');
 });
+
+test('check reports a gone source as a note when the store copy matches a current source, and install --yes re-records it', async (t) => {
+  const context = sandbox(t);
+  const gone = writeShelf(join(context.root, 'gone-clone'));
+  await ext(context, ['install', 'lit-pptx', '--from', gone, '--yes']);
+  rmSync(gone, { recursive: true, force: true });
+
+  const withFrom = await ext(context, ['check', '--from', context.shelf]);
+  assert.equal(withFrom.code, 0, withFrom.stdout);
+  assert.match(withFrom.stdout, /^note lit-pptx: .*no longer exists/mu);
+  assert.ok(withFrom.stdout.includes(`litgrok extensions install lit-pptx --yes --from "${context.shelf}"`), withFrom.stdout);
+
+  await ext(context, ['install', 'visual-qa', '--yes'], { FAKE_SHELF: context.shelf });
+  const withCache = await ext(context, ['check']);
+  assert.equal(withCache.code, 0, withCache.stdout);
+  assert.ok(withCache.stdout.includes('litgrok extensions install lit-pptx --yes'), withCache.stdout);
+  assert.equal(JSON.parse((await ext(context, ['check', '--json'])).stdout).clean, true);
+
+  const before = plugins(context).find(({ name }) => name === 'lit-pptx');
+  const rerecorded = await ext(context, ['install', 'lit-pptx', '--yes'], { FAKE_SHELF: context.shelf });
+  assert.equal(rerecorded.code, 0, rerecorded.stderr);
+  const after = plugins(context).filter(({ name }) => name === 'lit-pptx');
+  assert.equal(after.length, 1);
+  assert.notEqual(after[0].source, before.source, 'the install records the current source');
+  const clean = await ext(context, ['check']);
+  assert.equal(clean.code, 0);
+  assert.doesNotMatch(clean.stdout, /no longer exists/u);
+});
+
+test('check keeps a gone source as a finding when nothing current matches, with a fix line that clears it', async (t) => {
+  const context = sandbox(t);
+  const gone = writeShelf(join(context.root, 'gone-clone'));
+  await ext(context, ['install', 'lit-pptx', '--from', gone, '--yes']);
+  rmSync(gone, { recursive: true, force: true });
+
+  const noSource = await ext(context, ['check']);
+  assert.equal(noSource.code, 1);
+  assert.match(noSource.stdout, /^FIX lit-pptx: .*no longer exists/mu);
+  assert.ok(noSource.stdout.includes('litgrok extensions install lit-pptx --yes'), noSource.stdout);
+  assert.doesNotMatch(noSource.stdout, /extensions update lit-pptx/u);
+
+  writeFileSync(join(context.shelf, 'variants', 'litgrok', 'lit-pptx', 'SKILL.md'), '---\nname: lit-pptx\ndescription: "a newer lit-pptx"\n---\n');
+  const differs = await ext(context, ['check', '--from', context.shelf]);
+  assert.equal(differs.code, 1);
+  const fix = `litgrok extensions install lit-pptx --yes --from "${context.shelf}"`;
+  assert.ok(differs.stdout.includes(fix), differs.stdout);
+
+  const applied = await ext(context, ['install', 'lit-pptx', '--yes', '--from', context.shelf]);
+  assert.equal(applied.code, 0, applied.stderr);
+  const cleared = await ext(context, ['check', '--from', context.shelf]);
+  assert.equal(cleared.code, 0, cleared.stdout);
+});
+
+test('check --from a folder that is not a shelf stops with the reason', async (t) => {
+  const context = sandbox(t);
+  const result = await ext(context, ['check', '--from', join(context.root, 'nowhere')]);
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /variants\/litgrok/u);
+});
