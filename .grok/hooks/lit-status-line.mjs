@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, readSync, realpathSync, writeSync } from 'node:fs';
+import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, realpathSync, writeSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
@@ -784,24 +784,14 @@ function otherSessionLine(row, { glyphs, paint, maxCells, rail }) {
 
 // The nine skills that make files are LitFamily extensions now. Grok Build ignores a SessionStart hook's stdout, so
 // the status row is where a session can say so: one row for the whole first session an installed copy sees, then
-// never again. The marker sits beside the installed hooks and keeps a hash of that session's id, not the id.
+// never again. The marker sits beside the install manifest and keeps a hash of that session's id, not the id. It
+// stays out of .grok/litgrok/: in a user install that folder is ~/.grok/litgrok/, whose presence makes the
+// auto-handoff command count the home folder as a project root.
 const EXTENSIONS_NOTICE = 'litfamily-extensions-v1';
 
 function extensionsNoticeSession(sessionId) {
   if (!installedVersion() || typeof sessionId !== 'string' || sessionId === '' || sessionId.length > 512) return false;
-  const directory = join(dirname(dirname(fileURLToPath(import.meta.url))), 'litgrok');
-  try {
-    const status = lstatSync(directory);
-    if (!status.isDirectory() || status.isSymbolicLink()) return false;
-  } catch (error) {
-    if (error?.code !== 'ENOENT') return false;
-    try {
-      mkdirSync(directory, { mode: 0o700 });
-    } catch {
-      return false;
-    }
-  }
-  const marker = join(directory, 'extensions-notice.json');
+  const marker = join(dirname(dirname(fileURLToPath(import.meta.url))), '.litgrok-extensions-notice.json');
   const session = createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
   const noFollow = constants.O_NOFOLLOW ?? 0;
   let descriptor;

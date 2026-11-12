@@ -204,8 +204,8 @@ test('the status row adds one extensions row for the whole first session after a
   assert.ok(first.length >= 2 && !first[0].includes('LitFamily'), 'the HUD row stays first');
   assert.ok(extensionRow(statusRows({ root, home, script, sessionId: 'session-one' })), 'every refresh of that session keeps it');
   assert.equal(extensionRow(statusRows({ root, home, script, sessionId: 'session-two' })), undefined, 'the next session has no row');
-  assert.ok(existsSync(join(installed, 'litgrok', 'extensions-notice.json')), 'the marker sits beside the installed hooks');
-  const marker = readFileSync(join(installed, 'litgrok', 'extensions-notice.json'), 'utf8');
+  assert.ok(existsSync(join(installed, '.litgrok-extensions-notice.json')), 'the marker sits beside the install manifest');
+  const marker = readFileSync(join(installed, '.litgrok-extensions-notice.json'), 'utf8');
   assert.ok(!marker.includes('session-one'), 'the marker stores no raw session id');
 });
 
@@ -216,10 +216,10 @@ test('the extensions row respects the one-line HUD and never comes from the repo
   const quiet = statusRows({ root, home, script, sessionId: 'session-quiet', env: { LITGROK_HUD_LINES: '1' } });
   assert.equal(quiet.length, 1, 'LITGROK_HUD_LINES=1 keeps one row');
   assert.ok(!quiet[0].includes('LitFamily'), 'and that row is the HUD');
-  assert.equal(existsSync(join(installed, 'litgrok', 'extensions-notice.json')), false, 'a quiet session does not use up the notice');
+  assert.equal(existsSync(join(installed, '.litgrok-extensions-notice.json')), false, 'a quiet session does not use up the notice');
   const repo = statusRows({ root, home, script: join(HOOKS, 'lit-status-line.mjs'), sessionId: 'session-repo' });
   assert.ok(!repo.some((row) => row.includes('LitFamily')), 'the uninstalled repository copy shows no row');
-  assert.equal(existsSync(join(PRODUCT_ROOT, '.grok', 'litgrok', 'extensions-notice.json')), false, 'and writes no marker into the repository');
+  assert.equal(existsSync(join(PRODUCT_ROOT, '.grok', '.litgrok-extensions-notice.json')), false, 'and writes no marker into the repository');
 });
 
 test('README and README_ko-KR carry an Extensions section in the same framing', () => {
@@ -239,4 +239,26 @@ test('README and README_ko-KR carry an Extensions section in the same framing', 
   assert.match(koSection, /코어/u);
   assert.ok(koSection.includes(CLONE_LINE));
   assert.doesNotMatch(korean, /#wjgoarxiv-skills로-옮긴-스킬/u, 'old anchors point at the new section');
+});
+
+// In a user install the hooks sit in ~/.grok/hooks, and ~/.grok/litgrok/ is the runtime-state folder that makes the
+// auto-handoff command count the home folder as a project root. Showing the notice must not create that folder.
+test('the extensions marker in a user install leaves the home folder out of the project roots', async (t) => {
+  const { root, home, env } = sandbox(t);
+  const installed = join(home, '.grok');
+  mkdirSync(join(installed, 'hooks'), { recursive: true });
+  for (const name of readdirSync(HOOKS)) {
+    if (name.endsWith('.mjs')) writeFileSync(join(installed, 'hooks', name), readFileSync(join(HOOKS, name)));
+  }
+  writeFileSync(join(installed, '.litgrok-install-manifest.json'), `${JSON.stringify({ schema: 'litgrok.install-manifest/v1', version: '9.8.7', files: {} })}\n`);
+  const rows = statusRows({ root, home, script: join(installed, 'hooks', 'lit-status-line.mjs'), sessionId: 'session-home' });
+  assert.ok(rows.some((row) => row.includes('LitFamily extensions')), 'the first session still shows the row');
+  assert.equal(existsSync(join(installed, 'litgrok')), false, 'no runtime-state folder appears under ~/.grok');
+  const repository = join(home, 'code', 'repo');
+  mkdirSync(join(repository, '.git'), { recursive: true });
+  const io = captureIo();
+  const code = await run(['auto-handoff', 'on', '70'], { ...io, cwd: repository, env: { ...env, LITGROK_NO_UPDATE_CHECK: '1' } });
+  const { stdout, stderr } = io.read();
+  assert.equal(code, 0, stderr);
+  assert.doesNotMatch(`${stdout}${stderr}`, /also a project root/u);
 });
