@@ -210,8 +210,8 @@ tables with Pretendard embedded. Its deck QA checks the result before you get it
 ### Write it
 
 `lit-docx` writes a Word file you can keep editing, in one of six restrained tonalities: a cover or title block, key
-figures, ruled tables and numbered sections. Both skills leave the Markdown source beside the file, render the pages and
-run a layout gate before handing it over. The reply names the tonality, the reason and two alternatives you can switch
+figures, ruled tables and numbered sections. It leaves the Markdown source beside the file, renders the pages and
+runs a layout gate before handing it over. The reply names the tonality, the reason and two alternatives you can switch
 to with one word.
 
 <table>
