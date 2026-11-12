@@ -28,6 +28,9 @@ function sandbox(t, { discipline = 'litwork', stage = null } = {}) {
   for (const dir of [sb.home, sb.workspace, join(sb.grok, 'hooks')]) mkdirSync(dir, { recursive: true });
   for (const name of readdirSync(HOOKS)) if (name.endsWith('.mjs')) writeFileSync(join(sb.grok, 'hooks', name), readFileSync(join(HOOKS, name)));
   writeFileSync(join(sb.grok, '.litgrok-install-manifest.json'), '{"version":"1.0.35"}\n');
+  // The one-time LitFamily extensions row belongs to an earlier session here; test/litfamily-extensions covers it.
+  mkdirSync(join(sb.grok, 'litgrok'));
+  writeFileSync(join(sb.grok, 'litgrok', 'extensions-notice.json'), `${JSON.stringify({ notice: 'litfamily-extensions-v1', session: '0'.repeat(32) })}\n`);
   if (discipline) writeHudRecords({ env: { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot }, sessionId: SESSION, cwd: sb.workspace, workspaceRoot: sb.workspace, discipline });
   if (stage) {
     const ledger = join(sb.workspace, '.grok', 'litgrok', 'session-ledger', `${createHash('sha256').update(SESSION).digest('hex').slice(0, 32)}.jsonl`);

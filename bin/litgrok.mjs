@@ -3,7 +3,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { constants, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, dirname, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderMark, terminalMode } from '../.grok/hooks/lit-mark.mjs';
 import { applyStoredGround, backupIfSectionAbsent, decideGround, groundReport, ruleSourceForInstall, runGround } from './ground-rule.mjs';
@@ -701,7 +701,7 @@ function readOwnershipManifest(root) {
     }
     hashes.set(relativePath, hash);
   }
-  return { path: target, hashes };
+  return { path: target, hashes, version: parsed.version };
 }
 
 function targetState(source, target, relativePath, manifest) {
@@ -839,6 +839,121 @@ function retiredPayload(root, files, manifest) {
     .filter(([path]) => !preservedSkills.some((directory) => path.startsWith(`${directory}/`)))
     .map(([relativePath, expectedHash]) => ({ root, relativePath, expectedHash, target: join(root, relativePath), dropped: droppedPath(relativePath) }));
   return { entries, directories, preservedSkills: preservedSkills.map((path) => join(root, path)) };
+}
+
+// A skill that became a note (it moved to the LitFamily extension shelf) loses the body files the last install
+// owned. Anything else in that folder is not the installer's, so the update leaves it there and names it.
+function keptBesideNotes(root, files, legacyEntries) {
+  const currentPaths = new Set(files.map(({ relativePath }) => normalizedRelativePath(relativePath)));
+  const legacyPaths = new Set(legacyEntries.map(({ relativePath }) => relativePath));
+  const notes = new Set(legacyEntries
+    .filter(({ dropped, relativePath }) => dropped && relativePath.startsWith('skills/'))
+    .map(({ relativePath }) => relativePath.split('/').slice(0, 2).join('/'))
+    .filter((path) => currentPaths.has(`${path}/SKILL.md`)));
+  const kept = [];
+  function visit(path, note) {
+    let children;
+    try {
+      children = readdirSync(join(root, path), { withFileTypes: true });
+    } catch (error) {
+      if (error?.code === 'ENOENT' || error?.code === 'ENOTDIR') return;
+      throw error;
+    }
+    for (const entry of children.sort((left, right) => left.name.localeCompare(right.name))) {
+      const child = `${path}/${entry.name}`;
+      // A symbolic link is never followed; it is named like any other entry the installer did not write.
+      if (entry.isDirectory()) visit(child, note);
+      else if (!currentPaths.has(child) && !legacyPaths.has(child)) kept.push({ target: join(root, child), note });
+    }
+  }
+  for (const path of [...notes].sort()) visit(path, path.split('/')[1]);
+  return kept;
+}
+
+function keptFileWarning({ target, note }) {
+  return `Warning: keeping ${target} beside the ${note} note. LitGrok did not write it, and the installer owns that folder, so move it somewhere of your own.`;
+}
+
+// Read-only: what a real run would remove, refuse and keep, so an upgrade's deletions are visible before it runs.
+function previewOwnership(root, files, command) {
+  const lines = [];
+  let manifest;
+  let entries;
+  let legacyStates;
+  let states;
+  try {
+    manifest = readOwnershipManifest(root);
+    states = files.map(({ relativePath, source, target }) => targetState(source, target, relativePath, manifest));
+    ({ entries } = retiredPayload(root, files, manifest));
+    legacyStates = entries.map(({ relativePath, expectedHash }) => legacyTargetState(root, relativePath, expectedHash));
+  } catch (error) {
+    return [`would refuse: ${errorText(error)}`, 'Preview: the real run stops before writing anything until that is resolved.'];
+  }
+  let removed = command === 'uninstall' ? states.filter((state) => state === 'current' || state === 'owned').length : 0;
+  let refused = 0;
+  for (let index = 0; index < files.length; index += 1) {
+    if (states[index] !== 'conflict') continue;
+    lines.push(`would refuse ${files[index].target} (it differs from the copy the last install wrote)`);
+    refused += 1;
+  }
+  for (let index = 0; index < entries.length; index += 1) {
+    if (legacyStates[index] === 'owned') {
+      lines.push(`would remove ${entries[index].target}`);
+      removed += 1;
+    } else if (legacyStates[index] === 'conflict') {
+      lines.push(`would refuse ${entries[index].target} (this release no longer ships it, and it is not the copy the last install wrote)`);
+      refused += 1;
+    }
+  }
+  const kept = keptBesideNotes(root, files, entries);
+  for (const { target, note } of kept) lines.push(`would keep ${target} (not written by LitGrok, beside the ${note} note)`);
+  const written = states.filter((state) => state === 'missing' || state === 'owned').length;
+  const counts = command === 'uninstall'
+    ? `${removed} to remove · ${refused} refused · ${kept.length} kept`
+    : `${written} to write · ${removed} to remove · ${refused} refused · ${kept.length} kept`;
+  lines.push(`Preview: ${counts}`);
+  if (refused > 0) lines.push('The real run stops before writing anything until you move the refused files out or remove them yourself.');
+  return lines;
+}
+
+const SHELF_URL = 'https://github.com/wjgoarxiv/wjgoarxiv-skills';
+// 1.0.34 was the last release that shipped the office and motion engines, so an install recorded by it or an
+// older release may have left their caches behind.
+const LAST_ENGINE_RELEASE = '1.0.34';
+
+function oldEngineCaches(env, home, manifest, ownedBefore) {
+  const upgrade = manifest
+    ? stableVersion(manifest.version) !== null && !isNewerVersion(manifest.version, LAST_ENGINE_RELEASE)
+    : ownedBefore > 0;
+  if (!upgrade) return [];
+  const cacheHome = typeof env.XDG_CACHE_HOME === 'string' && isAbsolute(env.XDG_CACHE_HOME) ? env.XDG_CACHE_HOME : join(home, '.cache');
+  return ['office-docs', 'motion-runtime'].map((name) => join(cacheHome, 'litgrok', name)).filter((path) => {
+    try {
+      return lstatSync(path).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+}
+
+function extensionsCard(colors, caches) {
+  const titleColor = '38;2;255;99;55';
+  return [
+    `  ${paint('╭─ LITFAMILY EXTENSIONS', titleColor, colors)}`,
+    "  │ LitGrok's core is complete and works on its own.",
+    '  │ Nine skills that make files (decks, documents, figures, design and video covers) are now',
+    `  │ LitFamily extensions, kept on the extension shelf at ${SHELF_URL}:`,
+    '  │ lit-pptx, lit-docx, lit-scientific-visualization, lit-diagram-drawer, lit-schematic,',
+    '  │ frontend-ui-ux, visual-qa, readme-studio and lit-typographic-motion.',
+    '  │ Install the ones you use beside LitGrok for the full LitFamily experience:',
+    `  │   git clone ${SHELF_URL}`,
+    '  │   grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust',
+    ...(caches.length > 0
+      ? [`  │ Earlier releases left engine caches at ${caches.join(' and ')}. Nothing reads them now (the extensions keep their own), so you can delete them.`]
+      : []),
+    `  ${paint('╰─', titleColor, colors)}`,
+    '',
+  ].join('\n');
 }
 
 function removeRetiredDirectories(directories) {
@@ -1144,6 +1259,7 @@ export async function run(args, context = {}) {
   if (reasons.length > 0) {
     stdout.write(`${reasons.join(' / ')} — no files written\n`);
     for (const { target } of files) stdout.write(`would ${options.command} ${target}\n`);
+    for (const line of previewOwnership(root, files, options.command)) stdout.write(`${line}\n`);
     if (options.statusLine) stdout.write(`would configure user status line ${join(root, 'config.toml')}\n`);
     if (options.notify) stdout.write(`would configure user finish notification ${join(root, 'config.toml')}\n`);
     printHookTrustRequirement(files);
@@ -1244,12 +1360,14 @@ export async function run(args, context = {}) {
         ? ''
         : ` · ${legacyCounts.missing} legacy missing · ${legacyCounts.owned} legacy owned · ${legacyCounts.conflicts} legacy conflicts`;
       return {
-        value: { states: owned, counts, manifest, legacyEntries, legacyStates, legacyCounts, retiredDirectories, preservedSkills },
+        value: { states: owned, counts, manifest, legacyEntries, legacyStates, legacyCounts, retiredDirectories, preservedSkills, kept: keptBesideNotes(root, files, legacyEntries) },
         detail: `${counts.missing} missing · ${counts.current} already-current · ${counts.owned} owned · ${counts.conflicts} conflicts${legacyDetail}`,
       };
     });
 
     for (const preserved of states.preservedSkills) stderr.write(`Warning: keeping modified legacy skill at ${preserved}; review or remove it yourself.\n`);
+    for (const kept of states.kept) stderr.write(`${keptFileWarning(kept)}\n`);
+    const caches = oldEngineCaches(env, home, states.manifest, states.counts.owned + states.legacyCounts.owned);
 
     step = 'WRITE';
     if (options.command === 'uninstall') {
@@ -1302,6 +1420,7 @@ export async function run(args, context = {}) {
       const receipt = receiptCard(options, displayRoot, colors, { status: 'Already current', written: 0, current: states.counts.current });
       progress.close();
       stdout.write(receipt);
+      stdout.write(extensionsCard(colors, caches));
       return 0;
     }
 
@@ -1338,6 +1457,7 @@ export async function run(args, context = {}) {
     const receipt = receiptCard(options, displayRoot, colors, { status: 'Ready', written: installed, current: states.counts.current });
     progress.close();
     stdout.write(receipt);
+    stdout.write(extensionsCard(colors, caches));
     return 0;
   } catch (error) {
     progress.close();

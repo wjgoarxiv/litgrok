@@ -45,6 +45,9 @@ test('each note says it moved, where it lives now, and the one-line Grok Build i
     const text = note(id);
     assert.match(text, new RegExp(`^---\\nname: ${id}\\n`, 'u'), `${id} keeps its name`);
     assert.match(text, /\ndescription: "Moved: /u, `${id} description starts with Moved:`);
+    assert.match(text.split('\n---\n')[0], /is now a LitFamily extension/u, `${id} description calls it a LitFamily extension`);
+    assert.match(text, /\n[a-z-]+ moved out of LitGrok and is now a LitFamily extension\./u, `${id} note opens with the LitFamily extension framing`);
+    assert.match(text, /that it is now a LitFamily extension/u, `${id} tells the user it is a LitFamily extension`);
     assert.match(text, /\nuser-invocable: true\n/u);
     assert.ok(text.includes('wjgoarxiv-skills'), `${id} names the repository`);
     assert.ok(text.includes(`wjgoarxiv-skills/variants/litgrok/${id}/`), `${id} names its folder in the repository`);

@@ -54,7 +54,7 @@ architecture. Every one passed its skill's QA script before it was exported.
 
 lit-pptx picks one of thirteen tonalities for the audience, then compiles native, editable charts,
 KPI rows and tables with Pretendard embedded, and its deck QA checks the result before you get it.
-It now ships in wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
+It now ships in wjgoarxiv-skills (see [Extensions](#extensions)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="Contact sheet of ten off-white Korean newsroom-style slides with rust-orange accents, briefing residents on district housing prices and moving plans: a headline KPI cover, an agenda, a line chart, a bar chart with stat cards, a horizontal bar chart, a neighbourhood table, a timeline and a sources page." /><br /><b>lit-pptx · newsroom, Korean public briefing</b><br /><sub>From the bundled example <code>17-public-data-briefing-newsroom-ko.md</code>; the deck QA passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="Contact sheet of ten dark navy slides with amber accents from a Q3 mobile banking app data review: a KPI title slide, line and bar charts, a retention cohort table, a section divider, metric definitions, an Android and iOS comparison and a Q4 release timeline." /><br /><b>lit-pptx · night, data review</b><br /><sub>From the bundled example <code>05-data-review-night-en.md</code>; the deck QA passed.</sub></td></tr>
@@ -66,7 +66,7 @@ It now ships in wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-
 lit-docx writes a Word file you can keep editing: a cover or title block, key figures, ruled tables
 and numbered sections in one of six restrained tonalities. It renders the pages and runs its layout
 gate before it hands the file over. It now ships in wjgoarxiv-skills
-(see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
+(see [Extensions](#extensions)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="The first three pages of a Korean Word report on the first year of a rooftop solar installation: a bold title block, a key-figure strip, section headings and ruled data tables." /><br /><b>lit-docx · Korean report, Report tonality</b><br /><sub>From the bundled example <code>01-report-ko.md</code> by the skill&#39;s own converter; the layout gate passed.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="The first three pages of a Korean Word proposal for a bicycle-commuting support pilot: a cover page, a summary with three key figures, body sections, a schedule table and a budget table." /><br /><b>lit-docx · Korean proposal, Proposal tonality</b><br /><sub>From the bundled example <code>04-proposal-ko.md</code>; the layout gate passed.</sub></td></tr>
@@ -74,7 +74,7 @@ gate before it hands the file over. It now ships in wjgoarxiv-skills
 
 ### Build it and keep track of it
 
-frontend-ui-ux builds a page from a brief and then checks it at several widths. It now ships in wjgoarxiv-skills (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). When the work has
+frontend-ui-ux builds a page from a brief and then checks it at several widths. It now ships in wjgoarxiv-skills (see [Extensions](#extensions)). When the work has
 spread over several sessions, `lit adhd` reads them all and prints one brief with a next step.
 
 <table>
@@ -345,7 +345,7 @@ an equipment layout, an isometric cutaway or a journal figure of an experimental
 editable SVG with PDF and a 600 dpi PNG, and checks it with its own QA script before it reports.
 Both, with `lit-scientific-visualization`, now ship in wjgoarxiv-skills; the
 prompt below still reaches `lit-schematic` in LitGrok, and its note gives the install line (see
-[Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)).
+[Extensions](#extensions)).
 
 ```text
 lit draw a P&ID of a hypochlorite dosing skid with duty and standby pumps
@@ -385,7 +385,7 @@ go
 Films and README covers now come from wjgoarxiv-skills, which carries
 `lit-typographic-motion` (a treatment first, then a short film checked by a QA gate, or a silent README
 cover loop) and `readme-studio`. A film request still finds `lit-typographic-motion` in LitGrok, and its
-note gives the install line (see [Skills that moved](#skills-that-moved-to-wjgoarxiv-skills)). The
+note gives the install line (see [Extensions](#extensions)). The
 `litgrok motion-runtime` command left with the skill; the plugin pre-warms its own engine.
 
 ### The routes at a glance
@@ -483,21 +483,37 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # put
 can add the same agreement as its own project file, `.grok/rules/10-litgrok-ground.md`, by
 running `litgrok ground project`.
 
-## Skills that moved to wjgoarxiv-skills
+## Extensions
 
-The skills that make finished artefacts, such as interfaces, now live in a separate repository,
-wjgoarxiv-skills. For Grok Build each one is its own folder under `variants/litgrok/`, a one-skill
-plugin with everything it reads inside it, so you add only the skills you use. LitGrok keeps a short
-note under each old name. `/frontend-ui-ux`, the bare `lit` routes and the agents that preload these
-skills still answer; the note tells you what moved and gives you one line to install it.
-wjgoarxiv-skills is public at https://github.com/wjgoarxiv/wjgoarxiv-skills. Clone it once
-(`git clone https://github.com/wjgoarxiv/wjgoarxiv-skills`), then run the line against your
-clone. The line names the skill's folder path, so Grok Build copies only that folder, a few
-megabytes at most. A `#` subfolder source (`<clone>#<folder>` or `owner/repo#<folder>`)
-would copy the whole repository, `.git` included, over 200 MB for each skill. The plugin goes
-into Grok Build's own plugin store, never into `.grok/skills/`, where LitGrok's installer keeps the
-note, so `litgrok install` keeps updating LitGrok cleanly. Once it is installed, the skill answers
-as `<skill>:<skill>` beside the note, and `grok plugin uninstall <skill>` removes it.
+LitGrok's core is complete and works on its own: planning, building, review, research, handoff and
+the rest of the lit workflow need nothing else. Nine skills that make finished files, such as decks,
+documents, figures, design work and video covers, are now LitFamily extensions. They live on the
+LitFamily extension shelf, wjgoarxiv-skills, at https://github.com/wjgoarxiv/wjgoarxiv-skills. Install
+the ones you use beside LitGrok and you get the full LitFamily experience back; leave out the rest.
+
+For Grok Build each extension is its own folder under `variants/litgrok/`, a one-skill plugin with
+everything it reads inside it. Clone the shelf once, then run one line per skill against your clone:
+
+```bash
+git clone https://github.com/wjgoarxiv/wjgoarxiv-skills
+grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust
+```
+
+LitGrok keeps a short note under each old name, so `/lit-pptx`, the bare `lit` routes and the agents
+that preload these skills still answer: the note says the skill is a LitFamily extension now and gives
+you its install line. The line names the skill's folder path, so Grok Build copies only that folder, a
+few megabytes at most. A `#` subfolder source (`<clone>#<folder>` or `owner/repo#<folder>`) would copy
+the whole repository, `.git` included, over 200 MB for each skill. The plugin goes into Grok Build's own
+plugin store, never into `.grok/skills/`, where LitGrok's installer keeps the note, so `litgrok install`
+keeps updating LitGrok cleanly. Once it is installed, the skill answers as `<skill>:<skill>` beside the
+note, and `grok plugin uninstall <skill>` removes it.
+
+The installer tells you this when you install or update. On an update from 1.0.34 or older it also
+names the old engine caches still on disk (`~/.cache/litgrok/office-docs` and
+`~/.cache/litgrok/motion-runtime`, under `$XDG_CACHE_HOME` if you set it); nothing reads them now,
+because the extensions keep their own cache, so you can delete them. If you use the LIT status row, it
+adds a one-line reminder for the first session after. Grok Build ignores what a session-start hook
+prints, so without the status row the install output is the only place you see it.
 
 | Skill | Folder in wjgoarxiv-skills | Install line |
 | --- | --- | --- |

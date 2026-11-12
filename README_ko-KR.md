@@ -54,7 +54,7 @@ lit src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘
 ### 발표하기
 
 lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, 편집할 수 있는 네이티브 차트와 KPI 행,
-표를 Pretendard를 넣어 만들고, 건네기 전에 덱 QA로 검사합니다. 이제는 wjgoarxiv-skills에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
+표를 Pretendard를 넣어 만들고, 건네기 전에 덱 QA로 검사합니다. 이제는 wjgoarxiv-skills에 있습니다([확장 스킬](#확장-스킬)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-newsroom.webp" width="400" alt="주민에게 구의 집값과 이사 계획을 설명하는 뉴스룸 스타일 한국어 슬라이드 열 장의 모음. 미색 바탕에 녹슨 주황 강조, 핵심 수치 표지, 순서, 선 그래프, 수치 카드가 붙은 막대 그래프, 가로 막대 그래프, 동별 표, 일정, 자료 출처." /><br /><b>lit-pptx · 뉴스룸, 주민 설명 자료</b><br /><sub>함께 든 예제 <code>17-public-data-briefing-newsroom-ko.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/deck-night.webp" width="400" alt="모바일 뱅킹 앱 3분기 데이터 리뷰 슬라이드 열 장의 모음. 짙은 남색 바탕에 호박색 강조, KPI 표지, 선과 막대 그래프, 리텐션 코호트 표, 구간 표지, 지표 정의, Android와 iOS 비교, 4분기 출시 일정." /><br /><b>lit-pptx · 나이트, 데이터 리뷰</b><br /><sub>함께 든 예제 <code>05-data-review-night-en.md</code>로 만들었습니다. 덱 QA를 통과했습니다.</sub></td></tr>
@@ -65,7 +65,7 @@ lit-pptx는 청중에 맞춰 톤 열세 가지 가운데 하나를 고른 뒤, �
 
 lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 톤 여섯 가지 가운데 하나로 표지나
 제목 블록, 핵심 수치, 괘선 표, 번호 붙은 절을 짜고, 건네기 전에 페이지를 렌더링해 레이아웃 검사를
-거칩니다. 이제는 wjgoarxiv-skills에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
+거칩니다. 이제는 wjgoarxiv-skills에 있습니다([확장 스킬](#확장-스킬)).
 
 <table>
 <tr><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-report.webp" width="400" alt="옥상 태양광 설치 첫해를 다룬 한국어 Word 보고서의 앞 세 쪽. 굵은 제목 블록, 핵심 수치 띠, 절 제목, 괘선 데이터 표." /><br /><b>lit-docx · 한국어 보고서, Report 톤</b><br /><sub>함께 든 예제 <code>01-report-ko.md</code>를 스킬의 변환기로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td><td width="50%" valign="top"><img src="./docs/assets/showcase/docx-proposal.webp" width="400" alt="자전거 출퇴근 지원 시범 사업을 다룬 한국어 Word 제안서의 앞 세 쪽. 표지, 핵심 수치 세 개가 있는 요약, 본문 절, 일정 표, 예산 표." /><br /><b>lit-docx · 한국어 제안서, Proposal 톤</b><br /><sub>함께 든 예제 <code>04-proposal-ko.md</code>로 만들었습니다. 레이아웃 게이트를 통과했습니다.</sub></td></tr>
@@ -74,7 +74,7 @@ lit-docx는 계속 고쳐 쓸 수 있는 Word 파일을 만듭니다. 절제된 
 ### 화면 만들기와 흐름 챙기기
 
 frontend-ui-ux는 의뢰문으로 페이지를 만든 뒤 여러 너비에서 직접 확인합니다. 이제는
-wjgoarxiv-skills에 있습니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). 일이 여러 세션에
+wjgoarxiv-skills에 있습니다([확장 스킬](#확장-스킬)). 일이 여러 세션에
 흩어졌다면 `lit adhd`가 그 세션을 모두 읽고 다음 단계가 담긴 브리프 한 장을 보여 줍니다.
 
 <table>
@@ -338,7 +338,7 @@ lit 새 온보딩 흐름에 대한 두 쪽짜리 제안서를 Word 파일로 써
 실제 장치라면 `lit-schematic`이 맡습니다. ISA-5.1 태그와 제어 루프가 있는 P&ID, 장치 배치도, 등각
 단면도, 논문용 실험 장치 그림을 편집 가능한 SVG와 PDF, 600 dpi PNG로 그리고, 보고하기 전에 자체
 QA 스크립트로 검사합니다. 두 스킬은 `lit-scientific-visualization`과 함께 이제 wjgoarxiv-skills에 있습니다. 아래 프롬프트는 LitGrok에서 여전히 `lit-schematic`에 닿고, 그 안내가
-설치 한 줄을 알려 줍니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)).
+설치 한 줄을 알려 줍니다([확장 스킬](#확장-스킬)).
 
 ```text
 lit 상용·예비 펌프가 있는 차아염소산나트륨 도징 스키드 P&ID를 그려줘
@@ -375,7 +375,7 @@ go
 영상과 README 커버는 이제 wjgoarxiv-skills가 만듭니다. 그 저장소에는
 `lit-typographic-motion`(연출안을 먼저 쓰고 QA 검사를 거친 짧은 영상, 또는 소리 없는 README 커버 루프)과
 `readme-studio`가 들어 있습니다. 영상을 요청하면 LitGrok에서 여전히 `lit-typographic-motion`이 잡히고,
-그 안내가 설치 한 줄을 알려 줍니다([옮긴 스킬](#wjgoarxiv-skills로-옮긴-스킬)). `litgrok motion-runtime`
+그 안내가 설치 한 줄을 알려 줍니다([확장 스킬](#확장-스킬)). `litgrok motion-runtime`
 명령은 스킬과 함께 빠졌고, 플러그인이 자기 엔진을 직접 준비합니다.
 
 ### 명령 한눈에 보기
@@ -473,19 +473,35 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok ground on    # 다
 `litgrok ground project`로 같은 약속을 프로젝트 파일 `.grok/rules/10-litgrok-ground.md`에 둘 수
 있습니다.
 
-## wjgoarxiv-skills로 옮긴 스킬
+## 확장 스킬
 
-화면처럼 완성된 결과물을 만드는 스킬은 이제 별도 저장소 wjgoarxiv-skills에 있습니다. Grok Build용은
-스킬마다 `variants/litgrok/` 아래 자기 폴더가 있고, 그 폴더 하나가 필요한 파일을 모두 담은 스킬 하나짜리
-플러그인입니다. 쓰는 스킬만 골라 설치하면 됩니다. LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다.
-`/frontend-ui-ux`, `lit`으로 시작하는 요청, 이 스킬을 미리 불러오는 에이전트는 그대로 동작하고,
-안내가 무엇이 옮겨 갔는지와 설치 한 줄을 알려 줍니다. wjgoarxiv-skills는
-https://github.com/wjgoarxiv/wjgoarxiv-skills 에 공개되어 있습니다. 한 번 클론한 뒤(`git clone https://github.com/wjgoarxiv/wjgoarxiv-skills`) 그 클론을 가리켜 아래 줄을 실행합니다. 이 줄은 스킬 폴더 경로를
-가리키므로 Grok Build는 그 폴더만 복사하고, 크기는 많아야 몇 MB입니다. `#` 하위 폴더 소스(`<clone>#<folder>`나
-`owner/repo#<folder>`)를 쓰면 `.git`까지 저장소 전체를 스킬마다 복사해서 200 MB가 넘습니다.
-플러그인은 LitGrok 설치기가 안내를 두는 `.grok/skills/`가 아니라 Grok Build의 플러그인 저장소에 들어가므로
-`litgrok install`은 계속 깔끔하게 업데이트됩니다. 설치하면 스킬은 안내 옆에 `<스킬>:<스킬>` 이름으로 불리고,
-`grok plugin uninstall <스킬>`로 지웁니다.
+LitGrok의 코어는 그 자체로 완성되어 있고 혼자서도 동작합니다. 계획, 구현, 리뷰, 조사, 핸드오프 같은
+lit 흐름에는 다른 것이 필요하지 않습니다. 덱, 문서, 그림, 디자인, 영상 커버처럼 완성된 파일을 만드는
+스킬 아홉 개는 이제 LitFamily 확장입니다. 이 확장은 LitFamily 확장 선반인 wjgoarxiv-skills
+(https://github.com/wjgoarxiv/wjgoarxiv-skills)에 있습니다. 쓰는 것만 골라 LitGrok 옆에 설치하면
+LitFamily를 온전히 다 쓸 수 있고, 나머지는 설치하지 않아도 됩니다.
+
+Grok Build용 확장은 스킬마다 `variants/litgrok/` 아래 자기 폴더가 있고, 그 폴더 하나가 필요한 파일을 모두
+담은 스킬 하나짜리 플러그인입니다. 선반을 한 번 클론한 뒤, 스킬마다 그 클론을 가리켜 한 줄씩 실행합니다.
+
+```bash
+git clone https://github.com/wjgoarxiv/wjgoarxiv-skills
+grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/lit-pptx" --trust
+```
+
+LitGrok은 예전 이름마다 짧은 안내를 남겨 둡니다. 그래서 `/lit-pptx`, `lit`으로 시작하는 요청, 이 스킬을
+미리 불러오는 에이전트는 그대로 동작하고, 안내가 이 스킬이 이제 LitFamily 확장이라는 것과 설치 한 줄을
+알려 줍니다. 이 줄은 스킬 폴더 경로를 가리키므로 Grok Build는 그 폴더만 복사하고, 크기는 많아야 몇 MB입니다.
+`#` 하위 폴더 소스(`<clone>#<folder>`나 `owner/repo#<folder>`)를 쓰면 `.git`까지 저장소 전체를 스킬마다
+복사해서 200 MB가 넘습니다. 플러그인은 LitGrok 설치기가 안내를 두는 `.grok/skills/`가 아니라 Grok Build의
+플러그인 저장소에 들어가므로 `litgrok install`은 계속 깔끔하게 업데이트됩니다. 설치하면 스킬은 안내 옆에
+`<스킬>:<스킬>` 이름으로 불리고, `grok plugin uninstall <스킬>`로 지웁니다.
+
+설치 프로그램은 설치하거나 업데이트할 때 이 내용을 알려 줍니다. 1.0.34 이하에서 업데이트하면 디스크에 남은
+예전 엔진 캐시(`~/.cache/litgrok/office-docs`, `~/.cache/litgrok/motion-runtime`, `$XDG_CACHE_HOME`을
+정했다면 그 아래)도 알려 줍니다. 확장은 자기 캐시를 따로 쓰므로 이제 이 캐시를 읽는 것이 없고, 지워도
+됩니다. LIT 상태 행을 쓴다면 그다음 첫 세션 동안 한 줄짜리 안내가 더 나옵니다. Grok Build는 세션 시작
+훅이 출력한 내용을 무시하므로, 상태 행을 쓰지 않으면 설치 출력에서만 이 안내를 봅니다.
 
 | 스킬 | wjgoarxiv-skills 안의 폴더 | 설치 한 줄 |
 | --- | --- | --- |

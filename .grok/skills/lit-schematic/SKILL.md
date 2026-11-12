@@ -1,13 +1,13 @@
 ---
 name: lit-schematic
-description: "Moved: lit-schematic draws physical schematics of real equipment (P&ID, PFD, BFD, equipment layout, isometric cutaway, journal apparatus figure, 공정도, 계장도, 장치도, 모식도) and now ships as its own one-skill plugin in wjgoarxiv-skills. When that plugin's lit-schematic is listed, use it; otherwise this note gives the one-line install."
+description: "Moved: lit-schematic draws physical schematics of real equipment (P&ID, PFD, BFD, equipment layout, isometric cutaway, journal apparatus figure, 공정도, 계장도, 장치도, 모식도) and is now a LitFamily extension, shipped as its own one-skill plugin in wjgoarxiv-skills. When that plugin's lit-schematic is listed, use it; otherwise this note gives the one-line install."
 user-invocable: true
 argument-hint: "<equipment or apparatus brief>"
 ---
 
 # lit-schematic
 
-lit-schematic moved out of LitGrok. Its full skill now lives in the wjgoarxiv-skills repository, as its own Grok Build edition: one skill in one folder, installed on its own:
+lit-schematic moved out of LitGrok and is now a LitFamily extension. LitGrok's core works without it; installed beside LitGrok, it brings back the full LitFamily experience for this kind of work. Its full skill lives in wjgoarxiv-skills, the LitFamily extension shelf, as its own Grok Build edition: one skill in one folder, installed on its own:
 
 ```text
 wjgoarxiv-skills/variants/litgrok/lit-schematic/
@@ -31,7 +31,7 @@ limitations_channel: reply
 1. Look at the skills this session lists. A plugin's skill keeps its own name, and Grok Build shows it as `lit-schematic:lit-schematic` (plugin `lit-schematic`, skill `lit-schematic`) while this note has the same name. If a `lit-schematic` skill from the `lit-schematic` plugin is listed, load that one and follow it for the whole request; this note adds nothing to it.
 2. Otherwise, for a direct request, reply in the user's language with three things and stop, writing no file:
    - one sentence on what lit-schematic makes: a physical schematic of real equipment or an apparatus (a P&ID with ISA-5.1 tags and loops, a PFD or layout, an isometric cutaway, a journal setup figure) as editable SVG with PDF and 600 dpi PNG, checked by its QA gate;
-   - that it moved out of LitGrok into the wjgoarxiv-skills repository, in the folder shown above;
+   - that it is now a LitFamily extension, kept in the wjgoarxiv-skills repository in the folder shown above, and installs beside LitGrok;
    - the install line from Install below, in a code block, and that a new session (or `r` in the Plugins tab) picks the plugin up, after which the user asks again.
 3. Conceptual boxes-and-arrows go to the `lit-diagram-drawer` note and measured-data plots to the `lit-scientific-visualization` note; each installs on its own from its own folder.
 

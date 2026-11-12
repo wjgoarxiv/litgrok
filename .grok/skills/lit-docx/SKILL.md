@@ -1,13 +1,13 @@
 ---
 name: lit-docx
-description: "Moved: lit-docx builds finished Word documents (report, doc, docx, Word, 보고서, 리포트, 기획서, 제안서, 문서, 워드, including a bare lit request) and DOCX or PDF to Markdown, and now ships as its own one-skill plugin in wjgoarxiv-skills. When that plugin's lit-docx is listed, use it; otherwise this note gives the one-line install."
+description: "Moved: lit-docx builds finished Word documents (report, doc, docx, Word, 보고서, 리포트, 기획서, 제안서, 문서, 워드, including a bare lit request) and DOCX or PDF to Markdown, and is now a LitFamily extension, shipped as its own one-skill plugin in wjgoarxiv-skills. When that plugin's lit-docx is listed, use it; otherwise this note gives the one-line install."
 user-invocable: true
 argument-hint: "<document request>"
 ---
 
 # lit-docx
 
-lit-docx moved out of LitGrok. Its full skill now lives in the wjgoarxiv-skills repository, as its own Grok Build edition: one skill in one folder, installed on its own:
+lit-docx moved out of LitGrok and is now a LitFamily extension. LitGrok's core works without it; installed beside LitGrok, it brings back the full LitFamily experience for this kind of work. Its full skill lives in wjgoarxiv-skills, the LitFamily extension shelf, as its own Grok Build edition: one skill in one folder, installed on its own:
 
 ```text
 wjgoarxiv-skills/variants/litgrok/lit-docx/
@@ -31,7 +31,7 @@ limitations_channel: reply
 1. Look at the skills this session lists. A plugin's skill keeps its own name, and Grok Build shows it as `lit-docx:lit-docx` (plugin `lit-docx`, skill `lit-docx`) while this note has the same name. If a `lit-docx` skill from the `lit-docx` plugin is listed, load that one and follow it for the whole request; this note adds nothing to it.
 2. Otherwise, for a direct request, reply in the user's language with three things and stop, writing no file:
    - one sentence on what lit-docx makes: a finished Word document (report, brief, manual, proposal, memo or manuscript) in a design chosen for its content or a named publisher style, plus DOCX or PDF to Markdown and in-place edits, gated on rendered pages;
-   - that it moved out of LitGrok into the wjgoarxiv-skills repository, in the folder shown above;
+   - that it is now a LitFamily extension, kept in the wjgoarxiv-skills repository in the folder shown above, and installs beside LitGrok;
    - the install line from Install below, in a code block, and that a new session (or `r` in the Plugins tab) picks the plugin up, after which the user asks again.
 3. A request that also asks for slides goes to the `lit-pptx` note in the same way; answer both parts in one reply.
 4. A file asked for as Markdown or plain text is not an Office file; write it directly, as the project rule says, and do not send the user to an install.

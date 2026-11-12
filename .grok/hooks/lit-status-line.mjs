@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
+import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, readSync, realpathSync, writeSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
@@ -782,6 +782,67 @@ function otherSessionLine(row, { glyphs, paint, maxCells, rail }) {
   });
 }
 
+// The nine skills that make files are LitFamily extensions now. Grok Build ignores a SessionStart hook's stdout, so
+// the status row is where a session can say so: one row for the whole first session an installed copy sees, then
+// never again. The marker sits beside the installed hooks and keeps a hash of that session's id, not the id.
+const EXTENSIONS_NOTICE = 'litfamily-extensions-v1';
+
+function extensionsNoticeSession(sessionId) {
+  if (!installedVersion() || typeof sessionId !== 'string' || sessionId === '' || sessionId.length > 512) return false;
+  const directory = join(dirname(dirname(fileURLToPath(import.meta.url))), 'litgrok');
+  try {
+    const status = lstatSync(directory);
+    if (!status.isDirectory() || status.isSymbolicLink()) return false;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') return false;
+    try {
+      mkdirSync(directory, { mode: 0o700 });
+    } catch {
+      return false;
+    }
+  }
+  const marker = join(directory, 'extensions-notice.json');
+  const session = createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
+  const noFollow = constants.O_NOFOLLOW ?? 0;
+  let descriptor;
+  try {
+    descriptor = openSync(marker, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow, 0o600);
+    writeSync(descriptor, `${JSON.stringify({ notice: EXTENSIONS_NOTICE, session })}\n`);
+    return true;
+  } catch (error) {
+    if (error?.code !== 'EEXIST') return false;
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
+  try {
+    descriptor = openSync(marker, constants.O_RDONLY | noFollow);
+    const status = fstatSync(descriptor);
+    if (!status.isFile() || status.size > 1024) return false;
+    const buffer = Buffer.alloc(status.size);
+    const read = readSync(descriptor, buffer, 0, status.size, 0);
+    const record = JSON.parse(buffer.subarray(0, read).toString('utf8'));
+    return record?.notice === EXTENSIONS_NOTICE && record.session === session;
+  } catch {
+    return false;
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
+}
+
+function extensionsLine({ glyphs, paint, maxCells, rail }) {
+  return layoutLine({
+    left: [
+      segment('LitFamily extensions', (text) => paint.fg(text, 'accent', true)),
+      segment('github.com/wjgoarxiv/wjgoarxiv-skills', (text) => paint.fg(text, 'accent')),
+      segment('decks, documents, figures, design and video covers install beside LitGrok', (text) => paint.fg(text, 'dim'), { drop: 1 }),
+    ],
+    separator: { plain: ` ${glyphs.dot} `, painted: ` ${paint.fg(glyphs.dot, 'dim')} ` },
+    rail,
+    maxCells,
+    ellipsis: glyphs.ellipsis,
+  });
+}
+
 function figuresLine({ status, glyphs, paint, handoff, maxCells, rail }) {
   return layoutLine({
     left: figureLeads(figureSegments(status, { glyphs, paint, handoff }), glyphs, paint, false),
@@ -853,6 +914,13 @@ function render(input) {
   }
   const rail = railFor(paint, glyphs);
   const otherLines = others.map((row) => otherSessionLine(row, { glyphs, paint, maxCells, rail }));
+  let notice = false;
+  try {
+    notice = extensionsNoticeSession(input?.session_id);
+  } catch {
+    notice = false;
+  }
+  if (notice) otherLines.push(extensionsLine({ glyphs, paint, maxCells, rail }));
   // The card shows while a discipline is active or the session has a workflow stage; otherwise the
   // HUD is the single row, with the other sessions' rows under it.
   if (!discipline && !workflow?.stage) return [compactRow({ ...shared, looks, phase }), ...otherLines];

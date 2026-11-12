@@ -1,13 +1,13 @@
 ---
 name: lit-diagram-drawer
-description: "Moved: lit-diagram-drawer draws conceptual diagrams (architecture, workflows, systems, data models, timelines) and now ships as its own one-skill plugin in wjgoarxiv-skills. When that plugin's lit-diagram-drawer is listed, use it; otherwise this note gives the one-line install. Interfaces stay with frontend-ui-ux, real equipment with lit-schematic."
+description: "Moved: lit-diagram-drawer draws conceptual diagrams (architecture, workflows, systems, data models, timelines) and is now a LitFamily extension, shipped as its own one-skill plugin in wjgoarxiv-skills. When that plugin's lit-diagram-drawer is listed, use it; otherwise this note gives the one-line install. Interfaces stay with frontend-ui-ux, real equipment with lit-schematic."
 user-invocable: true
 argument-hint: "<diagram brief>"
 ---
 
 # lit-diagram-drawer
 
-lit-diagram-drawer moved out of LitGrok. Its full skill now lives in the wjgoarxiv-skills repository, as its own Grok Build edition: one skill in one folder, installed on its own:
+lit-diagram-drawer moved out of LitGrok and is now a LitFamily extension. LitGrok's core works without it; installed beside LitGrok, it brings back the full LitFamily experience for this kind of work. Its full skill lives in wjgoarxiv-skills, the LitFamily extension shelf, as its own Grok Build edition: one skill in one folder, installed on its own:
 
 ```text
 wjgoarxiv-skills/variants/litgrok/lit-diagram-drawer/
@@ -31,7 +31,7 @@ limitations_channel: reply
 1. Look at the skills this session lists. A plugin's skill keeps its own name, and Grok Build shows it as `lit-diagram-drawer:lit-diagram-drawer` (plugin `lit-diagram-drawer`, skill `lit-diagram-drawer`) while this note has the same name. If a `lit-diagram-drawer` skill from the `lit-diagram-drawer` plugin is listed, load that one and follow it for the whole request; this note adds nothing to it.
 2. Otherwise, for a direct request, reply in the user's language with three things and stop, writing no file:
    - one sentence on what lit-diagram-drawer makes: a clear, accessible, Korean-ready diagram of an architecture, workflow, system, data model or timeline as HTML or SVG, with PNG and Office-safe SVG export;
-   - that it moved out of LitGrok into the wjgoarxiv-skills repository, in the folder shown above;
+   - that it is now a LitFamily extension, kept in the wjgoarxiv-skills repository in the folder shown above, and installs beside LitGrok;
    - the install line from Install below, in a code block, and that a new session (or `r` in the Plugins tab) picks the plugin up, after which the user asks again.
 3. Real equipment, P&IDs and apparatus figures go to the `lit-schematic` note, plots of measured data to the `lit-scientific-visualization` note; each moved to its own folder in wjgoarxiv-skills and installs on its own.
 
