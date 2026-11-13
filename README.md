@@ -88,7 +88,7 @@ Its install receipt should read `Status: Ready` and names the two steps only you
 | `--dry-run` | Prints every destination and writes nothing | You want to look first |
 | `--user` | Installs under `~/.grok/`, so the skills and rule are in every project | You want LitGrok everywhere |
 | `--status-line`, added to `--user` | Adds the LIT status row | Grok reads the row only from user settings |
-| `--package @litfamily/litgrok@1.0.35` in place of `@latest` | Pins this release | A team wants everyone on the same files |
+| `--package @litfamily/litgrok@1.0.36` in place of `@latest` | Pins this release | A team wants everyone on the same files |
 
 <details>
 <summary>Where the same package can live: this project, your user account or Grok Bot</summary>
