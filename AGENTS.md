@@ -10,7 +10,10 @@ each as a one-skill Grok Build plugin under `variants/litgrok/<id>/`; LitGrok sh
 remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
 user's request, and the opt-in status-line command keeps a per-session context record in the
-temporary HUD state root.
+temporary HUD state root. The package-owned hooks keep three more kinds of project state under
+`.grok/litgrok/`: the session ledger, a handoff packet per session written by `PreCompact` and reloaded
+once by `PreToolUse` (`handoff/`, off with `LITGROK_COMPACT_HANDOFF=0`), and `notices.jsonl`, a hash and
+time per notice already printed.
 The current tree contains 42 skills, one project rule, and twelve hook
 registrations with their commands. Project hooks must surface the
 `/hooks-trust` or `--trust` requirement. Do not add plugins, marketplaces, MCP,
