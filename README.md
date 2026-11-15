@@ -321,7 +321,8 @@ even while you are watching. Both stay off until you ask for them.
 
 A long session slowly fills Grok's context window. When it is nearly full, Grok compacts the conversation, and the details of what you were in the middle of get squeezed out. Automatic handoff has the model write its handoff while it still remembers everything, so after the compaction it can pick up exactly where it was.
 
-- **Off until you ask.** It stays off until you turn it on, and the percent is always your choice.
+- **A short save is already on.** When the session has a plan row left or a running workflow stage, the `PreCompact` hook writes `.grok/litgrok/handoff/<session key>.md` before every compaction: the stage, the plan position, the current row and the last test verdict. The first tool call after the compaction gets it back once. `LITGROK_COMPACT_HANDOFF=0` turns it off.
+- **The fuller handoff waits for you.** The model-written handoff below stays off until you turn it on, and the percent is always your choice.
 - **One project at a time.** The setting lives in that project's `.grok/litgrok/auto-handoff.json`.
 - **Status row first.** Grok shares how full the context is with the status row and with no hook, so add [the row](#the-lit-status-row) first; it lives in your user settings and only needs doing once.
 - **Trusted hooks.** The Stop hook that does the asking is a project hook like the others, so it runs in a trusted Git root (`/hooks-trust`).
