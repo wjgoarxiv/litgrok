@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.37 — 2026-11-16
 
 - A handoff is saved before every compaction, and reloaded once after it, with no setting to turn on. When the session has a plan with an unchecked row or a running workflow stage, the `PreCompact` hook writes `.grok/litgrok/handoff/<session key>.md` (stage, plan position, the current row, the last test verdict; no prompt, command or tool output), `PostCompact` arms one reload, and the first tool call afterwards receives it as a `PreToolUse` `additionalContext`. Grok Build ignores the stdout of passive hooks such as `SessionStart`, so a tool call is the one model-bound channel a hook has without blocking. `LITGROK_COMPACT_HANDOFF=0` turns it off. `litgrok auto-handoff` is unchanged. The hook registrations did not change, so no new `/hooks-trust` is needed.
 - The `lit adhd` nudge at session start is printed once per distinct sentence. `.grok/litgrok/notices.jsonl` keeps a hash and a time per notice, never its text; a missing, damaged, oversized or symlinked record behaves as before, with the nudge once a day.
