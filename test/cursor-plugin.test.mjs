@@ -78,6 +78,34 @@ test('the Cursor manifest ships skills only', () => {
   assert.equal(existsSync(join(CURSOR_DIRECTORY, 'hooks.json')), false, 'no Cursor hook file is shipped');
 });
 
+// Cursor documents `rules` and `agents` manifest fields, but only for its own formats: a rule needs
+// `description`, `alwaysApply` and `globs` frontmatter, and an agent is `name` and `description`. LitGrok's
+// rule has no frontmatter and its agents carry Grok Build's `permissionMode` and `skills` keys, which Cursor
+// does not document (a read-only planner would lose its mode there). So the manifest omits both fields.
+// If either file is converted to Cursor's format, this test fails: add the field to the manifest then.
+test('the manifest omits rules and agents because those files use Grok Build formats', () => {
+  const rule = readFileSync(join(PRODUCT_ROOT, '.grok', 'rules', '00-litgrok.md'), 'utf8');
+  assert.doesNotMatch(rule, /^---\n[\s\S]*?\balwaysApply:/u, 'a Cursor-format rule belongs in the manifest');
+  const agentsRoot = join(PRODUCT_ROOT, '.grok', 'agents');
+  const agentFiles = readdirSync(agentsRoot).filter((name) => name.endsWith('.md'));
+  assert.ok(agentFiles.length > 0);
+  for (const name of agentFiles) {
+    const fields = frontmatterFields(readFileSync(join(agentsRoot, name), 'utf8'), name);
+    assert.ok(fields.has('permissionMode'), `${name} uses Grok Build's permissionMode, which Cursor does not document`);
+  }
+});
+
+test('every path a Cursor manifest declares exists in the repository', () => {
+  const root = readJson(PLUGIN_PATH);
+  for (const key of ['logo', 'skills']) {
+    assertRelativeInside(root[key], key);
+    assert.equal(existsSync(join(PRODUCT_ROOT, root[key])), true, `${key} path ${root[key]} must exist`);
+  }
+  const marker = readJson(join(PRODUCT_ROOT, '.grok', '.cursor-plugin', 'plugin.json'));
+  assertRelativeInside(marker.skills, 'marker skills');
+  assert.equal(existsSync(join(PRODUCT_ROOT, '.grok', marker.skills)), true, 'the marker skills path must exist');
+});
+
 test('every skill under the Cursor skills path passes Cursor\'s name and description rules', () => {
   const manifest = readJson(PLUGIN_PATH);
   assertRelativeInside(manifest.skills, 'skills');
