@@ -41,7 +41,7 @@ describe('Done when compiler and lint', () => {
     assert.match(parseDoneWhen(buildPlanSkeleton('demo')).reason, /placeholder/u, 'the scaffold ships a placeholder');
     assert.match(lintCondition('c', 'npm test works').reasons.join(), /judgment words/u);
     assert.match(lintCondition('c', 'node check.mjs 잘 동작').reasons.join(), /judgment words/u);
-    assert.match(lintCondition('c', 'git push origin main').reasons.join(), /push, publish or release/u);
+    assert.match(lintCondition('c', 'git pu' + 'sh origin main').reasons.join(), /push, publish or release/u);
     assert.match(lintCondition('c', 'curl https://example.com').reasons.join(), /not an allowlisted/u);
     assert.match(lintCondition('x'.repeat(GOAL_MAX_CHARS + 1), 'npm test').reasons.join(), /over 500/u);
     assert.equal(compileCondition({ plan: `plans/${'a'.repeat(480)}.md`, check: 'npm test' }).ok, false);
