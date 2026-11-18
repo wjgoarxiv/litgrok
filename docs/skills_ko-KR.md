@@ -14,7 +14,7 @@
 <tr>
 <td><img src="./assets/skills/lit-plan.webp" width="240" alt="/start-work가 실행할 번호 붙은 작업 목록을 파일로 만듭니다. 코드는 아직 건드리지 않습니다." /></td>
 <td><code>lit-plan</code><br /><sub><code>/lit-plan &lt;objective&gt;</code></sub></td>
-<td><code>/start-work</code>가 실행할 번호 붙은 작업 목록을 파일로 만듭니다. 코드는 아직 건드리지 않습니다.</td>
+<td><code>/start-work</code>가 실행할 번호 붙은 작업 목록을 파일로 만듭니다. 코드는 아직 건드리지 않습니다. 승인 질문에 <code>yes</code> 한 번이면 <code>start-work</code>가 시작되고 <code>Done when</code> 확인 명령이 목표로 걸립니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/start-work.webp" width="240" alt="계획을 한 줄씩 실행합니다. A부터 F까지 관문을 모두 통과해야 체크됩니다." /></td>
@@ -27,14 +27,9 @@
 <td>작업 전에는 계획을, 작업 후에는 결과를 검토하며, 어느 쪽인지는 있는 자료로 고릅니다. 읽기 전용 갈래가 찾은 문제를 증거 순으로 정리합니다.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/litgoal.webp" width="240" alt="확인 가능한 도착 지점 하나를 정해 직접 실행할 /goal 한 줄을 건네고, litwork와 start-work가 그곳을 향해 달립니다. LitGrok은 목표 상태를 저장하지 않습니다." /></td>
+<td><img src="./assets/skills/litgoal.webp" width="240" alt="확인 가능한 도착 지점 하나를 정해 직접 실행할 /goal 한 줄을 건네고, litwork와 start-work가 그곳을 향해 달립니다." /></td>
 <td><code>litgoal</code><br /><sub><code>/litgoal &lt;request&gt;</code></sub></td>
-<td>확인 가능한 도착 지점 하나를 정해 직접 실행할 <code>/goal</code> 한 줄을 건네고, <code>litwork</code>와 <code>start-work</code>가 그곳을 향해 달립니다. LitGrok은 목표 상태를 저장하지 않습니다.</td>
-</tr>
-<tr>
-<td><img src="./assets/skills/lit-recap.webp" width="240" alt="Grok Build 세션 기록을 바탕으로 증거가 붙은 짧은 요약을 만듭니다." /></td>
-<td><code>lit-recap</code><br /><sub><code>/lit-recap</code></sub></td>
-<td>Grok Build 세션 기록을 바탕으로 증거가 붙은 짧은 요약을 만듭니다.</td>
+<td>확인 가능한 도착 지점 하나를 정해 직접 실행할 <code>/goal</code> 한 줄을 건네고, <code>litwork</code>와 <code>start-work</code>가 그곳을 향해 달립니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-handoff.webp" width="240" alt="handoff라고 치면 다음 세션이 읽을 인수인계 파일을 만듭니다. 비밀 값은 넣지 않습니다." /></td>
@@ -47,9 +42,9 @@
 <td>남의 글에 공개된 기법을 내 스킬로 가져옵니다. 출처를 기록하고 라이선스를 검사한 뒤 실제 화면에서 동등함을 증명합니다.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/lit-adhd.webp" width="240" alt="최근 세션 전체를 한 화면으로 브리핑합니다. 세션별 카드, 로드맵, 추천 다음 단계." /></td>
+<td><img src="./assets/skills/lit-adhd.webp" width="240" alt="최근 세션 전체를 여섯 줄 판정 카드로 알려 줍니다. 무엇이 바뀌었는지, 지금 할 일 하나와 입력할 말." /></td>
 <td><code>lit-adhd</code><br /><sub><code>lit adhd</code> · <code>lit rewind</code></sub></td>
-<td>"어디까지 했지"에 답합니다. 세션별 카드, 로드맵 게이지, 추천 다음 단계 하나. 읽기 전용.</td>
+<td>"어디까지 했지"에 여섯 줄 카드로 답합니다. 지난번에 본 뒤 바뀐 것, 지금 할 일 하나와 정확히 입력할 말, 이유, 다음에 기다리는 일까지 담습니다. <code>lit adhd 자세히</code>는 보드를, <code>lit adhd recap</code>은 세션 요약을 보여 줍니다. 읽기 전용.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/deep-interview.webp" width="240" alt="정해진 순서로 한 번에 한 질문씩 물어, 계획을 세울 수 있을 만큼 요청을 분명히 합니다." /></td>
@@ -60,6 +55,11 @@
 <td><img src="./assets/skills/lit-brainstorm.webp" width="240" alt="열린 질문을 여러 선택지로 펼친 뒤 묶고 점수를 매겨, 고를 수 있는 짧은 후보 목록으로 마무리합니다. 만들지는 않습니다." /></td>
 <td><code>lit-brainstorm</code><br /><sub><code>/lit-brainstorm &lt;topic&gt;</code></sub></td>
 <td>열린 질문을 여러 선택지로 펼친 뒤 묶고 점수를 매겨, 고를 수 있는 짧은 후보 목록으로 마무리합니다. 만들지는 않습니다.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/ultra-brainstorm.webp" width="240" alt="값싼 아이디어 에이전트를 몇 개 돌릴지 비용과 함께 묻고, 워크플로 하나로 펼친 뒤 심사한 상위 목록을 보여 줍니다." /></td>
+<td><code>ultra-brainstorm</code><br /><sub><code>ultra-brainstorm &lt;topic&gt;</code> · <code>/ultra-brainstorm</code></sub></td>
+<td>규모를 키운 브레인스토밍입니다. 비용을 먼저 보고 값싼 아이디어 에이전트 수(100개 이상)를 고르면, 백그라운드 워크플로 하나로 펼쳐지고 리듀서가 묶고 심사자가 점수를 매깁니다. 상위 목록에서 직접 고릅니다. 만들지는 않습니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/litresearch.webp" width="240" alt="범위를 정한 조사입니다. 모든 주장에 출처를 붙이고, 증거보다 크게 말하지 않습니다." /></td>
@@ -127,9 +127,9 @@
 <td>wjgoarxiv-skills의 <code>figures</code> 플러그인으로 옮겼습니다. 이 이름은 이제 설치 한 줄을 알려 줍니다. 플러그인: 검증된 데이터로 논문용 그림과 캡션을 만듭니다. 그래프 종류는 데이터 성격에 맞춰 고릅니다.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/lit-team.webp" width="240" alt="작업을 범위가 정해진 묶음으로 나눠 Grok Build 기본 서브에이전트에 맡깁니다. 통합과 검증은 부모가 맡습니다." /></td>
-<td><code>lit-team</code><br /><sub><code>/lit-team</code></sub></td>
-<td>작업을 범위가 정해진 묶음으로 나눠 Grok Build 기본 서브에이전트에 맡깁니다. 통합과 검증은 부모가 맡습니다.</td>
+<td><img src="./assets/skills/lit-team.webp" width="240" alt="lit team과 목표를 입력하면 이 세션이 지휘자가 되어 팀을 대신 돌립니다." /></td>
+<td><code>lit-team</code><br /><sub><code>lit team &lt;goal&gt;</code> · <code>/lit-team</code></sub></td>
+<td><code>lit team &lt;goal&gt;</code>을 입력하면 이 세션이 지휘자가 되어 팀을 대신 돌립니다. 서브에이전트, 워크플로 하나, herdr 창, 워크트리 가운데 맞는 방식을 고르고 결과를 합친 뒤 다시 검증합니다.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/autoresearch.webp" width="240" alt="범위를 정한 연구 작업입니다. 서브에이전트가 조사하고, 증거 관문을 거쳐, 하나로 종합합니다." /></td>

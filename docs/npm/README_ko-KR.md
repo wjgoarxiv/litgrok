@@ -69,7 +69,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 세션이 불러온 전체 목록은 `/skills`에서 보입니다. [GitHub의 스킬 갤러리](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md)에서는 42개 스킬을 결과 그림과 함께 볼 수 있습니다.
 
-코드 밖의 일도 있습니다. `lit-pptx`와 `lit-docx`는 wjgoarxiv-skills로 발표자료와 보고서, Word 문서를 그 일에 맞게 고른 디자인 방향으로 만들고(답변에 다른 두 방향도 함께 알려 줍니다), `/frontend-ui-ux`는 화면을 만들어 확인하는 wjgoarxiv-skills를 알려 주며, `/readme-studio`는 저장소 사실에 근거한 README를 쓰는 wjgoarxiv-skills를 알려 줍니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 쓰고, `lit-schematic`은 검사된 P&ID, 설비 배치도, 아이소메트릭 단면도를 그리는 wjgoarxiv-skills를 알려 주며, `lit-hijack`은 공개된 기법을 출처 기록과 라이선스 검사, 동등성 증명과 함께 가져오고, `lit-adhd`는 최근 세션 전체를 읽기 전용 한 화면으로 브리핑합니다.
+코드 밖의 일도 있습니다. `lit-pptx`와 `lit-docx`는 wjgoarxiv-skills로 발표자료와 보고서, Word 문서를 그 일에 맞게 고른 디자인 방향으로 만들고(답변에 다른 두 방향도 함께 알려 줍니다), `/frontend-ui-ux`는 화면을 만들어 확인하는 wjgoarxiv-skills를 알려 주며, `/readme-studio`는 저장소 사실에 근거한 README를 쓰는 wjgoarxiv-skills를 알려 줍니다. `lit-humanizer`는 딱딱한 한국어나 영어 문장을 다시 쓰고, `lit-schematic`은 검사된 P&ID, 설비 배치도, 아이소메트릭 단면도를 그리는 wjgoarxiv-skills를 알려 주며, `lit-hijack`은 공개된 기법을 출처 기록과 라이선스 검사, 동등성 증명과 함께 가져오고, `lit-adhd`는 최근 세션 전체를 여섯 줄 카드로 알려 주고(`lit adhd recap`은 세션들이 한 일을 다시 보여 줍니다), `ultra-brainstorm`은 비용을 먼저 보여 준 뒤 값싼 아이디어 에이전트 백 개 이상을 워크플로 하나로 돌리며, `lit team <목표>`는 이 세션을 팀의 지휘자로 만듭니다.
 
 ## 설치하면 달라지는 것
 

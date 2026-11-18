@@ -246,13 +246,15 @@ the routes below.
 | `/litwork` | Turns a bounded task into a checklist, recording each check and the next step. |
 | `handoff` or `/lit-handoff` | Carries the checked result and the next step into another session. |
 | `/lit-brainstorm` | Opens a question into many options and a short list to pick from. |
-| `/lit-plan` | Writes a plan file of numbered rows with checks, and edits nothing yet. |
+| `ultra-brainstorm <topic>` | Runs the same idea hunt with a hundred or more cheap agents, after you saw the cost. |
+| `/lit-plan` | Writes a plan file of numbered rows with checks, and edits nothing yet; its finish check can become a `/goal`. |
 | `/start-work <approved-plan>` | Runs the plan you approved row by row, ticking a row once its checks pass. |
 | `/review-work` | Reviews a plan before work or a change after it, and changes no files. |
 | `/litresearch` | Runs bounded research that ties every claim to a source. |
 | `lit hijack <source> into <skill>` | Brings a technique you read about into your own skill, without copying the text. |
 | `/lit-humanizer <file>` | Rewrites stiff English or Korean prose and keeps the facts. |
-| `lit adhd` | Briefs every recent session on one read-only board; `go` takes its next step. |
+| `lit adhd` | Tells you in six lines what changed, the one thing to do now and what to type; `go` takes it. |
+| `lit team <goal>` | Turns this session into the orchestrator of a team it splits, launches, watches and re-checks. |
 
 [All 42 skills, with a picture of what each one gives you](./docs/skills.md).
 
@@ -283,12 +285,30 @@ go
   where each source came from, checks what its licence allows, writes a spec in its own words, has the change built
   through `lit-plan` and `start-work`, and proves it on the real surface against a baseline that cannot see the new
   work. The report says what was taken, what was left and why.
-- **`lit adhd`** (or `lit rewind`) is for after a day of several sessions and interruptions: it reads every recent agent
-  session of this repository and prints one board, changing nothing. If the step it suggests is what you want, type
-  `go` and the session takes it; `lit adhd detail` adds one card per session under the board.
-- **The board** shows the one thing to do now and what to type; how much is done, in progress, waiting on you and left;
-  each plan as a milestone with a progress bar; what you finished lately and what is still to do; and a short list of
-  things not to forget, such as a session waiting on your answer, uncommitted changes or a plan that stalled.
+- **`lit adhd`** (or `lit rewind`) is for after a day of several sessions and interruptions. It reads every recent agent
+  session of this repository and answers in about six lines: what finished and what started waiting since you last
+  looked, the one thing to do now with the exact text to type, why and what happens if you leave it, what waits after
+  it, and how many sessions it could read. It counts only what the records prove (a ticked plan, a commit), never a
+  session's own claim, and a push or a release only ever appears as a question for you. If the step is what you want,
+  type `go`. Nothing is changed.
+- **The board** is one word away: `lit adhd detail` shows how much is done, in progress, waiting on you and left, each
+  plan as a milestone with a progress bar, and one card per session. `lit adhd recap [session]` replays what the
+  sessions did; it took over from the separate lit-recap skill, and `lit recap` still opens it.
+- **A `lit` prompt that needs several skills** gets a short plan instead of one guess: `lit` collects up to three
+  fitting skills, keeps the first as the lead, and says the plan in the reply's first line. A risky redesign brings
+  `lit-crucible` along first. To choose the skills yourself, type them: `lit +viz +ui make a dashboard of these runs`.
+- **`ultra-brainstorm <topic>`** is for a question wide enough that one context would miss directions. It asks one
+  thing first, how many idea agents to run, with the rough token cost, then runs them as one background workflow on
+  the cheapest model; reducers cluster the ideas and a judge scores them with visible arithmetic. You pick from the top
+  list.
+- **`lit team <goal>`** hands the whole team to this session. It decides whether the work goes to subagents, one
+  workflow, herdr panes or separate worktrees, says which in one line, writes each member's brief, wakes a member that
+  stalls, merges and re-verifies, and reports once.
+- **`/lit-plan` ends with one question that starts the work.** The plan closes with a check command, and the approval
+  question reads `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`. An exact `yes` starts
+  `start-work` on the plan and arms the finish line in one step; without a usable check it asks
+  `Approve plan and start work? (yes / no)` and says why there is no goal. Grok Build takes `/goal` from you alone, so
+  LitGrok hands you the line to paste and checks the same condition at the end of each turn.
 
 </details>
 
@@ -417,7 +437,7 @@ slide and document skills, need Node.js or Python on the computer that runs them
 <details>
 <summary>The 42 skill names you can call</summary>
 
-`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-adhd`, `lit-handoff`, `lit-hijack`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-schematic`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
+`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-adhd`, `lit-handoff`, `lit-hijack`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-schematic`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `ultra-brainstorm`, `visual-qa`, `wikify`.
 
 </details>
 
@@ -484,7 +504,7 @@ A request for one, by its slash name, a bare `lit` prompt or an agent that prelo
 gives the install line. The picture shows which skills sit where and the four steps `litgrok extensions install` takes
 to bring one back.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-recap, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back with litgrok extensions install skill --yes, in four steps: 1, check: grok plugin list --json and the eight skills folders, and a personal copy stops it; 2, move aside: each store copy, whole, into a dated folder under ~/.grok/extension-backups; 3, copy: grok plugin uninstall, then grok plugin install folder --trust; 4, receipt: Grok Build's registry.json, read back by grok plugin list --json, with source, store path and time. Notes: the other verbs are litgrok extensions list, check, update, remove and prune-backups; by hand, each note keeps the git clone and install lines." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.en.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.en.light.png" width="960" alt="Diagram titled Core and extensions in LitGrok. litgrok install copies 42 skill folders into .grok/skills. On the left, the core, 33 skills complete on its own, in five groups. Plan, build and review: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team, ultra-brainstorm. Research: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. Code: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. Carrying work over: lit-handoff, lit-adhd, wikify. Prose and the host: lit-humanizer, litgrok. In the middle, nine same-name notes, each pointing with an arrow to its folder under wjgoarxiv-skills variants/litgrok/: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. Below, bringing one extension back with litgrok extensions install skill --yes, in four steps: 1, check: grok plugin list --json and the eight skills folders, and a personal copy stops it; 2, move aside: each store copy, whole, into a dated folder under ~/.grok/extension-backups; 3, copy: grok plugin uninstall, then grok plugin install folder --trust; 4, receipt: Grok Build's registry.json, read back by grok plugin list --json, with source, store path and time. Notes: the other verbs are litgrok extensions list, check, update, remove and prune-backups; by hand, each note keeps the git clone and install lines." /></picture></p>
 
 For Grok Build each extension is its own folder under `variants/litgrok/`, a one-skill plugin with everything it reads
 inside it. Run from the project root; the first line only prints the plan, and `--yes` carries it out:

@@ -244,13 +244,15 @@ lit 논문용 흡착 실험 장치 모식도 그려줘
 | `/litwork` | 범위가 정해진 작업을 체크리스트로 바꾸고, 확인한 것과 다음 할 일을 남깁니다. |
 | `handoff` 또는 `/lit-handoff` | 확인한 결과와 다음 할 일을 다음 세션으로 건넵니다. |
 | `/lit-brainstorm` | 열린 질문을 여러 선택지와 고를 수 있는 짧은 목록으로 펼칩니다. |
-| `/lit-plan` | 번호 붙은 행과 확인 기준을 담은 계획 파일을 쓰고, 아직 아무것도 고치지 않습니다. |
+| `ultra-brainstorm <주제>` | 비용을 먼저 보여 준 뒤, 값싼 에이전트 백 개 이상으로 같은 아이디어 찾기를 돌립니다. |
+| `/lit-plan` | 번호 붙은 행과 확인 기준을 담은 계획 파일을 쓰고, 아직 아무것도 고치지 않습니다. 끝 확인 명령은 `/goal`이 될 수 있습니다. |
 | `/start-work <승인된 계획>` | 승인한 계획을 한 행씩 실행하고, 확인을 통과한 행에만 체크합니다. |
 | `/review-work` | 작업 전에는 계획을, 작업 후에는 변경 사항을 검토하며 파일은 고치지 않습니다. |
 | `/litresearch` | 범위를 정해 조사하고, 모든 주장을 출처와 연결합니다. |
 | `lit hijack <자료> 를 <스킬> 로` | 읽은 기법을 글은 베끼지 않고 내 스킬로 옮겨 옵니다. |
 | `/lit-humanizer <파일>` | 딱딱한 한국어나 영어 문장을 사실은 그대로 두고 자연스럽게 고칩니다. |
-| `lit adhd` | 최근 세션 전부를 읽기 전용 보드 한 장으로 정리하고, `go`로 다음 단계를 진행합니다. |
+| `lit adhd` | 바뀐 것, 지금 할 일 하나, 입력할 말을 여섯 줄로 알려 주고, `go`로 그 일을 진행합니다. |
+| `lit team <목표>` | 이 세션이 지휘자가 되어 팀을 나누고, 띄우고, 지켜보고, 다시 확인합니다. |
 
 [스킬 42개 전체와 스킬마다 얻는 결과 그림](./docs/skills_ko-KR.md)
 
@@ -281,10 +283,27 @@ go
   라이선스가 무엇을 허락하는지 확인하고, 사양을 자기 말로 새로 쓴 뒤, 변경은 `lit-plan`과 `start-work`로 만들고 새
   작업을 보지 못한 기준선과 실제 화면에서 비교해 증명합니다. 보고서에는 가져온 것, 두고 온 것, 그 이유가 남습니다.
 - **`lit adhd`**(또는 `lit rewind`)는 창 여러 개와 끊김이 이어진 하루 뒤에 씁니다. 이 저장소의 최근 에이전트 세션을 모두
-  읽고 보드 한 장으로 정리하며, 아무것도 바꾸지 않습니다. 권하는 단계가 마음에 들면 `go`를 입력해 세션이 그 일을 이어
-  가게 하고, `lit adhd 자세히`라고 하면 보드 아래에 세션별 카드가 붙습니다.
-- **보드**에는 지금 할 일 하나와 입력할 말, 끝남·진행 중·나를 기다림·남음 개수, 계획마다 진행 막대가 붙은 마일스톤,
-  최근 끝낸 일과 남은 일, 그리고 답을 기다리는 세션이나 커밋 안 된 변경, 멈춘 계획처럼 잊지 말아야 할 일이 나옵니다.
+  읽고 여섯 줄 안팎으로 답합니다. 지난번에 본 뒤 무엇이 끝났고 무엇이 나를 기다리는지, 지금 할 일 하나와 정확히 입력할
+  말, 그 이유와 미루면 생기는 일, 다음에 기다리는 일, 몇 개 세션을 읽었는지가 담깁니다. 끝났다는 판단은 기록이 증명할
+  때만 합니다(체크된 계획, 커밋). 세션이 스스로 끝났다고 한 말은 세지 않고, push나 배포는 나에게 묻는 질문으로만 나옵니다.
+  권하는 일이 마음에 들면 `go`를 입력하면 됩니다. 아무것도 바꾸지 않습니다.
+- **보드**는 한 마디면 열립니다. `lit adhd 자세히`라고 하면 끝남·진행 중·나를 기다림·남음 개수, 계획마다 진행 막대가 붙은
+  마일스톤, 세션별 카드가 나옵니다. `lit adhd recap [세션]`은 세션들이 한 일을 다시 보여 줍니다. 따로 있던 lit-recap
+  스킬의 일을 이어받았고, `lit recap`이라고 해도 열립니다.
+- **스킬이 여럿 필요한 `lit` 프롬프트**는 한 가지로 짐작하지 않고 짧은 계획을 받습니다. `lit`이 맞는 스킬을 세 개까지
+  모으고 첫 번째를 주 스킬로 두며, 답의 첫 줄에 그 계획을 적습니다. 위험한 재설계라면 `lit-crucible`이 먼저 붙습니다.
+  스킬을 직접 고르려면 이렇게 씁니다: `lit +viz +ui 이 실행 결과로 대시보드 만들어줘`.
+- **`ultra-brainstorm <주제>`**는 한 맥락으로는 방향을 놓칠 만큼 넓은 질문에 씁니다. 먼저 하나만 묻습니다. 아이디어
+  에이전트를 몇 개 돌릴지, 대략 토큰이 얼마나 드는지 보여 주고 나서입니다. 답하면 가장 싼 모델로 백그라운드 워크플로
+  하나를 돌리고, 리듀서가 아이디어를 묶고 심사자가 계산식을 드러낸 채 점수를 매깁니다. 상위 목록에서 직접 고릅니다.
+- **`lit team <목표>`**는 팀 운영을 이 세션에 통째로 맡깁니다. 일을 서브에이전트, 워크플로 하나, herdr 창, 별도 워크트리
+  가운데 어디로 보낼지 정해 한 줄로 알리고, 팀원마다 지시서를 쓰고, 멈춘 팀원을 깨우고, 결과를 합쳐 다시 검증한 뒤 한 번에
+  보고합니다.
+- **`/lit-plan`은 질문 하나로 작업까지 시작합니다.** 계획 끝에 확인 명령을 적으면 승인 질문이
+  `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`가 됩니다. 정확히 `yes`라고 하면
+  `start-work`가 그 계획으로 시작되고 끝 지점도 한 번에 걸립니다. 쓸 만한 확인 명령이 없으면
+  `Approve plan and start work? (yes / no)`라고 묻고 목표가 없는 이유를 말합니다. Grok Build의 `/goal`은 사용자만 입력할
+  수 있으므로, LitGrok은 붙여 넣을 줄을 건네고 턴이 끝날 때마다 같은 조건을 확인합니다.
 
 </details>
 
@@ -412,7 +431,7 @@ Grok Bot은 시작할 때 마켓플레이스를 읽으므로, LitGrok이 아직 
 <details>
 <summary>부를 수 있는 스킬 이름 42개</summary>
 
-`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-adhd`, `lit-handoff`, `lit-hijack`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-recap`, `lit-schematic`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `visual-qa`, `wikify`.
+`autoconference`, `autoresearch`, `browser-drive`, `comment-checker`, `debugging`, `deep-interview`, `frontend-ui-ux`, `lit-brainstorm`, `lit-burnoff`, `lit-burnoff-file`, `lit-code`, `lit-commit`, `lit-comprehend`, `lit-crucible`, `lit-diagram-drawer`, `lit-docx`, `lit-adhd`, `lit-handoff`, `lit-hijack`, `lit-humanizer`, `lit-init`, `lit-plan`, `lit-pptx`, `lit-schematic`, `lit-scientific-visualization`, `lit-team`, `lit-typographic-motion`, `litgoal`, `litgrok`, `litresearch`, `litwork`, `lsp`, `lsp-setup`, `readme-studio`, `refactor`, `review-work`, `rules`, `start-work`, `structural-search`, `ultra-brainstorm`, `visual-qa`, `wikify`.
 
 </details>
 
@@ -478,7 +497,7 @@ LitGrok 옆에 설치하면 LitFamily를 온전히 다 쓸 수 있고, 나머지
 설치 한 줄을 알려 줍니다. 어떤 스킬이 어디에 있는지, `litgrok extensions install`이 확장 하나를 다시 들이는 네 단계가
 무엇인지 그림으로 정리했습니다.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.ko.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.ko.light.png" width="960" alt="LitGrok의 코어와 확장을 그린 도식. litgrok install은 .grok/skills에 스킬 폴더 42개를 복사한다. 왼쪽은 이것만으로 완결되는 코어 33개를 다섯 묶음으로 보여 준다. 계획·구현·리뷰: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team. 리서치: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. 코드: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. 이어서 일하기: lit-handoff, lit-recap, lit-adhd, wikify. 문장과 호스트: lit-humanizer, litgrok. 가운데는 같은 이름의 안내 9개로, 각각 화살표로 wjgoarxiv-skills의 variants/litgrok/ 폴더를 가리킨다: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. 아래는 litgrok extensions install skill --yes가 확장 하나를 다시 들이는 네 단계다. 1, 확인: grok plugin list --json과 스킬 폴더 8곳을 보고, 개인 사본이 있으면 멈춘다. 2, 옮겨 두기: 저장소의 사본을 통째로 ~/.grok/extension-backups의 날짜 폴더에 둔다. 3, 복사: grok plugin uninstall 다음 grok plugin install folder --trust. 4, 설치 기록: Grok Build의 registry.json을 grok plugin list --json으로 읽으며, 소스와 저장소 경로와 시각이 남는다. 덧붙인 카드: 다른 동사는 litgrok extensions list, check, update, remove, prune-backups이고, 손으로 할 때는 각 안내에 git clone과 설치 줄이 그대로 있다." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/readme/diagrams/core-extensions.ko.dark.png" /><img src="./docs/assets/readme/diagrams/core-extensions.ko.light.png" width="960" alt="LitGrok의 코어와 확장을 그린 도식. litgrok install은 .grok/skills에 스킬 폴더 42개를 복사한다. 왼쪽은 이것만으로 완결되는 코어 33개를 다섯 묶음으로 보여 준다. 계획·구현·리뷰: litwork, lit-plan, start-work, review-work, deep-interview, lit-brainstorm, lit-crucible, litgoal, lit-team, ultra-brainstorm. 리서치: litresearch, autoresearch, autoconference, lit-hijack, browser-drive, lit-comprehend. 코드: lit-code, lit-commit, debugging, refactor, structural-search, lsp, lsp-setup, comment-checker, lit-burnoff, lit-burnoff-file, lit-init, rules. 이어서 일하기: lit-handoff, lit-adhd, wikify. 문장과 호스트: lit-humanizer, litgrok. 가운데는 같은 이름의 안내 9개로, 각각 화살표로 wjgoarxiv-skills의 variants/litgrok/ 폴더를 가리킨다: lit-pptx, lit-docx, lit-diagram-drawer, lit-schematic, lit-scientific-visualization, frontend-ui-ux, visual-qa, lit-typographic-motion, readme-studio. 아래는 litgrok extensions install skill --yes가 확장 하나를 다시 들이는 네 단계다. 1, 확인: grok plugin list --json과 스킬 폴더 8곳을 보고, 개인 사본이 있으면 멈춘다. 2, 옮겨 두기: 저장소의 사본을 통째로 ~/.grok/extension-backups의 날짜 폴더에 둔다. 3, 복사: grok plugin uninstall 다음 grok plugin install folder --trust. 4, 설치 기록: Grok Build의 registry.json을 grok plugin list --json으로 읽으며, 소스와 저장소 경로와 시각이 남는다. 덧붙인 카드: 다른 동사는 litgrok extensions list, check, update, remove, prune-backups이고, 손으로 할 때는 각 안내에 git clone과 설치 줄이 그대로 있다." /></picture></p>
 
 Grok Build용 확장은 스킬마다 `variants/litgrok/` 아래 자기 폴더가 있고, 그 폴더 하나가 필요한 파일을 모두 담은 스킬
 하나짜리 플러그인입니다. 프로젝트 루트에서 실행하세요. 첫 줄은 계획만 보여 주고, `--yes`를 붙이면 실제로 합니다.

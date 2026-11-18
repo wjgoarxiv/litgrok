@@ -149,17 +149,22 @@ A few things stay with you. Trusting hooks, creating the Git root, signing in an
 
 ## The routes you will use most
 
-Day to day, most work goes through these six. Each one hands Grok Build a skill's instructions; your session shows what the model actually does with them.
+Day to day, most work goes through the commands below. Each one hands Grok Build a skill's instructions; your session shows what the model actually does with them.
 
 | Type this | What happens |
 | --- | --- |
 | `/litwork` | Starts the shipped work checklist for a bounded task. |
 | `handoff` or `/lit-handoff` | Carries the checked result and the next step into another session. |
 | `/lit-brainstorm` | Opens a question into many options and a short list to pick from. |
-| `/lit-plan` | Writes a plan with concrete checks. |
+| `ultra-brainstorm <topic>` | Runs the idea hunt with a hundred or more cheap agents in one workflow, after one question about how many and what it costs. |
+| `/lit-plan` | Writes a plan with concrete checks; one `yes` to its approval question starts the work and sets its `Done when` check as the goal. |
 | `/start-work <approved-plan>` | Executes a plan you approved. |
 | `/review-work` | Reviews a plan before work or a change after it, with its evidence. |
 | `/litresearch` | Runs bounded, source-traceable research without overstating the evidence. |
+| `lit team <goal>` | Makes this session the orchestrator: it splits the work, launches the team, watches it, merges and re-verifies. |
+| `lit adhd` | Answers "where was I" in six lines; `lit adhd detail` shows the board and `lit adhd recap` replays the sessions. |
+
+A `lit` prompt that fits several skills gets a one-line plan of up to three, the first leading; `lit +viz +ui <task>` names them yourself. This plan lives in the project rule and is advisory, since Grok Build drops what a prompt hook prints.
 
 ### Project hooks
 

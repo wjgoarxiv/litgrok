@@ -10,10 +10,15 @@ each as a one-skill Grok Build plugin under `variants/litgrok/<id>/`; LitGrok sh
 remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
 user's request, and the opt-in status-line command keeps a per-session context record in the
-temporary HUD state root. The package-owned hooks keep three more kinds of project state under
+temporary HUD state root. The package-owned hooks keep four more kinds of project state under
 `.grok/litgrok/`: the session ledger, a handoff packet per session written by `PreCompact` and reloaded
-once by `PreToolUse` (`handoff/`, off with `LITGROK_COMPACT_HANDOFF=0`), and `notices.jsonl`, a hash and
-time per notice already printed.
+once by `PreToolUse` (`handoff/`, off with `LITGROK_COMPACT_HANDOFF=0`), `notices.jsonl`, a hash and
+time per notice already printed, and the lit-plan approval records (`goal/owner.json` and `goal/answer.json`):
+an exact `yes` to `UserPromptSubmit` starts start-work on the plan and arms the goal, `Stop` hands the plan to
+start-work once and later checks the goal once, and `SessionStart` closes a dead session's record.
+Three skill scripts write there when the user runs them: `goal-propose.mjs` (`goal/consent.json`), the
+lit-adhd collector (`adhd/cursor.json`, what the last verdict card showed) and ultra-brainstorm
+(`brainstorm/<slug>/`, through Grok Build's `workflow` tool).
 The current tree contains 42 skills, one project rule, and twelve hook
 registrations with their commands. Project hooks must surface the
 `/hooks-trust` or `--trust` requirement. Do not add plugins, marketplaces, MCP,

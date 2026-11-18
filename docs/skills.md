@@ -14,7 +14,7 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <tr>
 <td><img src="./assets/skills/lit-plan.webp" width="240" alt="A plan file with numbered rows that /start-work can run. Nothing is edited yet." /></td>
 <td><code>lit-plan</code><br /><sub><code>/lit-plan &lt;objective&gt;</code></sub></td>
-<td>A plan file with numbered rows that <code>/start-work</code> can run. Nothing is edited yet.</td>
+<td>A plan file with numbered rows that <code>/start-work</code> can run. Nothing is edited yet. One <code>yes</code> to its approval question starts <code>start-work</code> and sets its <code>Done when</code> check as the goal.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/start-work.webp" width="240" alt="Runs a plan row by row. A row is checked only after gates A to F pass." /></td>
@@ -27,14 +27,9 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <td>Reviews a plan before work starts or the work after it, picking the mode from what exists. Read-only lanes rank what they find by evidence.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/litgoal.webp" width="240" alt="Sets one checkable finish line and hands you a native /goal line to run; litwork and start-work run toward it. LitGrok stores no goal state." /></td>
+<td><img src="./assets/skills/litgoal.webp" width="240" alt="Sets one checkable finish line and hands you a native /goal line to run; litwork and start-work run toward it." /></td>
 <td><code>litgoal</code><br /><sub><code>/litgoal &lt;request&gt;</code></sub></td>
-<td>Sets one checkable finish line and hands you a native <code>/goal</code> line to run; <code>litwork</code> and <code>start-work</code> run toward it. LitGrok stores no goal state.</td>
-</tr>
-<tr>
-<td><img src="./assets/skills/lit-recap.webp" width="240" alt="A short account with evidence, rebuilt from Grok Build session history." /></td>
-<td><code>lit-recap</code><br /><sub><code>/lit-recap</code></sub></td>
-<td>A short account with evidence, rebuilt from Grok Build session history.</td>
+<td>Sets one checkable finish line and hands you a native <code>/goal</code> line to run; <code>litwork</code> and <code>start-work</code> run toward it.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/lit-handoff.webp" width="240" alt="Type handoff for a resume file the next session can read. Secrets stay out." /></td>
@@ -47,9 +42,9 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <td>Ports someone else's published technique into your skill, clean-room: capture with provenance, gate the licence, prove parity on the real surface.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/lit-adhd.webp" width="240" alt="A one-screen brief of every recent session: one card each, the roadmap, one recommended next step." /></td>
+<td><img src="./assets/skills/lit-adhd.webp" width="240" alt="A six-line verdict on every recent session: what changed, the one thing to do now and what to type." /></td>
 <td><code>lit-adhd</code><br /><sub><code>lit adhd</code> · <code>lit rewind</code></sub></td>
-<td>Answers "where was I" across recent sessions: one card per session, the roadmap gauge, one recommended next step. Read-only.</td>
+<td>Answers "where was I" across recent sessions with a six-line card: what changed since you last looked, the one thing to do now and exactly what to type, why, and what waits next. <code>lit adhd detail</code> shows the board, <code>lit adhd recap</code> the session recap. Read-only.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/deep-interview.webp" width="240" alt="One question at a time, in a fixed order, until the request is clear enough to plan." /></td>
@@ -60,6 +55,11 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <td><img src="./assets/skills/lit-brainstorm.webp" width="240" alt="Turns an open question into many options, groups and scores them, and ends on a short list for you to pick from. Nothing is built." /></td>
 <td><code>lit-brainstorm</code><br /><sub><code>/lit-brainstorm &lt;topic&gt;</code></sub></td>
 <td>Turns an open question into many options, groups and scores them, and ends on a short list for you to pick from. Nothing is built.</td>
+</tr>
+<tr>
+<td><img src="./assets/skills/ultra-brainstorm.webp" width="240" alt="Asks how many cheap idea agents to run and what it costs, fans them out as one workflow, then shows a judged top list for you to pick from." /></td>
+<td><code>ultra-brainstorm</code><br /><sub><code>ultra-brainstorm &lt;topic&gt;</code> · <code>/ultra-brainstorm</code></sub></td>
+<td>Brainstorming at scale: you choose how many cheap idea agents to run (100 or more) after seeing the cost, they fan out as one background workflow, reducers cluster and a judge scores. You pick from the top list. Nothing is built.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/litresearch.webp" width="240" alt="Bounded research with every claim traced to a source and no evidence overstated." /></td>
@@ -127,9 +127,9 @@ All 42 skills, one row each. The routes are the ones each skill documents, and `
 <td>Moved to the <code>figures</code> plugin of wjgoarxiv-skills; this name now gives the one-line install. The plugin: A publication-ready figure and caption from verified data. The chart type follows the data.</td>
 </tr>
 <tr>
-<td><img src="./assets/skills/lit-team.webp" width="240" alt="Splits work into bounded task packets for Grok Build's built-in subagents. The parent integrates and verifies." /></td>
-<td><code>lit-team</code><br /><sub><code>/lit-team</code></sub></td>
-<td>Splits work into bounded task packets for Grok Build's built-in subagents. The parent integrates and verifies.</td>
+<td><img src="./assets/skills/lit-team.webp" width="240" alt="Type lit team and a goal; this session becomes the orchestrator and runs the team for you." /></td>
+<td><code>lit-team</code><br /><sub><code>lit team &lt;goal&gt;</code> · <code>/lit-team</code></sub></td>
+<td>Type <code>lit team &lt;goal&gt;</code>; this session becomes the orchestrator and runs the team for you. It picks subagents, one workflow, herdr panes or worktrees, then merges and re-verifies.</td>
 </tr>
 <tr>
 <td><img src="./assets/skills/autoresearch.webp" width="240" alt="A bounded research campaign: subagents, evidence gates, one synthesis." /></td>
