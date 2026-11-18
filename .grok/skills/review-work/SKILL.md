@@ -3,6 +3,7 @@ name: review-work
 description: Review a plan before work starts, or the finished work after it. Picks plan review or work review from what exists, or takes the mode you name, and reports evidence-ranked findings from read-only lanes.
 user-invocable: true
 argument-hint: <target>
+goal: never
 ---
 
 # review-work

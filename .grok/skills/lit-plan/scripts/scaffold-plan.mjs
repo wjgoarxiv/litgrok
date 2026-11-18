@@ -109,6 +109,11 @@ ${FINAL_VERIFICATION_ITEMS.map((item) => `- [ ] ${item}`).join('\n')}
 ## Commit strategy
 
 ## Success criteria
+
+## Done when
+<!-- One command that exits 0 only when the work is done; goal-propose.mjs turns it into the /goal line of the approval question. -->
+<!-- A plan that must never set a goal deletes this section or writes goal: never on its own line. -->
+- check: \`<fill — e.g. npm test>\`
 `;
 }
 

@@ -30,6 +30,8 @@ limitations_channel: inline
 
 litgoal does not run work, write the plan, or declare the goal met. The user's own check of the criteria decides that.
 
+A finish line can also arrive with a plan: `lit-plan` compiles its `## Done when` block into one condition and asks once at approval, `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`. An exact `yes` starts start-work on the plan, arms LitGrok's own advisory record and hands the user the `/goal` line to paste; the `Stop` hook then runs that same check at turn end. `lit-plan` holds the full sequence. litgoal is for a finish line without a plan.
+
 ## Why the handoff stays in the user's session
 
 Grok Build's native /goal state belongs to the session that receives the command. The approved interop probe established four boundaries:

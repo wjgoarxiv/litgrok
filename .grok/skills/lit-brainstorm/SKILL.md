@@ -3,6 +3,7 @@ name: lit-brainstorm
 description: Open a question into many different options, group and score them against stated criteria, and converge to a short list the user picks from. Use for open asks such as what could we do, name ideas, or which direction. It proposes and never implements.
 user-invocable: true
 argument-hint: "<topic or question>"
+goal: never
 ---
 
 # lit-brainstorm

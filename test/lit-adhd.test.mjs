@@ -80,6 +80,14 @@ const baseEnv = (store, extra = {}) => ({
 });
 
 describe("lit-adhd collector", () => {
+  it("knows its own session from GROK_SESSION_ID, so the session drawing the card is never another one at work", () => {
+    const { proj, store } = fixture();
+    const data = collectRewind({ cwd: proj, since: "30d", max: 5, env: baseEnv(store, { GROK_SESSION_ID: "sess-run" }), now: NOW, record: false });
+    assert.deepEqual(data.sessions.filter((item) => item.self).map((item) => item.id8), ["sess-run"]);
+    const named = collectRewind({ cwd: proj, since: "30d", max: 5, sessionId: "sess-wait", env: baseEnv(store, { GROK_SESSION_ID: "sess-run" }), now: NOW, record: false });
+    assert.deepEqual(named.sessions.filter((item) => item.self).map((item) => item.id8), ["sess-wai"], "--session wins over the environment");
+  });
+
   it("reads sessions, plans, handoffs and git from the fixture", () => {
     const { proj, store } = fixture();
     const data = collectRewind({ cwd: proj, since: "30d", max: 5, sessionId: "sess-wait", env: baseEnv(store), now: NOW, record: false });
@@ -432,12 +440,12 @@ describe("lit-adhd enrollment", () => {
     assert.ok(existsSync(join(root, "docs", "assets", "skills", "lit-adhd.webp")), "skills page snapshot");
   });
 
-  it("is routed by the rule and points back from handoff and recap", () => {
+  it("is routed by the rule and points back from handoff", () => {
     const rule = read(".grok", "rules", "00-litgrok.md");
     assert.match(rule, /## Brief over sessions/u);
     assert.match(rule, /lit-adhd/u);
     assert.match(rule, /Triggers: adhd, rewind/u);
-    for (const neighbour of ["lit-handoff", "lit-recap"]) {
+    for (const neighbour of ["lit-handoff"]) {
       assert.match(readFileSync(join(skillsRoot, neighbour, "SKILL.md"), "utf8"), /lit adhd/u, neighbour);
     }
   });

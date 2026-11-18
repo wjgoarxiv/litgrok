@@ -147,6 +147,9 @@ const REFERENCE_SETS = new Map([
     'explore-packet.md',
     'plan-packet.md',
   ]],
+  ['ultra-brainstorm', [
+    'lenses.md',
+  ]],
   ['lit-comprehend', [
     'artifact-format.md',
     'honesty-ledger-contract.md',

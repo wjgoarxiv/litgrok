@@ -6,6 +6,7 @@ import { renderMark } from './lit-mark.mjs';
 import { noticeShown, recordNotice } from './notice-record.mjs';
 import { claimSessionIgnition } from './record-passive-event.mjs';
 import { adhdSuggestion } from '../skills/lit-adhd/scripts/lib/suggest.mjs';
+import { sweepGoal } from './lit-goal.mjs';
 
 // Decode once: a multi-byte character can straddle two pipe chunks.
 const chunks = [];
@@ -38,6 +39,12 @@ try {
     }
   } catch {
     // No suggestion; session start continues.
+  }
+  // A lit goal armed by a session that never closed it (a crash, a closed window) closes here.
+  try {
+    sweepGoal({ workspaceRoot: event.realWorkspaceRoot ?? event.workspaceRoot ?? event.cwd ?? process.cwd(), sessionId: event.sessionId ?? process.env.GROK_SESSION_ID });
+  } catch {
+    // The record stays as it was; the Stop check still ignores another session's goal.
   }
 } catch (error) {
   process.stderr.write(`LitGrok session-start: ${error.code || 'EVENT_INVALID'}\n`);

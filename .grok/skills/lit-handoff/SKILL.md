@@ -3,6 +3,7 @@ name: lit-handoff
 description: Prepare a precise, secret-safe resume contract for continuing work in a later agent session.
 user-invocable: true
 argument-hint: "<handoff request>"
+goal: never
 ---
 
 # Lit Handoff

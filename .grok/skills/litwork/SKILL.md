@@ -108,7 +108,7 @@ Older LitGrok versions may have left skill-review state under .grok/litgrok. Cur
 
 When the user holds a finish line from `litgoal`, check each receipt against its criteria; litwork never redefines it.
 
-The host may offer native /goal or /workflow features. If the user elects to use one, keep its state and authority separate from this passive ledger and name the host-owned route in the receipt.
+Grok Build's native `/goal` and `/workflow` are typed by the user. When the user runs one, its state and authority stay the host's, separate from this passive ledger, and the receipt names that host route. A goal LitGrok armed at plan approval (`.grok/litgrok/goal/owner.json`, see `lit-plan`) is LitGrok's own advisory record, never the host goal.
 
 LitGrok does not ship:
 

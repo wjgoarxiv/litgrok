@@ -85,7 +85,7 @@ const markerDir = (stateRoot) => {
 
 const noFollow = constants.O_NOFOLLOW ?? 0;
 
-const readMarker = (marker) => {
+const readMarker = (marker, limit = 1024) => {
   let descriptor;
   try {
     descriptor = openSync(marker, constants.O_RDONLY | noFollow);
@@ -94,7 +94,7 @@ const readMarker = (marker) => {
   }
   try {
     const status = lstatSync(marker);
-    if (!status.isFile() || status.isSymbolicLink() || status.size > 1024) return null;
+    if (!status.isFile() || status.isSymbolicLink() || status.size > limit) return null;
     const buffer = Buffer.alloc(status.size);
     const read = readSync(descriptor, buffer, 0, status.size, 0);
     return JSON.parse(buffer.subarray(0, read).toString("utf8"));
@@ -105,7 +105,7 @@ const readMarker = (marker) => {
   }
 };
 
-const writeMarker = (marker, day) => {
+const writeMarker = (marker, value) => {
   let descriptor;
   try {
     descriptor = openSync(marker, constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | noFollow, 0o600);
@@ -113,7 +113,7 @@ const writeMarker = (marker, day) => {
     return false;
   }
   try {
-    writeSync(descriptor, `${JSON.stringify({ day })}\n`);
+    writeSync(descriptor, `${JSON.stringify(value)}\n`);
     return true;
   } catch {
     return false;
@@ -133,8 +133,24 @@ export const adhdSuggestion = ({ storeDir, projectRoot, sessionId, stateRoot, no
   } catch {
     // An unreadable marker suggests once, then the write below records it.
   }
-  if (!writeMarker(marker, dayOf(now))) return null;
+  if (!writeMarker(marker, { day: dayOf(now) })) return null;
   return count === 1
     ? "One other recent session is on record: type `lit adhd` for the brief before you resume it."
     : `${count} other recent sessions are on record: type ` + "`lit adhd`" + " for the one-screen brief before you resume any.";
+};
+
+// The verdict cursor: when the user last looked at a lit-adhd card, which proven items they had
+// seen, and the fingerprint of the action it showed. Same directory and link rules as the marker.
+const CURSOR_BYTES = 64 * 1024;
+
+export const readCursor = (stateRoot) => {
+  const directory = markerDir(stateRoot);
+  if (directory === null) return null;
+  const cursor = readMarker(join(directory, "cursor.json"), CURSOR_BYTES);
+  return cursor && typeof cursor === "object" && !Array.isArray(cursor) ? cursor : null;
+};
+
+export const writeCursor = (stateRoot, cursor) => {
+  const directory = markerDir(stateRoot);
+  return directory === null ? false : writeMarker(join(directory, "cursor.json"), cursor);
 };

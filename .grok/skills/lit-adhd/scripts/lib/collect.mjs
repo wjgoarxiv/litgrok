@@ -2,20 +2,22 @@
 // every worktree of this repo (plan rows, handoff headings and `## Next`, Grok Build session records
 // with LitGrok's liveness records, git log, and herdr when HERDR_ENV=1) and returns one redacted,
 // capped JSON brief. A source that is not
-// there reads `unknown`; nothing is inferred. It writes nothing: `go` re-collects the brief and
-// continues the offered step. There is no litgoal ledger, workflow stack or start-work state file
+// there reads `unknown`; nothing is inferred. Its one write is the verdict cursor (when the user
+// last looked) under `.grok/litgrok/adhd/`; `go` re-collects the brief and continues the offered step. There is no litgoal ledger, workflow stack or start-work state file
 // in Grok Build, so those sources stay `unknown` and the next step degrades to plans.
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 
 import { planLinesOutsideFences, parsePlanTaskRows } from "./plan-task-rows.mjs";
 import { resolveProjectStateRoot } from "./project-state-root.mjs";
 import { buildBoard, renderBoard } from "./board.mjs";
 import { renderBrief } from "./brief.mjs";
+import { readCursor, writeCursor } from "./suggest.mjs";
+import { nextCursor, renderVerdict } from "./verdict.mjs";
 import { aggregateProgress, clipToWidth, displayWidth, progressOf } from "./gauge.mjs";
 import { chooseNextStep } from "./next-step.mjs";
 import { makeRedactor } from "./redact.mjs";
@@ -240,17 +242,27 @@ const herdrAgent = (agent, env, redact) => ({
   self: Boolean(env.HERDR_PANE_ID) && agent?.pane_id === env.HERDR_PANE_ID,
 });
 
-const herdrOf = (env, exec, redact) => {
+// herdr lists every agent on the machine; only one whose working folder sits inside this repository's
+// worktrees belongs to this brief. An agent with no readable folder, or a line herdr did not give as JSON, is
+// left out, so another project's work never counts as "running here".
+const insideRoots = (folder, roots) => typeof folder === "string" && folder !== "" && roots.some((root) => {
+  const away = relative(resolve(root), resolve(folder));
+  return away === "" || (!away.startsWith("..") && !isAbsolute(away));
+});
+
+const herdrOf = (env, exec, redact, roots) => {
   if (env.HERDR_ENV !== "1") return { status: "unknown", agents: [] };
   try {
     const out = exec("herdr", ["agent", "list"], { timeout: HERDR_TIMEOUT_MS });
+    let listed;
     try {
-      const listed = JSON.parse(out)?.result?.agents;
-      if (!Array.isArray(listed)) throw new Error("not a list");
-      return { status: "ok", agents: listed.slice(0, 20).map((agent) => herdrAgent(agent, env, redact)) };
+      listed = JSON.parse(out)?.result?.agents;
     } catch {
-      return { status: "ok", agents: out.split("\n").filter((line) => line.trim()).slice(0, 20).map((line) => clipToWidth(redact(line.trim()), 120)) };
+      listed = null;
     }
+    if (!Array.isArray(listed)) return { status: "ok", agents: [] };
+    const here = listed.filter((agent) => insideRoots(agent?.cwd, roots) || insideRoots(agent?.foreground_cwd, roots));
+    return { status: "ok", agents: here.slice(0, 20).map((agent) => herdrAgent(agent, env, redact)) };
   } catch {
     return { status: "unknown", agents: [] };
   }
@@ -284,6 +296,8 @@ export const collectRewind = ({
   exec = defaultExec,
   budgetBytes = undefined,
 } = {}) => {
+  // Grok Build hands every tool shell this session's id, so the session drawing the card knows itself.
+  if (!sessionId && /^[A-Za-z0-9._:-]{1,160}$/u.test(env.GROK_SESSION_ID ?? "")) sessionId = env.GROK_SESSION_ID;
   const home = env.HOME || homedir();
   const redact = makeRedactor({ env, home });
   const budget = makeBudget(budgetBytes);
@@ -310,10 +324,24 @@ export const collectRewind = ({
   const storeDir = join(env.GROK_CONFIG_DIR || join(home, ".grok"), "sessions");
   const found = findSessions(storeDir, roots);
   const sessions = [];
-  for (const dir of found.dirs) {
-    if (sessions.length >= limit || budget.exhausted) break;
+  // Coverage: every session folder found is either read, outside the window, or not read for a
+  // named reason, so the verdict never says "nothing to do" over records it did not open.
+  const notRead = { budget: 0, limit: 0, unreadable: 0 };
+  for (const [index, dir] of found.dirs.entries()) {
+    if (sessions.length >= limit || budget.exhausted) {
+      // Folders older than the window would not have been listed anyway; count only the rest.
+      notRead[budget.exhausted ? "budget" : "limit"] += found.dirs.slice(index).filter((path) => {
+        const changed = mtimeOf(path);
+        return changed === null || now - changed <= sinceMs;
+      }).length;
+      break;
+    }
     const session = sessionRecord(dir, { redact, now, budget });
-    if (!session || (session.lastMs !== null && now - session.lastMs > sinceMs)) continue;
+    if (!session) {
+      notRead.unreadable += 1;
+      continue;
+    }
+    if (session.lastMs !== null && now - session.lastMs > sinceMs) continue;
     if (here && session.cwd && resolve(session.cwd).normalize("NFC") !== start.normalize("NFC")) continue;
     session.status = statusFrom(session.status, livenessOf(roots, session.sessionId, budget), now);
     sessions.push(session);
@@ -321,7 +349,7 @@ export const collectRewind = ({
 
   const commits = collectEach((root) => commitsOf(root, sinceMs, now, exec, redact));
   const worktreeState = roots.map((root) => worktreeStateOf(root, exec, redact, isLocal(root)));
-  const herdr = herdrOf(env, exec, redact);
+  const herdr = herdrOf(env, exec, redact, roots);
 
   // A session waits on the user when it asked something.
   for (const session of sessions) {
@@ -352,6 +380,7 @@ export const collectRewind = ({
       herdr: herdr.status,
     },
     budget: { bytesRead: budget.used, limit: budget.limit, exhausted: budget.exhausted },
+    coverage: { found: found.dirs.length, notRead },
     summary: {
       sessions: sessions.length,
       waitingOnUser: sessions.filter((session) => session.status === "waiting-on-user").length,
@@ -429,18 +458,30 @@ export const renderRewind = (data, width = 100) => {
 };
 
 /**
- * `rewind [--brief [--detail] [--lang ko|en] | --json] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]`.
- * `--brief` prints the KPI board the lit-adhd skill shows; `--detail` adds the per-session brief
- * under it; `--json` the data under both, with the board text in `board.text`.
+ * `rewind [--verdict | --brief [--detail] | --recap [<session>] [--moved] | --json] [--en | --lang ko|en] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]`.
+ * `--verdict` prints the six-line card the lit-adhd skill shows by default and then moves the
+ * user's cursor; `--brief` the KPI board, with `--detail` the per-session brief under it;
+ * `--recap` the per-session brief alone (one session when an id or its first eight characters
+ * follows); `--json` the data, with the board text in `board.text` and the card in `verdict`.
  */
+// The card is Korean unless the user asked for English in so many words: `--en`, "in English" or 영어로.
+// An English-looking prompt alone stays Korean. The skill turns this into the exact flag it passes.
+export const langForPrompt = (text) => (/(?:^|\s)--en(?=\s|$)|\bin english\b|영어로/iu.test(String(text ?? "")) ? "en" : "ko");
+
+export const RECAP_MOVED_NOTE = "lit-recap moved into lit-adhd (lit adhd recap).";
+
 export const runRewindCli = (args, cwd = process.cwd(), { env = process.env, stdout = process.stdout, stderr = process.stderr } = {}) => {
   const options = { cwd, env, here: false, since: DEFAULT_SINCE, max: DEFAULT_MAX, sessionId: null };
   let json = false;
   let brief = false;
   let detail = false;
-  let lang = "en";
+  let verdict = false;
+  let recap = false;
+  let recapId = null;
+  let moved = false;
+  let lang = "ko";
   let width = Number(stdout.columns) || 100;
-  const usage = "Usage: rewind [--brief [--detail] [--lang ko|en] | --json] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]";
+  const usage = "Usage: rewind [--verdict | --brief [--detail] | --recap [<session>] [--moved] | --json] [--en | --lang ko|en] [--here] [--since 7d] [--max 12] [--session <id>] [--width N]";
   if (args.some((arg) => arg === "--help" || arg === "-h")) {
     stdout.write(`${usage}\n`);
     return 0;
@@ -450,7 +491,14 @@ export const runRewindCli = (args, cwd = process.cwd(), { env = process.env, std
     if (arg === "--json") json = true;
     else if (arg === "--brief") brief = true;
     else if (arg === "--detail") detail = true;
+    else if (arg === "--verdict") verdict = true;
+    else if (arg === "--moved") moved = true;
+    else if (arg === "--recap") {
+      recap = true;
+      if (/^[A-Za-z0-9][A-Za-z0-9._:-]{3,159}$/u.test(args[index + 1] ?? "")) recapId = args[++index];
+    }
     else if (arg === "--lang" && ["ko", "en"].includes(args[index + 1])) lang = args[++index];
+    else if (arg === "--en") lang = "en";
     else if (arg === "--here") options.here = true;
     else if (arg === "--since" && parseSince(args[index + 1])) options.since = args[++index];
     else if (arg === "--max" && /^\d{1,2}$/u.test(args[index + 1] ?? "")) options.max = Number(args[++index]);
@@ -463,9 +511,24 @@ export const runRewindCli = (args, cwd = process.cwd(), { env = process.env, std
   }
   const data = collectRewind(options);
   const now = Date.parse(data.generatedAt);
+  const stateRoot = resolveProjectStateRoot(resolve(cwd));
   if (json) {
     data.board.text = renderBoard(data, { lang, now });
+    data.verdict = renderVerdict(data, { lang, cursor: readCursor(stateRoot) }).verdict;
     stdout.write(`${JSON.stringify(data, null, 2)}\n`);
+  } else if (verdict) {
+    // The cursor moves only after the card was drawn, so the next look compares with this one.
+    const card = renderVerdict(data, { lang, cursor: readCursor(stateRoot) });
+    stdout.write(card.text);
+    writeCursor(stateRoot, nextCursor(card.verdict, now));
+  } else if (recap) {
+    const sessions = recapId ? data.sessions.filter((session) => session.id8 === recapId.slice(0, 8)) : data.sessions;
+    if (recapId && !sessions.length) {
+      stderr.write(`rewind: no recent session matches ${JSON.stringify(recapId.slice(0, 8))}\n`);
+      return 66;
+    }
+    // Reached through the old lit-recap words: the moved note is the first line of the output.
+    stdout.write(`${moved ? `${RECAP_MOVED_NOTE}\n\n` : ""}${renderBrief({ ...data, sessions }, { lang, now })}`);
   } else if (brief) {
     // The board is the answer; the per-session brief is the detail a reader asks for.
     stdout.write(detail ? `${renderBoard(data, { lang, now })}\n---\n\n${renderBrief(data, { lang, now })}` : renderBoard(data, { lang, now }));

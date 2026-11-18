@@ -54,7 +54,7 @@ export const chooseNextStep = (data, sessionId) => {
   if (ownRun) return { kind: "continue-work", target: { plan: ownRun.plan }, say: "go" };
   const open = data.roadmap.plans.filter((plan) => plan.local && plan.progress.total !== null && plan.progress.done < plan.progress.total);
   const running = (data.workflows ?? []).some((frame) => frame.status === "active" || frame.status === "paused")
-    || data.sessions.some((session) => session.status === "active" || session.status === "waiting-on-user");
+    || data.sessions.some((session) => !session.self && (session.status === "active" || session.status === "waiting-on-user"));
   if (running) return { kind: "none", target: null };
   const now = Date.parse(data.generatedAt);
   const fresh = open.filter((plan) => plan.changedMs !== null && plan.changedMs !== undefined && now - plan.changedMs <= JUST_SAVED_MS);

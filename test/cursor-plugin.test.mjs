@@ -229,8 +229,8 @@ test('both reference manuals describe the Cursor manifest instead of claiming no
 const GROK_SUBJECT_SKILLS = new Set(['litgrok', 'lsp', 'lsp-setup', 'rules']);
 const HOST_NOTE_SKILLS = [
   'autoconference', 'autoresearch', 'browser-drive', 'comment-checker', 'debugging', 'deep-interview', 'frontend-ui-ux',
-  'lit-brainstorm', 'lit-docx', 'lit-handoff', 'lit-pptx', 'lit-recap', 'lit-typographic-motion', 'litgoal', 'litresearch',
-  'litwork', 'lsp-setup', 'lsp', 'readme-studio', 'refactor', 'rules', 'structural-search', 'visual-qa', 'wikify',
+  'lit-brainstorm', 'lit-docx', 'lit-handoff', 'lit-pptx', 'lit-team', 'lit-typographic-motion', 'litgoal', 'litresearch',
+  'litwork', 'lsp-setup', 'lsp', 'readme-studio', 'refactor', 'rules', 'structural-search', 'ultra-brainstorm', 'visual-qa', 'wikify',
 ];
 
 test('skill descriptions name Grok only where Grok Build is the subject', () => {

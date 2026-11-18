@@ -34,7 +34,6 @@
     "./.grok/skills/lit-plan",
     "./.grok/skills/lit-pptx",
     "./.grok/skills/lit-typographic-motion",
-    "./.grok/skills/lit-recap",
     "./.grok/skills/lit-schematic",
     "./.grok/skills/lit-scientific-visualization",
     "./.grok/skills/lit-team",
@@ -50,6 +49,7 @@
     "./.grok/skills/rules",
     "./.grok/skills/start-work",
     "./.grok/skills/structural-search",
+    "./.grok/skills/ultra-brainstorm",
     "./.grok/skills/visual-qa",
     "./.grok/skills/wikify"
   ],

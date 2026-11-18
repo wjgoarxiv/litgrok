@@ -4,8 +4,9 @@
 import { appendSessionRecord, recordPassiveEvent } from './record-passive-event.mjs';
 import { PLAN_GATE_SIGNAL, evaluatePlanGate } from './plan-gate.mjs';
 import { evaluateAutoHandoff } from './auto-handoff-gate.mjs';
+import { GOAL_SIGNAL, START_SIGNAL, goalTurnEnd } from './lit-goal.mjs';
 import { planProgress } from './plan-progress.mjs';
-import { updateWorkflowState } from './workflow-stage.mjs';
+import { readWorkflowState, updateWorkflowState, workflowStatePath } from './workflow-stage.mjs';
 
 const observed = await recordPassiveEvent('Stop');
 if (observed) {
@@ -46,13 +47,26 @@ if (observed) {
     } catch (error) {
       process.stderr.write(`LitGrok auto-handoff: AUTO_HANDOFF_FAILED ${error instanceof Error ? error.message : String(error)}\n`);
     }
+    // The approved plan's start-work hand-off, then the advisory goal check: only when nothing above held the turn.
+    if (!held) {
+      try {
+        const goal = goalTurnEnd({ workspaceRoot: observed.environment.realWorkspaceRoot, sessionId: observed.environment.sessionId });
+        if (goal.block) {
+          held = true;
+          appendSessionRecord(observed.ledgerFile, observed.record, { signal: goal.start ? START_SIGNAL : GOAL_SIGNAL });
+          process.stdout.write(`${JSON.stringify({ decision: 'block', reason: goal.reason })}\n`);
+        }
+      } catch (error) {
+        process.stderr.write(`LitGrok goal check: ${error instanceof Error ? error.message : String(error)}\n`);
+      }
+    }
   }
   // The workflow row: a stop that ends the turn closes the current stage, a held one keeps it open.
   if (observed.ledgerFile) {
     try {
       updateWorkflowState(observed.ledgerFile, observed.environment.sessionId, {
         ended: !held,
-        plan: planProgress(observed.environment.realWorkspaceRoot),
+        plan: planProgress(observed.environment.realWorkspaceRoot, readWorkflowState(workflowStatePath(observed.ledgerFile), observed.environment.sessionId)?.planPath),
       });
     } catch (error) {
       process.stderr.write(`LitGrok workflow state: ${error instanceof Error ? error.message : String(error)}\n`);

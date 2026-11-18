@@ -3,6 +3,7 @@ name: lit-crucible
 description: Stress-test an approach through bounded read-only exploration, contradiction checks, and a synthesized planning handoff.
 user-invocable: true
 argument-hint: "<approach>"
+goal: never
 ---
 
 # lit-crucible

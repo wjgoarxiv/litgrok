@@ -137,6 +137,15 @@ export function workflowStatePath(ledgerFile) {
 }
 
 const isCount = (value) => Number.isSafeInteger(value) && value >= 0 && value <= MAX_COUNT;
+// The plan a start path named: `plans/<name>.md`, inside the project. Records from before it carry none.
+export const PLAN_PATH = /^plans\/[\w.-]{1,120}\.md$/u;
+
+/** The plan a start-work prompt names (`/start-work plans/x.md`, `lit start plans/x.md`), or null. */
+export function planPathFromPrompt(visibleText) {
+  if (typeof visibleText !== 'string' || !/(?:^|[\s/])(?:start-work|lit\s+start)(?=$|[^\w-])/iu.test(visibleText)) return null;
+  const match = /(?:^|[\s`'"])(?:\.\/)?(plans\/[\w.-]{1,120}\.md)(?=$|[\s`'".,;:)])/u.exec(visibleText);
+  return match ? match[1] : null;
+}
 const isTime = (value) => typeof value === 'string' && Number.isFinite(Date.parse(value));
 
 function validState(state, sessionId) {
@@ -146,6 +155,7 @@ function validState(state, sessionId) {
     && Array.isArray(state.visited) && state.visited.length <= STAGES.length && state.visited.every((stage) => STAGES.includes(stage))
     && typeof state.ended === 'boolean'
     && (state.active === undefined || (typeof state.active === 'string' && /^[a-z0-9][a-z0-9-]{0,79}$/iu.test(state.active)))
+    && (state.planPath === undefined || (typeof state.planPath === 'string' && PLAN_PATH.test(state.planPath)))
     && (state.plan === null || (isCount(state.plan?.done) && isCount(state.plan?.total) && state.plan.done <= state.plan.total
       && (state.plan.next === undefined || (typeof state.plan.next === 'string' && [...state.plan.next].length <= MAX_NEXT_CHARACTERS && !/[\u0000-\u001f\u007f-\u009f]/u.test(state.plan.next)))))
     && (state.test === null || (['pass', 'fail'].includes(state.test?.verdict) && (state.test.count === undefined || isCount(state.test.count)) && isTime(state.test.at)))
@@ -179,7 +189,7 @@ export function readWorkflowState(path, sessionId) {
  * { active } the discipline an explicit switch selected (a bare lit continues it; null clears it), { ended } when a turn stops (true) or is held (false), { plan } and { test }. A turn that ends a review with
  * every plan task checked moves the stage to done. Nothing is written for a session with nothing to show.
  */
-export function updateWorkflowState(ledgerFile, sessionId, { stage, entry, active, ended, plan, test, now = new Date() }) {
+export function updateWorkflowState(ledgerFile, sessionId, { stage, entry, active, ended, plan, planPath, test, now = new Date() }) {
   const path = workflowStatePath(ledgerFile);
   try {
     if (lstatSync(path).isSymbolicLink()) throw new Error('WORKFLOW_STATE_UNSAFE');
@@ -198,6 +208,8 @@ export function updateWorkflowState(ledgerFile, sessionId, { stage, entry, activ
   }
   if (typeof active === 'string') state.active = active;
   else if (active === null) delete state.active;
+  if (typeof planPath === 'string' && PLAN_PATH.test(planPath)) state.planPath = planPath;
+  else if (planPath === null) delete state.planPath;
   if (plan !== undefined) state.plan = plan;
   if (test) state.test = { ...test, at: now.toISOString() };
   if (typeof ended === 'boolean' && state.stage !== null) {

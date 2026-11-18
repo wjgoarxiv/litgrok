@@ -21,8 +21,11 @@ import { run } from '../bin/litgrok.mjs';
 // 17,985 adds the brief-over-sessions route to lit-adhd with its triggers and scope (469 bytes);
 // 18,073 adds the re-entry line that sends a bare `go` after a saved plan to start-work (88 bytes);
 // 18,954 adds the ground-rules section: plans, handoff, no publish without a yes, and how to turn it off (881 bytes);
-// 19,021 says lit-adhd prints its KPI board as given and that `lit adhd detail` adds the session cards (67 bytes).
-const RULE_BUDGET_BYTES = 19_021;
+// 19,021 says lit-adhd prints its KPI board as given and that `lit adhd detail` adds the session cards (67 bytes);
+// 20,948 adds the skill-plan section (several fitting skills, cap three, aliases, installed-only extensions), the
+// ultra-brainstorm and lit team routes, and the lit-adhd verdict, recap and lit-recap alias lines (1,927 bytes);
+// 20,951 says the old recap words call the collector with --moved, which prints the moved note first (3 bytes).
+const RULE_BUDGET_BYTES = 20_951;
 const ROUTES = {
   'lit, English': 'lit fix the failing date parser',
   'lit, Korean': 'lit 날짜 파서 버그 고쳐줘',

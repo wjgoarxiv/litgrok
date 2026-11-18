@@ -162,13 +162,6 @@
       "maxFiles": 173,
       "maxBytes": 7237000
     },
-    "lit-recap": {
-      "minSkillBytes": 3300,
-      "maxSkillBytes": 5000,
-      "minFiles": 1,
-      "maxFiles": 2,
-      "maxBytes": 5000
-    },
     "lit-schematic": {
       "minSkillBytes": 4000,
       "maxSkillBytes": 28000,
@@ -281,6 +274,13 @@
       "maxFiles": 2,
       "maxBytes": 14000
     },
+    "ultra-brainstorm": {
+      "minSkillBytes": 7900,
+      "maxSkillBytes": 12000,
+      "minFiles": 4,
+      "maxFiles": 6,
+      "maxBytes": 32000
+    },
     "visual-qa": {
       "minSkillBytes": 3900,
       "maxSkillBytes": 6000,
@@ -362,21 +362,21 @@
     },
     "lit-adhd": {
       "skillMd": {
-        "bytes": 18914,
-        "sha256": "e70df1e3e2cdfc16c0652a5794d2abe9be977d382a16994e7f27f171efd8bdf0"
+        "bytes": 22215,
+        "sha256": "87ed2c9dbc650192811791995ab40cc15a4d8f7ed0ed313ad44287660fbd1f7b"
       },
-      "files": 14,
-      "bytes": 134540,
-      "sha256": "e6d08da03eb34db97e9a065914f3f48c00096ecb5c9da5957e737d21cb0d9335"
+      "files": 15,
+      "bytes": 157990,
+      "sha256": "469af2c3c80f7c78f563a6354a6452fad79c85253677f8b1bffdecce3e12504c"
     },
     "lit-brainstorm": {
       "skillMd": {
-        "bytes": 11012,
-        "sha256": "4a97748a59b09ebbcad828281eb59d0777cce20df5814c25fc6a5bcf5757839e"
+        "bytes": 11024,
+        "sha256": "bc9a1d77751dfa0603d1a787edc3e53d914106daceb16876d8999e24555567c3"
       },
       "files": 5,
-      "bytes": 27101,
-      "sha256": "7d66ca85abb37f519b555e2a665f8b60da994f566e729624e36cc5b0ef39e90e"
+      "bytes": 27113,
+      "sha256": "44744f4eb43e20276bccf4ff5a0c0a9b0c6c24711e3b6db2ce9e89dc66557396"
     },
     "lit-burnoff": {
       "skillMd": {
@@ -416,21 +416,21 @@
     },
     "lit-comprehend": {
       "skillMd": {
-        "bytes": 4448,
-        "sha256": "6a9a42192d2ae91da4e32c9836594d5e6654bda6b87928a138ed3350593541cd"
+        "bytes": 4460,
+        "sha256": "d545d1ffca9ef71ea70a2b0d76e9047ba9352b7df576c225a1f7bb688cfa6c32"
       },
       "files": 6,
-      "bytes": 30535,
-      "sha256": "635f40c16575ccee0a7c247b7d45834d2c6aed6e28bb9f7000391b0954c475cb"
+      "bytes": 30547,
+      "sha256": "92a9ca7861a9a2523752962c17778095a91ad509d19fee0e9473c4c0325789bb"
     },
     "lit-crucible": {
       "skillMd": {
-        "bytes": 9861,
-        "sha256": "7aaf26c0b4576dda516c28b53669a945e968cdc72880a1c5e864f025e2edaca6"
+        "bytes": 9873,
+        "sha256": "1e9dc609150f53e7cf33abb2cc27b139e35d58375d58194b44b62936b64c2e5a"
       },
       "files": 1,
-      "bytes": 9861,
-      "sha256": "267b72a32421d6a3874da1487cf7b0dd98129786ab4ad09f15b860637643e957"
+      "bytes": 9873,
+      "sha256": "27948ab7507b53515898a023b85c041e785a2525ad9ea48d41303ca6272aa81d"
     },
     "lit-diagram-drawer": {
       "skillMd": {
@@ -452,12 +452,12 @@
     },
     "lit-handoff": {
       "skillMd": {
-        "bytes": 9920,
-        "sha256": "5bc4c84497415e07ed7c8327525e6f29006f878d5aad0cbb17c9af2069a08bf7"
+        "bytes": 9932,
+        "sha256": "d7ecf0acddfd27f38875ae75606a3ab25201e39a740392e473a87bd0fdc1f1f8"
       },
       "files": 7,
-      "bytes": 40743,
-      "sha256": "a428abd8f60caa37b8c5d69b779ac8d1e4167efeadee4179f6425f9adc5b455e"
+      "bytes": 40755,
+      "sha256": "2f7e9688d1adf313aa787b0eae496da9ab1ceee4ae1a8d41885b0e40419ee91a"
     },
     "lit-hijack": {
       "skillMd": {
@@ -488,12 +488,12 @@
     },
     "lit-plan": {
       "skillMd": {
-        "bytes": 5822,
-        "sha256": "41996843df8492ae4d23a8132e6041cf9ff31402e80ae9802621d7a83013465c"
+        "bytes": 8984,
+        "sha256": "2988b7039c6b61963341aac1e6239e8db2555a1f7b62fba35836e49f228908a9"
       },
-      "files": 6,
-      "bytes": 32788,
-      "sha256": "38c152545a1eaa985f15701866beb56e4fb967fa227fba832cd30c54fd4c9b54"
+      "files": 8,
+      "bytes": 49605,
+      "sha256": "23ad0e5f61e5ce94f0cafbf01138a7a81843862072a4720ce80d1ae2247cb10a"
     },
     "lit-pptx": {
       "skillMd": {
@@ -503,15 +503,6 @@
       "files": 1,
       "bytes": 5398,
       "sha256": "f52e195a662b7fc1a2bb9d7fa81bfd18b40b30ef55fa4b8f42c42f30f089bad1"
-    },
-    "lit-recap": {
-      "skillMd": {
-        "bytes": 3314,
-        "sha256": "e1fffb2db12a5cd6f3e7ebaa5cfa05c02dcb7feacf0e90f86327b716be80ed40"
-      },
-      "files": 1,
-      "bytes": 3314,
-      "sha256": "b58df64c08d350d11e44d0c99539c0a8082428782ebf00833b304fdc7498a4fd"
     },
     "lit-schematic": {
       "skillMd": {
@@ -533,12 +524,12 @@
     },
     "lit-team": {
       "skillMd": {
-        "bytes": 4602,
-        "sha256": "82784e938f7f09fe99c77e29b4a542f0ca2c1b989b449bf55a01f1a60d4bd3db"
+        "bytes": 6949,
+        "sha256": "fdfa24283edaa125f9c998882c9554783eecf9b3dc1505412345d164ad741c35"
       },
       "files": 4,
-      "bytes": 18854,
-      "sha256": "683500dc0930001e4b4feb38e9307f7b5a2b5c4b61573d0ee25c8dd7c70a0e36"
+      "bytes": 21201,
+      "sha256": "b7a405858aee35dc29bed96508be25488760df006c324fea84803f99dc227413"
     },
     "lit-typographic-motion": {
       "skillMd": {
@@ -551,12 +542,12 @@
     },
     "litgoal": {
       "skillMd": {
-        "bytes": 6617,
-        "sha256": "5584f093333331ccc23c759246db67254b80b6c0c0574e05b041c86e5636e867"
+        "bytes": 7094,
+        "sha256": "ef9b7de869b76d9dcd3097dfd9c5a0cff1a36147da6441b5457ac21e44f60d2e"
       },
       "files": 1,
-      "bytes": 6617,
-      "sha256": "7213b29c8ac0515d328048b8a4d8b6c64902d327b232d8d12a575005f7f60f56"
+      "bytes": 7094,
+      "sha256": "3d1d66d1ab4b32ee49dc22be4cbdeab2eac09d8d49ac188eb0c853a9db858b12"
     },
     "litgrok": {
       "skillMd": {
@@ -569,21 +560,21 @@
     },
     "litresearch": {
       "skillMd": {
-        "bytes": 4436,
-        "sha256": "4078c29c018192ef80aeb62fcf607ec7b492d52408a0da18e724c7f9237eb132"
+        "bytes": 4448,
+        "sha256": "227b84c6e241f20567806b176b1f525eebfe0e37608a304def1c70e72e7b474d"
       },
       "files": 3,
-      "bytes": 12574,
-      "sha256": "70fc8175f8a08610bbc43ff2a644103febe4357c1eb1ee273c3fdb76660de7fb"
+      "bytes": 12586,
+      "sha256": "c3963cdce7ade0c8cbe2183a13d0d3c33faa3d7f6c82d5f9484faa5d1cf67b35"
     },
     "litwork": {
       "skillMd": {
-        "bytes": 8021,
-        "sha256": "553ffc71bfe0dc2608d7064885da4cc26a080cda1da0449a65be3e38d564e451"
+        "bytes": 8175,
+        "sha256": "dda1e0242bd9434acc9219ce58f1082160c3c0114c8ffea99fca4fd2402ea7c5"
       },
       "files": 1,
-      "bytes": 8021,
-      "sha256": "dcadf51579c8621e6bebf6775c8334f716436c7a796faa56d4d3fd93426d63ce"
+      "bytes": 8175,
+      "sha256": "8f4dc622a3fc76805a102da716dce7c98d94bc9fc67205492332ba15e34b6520"
     },
     "lsp": {
       "skillMd": {
@@ -623,12 +614,12 @@
     },
     "review-work": {
       "skillMd": {
-        "bytes": 25989,
-        "sha256": "1fc8c31413d0ef06ae0095c587ecd18014e2035f409fd578bf9fe80e487c1941"
+        "bytes": 26001,
+        "sha256": "3370884ad08bc5a2350330b1381866a256f00e89ce6890bbfe1e1192385da790"
       },
       "files": 8,
-      "bytes": 46399,
-      "sha256": "edf1f7f8a37c8b76c3f9c84c7a842d8688d811d473710517a84885b7b2aff5e3"
+      "bytes": 46411,
+      "sha256": "26238cb0ec7f7d0e82e2ffdd8f1c39215ddf0c347876ec3228ba8bc721bdabb0"
     },
     "rules": {
       "skillMd": {
@@ -656,6 +647,15 @@
       "files": 1,
       "bytes": 8758,
       "sha256": "9fd99ffd31982a74d3372e37d4ac7137ee5fc9533adfd49e42eeec1e1a4104e2"
+    },
+    "ultra-brainstorm": {
+      "skillMd": {
+        "bytes": 8761,
+        "sha256": "f0e6f0fe33c2bf30ab6d170ce19ae2460387d499794630cc84ce861db305e1a9"
+      },
+      "files": 4,
+      "bytes": 23929,
+      "sha256": "9dca14446a3fb913e7761a26e1d86441cc3e723f004782b86052da8ecba32613"
     },
     "visual-qa": {
       "skillMd": {
@@ -694,6 +694,7 @@
     ".grok/hooks/compact-handoff.mjs",
     ".grok/hooks/deliverable-hedge-guard.json",
     ".grok/hooks/deliverable-hedge-guard.mjs",
+    ".grok/hooks/lit-goal.mjs",
     ".grok/hooks/lit-mark.mjs",
     ".grok/hooks/lit-status-line.mjs",
     ".grok/hooks/litgrok-hud-state.mjs",
@@ -831,6 +832,7 @@
     ".grok/skills/lit-adhd/scripts/lib/redact.mjs",
     ".grok/skills/lit-adhd/scripts/lib/suggest.mjs",
     ".grok/skills/lit-adhd/scripts/lib/transcripts.mjs",
+    ".grok/skills/lit-adhd/scripts/lib/verdict.mjs",
     ".grok/skills/lit-adhd/scripts/rewind.mjs",
     ".grok/skills/lit-brainstorm/SKILL.md",
     ".grok/skills/lit-brainstorm/references/converge-and-score.md",
@@ -995,11 +997,12 @@
     ".grok/skills/lit-plan/SKILL.md",
     ".grok/skills/lit-plan/references/plan-schema.md",
     ".grok/skills/lit-plan/references/start-work-handoff-contract.md",
+    ".grok/skills/lit-plan/scripts/goal-condition.mjs",
+    ".grok/skills/lit-plan/scripts/goal-propose.mjs",
     ".grok/skills/lit-plan/scripts/scaffold-plan.mjs",
     ".grok/skills/lit-plan/scripts/scope-roots.mjs",
     ".grok/skills/lit-plan/scripts/validate-plan.mjs",
     ".grok/skills/lit-pptx/SKILL.md",
-    ".grok/skills/lit-recap/SKILL.md",
     ".grok/skills/lit-schematic/SKILL.md",
     ".grok/skills/lit-scientific-visualization/SKILL.md",
     ".grok/skills/lit-team/SKILL.md",
@@ -1055,6 +1058,10 @@
     ".grok/skills/rules/scripts/resolve-guidance.mjs",
     ".grok/skills/start-work/SKILL.md",
     ".grok/skills/structural-search/SKILL.md",
+    ".grok/skills/ultra-brainstorm/SKILL.md",
+    ".grok/skills/ultra-brainstorm/references/lenses.md",
+    ".grok/skills/ultra-brainstorm/scripts/estimate.mjs",
+    ".grok/skills/ultra-brainstorm/scripts/ultra-brainstorm.rhai",
     ".grok/skills/visual-qa/SKILL.md",
     ".grok/skills/wikify/SKILL.md",
     ".grok/skills/wikify/references/page-format.md",
@@ -1114,7 +1121,6 @@
     "docs/assets/skills/lit-init.webp",
     "docs/assets/skills/lit-plan.webp",
     "docs/assets/skills/lit-pptx.webp",
-    "docs/assets/skills/lit-recap.webp",
     "docs/assets/skills/lit-schematic.webp",
     "docs/assets/skills/lit-scientific-visualization.webp",
     "docs/assets/skills/lit-team.webp",
@@ -1131,6 +1137,7 @@
     "docs/assets/skills/rules.webp",
     "docs/assets/skills/start-work.webp",
     "docs/assets/skills/structural-search.webp",
+    "docs/assets/skills/ultra-brainstorm.webp",
     "docs/assets/skills/visual-qa.webp",
     "docs/assets/skills/wikify.webp",
     "docs/privacy.md",

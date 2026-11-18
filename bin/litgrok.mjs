@@ -48,6 +48,7 @@ const PRE_MANIFEST_PAYLOAD_HASHES = Object.freeze({
   'agents/litgrok-native-flow-reviewer.md': 'd6e3bf4dcce0ad8648e0bb4849602264ff45212cbdaceaf9195b0a87e3925841',
   'agents/litgrok-polish-orchestrator.md': '4aaeee69ae52ec4ec4dff587296a6206129aea5094445e1441af58a5e13e960f',
   'agents/litgrok-qa-runner.md': 'b2ce6ab2a2258b76c13bd4a4eef4aba3a7f95393054585c4844e298376e4a3e1',
+  'hooks/user-prompt-submit.mjs': '9c7bf75799ca1f9d4d5fda81aa748df871f22c55b75df3d31f6b6cf57ad9010d',
   'agents/litgrok-quality-reviewer.md': 'ed6f2687770f0f31c6821f0ad49d717362807f0bb5f4f27cf4d36be1e7dfd5a2',
   'hooks/deliverable-hedge-guard.json': '65a0008a8c51be203a385f0ca55a5e7eb9e60e487c701c08d6d2407f0a3a1170',
   'hooks/deliverable-hedge-guard.mjs': '78f997d793e94853d1ef9073fbc9dd8b1577fe756d5e8a89d4fc3859d4bde5a9',

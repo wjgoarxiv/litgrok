@@ -14,6 +14,10 @@
       "reason": "Grok Build's project language-server file is host configuration and is not a file LitGrok ships."
     },
     {
+      "prefix": ".grok/litgrok/",
+      "reason": "LitGrok's runtime state (the lit-adhd cursor, the lit-plan goal consent and owner records) is written into the consuming project at run time and is never shipped."
+    },
+    {
       "prefix": ".handoff/",
       "reason": "The consuming project's handoff file is host workspace state, not a template shipped by this skill package."
     }

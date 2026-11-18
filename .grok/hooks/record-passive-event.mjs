@@ -20,7 +20,7 @@ import {
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { writeHudRecords } from './litgrok-hud-state.mjs';
 import { writeLiveness } from './session-liveness.mjs';
-import { entryFromPrompt, readWorkflowState, testVerdict, updateWorkflowState, workflowStatePath } from './workflow-stage.mjs';
+import { entryFromPrompt, planPathFromPrompt, readWorkflowState, testVerdict, updateWorkflowState, workflowStatePath } from './workflow-stage.mjs';
 
 const MAX_EVENT_BYTES = 1024 * 1024;
 // A ledger past this size moves aside as a numbered segment and a fresh one starts.
@@ -406,16 +406,21 @@ function appendRecord(path, record) {
 // The workflow snapshot is display state for the status line: a failure leaves the ledger record in
 // place, says so on stderr and lets the hook succeed. The plan reader loads only here, because the
 // status line imports this module and must not depend on the lit-plan skill's files.
-async function noteWorkflow(ledgerFile, environment, expectedEvent, record, entry, active) {
+// A start-work prompt that names its plan records that path, and progress is read from it from then on;
+// a switch to planning drops it, so the next plan is found again as the newest one.
+async function noteWorkflow(ledgerFile, environment, expectedEvent, record, entry, active, namedPlan = null) {
   if (!['UserPromptSubmit', 'PostToolUse', 'PostToolUseFailure'].includes(expectedEvent)) return;
   try {
+    const planPath = record.stage === 'work' && namedPlan ? namedPlan : record.stage === 'plan' ? null : undefined;
+    const recorded = planPath === undefined ? readWorkflowState(workflowStatePath(ledgerFile), environment.sessionId)?.planPath : planPath ?? undefined;
     const readsPlan = expectedEvent !== 'PostToolUseFailure' && !READ_ONLY_TOOLS.test(record.tool?.name ?? '');
-    const plan = readsPlan ? (await import('./plan-progress.mjs')).planProgress(environment.realWorkspaceRoot) : undefined;
+    const plan = readsPlan ? (await import('./plan-progress.mjs')).planProgress(environment.realWorkspaceRoot, recorded) : undefined;
     updateWorkflowState(ledgerFile, environment.sessionId, {
       stage: record.stage,
       entry,
       active,
       plan,
+      planPath,
       test: record.test,
     });
   } catch (error) {
@@ -479,7 +484,7 @@ export async function recordPassiveEvent(expectedEvent) {
     if (expectedEvent === 'Stop') record.signal = 'turn-ended';
     if (ledgerFile !== null) {
       appendRecord(ledgerFile, record);
-      await noteWorkflow(ledgerFile, environment, expectedEvent, record, entry?.entry, selected);
+      await noteWorkflow(ledgerFile, environment, expectedEvent, record, entry?.entry, selected, planPathFromPrompt(visiblePrompt));
       // Liveness is best effort: a refused or failed write never changes this hook's output.
       if (Object.hasOwn(LIVENESS_BY_EVENT, expectedEvent)) {
         try {

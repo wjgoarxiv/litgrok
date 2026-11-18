@@ -28,22 +28,47 @@ Load `references/plan-schema.md` when drafting, validating, or revising the exec
 Load `references/start-work-handoff-contract.md` before presenting the approval boundary or handing an approved revision to `start-work`.
 Run `scripts/validate-plan.mjs <plan.json>` before presenting a JSON plan record to check its fields, dependencies, and approval state.
 Run `scripts/scaffold-plan.mjs <slug>` to create `plans/<slug>.md` before appending task rows, and run `scripts/scaffold-plan.mjs --check plans/<slug>.md` before presenting the plan to confirm its sections and column-zero checkbox rows.
+Run `scripts/goal-propose.mjs plans/<slug>.md` once after `--check` passes, and end the reply with the approval question it prints (see "Goal at approval").
 
 ## Planning boundary
 
 Use plan mode when the user wants design and approval before execution. The built-in `plan` subagent is the investigation lane for complex planning: it can read, list, and search, but has no shell and no edits. Give it a bounded question, relevant paths, constraints, and expected evidence. Never attribute command output to it.
 
-Plan mode permits planning, not hidden implementation. Any shell or subagent behavior outside the plan lane still follows the current permission mode, so do not use it to bypass the no-edit boundary.
+Plan mode permits planning, not hidden implementation; shell and subagent use outside the plan lane still follow the current permission mode.
 
 ## Persist the plan
 
-The only file this skill writes is `plans/<slug>.md`, created from the project root with:
+The only plan file this skill writes is `plans/<slug>.md` (`goal-propose.mjs` adds the small `.grok/litgrok/goal/consent.json` record for the question), created from the project root with:
 
 ```text
 node .grok/skills/lit-plan/scripts/scaffold-plan.mjs <slug>
 ```
 
 The slug is lowercase kebab-case. A rerun over an existing file is a no-op, so a resumed session never clobbers appended tasks. Append every task as a column-zero `- [ ] N. <title>` row under `## Todos`; an indented row is invisible to `start-work`. Fill `## TL;DR (For humans)` last, then run `--check`. The package `Stop` hook blocks the end of a planning turn — plan permission mode, or a turn whose prompt invoked `lit-plan` — that has no `plans/*.md` written this turn or whose newest plan has zero task rows; the block reason names this script. The hook blocks at most twice per session and then passes with a warning.
+
+## Goal at approval
+
+Fill the plan's `## Done when` block with one command that exits 0 only when the work is done, as `- check: \`<command>\``: a test runner (`npm test`, `node --test …`, `pytest …`, `cargo test`, `go test …`, `make test|check|verify`) or one `scripts/<name>.sh` the plan creates. Then run, from the project root:
+
+```text
+node .grok/skills/lit-plan/scripts/goal-propose.mjs plans/<slug>.md
+```
+
+It compiles the block into one condition of at most 500 characters, `Every row in plans/<slug>.md is ticked and \`<command>\` exits 0 [lit:<id>]`, refuses judgment words (works, looks good, 잘 동작), a push or publish as the only success and any command off its allowlist, and runs the command once, time-boxed, to prove the condition false now. Ask the question it prints unchanged, last in the reply:
+
+- `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`, or
+- `Approve plan and start work? (yes / no)` followed by `No goal set: <reason>` (no block, a placeholder, a lint failure, a check that hangs or cannot start, or a goal already true).
+- A plan outside `plans/`, unreadable, or marked `goal: never` gets only `No goal set: <reason>` and no start offer; a read-only skill never starts work or a goal.
+
+Only the user's whole reply `yes` acts, and it does both at once: the prompt hook checks it against the question's hash, moves this session to the work stage as `/start-work <plan>` does, writes `.grok/litgrok/goal/owner.json` (goal armed when there is one) and the status line in `.grok/litgrok/goal/answer.json`. After a `yes`, print that file's `line` as written:
+
+- `Plan approved; start-work is running <plan>. LitGrok goal armed [lit:<id>]. Grok Build takes /goal only from you; paste: /goal <condition>`
+- `Plan approved; start-work is running <plan>. No goal set: <reason>`
+- `Not started, no goal set: <why>` (the plan is gone, or another session's start-work is running).
+
+Then stop. The `Stop` hook of that turn holds it once with `LitGrok start-work [lit:<id>]: …`; then load `start-work` on the plan and run it. Never start on a `yes` the hook did not record: when `answer.json` is missing or older than the question, print `Not started: the approval was not recorded. Type /start-work <plan> to run it.` (plus the `/goal` line to paste, if any) and stop. `edit`: change the plan, rerun the script, ask again. `no`, silence or any other reply does nothing. A goal the user set by hand: say `Your own goal is active; LitGrok left it alone.` With no user to answer (`grok -p`) the run ends at the question.
+
+From then on the `Stop` hook runs the same check at the end of a turn, as advice: once every row of the plan is ticked it holds the turn one time and asks for the command to be run; exit 0 is reported as `Goal met and cleared [lit:<id>]`. `lit cancel` closes the record (`LitGrok goal cleared (lit cancel) [lit:<id>]`); if they pasted the `/goal` line, only their `/goal clear` ends Grok's own goal. A crashed session's record closes at the next session start. Where the permission mode blocks the shell (plan mode), the check cannot run: say `No goal set: this mode cannot run the check` and offer the goal again after approval.
 
 ## Workflow
 
@@ -70,6 +95,6 @@ Stop when an undocumented schema controls the implementation, a required user ch
 
 ## Output
 
-Return the `plans/<slug>.md` path, evidence baseline, open decisions, approval boundary, verification map, and exact next action. Do not edit product files or run implementation commands; the plan file is the only write. The plan is ready when `--check` passes and `start-work` can execute it without inventing scope, ownership, or success criteria.
+Return the `plans/<slug>.md` path, evidence baseline, open decisions, approval boundary, verification map, and exact next action. Do not edit product files or run implementation commands; the plan file and the goal consent record are the only writes. The plan is ready when `--check` passes and `start-work` can execute it without inventing scope, ownership, or success criteria.
 
-End a saved plan with one line telling the user they can reply `go`. A bare `go` in the same conversation within 30 minutes of the save loads start-work on that `plans/<slug>.md`; judge the age by the plan file's modification time (mtime), and when several plans are open the one just saved is the one `go` means. Older than that, or after another plan was saved, `go` starts nothing and you name the plan to run. No hook writes this offer down: Grok Build drops an allowing prompt hook's output, so the route lives in this text and the project rule.
+The approval question is the reply's last line. A bare `go` in the same conversation within 30 minutes of the save (the plan file's mtime) still loads start-work on the plan just saved; older, or after another plan was saved, it starts nothing and you name the plan to run.

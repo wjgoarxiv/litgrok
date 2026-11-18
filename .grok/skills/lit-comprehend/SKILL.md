@@ -3,6 +3,7 @@ name: lit-comprehend
 description: Build a bounded, evidence-linked understanding of a requested scope before consequential work begins.
 user-invocable: true
 argument-hint: "<scope>"
+goal: never
 ---
 
 # Lit Comprehend

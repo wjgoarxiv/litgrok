@@ -3,6 +3,7 @@ name: litresearch
 description: Conduct bounded, source-traceable research with the host's search tools and documented MCP connections without overstating evidence.
 user-invocable: true
 argument-hint: "<question>"
+goal: never
 ---
 
 # Lit Research

@@ -106,6 +106,19 @@ Judge by this session's own state (earlier banner, plan file, workflow row), nev
 - `lit new …` and `lit restart …` start fresh with the full activation.
 - A bare `lit` with nothing active asks one question to confirm; `lit fix X` never does.
 
+## Skill plans
+
+A `lit` prompt may need several skills. Collect every section below whose trigger matches, in this file's order, plus a named discipline; drop repeats; keep at most three. The first match is the primary; the others are companions to confirm or drop, and one more skill may join when the work clearly needs it. `lit-crucible` joins as first companion, never primary, for a large or risky design ask: redesign, architecture, migration, 설계, 재설계, or three or more deliverables. Read-only primaries (lit-adhd, review-work, litresearch, lit-brainstorm, ultra-brainstorm) take only read-only companions. Quoted or fenced text adds nothing; a plain prompt keeps one skill and no plan line.
+
+With two or more, the first reply line is `Skill plan: 1 <primary> (primary) → 2 <id> → 3 <id>`. Name a moved skill `<id>:<id>` only when this session lists it, else write `<id> (not installed: litgrok extensions install <id> --yes)` once and go on without it. Load each skill when its part starts, never all up front.
+
+`lit +<alias> … <task>` fixes the plan: exactly those skills in that order, unknown aliases named as ignored. Aliases: viz, plot lit-scientific-visualization; ui, design frontend-ui-ux; qa visual-qa; crucible lit-crucible; plan lit-plan; research litresearch; review review-work; debug debugging; deck, slides lit-pptx; doc lit-docx; diagram lit-diagram-drawer; schematic lit-schematic; video, motion lit-typographic-motion; readme readme-studio; brainstorm lit-brainstorm; ultra ultra-brainstorm; humanize lit-humanizer; commit lit-commit; refactor refactor; ast structural-search.
+
+This plan is advisory: Grok Build drops the prompt hook's output, so no hook builds or checks it.
+
+- `ultra-brainstorm …` or `lit ultra-brainstorm …` opens `ultra-brainstorm`, whose one launch question comes first.
+- `lit team <goal>` opens `lit-team`: this session orchestrates the team.
+
 ## New film selection
 
 For an authorized bare `lit` request for a new film, choose `lit-typographic-motion`. Check this before the Office and Interface sections: once the trigger matches it wins, so a video noun wins over a bare `발표` and over 타이포그래피.
@@ -133,7 +146,7 @@ For an authorized bare `lit` request to draw real process or lab equipment, or `
 
 ## Brief over sessions
 
-For an authorized bare `lit` request to catch up on every recent session of the repository, or `/lit-adhd` or `/lit-rewind`, load `lit-adhd` from `.grok/skills/lit-adhd/` (project) or `~/.grok/skills/lit-adhd/` (user). Triggers: adhd, rewind, where was I, catch up, 어디까지, 브리핑. It runs read-only and prints the drawn KPI board as given (`lit adhd detail` or `자세히` adds session cards); it never edits plans or files. One session's own state is `lit-recap`; many sessions' state is this skill.
+For an authorized bare `lit` request to catch up on every recent session of the repository, or `/lit-adhd` or `/lit-rewind`, load `lit-adhd` from `.grok/skills/lit-adhd/` (project) or `~/.grok/skills/lit-adhd/` (user). Triggers: adhd, rewind, where was I, catch up, 어디까지, 브리핑. It runs read-only and prints what the collector drew: the six-line verdict card by default, the KPI board with session cards for `lit adhd detail` or `자세히`, the recap for `lit adhd recap [session]`. `lit recap`, `litrecap` and `lit-recap` open it with `--moved`, first line `lit-recap moved into lit-adhd (lit adhd recap).`
 
 ## Mechanism ports
 

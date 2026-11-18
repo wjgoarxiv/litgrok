@@ -203,7 +203,6 @@
         "lit-init",
         "lit-plan",
         "lit-pptx",
-        "lit-recap",
         "lit-schematic",
         "lit-scientific-visualization",
         "lit-team",
@@ -225,7 +224,7 @@
       ],
       "inventory": {
         "count": 42,
-        "sha256": "75a0147e99e10ec1ac7e6c182fa7a12f20ef0f6b6b85cd3264e56314a560f9db"
+        "sha256": "8ba84b86374d90a95ac74db19ea5867e5ce73d14f3d0ebfd88e78e7bcca5014b"
       }
     }
   },
@@ -411,7 +410,7 @@
         "p28": 1,
         "p31": 5,
         "p32": 2,
-        "p33": 6
+        "p33": 8
       }
     },
     "lit-recap": {
@@ -420,8 +419,7 @@
         "p27": 1,
         "p28": 1,
         "p31": 2,
-        "p32": 1,
-        "p33": 1
+        "p32": 1
       }
     },
     "lit-scientific-visualization": {
