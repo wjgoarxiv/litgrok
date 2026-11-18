@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.38 — 2026-11-18
 
 - `lit adhd` now answers in a six-line card instead of a board: what finished and what started waiting since you last looked, the one thing to do now with the exact text to type, why and what happens if you leave it, what waits after it, and how many sessions it could read. The step comes from a fixed order of checks (a parked approval, a session waiting on your answer, your own unfinished frame, and so on), counts as done only what a ticked plan or a commit proves, and never offers a push or a release except as a question in the queue. When some sessions could not be read it says so and holds back the all-clear. `lit adhd detail` (or `자세히`) still shows the full board. The card remembers what it last showed in `.grok/litgrok/adhd/cursor.json`, so the next one starts from what changed.
 - `lit adhd` speaks Korean unless you ask for English: add `--en`, or say "in English" or 영어로. The collector itself defaults to Korean, so an English-looking prompt alone no longer switches the card to English.
