@@ -6,8 +6,10 @@ import { dirname, join } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { answerGoalPrompt, goalTurnEnd, readGoalOwner, sweepGoal } from '../.grok/hooks/lit-goal.mjs';
+import { answerGoalPrompt, goalTurnEnd, loopGoalNotice, offerLoopGoal, readGoalOwner, sweepGoal } from '../.grok/hooks/lit-goal.mjs';
+import { entryFromPrompt } from '../.grok/hooks/workflow-stage.mjs';
 import { GOAL_MAX_CHARS, GOAL_STATUS, compileCondition, conditionHash, consentAnswer, falsify, lintCondition, parseDoneWhen } from '../.grok/skills/lit-plan/scripts/goal-condition.mjs';
+import { LOOP_STATUS, compileLoopCondition, detectCheck, falsifyLoop, normalizeGoalObjective, proposeLoopGoal } from '../.grok/hooks/lit-loop-goal.mjs';
 import { proposeGoal } from '../.grok/skills/lit-plan/scripts/goal-propose.mjs';
 import { buildPlanSkeleton } from '../.grok/skills/lit-plan/scripts/scaffold-plan.mjs';
 
@@ -281,5 +283,285 @@ describe('goal wording across the payload', () => {
       const text = readFileSync(file, 'utf8');
       assert.doesNotMatch(text, /(?:get|create|update)_goal[^\n]*if (?:it is )?available|may offer native \/goal/iu, file);
     }
+  });
+});
+
+describe('lit run: one yes arms a goal without a plan', () => {
+  const GOAL = (cwd) => join(cwd, '.grok', 'litgrok', 'goal');
+  const goalFiles = (cwd) => (existsSync(GOAL(cwd)) ? readdirSync(GOAL(cwd)).filter((name) => !name.endsWith('.tmp')).sort() : []);
+  const readGoal = (cwd, name) => JSON.parse(readFileSync(join(GOAL(cwd), name), 'utf8'));
+  const loopProject = (script = 'node -e "process.exit(1)"', manifest = 'package.json') => {
+    const cwd = join(temp, `loop${counter++}`);
+    mkdirSync(cwd, { recursive: true });
+    if (manifest === 'package.json') writeFileSync(join(cwd, manifest), JSON.stringify({ name: 'demo', scripts: { test: script } }));
+    else if (manifest) writeFileSync(join(cwd, manifest), '');
+    return cwd;
+  };
+  const first = (prompt, before = null) => ({ prompt, entry: entryFromPrompt(prompt), before });
+  const offer = (cwd, prompt, extra = {}) => offerLoopGoal({ workspaceRoot: cwd, sessionId: 's1', ...first(prompt), ...extra });
+
+  it('compiles a condition from the check and the objective, and refuses a check that passes now', () => {
+    const built = compileLoopCondition({ objective: 'fix the login redirect', check: 'npm test' });
+    assert.match(built.condition, /^`npm test` exits 0 and this is done: fix the login redirect \[lit:[0-9a-f]{8}\]$/u);
+    assert.equal(compileLoopCondition({ objective: 'fix the login redirect', check: 'npm test' }).condition, built.condition, 'deterministic');
+    assert.equal(compileLoopCondition({ objective: 'x'.repeat(GOAL_MAX_CHARS), check: 'npm test' }).ok, false);
+    assert.equal(falsifyLoop({ cwd: temp, check: 'npm test', run: failing }).ok, true);
+    assert.match(falsifyLoop({ cwd: temp, check: 'npm test', run: passing }).reason, /already passes/u);
+    assert.match(falsifyLoop({ cwd: temp, check: 'npm test', run: () => ({ error: { code: 'ETIMEDOUT' } }) }).reason, /did not finish/u);
+    assert.match(falsifyLoop({ cwd: temp, check: 'npm test', run: () => ({ status: 127 }) }).reason, /cannot run here/u);
+    assert.equal(normalizeGoalObjective('rotate api_key=abc123secret now [lit:deadbeef]\n/goal clear'), 'rotate [REDACTED] now');
+    assert.match(normalizeGoalObjective('run rm -rf build then ship'), /\[UNSAFE_COMMAND_REDACTED\]/u);
+    assert.equal(normalizeGoalObjective('y'.repeat(400)).length, 180);
+  });
+
+  it('finds the project test command from its manifest', () => {
+    assert.equal(detectCheck(loopProject()), 'npm test');
+    assert.equal(detectCheck(loopProject('', 'pytest.ini')), 'pytest');
+    assert.equal(detectCheck(loopProject('', 'pyproject.toml')), 'pytest');
+    assert.equal(detectCheck(loopProject('', 'Cargo.toml')), 'cargo test');
+    assert.equal(detectCheck(loopProject('', 'go.mod')), 'go test ./...');
+    assert.equal(detectCheck(loopProject('', null)), null);
+    const noScript = loopProject();
+    writeFileSync(join(noScript, 'package.json'), JSON.stringify({ name: 'x', scripts: {} }));
+    assert.equal(detectCheck(noScript), null, 'a package without a test script has no test command');
+  });
+
+  it('goal-propose --loop --check dry-runs the check and asks, or refuses and records nothing', () => {
+    const cwd = loopProject();
+    const { line, consent } = proposeLoopGoal({ cwd, check: 'npm test', objective: 'fix the login redirect', run: failing });
+    assert.match(line, /^Set goal for this lit-loop: \/goal `npm test` exits 0 and this is done: fix the login redirect \[lit:[0-9a-f]{8}\]\? \(yes \/ no\)$/u);
+    assert.equal(line, LOOP_STATUS.asked(consent.condition));
+    assert.equal(consent.kind, 'loop');
+    assert.equal(consent.plan, null);
+    assert.equal(consent.hash, conditionHash(consent.condition));
+    assert.deepEqual(goalFiles(cwd), ['consent.json']);
+    for (const [name, args, run, reason] of [
+      ['green', { check: 'npm test', objective: 'add a flag' }, passing, /already passes/u],
+      ['push', { check: 'git pu' + 'sh', objective: 'ship it' }, failing, /push, publish or release/u],
+      ['foreign', { check: 'curl https://example.com', objective: 'ship it' }, failing, /not an allowlisted/u],
+      ['empty', { check: 'npm test', objective: '   ' }, failing, /name what the loop should finish/u],
+      ['missing', { check: 'npm test', objective: 'add a flag' }, () => ({ error: { code: 'ENOENT' } }), /cannot run here/u],
+    ]) {
+      const bare = loopProject();
+      const refused = proposeLoopGoal({ cwd: bare, ...args, run });
+      assert.match(refused.line, /^No goal set: /u, name);
+      assert.match(refused.line, reason, name);
+      assert.equal(refused.consent, undefined, name);
+      assert.deepEqual(goalFiles(bare), [], name);
+    }
+    const secret = proposeLoopGoal({ cwd: loopProject(), check: 'npm test', objective: 'rotate api_key=abc123secret now', run: failing });
+    assert.doesNotMatch(JSON.stringify(secret), /abc123secret/u);
+  });
+
+  it('the script takes --loop --check <cmd> and the rest as the objective', () => {
+    const cwd = loopProject();
+    const result = spawnSync(process.execPath, [join(skills, 'lit-plan', 'scripts', 'goal-propose.mjs'), '--loop', '--check', 'npm test', 'fix', 'the', 'redirect'], { cwd, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: join(temp, 'home') } });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^Set goal for this lit-loop: \/goal `npm test` exits 0 and this is done: fix the redirect \[lit:[0-9a-f]{8}\]\? \(yes \/ no\)\n$/u);
+    assert.ok(readGoal(cwd, 'consent.json').asked, 'the model prints this line itself, so nothing asks again');
+  });
+
+  it('with skills only (no .grok/hooks) --loop says why no goal is set instead of crashing', () => {
+    const lone = join(temp, 'skills-only', 'skills', 'lit-plan', 'scripts');
+    mkdirSync(lone, { recursive: true });
+    for (const file of ['goal-propose.mjs', 'goal-condition.mjs']) writeFileSync(join(lone, file), readFileSync(join(skills, 'lit-plan', 'scripts', file)));
+    const result = spawnSync(process.execPath, [join(lone, 'goal-propose.mjs'), '--loop', '--check', 'npm test', 'fix', 'it'], { cwd: loopProject(), encoding: 'utf8', env: { PATH: process.env.PATH, HOME: join(temp, 'home') } });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^No goal set: /u);
+  });
+
+  it('the first activation of a run route records the question without running the check', () => {
+    const marker = join(temp, `ran${counter}`);
+    const cwd = loopProject(`node -e "require('fs').writeFileSync('${marker}','1');process.exit(1)"`);
+    const result = offer(cwd, 'lit fix the login redirect');
+    assert.equal(result.did, 'asked');
+    assert.equal(result.line, LOOP_STATUS.asked(result.condition));
+    assert.match(result.condition, /^`npm test` exits 0 and this is done: fix the login redirect \[lit:[0-9a-f]{8}\]$/u);
+    const consent = readGoal(cwd, 'consent.json');
+    assert.equal(consent.kind, 'loop');
+    assert.equal(consent.plan, null);
+    assert.equal(consent.sessionId, 's1');
+    assert.equal(consent.condition, result.condition);
+    assert.equal(consent.asked, undefined, 'the hook cannot show it; the next tool call or the Stop does');
+    assert.equal(existsSync(marker), false, 'no test run in the hook');
+    assert.match(offer(loopProject(), 'litwork add a flag').condition, /this is done: add a flag \[lit:/u);
+    assert.match(offer(loopProject(), 'lit loop add a flag').condition, /this is done: add a flag \[lit:/u);
+    assert.match(offer(loopProject(), 'lit new add a flag', { before: { stage: 'work' } }).condition, /this is done: add a flag \[lit:/u, 'a restart is a fresh first activation');
+    assert.match(offer(loopProject(), 'lit add a flag', { before: { stage: 'done' } }).condition, /this is done: add a flag \[lit:/u);
+  });
+
+  it('asks nothing for a repeat, a named discipline, no test command, no objective, or an owned or pending goal', () => {
+    const none = (cwd, prompt, extra) => assert.equal(offer(cwd, prompt, extra).did, 'none', prompt);
+    none(loopProject(), 'lit also the lexer', { before: { stage: 'work' } });
+    none(loopProject(), 'lit also the lexer', { before: { stage: 'plan' } });
+    for (const prompt of ['lit plan a cache', 'lit-plan a cache', 'lit review work', 'lit cancel', 'lit start plans/x.md', 'lit adhd', 'lit team ship it', 'lit goal ship it', 'lit brainstorm names', 'lit', 'lit   ', 'start-work plans/x.md', 'please lit fix it', 'yes']) none(loopProject(), prompt);
+    none(loopProject('', null), 'lit fix the login redirect');
+    none(loopProject('', 'Cargo.toml'), 'lit fix the login redirect', { sessionId: '' });
+    none(loopProject('', 'Cargo.toml'), 'litwork fix', { entry: null });
+    const owned = loopProject();
+    mkdirSync(GOAL(owned), { recursive: true });
+    writeFileSync(join(GOAL(owned), 'owner.json'), JSON.stringify({ condition: 'c', plan: 'plans/x.md', hash: conditionHash('c'), id: 'a', sessionId: 's9' }));
+    none(owned, 'lit fix the login redirect');
+    const pending = loopProject();
+    proposeGoal({ cwd: pending, planArg: 'plans/none.md' });
+    assert.equal(offer(pending, 'lit fix the login redirect').did, 'asked', 'a plan that never existed leaves no question behind');
+    const twice = loopProject();
+    assert.equal(offer(twice, 'lit fix the login redirect').did, 'asked');
+    none(twice, 'lit fix the login redirect again', { before: { stage: 'work' } });
+    const fenced = loopProject();
+    none(fenced, '```\nlit fix the login redirect\n```');
+  });
+
+  it('only an exact yes arms it; no, edit and any other prompt drop the question; nothing starts', () => {
+    const now = Date.now();
+    const cwd = loopProject();
+    const { condition } = offer(cwd, 'lit fix the login redirect', { now });
+    const ledgerFile = join(cwd, '.grok', 'litgrok', 'session-ledger', 's1.jsonl');
+    mkdirSync(join(cwd, '.grok', 'litgrok', 'session-ledger'), { recursive: true });
+    assert.equal(answerGoalPrompt({ workspaceRoot: cwd, sessionId: 'other', prompt: 'yes', ledgerFile, now }).did, 'none', 'another session cannot answer it');
+    assert.equal(answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'yes', ledgerFile, now: now + 31 * 60_000 }).did, 'none', 'a stale question');
+    assert.equal(readGoalOwner(cwd), null);
+    offer(cwd, 'lit fix the login redirect', { now });
+    const yes = answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: ' YES ', ledgerFile, now });
+    assert.equal(yes.did, 'loop-armed');
+    assert.equal(yes.status, LOOP_STATUS.armed(yes.id, condition));
+    assert.match(yes.status, /^LitGrok goal armed \[lit:[0-9a-f]{8}\]\. Grok Build takes \/goal only from you; paste: \/goal `npm test` exits 0 and this is done: fix the login redirect/u);
+    assert.equal(readGoal(cwd, 'answer.json').line, yes.status);
+    const owner = readGoalOwner(cwd);
+    assert.equal(owner.condition, condition);
+    assert.equal(owner.plan, null);
+    assert.equal(owner.start, undefined, 'a lit run starts no start-work');
+    assert.equal(existsSync(ledgerFile.replace(/\.jsonl$/u, '.workflow.json')), false, 'the workflow row did not move');
+    assert.deepEqual(goalFiles(cwd), ['answer.json', 'owner.json'], 'the question is answered once');
+    assert.equal(goalTurnEnd({ workspaceRoot: cwd, sessionId: 's1' }).start, undefined);
+
+    for (const [prompt, did] of [['no', 'declined'], ['edit', 'none'], ['make it faster', 'none'], ['yes please', 'none']]) {
+      const fresh = loopProject();
+      offer(fresh, 'lit fix the login redirect', { now });
+      assert.equal(answerGoalPrompt({ workspaceRoot: fresh, sessionId: 's1', prompt, now }).did, did, prompt);
+      assert.equal(readGoalOwner(fresh), null, prompt);
+      assert.equal(existsSync(join(GOAL(fresh), 'consent.json')), false, `${prompt} drops the question`);
+    }
+    const tampered = loopProject();
+    offer(tampered, 'lit fix the login redirect', { now });
+    const consent = readGoal(tampered, 'consent.json');
+    writeFileSync(join(GOAL(tampered), 'consent.json'), JSON.stringify({ ...consent, condition: `${consent.condition} or anything` }));
+    assert.equal(answerGoalPrompt({ workspaceRoot: tampered, sessionId: 's1', prompt: 'yes', now }).did, 'none');
+  });
+
+  it('a plan question is untouched by the loop rules', () => {
+    const cwd = project();
+    proposeGoal({ cwd, planArg: 'plans/cache.md', run: failing });
+    assert.equal(answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'make it faster' }).did, 'none');
+    assert.equal(existsSync(join(GOAL(cwd), 'consent.json')), true, 'silence still leaves the plan question waiting');
+  });
+
+  it('the question reaches the model once through the notice, and the yes answer once more', () => {
+    const now = Date.now();
+    const cwd = loopProject();
+    assert.equal(loopGoalNotice({ workspaceRoot: cwd, sessionId: 's1', now }), null, 'nothing asked, nothing to say');
+    const { condition } = offer(cwd, 'lit fix the login redirect', { now });
+    assert.equal(loopGoalNotice({ workspaceRoot: cwd, sessionId: 'other', now }), null);
+    const ask = loopGoalNotice({ workspaceRoot: cwd, sessionId: 's1', now });
+    assert.equal(ask.kind, 'ask');
+    assert.ok(ask.text.includes(LOOP_STATUS.asked(condition)), ask.text);
+    assert.match(ask.text, /never type or send \/goal yourself/iu);
+    assert.equal(loopGoalNotice({ workspaceRoot: cwd, sessionId: 's1', now }), null, 'asked once');
+    answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'yes', now });
+    const armed = loopGoalNotice({ workspaceRoot: cwd, sessionId: 's1', now });
+    assert.equal(armed.kind, 'armed');
+    assert.ok(armed.text.includes(LOOP_STATUS.armed(readGoalOwner(cwd).id, condition)), armed.text);
+    assert.equal(loopGoalNotice({ workspaceRoot: cwd, sessionId: 's1', now }), null, 'told once');
+    assert.equal(goalTurnEnd({ workspaceRoot: cwd, sessionId: 's1' }).block, false, 'a loop goal has no plan rows to hold the turn for');
+  });
+
+  it('lit cancel closes the loop record and a new session sweeps a dead one', () => {
+    const now = Date.now();
+    const cwd = loopProject();
+    offer(cwd, 'lit fix the login redirect', { now });
+    answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'yes', now });
+    assert.equal(sweepGoal({ workspaceRoot: cwd, sessionId: 's1' }).did, 'none');
+    assert.equal(answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'lit cancel', now }).did, 'cleared');
+    assert.equal(offer(cwd, 'lit new fix another thing', { now, before: { stage: 'work' } }).did, 'asked', 'a closed record leaves room for a new question');
+    answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'yes', now });
+    assert.equal(sweepGoal({ workspaceRoot: cwd, sessionId: 's2' }).did, 'swept');
+  });
+
+  it('a finished loop goal does not block the next question; another live session\'s still does', () => {
+    const now = Date.now();
+    const cwd = loopProject();
+    offer(cwd, 'lit fix the login redirect', { now });
+    answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'yes', now });
+    assert.ok(readGoalOwner(cwd) && !readGoalOwner(cwd).closed, 'armed and open');
+    assert.equal(offer(cwd, 'lit new add a flag', { now, before: { stage: 'work' } }).did, 'asked', 'the same session starting a fresh run replaces its own finished goal');
+    answerGoalPrompt({ workspaceRoot: cwd, sessionId: 's1', prompt: 'yes', now });
+    assert.notEqual(readGoalOwner(cwd).id, undefined);
+    const other = loopProject();
+    offer(other, 'lit fix the login redirect', { now, sessionId: 's9' });
+    answerGoalPrompt({ workspaceRoot: other, sessionId: 's9', prompt: 'yes', now });
+    assert.equal(offer(other, 'lit fix the footer', { now: now + 60_000 }).did, 'none', 'another session still owns a young goal');
+    assert.equal(offer(other, 'lit fix the footer', { now: now + 25 * 3_600_000 }).did, 'asked', 'a loop goal expires after 24 h');
+    const plan = loopProject();
+    mkdirSync(GOAL(plan), { recursive: true });
+    const owner = { condition: 'c', plan: 'plans/x.md', hash: conditionHash('c'), id: 'a', sessionId: 's1', armedAt: new Date(now - 48 * 3_600_000).toISOString() };
+    writeFileSync(join(GOAL(plan), 'owner.json'), JSON.stringify(owner));
+    assert.equal(offer(plan, 'lit fix the login redirect', { now }).did, 'none', 'a plan owner keeps its own clearing rules');
+  });
+
+  it('the installed hooks record the question, put it before the model at the first tool call, and arm on yes', () => {
+    const cwd = loopProject();
+    mkdirSync(join(temp, 'tmp'), { recursive: true });
+    const hook = (name, event) => spawnSync(process.execPath, [join(root, '.grok', 'hooks', name)], {
+      cwd,
+      encoding: 'utf8',
+      input: JSON.stringify({ sessionId: 'loop-s', cwd, workspaceRoot: cwd, ...event }),
+      env: { PATH: process.env.PATH, HOME: join(temp, 'home'), TMPDIR: join(temp, 'tmp'), GROK_HOOK_EVENT: event.hookEventName, GROK_HOOK_NAME: name.replace(/\.mjs$/u, ''), GROK_SESSION_ID: 'loop-s', GROK_WORKSPACE_ROOT: cwd },
+    });
+    const last = (run) => JSON.parse(run.stdout.trim().split('\n').at(-1));
+    const prompt = hook('user-prompt-submit.mjs', { hookEventName: 'UserPromptSubmit', prompt: 'lit fix the login redirect' });
+    assert.equal(prompt.status, 0, prompt.stderr);
+    assert.equal(prompt.stdout, '', 'the host drops what a prompt hook prints, so it prints nothing');
+    assert.deepEqual(goalFiles(cwd), ['consent.json']);
+    const before = hook('pre-tool-use.mjs', { hookEventName: 'PreToolUse', toolName: 'run_terminal_cmd', toolInput: { command: 'ls' } });
+    assert.equal(before.status, 0, before.stderr);
+    const context = last(before).hookSpecificOutput.additionalContext;
+    assert.match(context, /Set goal for this lit-loop: \/goal `npm test` exits 0 and this is done: fix the login redirect \[lit:[0-9a-f]{8}\]\? \(yes \/ no\)/u);
+    assert.equal(hook('pre-tool-use.mjs', { hookEventName: 'PreToolUse', toolName: 'run_terminal_cmd', toolInput: { command: 'ls' } }).stdout, '', 'the next tool call carries nothing');
+    assert.equal(hook('stop.mjs', { hookEventName: 'Stop' }).stdout, '', 'asked already, so the Stop does not hold the turn');
+    const yes = hook('user-prompt-submit.mjs', { hookEventName: 'UserPromptSubmit', prompt: 'yes' });
+    assert.equal(yes.status, 0, yes.stderr);
+    assert.equal(readGoalOwner(cwd)?.sessionId, 'loop-s');
+    const stop = hook('stop.mjs', { hookEventName: 'Stop' });
+    assert.equal(stop.status, 0, stop.stderr);
+    assert.equal(last(stop).decision, 'block');
+    assert.match(last(stop).reason, /LitGrok goal armed \[lit:[0-9a-f]{8}\]\. Grok Build takes \/goal only from you; paste: \/goal `npm test`/u);
+    assert.doesNotMatch(last(stop).reason, /start-work/u);
+    assert.equal(hook('stop.mjs', { hookEventName: 'Stop' }).stdout, '', 'told once');
+  });
+
+  it('a first turn with no tool call still gets the question from the Stop hook', () => {
+    const cwd = loopProject();
+    mkdirSync(join(temp, 'tmp'), { recursive: true });
+    const hook = (name, event) => spawnSync(process.execPath, [join(root, '.grok', 'hooks', name)], {
+      cwd,
+      encoding: 'utf8',
+      input: JSON.stringify({ sessionId: 'loop-t', cwd, workspaceRoot: cwd, ...event }),
+      env: { PATH: process.env.PATH, HOME: join(temp, 'home'), TMPDIR: join(temp, 'tmp'), GROK_HOOK_EVENT: event.hookEventName, GROK_HOOK_NAME: name.replace(/\.mjs$/u, ''), GROK_SESSION_ID: 'loop-t', GROK_WORKSPACE_ROOT: cwd },
+    });
+    hook('user-prompt-submit.mjs', { hookEventName: 'UserPromptSubmit', prompt: 'lit fix the login redirect' });
+    const stop = hook('stop.mjs', { hookEventName: 'Stop' });
+    assert.equal(JSON.parse(stop.stdout.trim().split('\n').at(-1)).decision, 'block');
+    assert.match(stop.stdout, /Set goal for this lit-loop: \/goal /u);
+    hook('user-prompt-submit.mjs', { hookEventName: 'UserPromptSubmit', prompt: 'lit also handle the 404' });
+    assert.deepEqual(goalFiles(cwd), [], 'a repeat asks nothing and the old question was dropped');
+  });
+
+  it('litwork says how the question arrives and keeps the script fallback', () => {
+    const litwork = readFileSync(join(skills, 'litwork', 'SKILL.md'), 'utf8');
+    for (const line of ['Set goal for this lit-loop: /goal <condition>? (yes / no)', 'goal-propose.mjs --loop --check "<check>" <objective>', 'No goal set: <reason>', 'LitGrok goal armed [lit:<id>]. Grok Build takes /goal only from you; paste: /goal <condition>']) {
+      assert.ok(litwork.includes(line), line);
+    }
+    assert.match(litwork, /advisory/u);
+    assert.match(litwork, /starts no start-work/u);
   });
 });

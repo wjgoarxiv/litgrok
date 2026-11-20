@@ -30,7 +30,7 @@ limitations_channel: inline
 
 litgoal does not run work, write the plan, or declare the goal met. The user's own check of the criteria decides that.
 
-A finish line can also arrive with a plan: `lit-plan` compiles its `## Done when` block into one condition and asks once at approval, `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`. An exact `yes` starts start-work on the plan, arms LitGrok's own advisory record and hands the user the `/goal` line to paste; the `Stop` hook then runs that same check at turn end. `lit-plan` holds the full sequence. litgoal is for a finish line without a plan.
+A finish line can also arrive with a plan: `lit-plan` compiles its `## Done when` block into one condition and asks once at approval, `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`. An exact `yes` starts start-work on the plan, arms LitGrok's own advisory record and hands the user the `/goal` line to paste; the `Stop` hook then runs that same check at turn end. `lit-plan` holds the full sequence. A plan-less `lit` run in a project with a test command gets its own one-line question (`Set goal for this lit-loop: /goal <condition>? (yes / no)`), described in `litwork`. litgoal is for a finish line with neither.
 
 ## Why the handoff stays in the user's session
 

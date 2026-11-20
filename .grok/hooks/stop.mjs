@@ -4,7 +4,7 @@
 import { appendSessionRecord, recordPassiveEvent } from './record-passive-event.mjs';
 import { PLAN_GATE_SIGNAL, evaluatePlanGate } from './plan-gate.mjs';
 import { evaluateAutoHandoff } from './auto-handoff-gate.mjs';
-import { GOAL_SIGNAL, START_SIGNAL, goalTurnEnd } from './lit-goal.mjs';
+import { GOAL_SIGNAL, LOOP_SIGNAL, START_SIGNAL, goalTurnEnd } from './lit-goal.mjs';
 import { planProgress } from './plan-progress.mjs';
 import { readWorkflowState, updateWorkflowState, workflowStatePath } from './workflow-stage.mjs';
 
@@ -53,7 +53,7 @@ if (observed) {
         const goal = goalTurnEnd({ workspaceRoot: observed.environment.realWorkspaceRoot, sessionId: observed.environment.sessionId });
         if (goal.block) {
           held = true;
-          appendSessionRecord(observed.ledgerFile, observed.record, { signal: goal.start ? START_SIGNAL : GOAL_SIGNAL });
+          appendSessionRecord(observed.ledgerFile, observed.record, { signal: goal.start ? START_SIGNAL : goal.notice ? LOOP_SIGNAL : GOAL_SIGNAL });
           process.stdout.write(`${JSON.stringify({ decision: 'block', reason: goal.reason })}\n`);
         }
       } catch (error) {

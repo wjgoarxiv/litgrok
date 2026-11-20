@@ -16,6 +16,10 @@ once by `PreToolUse` (`handoff/`, off with `LITGROK_COMPACT_HANDOFF=0`), `notice
 time per notice already printed, and the lit-plan approval records (`goal/owner.json` and `goal/answer.json`):
 an exact `yes` to `UserPromptSubmit` starts start-work on the plan and arms the goal, `Stop` hands the plan to
 start-work once and later checks the goal once, and `SessionStart` closes a dead session's record.
+A `lit <objective>` run with no plan gets one more record there (`goal/consent.json` of kind `loop`, written by
+the prompt hook on the first activation when the project has a test command, or by `goal-propose.mjs --loop --check`):
+the first tool call (`PreToolUse` `additionalContext`) or the `Stop` hook carries the question to the model once,
+and an exact `yes` arms the same `owner.json` with no start-work.
 Three skill scripts write there when the user runs them: `goal-propose.mjs` (`goal/consent.json`), the
 lit-adhd collector (`adhd/cursor.json`, what the last verdict card showed) and ultra-brainstorm
 (`brainstorm/<slug>/`, through Grok Build's `workflow` tool).

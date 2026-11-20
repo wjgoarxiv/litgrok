@@ -452,6 +452,8 @@ export async function recordPassiveEvent(expectedEvent) {
     const visiblePrompt = expectedEvent === 'UserPromptSubmit' && typeof event.prompt === 'string' ? visiblePromptText(event.prompt) : null;
     const entry = visiblePrompt === null ? null : entryFromPrompt(visiblePrompt);
     const ledgerFile = environment.sessionId === null ? null : ledgerPath(environment.realWorkspaceRoot, environment.sessionId);
+    // The row as it stood before this prompt moved it: the lit run goal question is asked on a first activation only.
+    const before = entry !== null && ledgerFile !== null ? readWorkflowState(workflowStatePath(ledgerFile), environment.sessionId) : null;
     // A bare `lit` continues the discipline the last explicit switch selected, and with it that discipline's gate.
     const continued = entry?.entry === 'continue' && ledgerFile !== null
       ? readWorkflowState(workflowStatePath(ledgerFile), environment.sessionId)?.active ?? null
@@ -503,7 +505,7 @@ export async function recordPassiveEvent(expectedEvent) {
         discipline: hudDiscipline,
       });
     }
-    return { environment, event, ledgerFile, record };
+    return { environment, event, ledgerFile, record, entry, before };
   } catch (error) {
     const code = error instanceof RecorderError ? error.code : error?.code?.startsWith?.('HUD_') ? error.code : 'RECORDER_FAILED';
     process.stderr.write(`LitGrok passive hook recorder: ${code}\n`);

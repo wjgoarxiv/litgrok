@@ -87,6 +87,10 @@ function goalFor({ cwd, plan, planText, timeoutMs, run }) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { line } = proposeGoal({ cwd: process.cwd(), planArg: process.argv[2] });
+  const [first, ...rest] = process.argv.slice(2);
+  const loop = first === '--loop' && rest[0] === '--check' && await import('../../../hooks/lit-loop-goal.mjs').catch(() => 0);
+  const { line } = loop === 0 ? { line: 'No goal set: no LitGrok hooks' } : loop
+    ? loop.proposeLoopGoal({ cwd: process.cwd(), check: rest[1], objective: rest.slice(2).join(' '), sessionId: process.env.GROK_SESSION_ID, asked: true })
+    : proposeGoal({ cwd: process.cwd(), planArg: first });
   process.stdout.write(`${line}\n`);
 }

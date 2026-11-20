@@ -12,18 +12,29 @@
 // channel that reaches the model. If the start is refused (the plan is gone, another session's start-work is
 // running), no goal is armed either. The goal check at turn end is advisory: when every row is ticked, the Stop
 // hook holds the turn once and asks for the plan's check; it never runs the check itself.
+//
+// A lit run with no plan gets one question too (`offerLoopGoal`, `loopGoalNotice`). The first activation of a run
+// route in a project with a test command records a `kind: "loop"` consent without running anything; the prompt
+// hook cannot show it, so the first tool call (PreToolUse `additionalContext`) or, with no tool call, the Stop
+// decision carries the exact question to the model once. An exact `yes` arms the same owner record, starts no
+// start-work and has no turn-end check; the same two channels tell the model the one line to show. Advisory
+// throughout: Grok Build takes `/goal` only from the user, who pastes the line.
 
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, renameSync, unlinkSync, writeSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 import { GOAL_DIR, GOAL_STATUS, conditionHash, consentAnswer, consentIsLive, consentKey, planRows } from '../skills/lit-plan/scripts/goal-condition.mjs';
+import { LOOP_STATUS, detectCheck, loopConsentIsLive, proposeLoopGoal } from './lit-loop-goal.mjs';
 import { updateWorkflowState } from './workflow-stage.mjs';
 
 export const GOAL_SIGNAL = 'goal-turn-end-check';
 export const START_SIGNAL = 'start-work-handoff';
+export const LOOP_SIGNAL = 'goal-loop-notice';
+const LOOP_ROUTE_DENY = /^(?:cancel|start|go|plan|review|team|goal|handoff|recap|adhd|rewind|humaniz\w*|hijack|brainstorm\w*|ideation|ideate|ideas?|ultra-brainstorm|research|crucible|\+\S+)(?=$|[^\w-])/iu;
 const MAX_RECORD_BYTES = 16 * 1024;
 const noFollow = constants.O_NOFOLLOW ?? 0;
 const RUN_FRESH_MS = 30 * 60 * 1000;
+const LOOP_GOAL_TTL_MS = 24 * 60 * 60 * 1000;
 
 // The goal directory if every part of it is a real directory; it is never created here.
 function goalDirectory(workspaceRoot) {
@@ -128,6 +139,15 @@ function answer(directory, id, did, line, now) {
   return line;
 }
 
+// The yes to a lit run's question: arm the owner record for this session. No plan, no start-work, no workflow row
+// change; `announce` makes the next tool call or Stop tell the model the one line to show.
+function armLoopGoal({ directory, consent, sessionId, now }) {
+  const { condition, hash, id, check } = consent;
+  const at = new Date(now).toISOString();
+  writeRecord(directory, 'owner.json', { version: 2, kind: 'loop', plan: null, condition, reason: null, hash, id, check: check ?? null, sessionId, armedAt: at, announce: { at } });
+  return { did: 'loop-armed', id, status: answer(directory, id, 'loop-armed', LOOP_STATUS.armed(id, condition), now) };
+}
+
 /**
  * The prompt side. `yes` to a live consent arms the owner record for this session; `no` drops the
  * consent; `edit` leaves it for the next question. `lit cancel` closes this session's own record.
@@ -137,9 +157,17 @@ export function answerGoalPrompt({ workspaceRoot, sessionId, prompt, ledgerFile 
   const directory = goalDirectory(workspaceRoot);
   if (directory === null || typeof sessionId !== 'string' || !sessionId) return { did: 'none' };
   const reply = consentAnswer(prompt);
+  let consent = readRecord(join(directory, 'consent.json'));
+  // A lit run's question is answered by the next prompt, whatever it says: only `yes` arms it, and any other
+  // prompt (`no`, `edit`, a new task) drops it. It belongs to the session that was asked.
+  if (consent?.kind === 'loop' && (consent.sessionId === null || consent.sessionId === undefined || consent.sessionId === sessionId)) {
+    removeRecord(directory, 'consent.json');
+    if (reply === 'yes' && loopConsentIsLive(consent, now)) return armLoopGoal({ directory, consent, sessionId, now });
+    if (reply === 'no' && loopConsentIsLive(consent, now)) return { did: 'declined' };
+    consent = null;
+  }
   if (reply !== null) {
-    const consent = readRecord(join(directory, 'consent.json'));
-    if (!consentIsLive(consent, now)) return { did: 'none' };
+    if (!consentIsLive(consent, now) || consent.kind === 'loop') return { did: 'none' };
     if (reply === 'edit') return { did: 'edit' };
     removeRecord(directory, 'consent.json');
     if (reply === 'no') return { did: 'declined' };
@@ -167,6 +195,13 @@ export function answerGoalPrompt({ workspaceRoot, sessionId, prompt, ledgerFile 
  * The next stop after that closes the record: the check was asked for, and the model reported it.
  */
 export function goalTurnEnd({ workspaceRoot, sessionId, now = Date.now() }) {
+  const result = planTurnEnd({ workspaceRoot, sessionId, now });
+  if (result.block) return result;
+  const notice = loopGoalNotice({ workspaceRoot, sessionId, now });
+  return notice ? { block: true, notice: true, reason: notice.text } : result;
+}
+
+function planTurnEnd({ workspaceRoot, sessionId, now }) {
   const owner = readGoalOwner(workspaceRoot);
   if (!owner || owner.closed || owner.sessionId !== sessionId) return { block: false };
   // The start: the turn in which the user said yes ends once with the order to run start-work.
@@ -179,7 +214,8 @@ export function goalTurnEnd({ workspaceRoot, sessionId, now = Date.now() }) {
         + 'row by row, exactly as if they had typed /start-work with it. Do not ask again.',
     };
   }
-  if (typeof owner.condition !== 'string') return { block: false };
+  // A lit run's goal has no plan rows, so the turn end has nothing to check; its one line comes from loopGoalNotice.
+  if (owner.kind === 'loop' || typeof owner.condition !== 'string') return { block: false };
   const root = resolve(workspaceRoot);
   const planPath = resolve(root, owner.plan);
   if (relative(root, planPath).startsWith('..')) return { block: false };
@@ -202,6 +238,82 @@ export function goalTurnEnd({ workspaceRoot, sessionId, now = Date.now() }) {
       + `Exit 0: reply with the line "${GOAL_STATUS.met(owner.id)}". Any other exit: say what failed and keep working. `
       + 'This check is advisory; if the user pasted the /goal line, Grok Build runs its own review as well.',
   };
+}
+
+// What the prompt names as the objective of a run route: the words after a leading `lit` or `litwork` (and a
+// `loop`, `new` or `restart` word), or null when the prompt names another route or no work.
+function runObjective(prompt) {
+  const match = /^\s*\/?(?:litwork|lit)(?=$|[^\w-])\s*([\s\S]*)$/iu.exec(String(prompt ?? ''));
+  if (!match) return null;
+  const tail = match[1].replace(/^(?:(?:new|restart)(?=$|[^\w-])\s*)?(?:-?loop(?=$|[^\w-])\s*)?/iu, '');
+  return !tail.trim() || LOOP_ROUTE_DENY.test(tail.trimStart()) ? null : tail;
+}
+
+// The first activation of a run route: a restart, a named switch away from another stage, or a bare `lit` with no
+// stage running (or a finished one). A bare `lit` while a stage runs, and every repeat, continues instead.
+function firstRunActivation(entry, before) {
+  if (!entry || entry.stage !== 'work' || entry.discipline !== undefined) return false;
+  if (entry.entry === 'restart') return true;
+  const stage = before?.stage ?? null;
+  if (entry.entry === 'switch') return stage !== 'work';
+  return stage === null || stage === 'done';
+}
+
+/**
+ * The prompt side of a lit run's question, called after answerGoalPrompt with the route the recorder read
+ * (`entry`) and the workflow row from before this prompt (`before`). On the first activation of a run route with an
+ * objective, a test command in the project, and no goal owned or pending, it records a loop consent. It runs no
+ * test and prints nothing: the notice delivers the question.
+ */
+export function offerLoopGoal({ workspaceRoot, sessionId, prompt, entry, before = null, now = Date.now() }) {
+  if (typeof sessionId !== 'string' || !sessionId || !firstRunActivation(entry, before)) return { did: 'none' };
+  const objective = runObjective(prompt);
+  if (objective === null) return { did: 'none' };
+  const root = resolve(workspaceRoot);
+  const check = detectCheck(root);
+  if (check === null) return { did: 'none' };
+  const owner = readGoalOwner(workspaceRoot);
+  // A plan's goal closes at its turn-end check. A loop goal has no check, so it never reports itself met: it stops
+  // blocking when this session starts a fresh run (the old one is over or abandoned), or after 24 h.
+  const staleLoop = owner?.kind === 'loop' && (owner.sessionId === sessionId || now - Date.parse(owner.armedAt) > LOOP_GOAL_TTL_MS);
+  if (owner && !owner.closed && !staleLoop) return { did: 'none' };
+  const directory = goalDirectory(workspaceRoot);
+  if (directory !== null) {
+    const pending = readRecord(join(directory, 'consent.json'));
+    if (consentIsLive(pending, now) || loopConsentIsLive(pending, now)) return { did: 'none' };
+  }
+  const offer = proposeLoopGoal({ cwd: root, check, objective, sessionId, now, falsifyNow: false });
+  return offer.consent ? { did: 'asked', id: offer.consent.id, condition: offer.consent.condition, line: offer.line } : { did: 'none' };
+}
+
+/**
+ * What the model should be told about a lit run's goal, once: the question to show the user (`ask`), then, after
+ * their yes, the line to show (`armed`). Called by the PreToolUse hook (a tool call's `additionalContext` is the one
+ * channel that reaches the model mid-turn) and by the Stop hook for a turn that made no tool call. Marks it told.
+ */
+export function loopGoalNotice({ workspaceRoot, sessionId, now = Date.now() }) {
+  const directory = goalDirectory(workspaceRoot);
+  if (directory === null || typeof sessionId !== 'string' || !sessionId) return null;
+  const consent = readRecord(join(directory, 'consent.json'));
+  if (consent?.kind === 'loop' && !consent.asked && (consent.sessionId == null || consent.sessionId === sessionId) && loopConsentIsLive(consent, now)) {
+    writeRecord(directory, 'consent.json', { ...consent, asked: new Date(now).toISOString() });
+    return {
+      kind: 'ask',
+      id: consent.id,
+      text: `LitGrok goal question [lit:${consent.id}]: the user has not seen this yet. Show them this line exactly as written, in a short message of its own, then carry on with the work: ${LOOP_STATUS.asked(consent.condition)} `
+        + 'Only their exact `yes` on a later prompt arms it, and Grok Build takes /goal only from the user, so never type or send /goal yourself.',
+    };
+  }
+  const owner = readGoalOwner(workspaceRoot);
+  if (owner?.kind === 'loop' && !owner.closed && owner.sessionId === sessionId && owner.announce && !owner.announce.handed) {
+    writeRecord(directory, 'owner.json', { ...owner, announce: { ...owner.announce, handed: new Date(now).toISOString() } });
+    return {
+      kind: 'armed',
+      id: owner.id,
+      text: `LitGrok goal [lit:${owner.id}]: the user answered yes to the lit-loop goal question. Show them this line exactly as written, in a short message of its own, then carry on; no plan is started by this: ${LOOP_STATUS.armed(owner.id, owner.condition)}`,
+    };
+  }
+  return null;
 }
 
 /** SessionStart: a record armed by another session that never closed (a crash, a closed window) closes. */
