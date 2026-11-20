@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.39 — 2026-11-21
 
 - A `lit <objective>` run with no plan can now get a goal question too. On its first activation (not a repeat), in a project with a test command (`npm test` from `package.json`, `pytest`, `cargo test`, `go test ./...`) and no goal owned or waiting, the prompt hook records one question without running any test: `Set goal for this lit-loop: /goal <condition>? (yes / no)`, where the condition is `` `<check>` exits 0 and this is done: <objective> [lit:<id>] ``. Grok Build drops what a prompt hook prints, so the first tool call of the turn carries the exact line to the model as `additionalContext` (the `Stop` hook does it for a turn with no tool call), and the `litwork` skill tells the model to show it as written; that is advisory. Only the exact reply `yes` arms the same `goal/owner.json` record a plan's `yes` arms, with no start-work and no turn-end check, and hands you the `/goal` line to paste, since Grok Build takes `/goal` from you alone. `no`, `edit` or any other prompt drops the question. With no test command, `litwork` points the model at `goal-propose.mjs --loop --check "<check>" <objective>` after its failing check; the script refuses with `No goal set: <reason>` and records nothing when the check already passes, cannot run or is not an allowlisted test command. The hook registrations did not change, so no new `/hooks-trust` is needed.
 
