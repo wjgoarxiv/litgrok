@@ -23,7 +23,7 @@
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, renameSync, unlinkSync, writeSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
-import { GOAL_DIR, GOAL_STATUS, conditionHash, consentAnswer, consentIsLive, consentKey, planRows } from '../skills/lit-plan/scripts/goal-condition.mjs';
+import { GOAL_DIR, GOAL_STATUS, conditionHash, consentAnswer, consentIsLive, consentKey, goalGuide, planRows } from '../skills/lit-plan/scripts/goal-condition.mjs';
 import { LOOP_STATUS, detectCheck, loopConsentIsLive, proposeLoopGoal } from './lit-loop-goal.mjs';
 import { updateWorkflowState } from './workflow-stage.mjs';
 
@@ -301,6 +301,8 @@ export function loopGoalNotice({ workspaceRoot, sessionId, now = Date.now() }) {
       kind: 'ask',
       id: consent.id,
       text: `LitGrok goal question [lit:${consent.id}]: the user has not seen this yet. Show them this line exactly as written, in a short message of its own, then carry on with the work: ${LOOP_STATUS.asked(consent.condition)} `
+        + 'Under the line show this answer guide, in the user\'s language with the answer words kept as the exact English words:\n\n'
+        + `${goalGuide('loop', consent.condition)}\n\n`
         + 'Only their exact `yes` on a later prompt arms it, and Grok Build takes /goal only from the user, so never type or send /goal yourself.',
     };
   }

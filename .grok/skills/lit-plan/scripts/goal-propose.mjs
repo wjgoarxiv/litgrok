@@ -10,13 +10,14 @@
 // It prints the approval question: `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`,
 // or, when no goal can be set, `Approve plan and start work? (yes / no)` followed by `No goal set: <reason>`.
 // A plan it cannot offer at all (outside plans/, unreadable, goal: never) gets only `No goal set: <reason>`.
+// A question is followed by its answer guide (`goalGuide`), which the model shows under the line.
 // It never starts work or arms a goal; only the user's exact `yes`, read by the prompt hook, does.
 
 import { closeSync, constants, lstatSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync, writeSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { GOAL_DIR, GOAL_STATUS, compileCondition, conditionHash, consentKey, falsify, goalId, lintCondition, parseDoneWhen } from './goal-condition.mjs';
+import { GOAL_DIR, GOAL_STATUS, compileCondition, conditionHash, consentKey, falsify, goalGuide, goalId, lintCondition, parseDoneWhen } from './goal-condition.mjs';
 
 const noFollow = constants.O_NOFOLLOW ?? 0;
 
@@ -70,7 +71,7 @@ export function proposeGoal({ cwd, planArg, now = Date.now(), timeoutMs, run } =
   }
   renameSync(staging, join(directory, 'consent.json'));
   const line = goal.ok ? GOAL_STATUS.asked(goal.condition) : `${GOAL_STATUS.askedStart}\n${GOAL_STATUS.skipped(goal.reason)}`;
-  return { line, consent };
+  return { line, guide: goal.ok ? goalGuide('plan', goal.condition) : goalGuide('start'), consent };
 }
 
 // The goal half of the question: a condition that is lint-clean and false right now, or the reason there is none.
@@ -89,8 +90,8 @@ function goalFor({ cwd, plan, planText, timeoutMs, run }) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [first, ...rest] = process.argv.slice(2);
   const loop = first === '--loop' && rest[0] === '--check' && await import('../../../hooks/lit-loop-goal.mjs').catch(() => 0);
-  const { line } = loop === 0 ? { line: 'No goal set: no LitGrok hooks' } : loop
+  const { line, guide } = loop === 0 ? { line: 'No goal set: no LitGrok hooks' } : loop
     ? loop.proposeLoopGoal({ cwd: process.cwd(), check: rest[1], objective: rest.slice(2).join(' '), sessionId: process.env.GROK_SESSION_ID, asked: true })
     : proposeGoal({ cwd: process.cwd(), planArg: first });
-  process.stdout.write(`${line}\n`);
+  process.stdout.write(guide ? `${line}\n\n${guide}\n` : `${line}\n`);
 }

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { answerGoalPrompt, goalTurnEnd, loopGoalNotice, offerLoopGoal, readGoalOwner, sweepGoal } from '../.grok/hooks/lit-goal.mjs';
 import { entryFromPrompt } from '../.grok/hooks/workflow-stage.mjs';
-import { GOAL_MAX_CHARS, GOAL_STATUS, compileCondition, conditionHash, consentAnswer, falsify, lintCondition, parseDoneWhen } from '../.grok/skills/lit-plan/scripts/goal-condition.mjs';
+import { GOAL_ANSWERS, GOAL_MAX_CHARS, GOAL_STATUS, compileCondition, conditionHash, consentAnswer, falsify, goalGuide, lintCondition, parseDoneWhen } from '../.grok/skills/lit-plan/scripts/goal-condition.mjs';
 import { LOOP_STATUS, compileLoopCondition, detectCheck, falsifyLoop, normalizeGoalObjective, proposeLoopGoal } from '../.grok/hooks/lit-loop-goal.mjs';
 import { proposeGoal } from '../.grok/skills/lit-plan/scripts/goal-propose.mjs';
 import { buildPlanSkeleton } from '../.grok/skills/lit-plan/scripts/scaffold-plan.mjs';
@@ -357,7 +357,8 @@ describe('lit run: one yes arms a goal without a plan', () => {
     const cwd = loopProject();
     const result = spawnSync(process.execPath, [join(skills, 'lit-plan', 'scripts', 'goal-propose.mjs'), '--loop', '--check', 'npm test', 'fix', 'the', 'redirect'], { cwd, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: join(temp, 'home') } });
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /^Set goal for this lit-loop: \/goal `npm test` exits 0 and this is done: fix the redirect \[lit:[0-9a-f]{8}\]\? \(yes \/ no\)\n$/u);
+    assert.match(result.stdout, /^Set goal for this lit-loop: \/goal `npm test` exits 0 and this is done: fix the redirect \[lit:[0-9a-f]{8}\]\? \(yes \/ no\)\n\n> \*\*▶ Answer: set goal for this lit-loop\*\*\n/u);
+    assert.ok(result.stdout.endsWith(`\n\n${goalGuide('loop', readGoal(cwd, 'consent.json').condition)}\n`), 'the guide follows the line');
     assert.ok(readGoal(cwd, 'consent.json').asked, 'the model prints this line itself, so nothing asks again');
   });
 
@@ -563,5 +564,85 @@ describe('lit run: one yes arms a goal without a plan', () => {
     }
     assert.match(litwork, /advisory/u);
     assert.match(litwork, /starts no start-work/u);
+  });
+});
+
+describe('answer guide under each goal question', () => {
+  const readGoal = (cwd, name) => JSON.parse(readFileSync(join(cwd, '.grok', 'litgrok', 'goal', name), 'utf8'));
+  const tableRows = (guide) => guide.split('\n').filter((row) => /^> \| \*\*`/u.test(row));
+  const guideProject = (files) => {
+    const cwd = join(temp, `guide${counter++}`);
+    mkdirSync(join(cwd, 'plans'), { recursive: true });
+    for (const [name, text] of Object.entries(files)) writeFileSync(join(cwd, name), text);
+    return cwd;
+  };
+
+  it('every question is built from the same answers its guide lists, in the same order', () => {
+    assert.deepEqual(GOAL_ANSWERS.plan.map(([word]) => word), ['yes', 'edit', 'no']);
+    assert.deepEqual(GOAL_ANSWERS.start.map(([word]) => word), ['yes', 'no']);
+    assert.deepEqual(GOAL_ANSWERS.loop.map(([word]) => word), ['yes', 'no']);
+    for (const kind of ['plan', 'start', 'loop']) {
+      const words = tableRows(goalGuide(kind, kind === 'start' ? null : 'c')).map((row) => /`(\w+)`/u.exec(row)[1]);
+      assert.deepEqual(words, GOAL_ANSWERS[kind].map(([word]) => word), kind);
+    }
+    assert.ok(GOAL_STATUS.asked('c').endsWith(`? (${GOAL_ANSWERS.plan.map(([word]) => word).join(' / ')})`));
+  });
+
+  it('the plan guide is a quoted Markdown table with the goal line and the closing instruction', () => {
+    const condition = 'Every row in plans/cache.md is ticked and `npm test` exits 0 [lit:0123abcd]';
+    const guide = goalGuide('plan', condition);
+    const lines = guide.split('\n');
+    assert.equal(lines[0], '> **▶ Answer: approve plan · start work · set goal**');
+    assert.ok(lines.includes(`> Goal: \`\` /goal ${condition} \`\``), 'a condition holding backticks keeps one code span');
+    assert.ok(lines.includes('> | Type | What happens |'));
+    assert.ok(lines.includes('> |---|---|'));
+    assert.equal(tableRows(guide).length, 3);
+    assert.match(guide, /\| \*\*`no`\*\* \| Nothing starts \|/u);
+    assert.equal(lines.at(-1), '> Type the word alone.');
+    assert.ok(lines.every((line) => line.startsWith('>')), 'every line stays inside the quote');
+  });
+
+  it('the start-only guide has two rows and no goal line; the loop guide has two rows and its goal', () => {
+    const start = goalGuide('start');
+    assert.equal(tableRows(start).length, 2);
+    assert.doesNotMatch(start, /Goal:/u);
+    assert.match(start, /^> \*\*▶ Answer: approve plan · start work\*\*$/mu);
+    const loop = goalGuide('loop', '`npm test` exits 0 and this is done: fix it [lit:0123abcd]');
+    assert.equal(tableRows(loop).length, 2);
+    assert.match(loop, /^> Goal: `` \/goal `npm test` exits 0/mu);
+    assert.match(loop, /\| \*\*`no`\*\* \| Keep working without a goal \|/u);
+  });
+
+  it('goal-propose prints the question unchanged, then the guide that matches it', () => {
+    const goal = guideProject({ 'check.mjs': 'process.exit(1)\n', 'plans/cache.md': '# Cache\n\n## Todos\n- [ ] 1. Build\n\n## Done when\n- check: `node check.mjs`\n' });
+    const run = (cwd, ...args) => spawnSync(process.execPath, [join(skills, 'lit-plan', 'scripts', 'goal-propose.mjs'), ...args], { cwd, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: join(temp, 'home') } });
+    const asked = run(goal, 'plans/cache.md');
+    assert.equal(asked.status, 0, asked.stderr);
+    const [question, blank, ...rest] = asked.stdout.trimEnd().split('\n');
+    assert.match(question, /^Approve plan, start work and set goal: \/goal .+\? \(yes \/ edit \/ no\)$/u);
+    assert.equal(blank, '');
+    assert.equal(rest.join('\n'), goalGuide('plan', readGoal(goal, 'consent.json').condition));
+    const start = guideProject({ 'plans/cache.md': '# Cache\n\n## Todos\n- [ ] 1. Build\n' });
+    assert.equal(run(start, 'plans/cache.md').stdout, `Approve plan and start work? (yes / no)\nNo goal set: the plan has no \`## Done when\` block\n\n${goalGuide('start')}\n`);
+    assert.match(run(start, '../x.md').stdout, /^No goal set: [^\n]+\n$/u, 'a plan it cannot offer gets no guide');
+  });
+
+  it('the lit run notice asks for the line and its two-row guide in the user\'s language', () => {
+    const cwd = guideProject({ 'package.json': JSON.stringify({ name: 'demo', scripts: { test: 'node -e "process.exit(1)"' } }) });
+    const prompt = 'lit fix the login redirect';
+    const { condition } = offerLoopGoal({ workspaceRoot: cwd, sessionId: 's1', prompt, entry: entryFromPrompt(prompt), before: null });
+    const ask = loopGoalNotice({ workspaceRoot: cwd, sessionId: 's1' });
+    assert.ok(ask.text.includes(LOOP_STATUS.asked(condition)));
+    assert.ok(ask.text.includes(goalGuide('loop', condition)), ask.text);
+    assert.match(ask.text, /user's language/u);
+    assert.ok(ask.text.indexOf(LOOP_STATUS.asked(condition)) < ask.text.indexOf(goalGuide('loop', condition)), 'the guide follows the line');
+  });
+
+  it('lit-plan and litwork tell the model to show the guide under the question', () => {
+    for (const id of ['lit-plan', 'litwork']) {
+      const text = readFileSync(join(skills, id, 'SKILL.md'), 'utf8');
+      assert.match(text, /answer guide/u, id);
+      assert.match(text, /answer words stay English/u, id);
+    }
   });
 });

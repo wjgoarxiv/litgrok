@@ -21,10 +21,33 @@ export const GOAL_MAX_CHARS = 500;
 export const CONSENT_TTL_MS = 30 * 60 * 1000;
 export const FALSIFY_TIMEOUT_MS = 120_000;
 
+// The answers each question takes, in order, and what each does. The question's `(yes / … / no)` and the answer
+// guide printed under it are both built from these lists, so they cannot drift apart. The guide is a quoted
+// Markdown table for the model's reply; the answer words stay the exact English words.
+export const GOAL_ANSWERS = Object.freeze({
+  plan: [['yes', 'Starts the work now; LitGrok arms the goal and gives you the `/goal` line to paste'], ['edit', 'Change the plan or its check first, then answer again'], ['no', 'Nothing starts']],
+  start: [['yes', 'Starts the work now, with no goal'], ['no', 'Nothing starts']],
+  loop: [['yes', 'LitGrok arms the goal and gives you the `/goal` line to paste; no plan starts'], ['no', 'Keep working without a goal']],
+});
+const GUIDE_TITLES = { plan: 'approve plan · start work · set goal', start: 'approve plan · start work', loop: 'set goal for this lit-loop' };
+export const goalChoices = (kind) => `(${GOAL_ANSWERS[kind].map(([word]) => word).join(' / ')})`;
+// One code span around text that may itself hold backticks: a fence one tick longer than its longest run.
+const codeSpan = (text) => {
+  const fence = '`'.repeat(Math.max(0, ...(text.match(/`+/gu) ?? []).map((run) => run.length)) + 1);
+  return `${fence} ${text} ${fence}`;
+};
+
+/** The answer guide under a question: `plan` and `loop` show their goal, `start` has none. */
+export function goalGuide(kind, condition = null) {
+  const goal = condition === null ? [] : [`> Goal: ${codeSpan(`/goal ${condition}`)}`, '>'];
+  const rows = GOAL_ANSWERS[kind].map(([word, does]) => `> | **\`${word}\`** | ${does} |`);
+  return [`> **▶ Answer: ${GUIDE_TITLES[kind]}**`, '>', ...goal, '> | Type | What happens |', '> |---|---|', ...rows, '>', '> Type the word alone.'].join('\n');
+}
+
 // The fixed status lines. The model prints them as written; nothing else announces a goal.
 export const GOAL_STATUS = Object.freeze({
-  asked: (condition) => `Approve plan, start work and set goal: /goal ${condition}? (yes / edit / no)`,
-  askedStart: 'Approve plan and start work? (yes / no)',
+  asked: (condition) => `Approve plan, start work and set goal: /goal ${condition}? ${goalChoices('plan')}`,
+  askedStart: `Approve plan and start work? ${goalChoices('start')}`,
   skipped: (reason) => `No goal set: ${reason}`,
   started: (plan, id, condition) => `Plan approved; start-work is running ${plan}. LitGrok goal armed [lit:${id}]. Grok Build takes /goal only from you; paste: /goal ${condition}`,
   startedNoGoal: (plan, reason) => `Plan approved; start-work is running ${plan}. No goal set: ${reason}`,

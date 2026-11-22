@@ -150,10 +150,10 @@
     },
     "lit-plan": {
       "minSkillBytes": 5800,
-      "maxSkillBytes": 9000,
+      "maxSkillBytes": 9300,
       "minFiles": 6,
       "maxFiles": 9,
-      "maxBytes": 50000
+      "maxBytes": 53000
     },
     "lit-pptx": {
       "minSkillBytes": 3800,
@@ -488,12 +488,12 @@
     },
     "lit-plan": {
       "skillMd": {
-        "bytes": 8984,
-        "sha256": "2988b7039c6b61963341aac1e6239e8db2555a1f7b62fba35836e49f228908a9"
+        "bytes": 9082,
+        "sha256": "95b739f74f6183688f009bbd5c3bd629edf2d9edf8c6755678f62ccf0de3cb85"
       },
       "files": 8,
-      "bytes": 49996,
-      "sha256": "cf153d6f021a47ece2e389087877942f64df4455bf28cdbb856f99716ca414d5"
+      "bytes": 52137,
+      "sha256": "00b3edfd86e84dc7dbac6a54296b63a3a4b4889e945cf0813324b51b563d4f20"
     },
     "lit-pptx": {
       "skillMd": {
@@ -569,12 +569,12 @@
     },
     "litwork": {
       "skillMd": {
-        "bytes": 9991,
-        "sha256": "36c6c33331acfa568333364ce72b46f8f73fd31bf1cb67abf7fe824af3c1f78a"
+        "bytes": 10097,
+        "sha256": "05c48eb95086b16fc0ae7bb3fc61b94bdeeae2ce597a62041ba61181c134b909"
       },
       "files": 1,
-      "bytes": 9991,
-      "sha256": "46f03fa582b5e6987f6fef2a203760b614a431aa1f7d18129518b7b7e5d228fe"
+      "bytes": 10097,
+      "sha256": "121651a954f4eaaa04c273a80a5353082d89b21d189f3013c58ad9e98d8fd659"
     },
     "lsp": {
       "skillMd": {

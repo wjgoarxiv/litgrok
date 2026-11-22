@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process';
 import { closeSync, constants, existsSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { FALSIFY_TIMEOUT_MS, GOAL_DIR, GOAL_MAX_CHARS, GOAL_STATUS, CONSENT_TTL_MS, conditionHash, goalId, lintCondition } from '../skills/lit-plan/scripts/goal-condition.mjs';
+import { FALSIFY_TIMEOUT_MS, GOAL_DIR, GOAL_MAX_CHARS, GOAL_STATUS, CONSENT_TTL_MS, conditionHash, goalChoices, goalGuide, goalId, lintCondition } from '../skills/lit-plan/scripts/goal-condition.mjs';
 
 const MAX_OBJECTIVE_CHARS = 180;
 const noFollow = constants.O_NOFOLLOW ?? 0;
@@ -24,7 +24,7 @@ const UNSAFE_COMMAND_PATTERNS = [
 ];
 
 export const LOOP_STATUS = Object.freeze({
-  asked: (condition) => `Set goal for this lit-loop: /goal ${condition}? (yes / no)`,
+  asked: (condition) => `Set goal for this lit-loop: /goal ${condition}? ${goalChoices('loop')}`,
   armed: (id, condition) => `LitGrok goal armed [lit:${id}]. Grok Build takes /goal only from you; paste: /goal ${condition}`,
 });
 
@@ -126,5 +126,5 @@ export function proposeLoopGoal({ cwd, check, objective, sessionId = null, asked
     closeSync(descriptor);
   }
   renameSync(staging, join(directory, 'consent.json'));
-  return { line: LOOP_STATUS.asked(built.condition), consent };
+  return { line: LOOP_STATUS.asked(built.condition), guide: goalGuide('loop', built.condition), consent };
 }

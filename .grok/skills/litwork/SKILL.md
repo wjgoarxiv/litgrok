@@ -112,13 +112,13 @@ Grok Build's native `/goal` and `/workflow` are typed by the user. When the user
 
 ## Goal for a lit run
 
-A `lit <objective>` run with no plan can get one native-goal question too, on its first activation only (not a repeat, not `litgoal`). When the project has a test command (`npm test` from `package.json`'s `scripts.test`, `pytest`, `cargo test`, `go test ./...`) and no goal is owned or waiting, the prompt hook records the question without running anything. Grok Build drops what a prompt hook prints, so the first tool call of the turn (or the `Stop` of a turn with none) carries the exact line to you. Show the user that line as written, in a short message of its own, and go on:
+A `lit <objective>` run with no plan can get one native-goal question too, on its first activation only (not a repeat, not `litgoal`). When the project has a test command (`npm test` from `package.json`'s `scripts.test`, `pytest`, `cargo test`, `go test ./...`) and no goal is owned or waiting, the prompt hook records the question without running anything. Grok Build drops what a prompt hook prints, so the first tool call of the turn (or the `Stop` of a turn with none) carries the exact line to you. Show the user that line as written, in a short message of its own, with the answer guide that comes with it under the line (the answer words stay English), and go on:
 
     Set goal for this lit-loop: /goal <condition>? (yes / no)
 
 The condition is `` `<check>` exits 0 and this is done: <objective> [lit:<id>] ``. Only the user's whole reply `yes` (any case) on a later prompt arms it; `no`, `edit` or any other prompt drops it. A `yes` writes `.grok/litgrok/goal/owner.json` (the same record lit-plan arms) and starts no start-work. Show the line you are then given: `LitGrok goal armed [lit:<id>]. Grok Build takes /goal only from you; paste: /goal <condition>`. `lit cancel` closes the record, and there is no turn-end check for it. This is advisory: Grok Build takes `/goal` only from the user, so never type or send it, and where a host shows no hook context (Grok Bot, Cursor) nothing asks.
 
-Without a test command the hook asks nothing. Once one failing check proves the objective (after the RED step), run `node .grok/skills/lit-plan/scripts/goal-propose.mjs --loop --check "<check>" <objective>` and end the reply with the line it prints. It dry-runs the check and refuses with `No goal set: <reason>`, recording nothing, when the check already passes, cannot run or is not an allowlisted test command. If a goal question already reached you this turn, do not run it.
+Without a test command the hook asks nothing. Once one failing check proves the objective (after the RED step), run `node .grok/skills/lit-plan/scripts/goal-propose.mjs --loop --check "<check>" <objective>` and end the reply with the line and answer guide it prints. It dry-runs the check and refuses with `No goal set: <reason>`, recording nothing, when the check already passes, cannot run or is not an allowlisted test command. If a goal question already reached you this turn, do not run it.
 
 LitGrok does not ship:
 
