@@ -3,7 +3,7 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-LitGrok은 xAI Grok Build가 코드를 고치기 전에 계획부터 세우고, 만든 결과를 확인하고, 인수인계 문서를 남기게 합니다. 그러면 내일 세션이 오늘 멈춘 자리에서 이어집니다. npm 명령 한 줄이면 스킬과 프로젝트 규칙, 훅이 프로젝트에 들어갑니다.
+LitGrok은 xAI Grok Build에 붙이는 추가 기능입니다. Grok이 "다 됐어요"라고 말하기 전에 자기 작업을 직접 확인하게 하고, 다음 세션이 이어서 시작할 수 있도록 기록을 남기게 합니다. npm 명령 한 줄이면 스킬과 프로젝트 규칙, 훅이 프로젝트에 들어갑니다.
 
 **[GitHub에서 README 전체 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [안내서](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide_ko-KR.md) · [전체 스킬](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md) · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference_ko-KR.md)
 
@@ -14,7 +14,40 @@ LitGrok은 xAI Grok Build가 코드를 고치기 전에 계획부터 세우고, 
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Grok Build 세션이 길어지면 대화가 압축되고, 새 세션은 앞 세션이 알던 내용을 모른 채 시작하며, "다 됐다"는 말도 모델이 그렇게 말했다는 뜻일 때가 많습니다. LitGrok은 세션마다 따라갈 순서를 줍니다. 첫 수정 전에 계획을 글로 남기고, 그 계획에 비추어 확인하고, 다음 세션이 읽을 인수인계 문서를 남깁니다. 스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열두 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
+Grok Build에게 기능을 하나 부탁하면 코드를 쓰고 끝났다고 말합니다. 그런데 다음 날 보니 테스트는 한 번도 돌지 않았습니다. 새 세션을 열면 프로젝트 설명을 처음부터 다시 해야 합니다.
+
+LitGrok을 쓰면 같은 요청 앞에 `lit`만 붙이면 됩니다. Grok은 먼저 이 작업에서 "끝났다"가 무슨 뜻인지 적고, 실패하는 테스트를 추가해 통과시킨 뒤, 무엇을 확인했고 무엇을 확인하지 못했는지 알려 줍니다. 작업을 멈출 때 `handoff`라고 치면 Grok이 기록을 남기고, 다음 세션은 그 기록부터 읽고 이어서 합니다.
+
+LitGrok에는 스킬 42개, 에이전트 11개, 프로젝트 규칙 하나, 훅 등록 열두 개가 들어 있고, 세션 실행과 모델 선택은 계속 Grok Build가 맡습니다. 며칠에 걸쳐 만드는 기능이나 다른 사람이 읽을 보고서처럼, 한 번 앉은 자리에서 끝나지 않는 일에 잘 맞습니다.
+
+## 두 가지 사용법
+
+**간단하게.** 요청 맨 앞에 `lit`을 붙이고 나머지는 평소처럼 씁니다.
+
+```text
+lit src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘
+```
+
+Grok이 목표를 정하고, 실패하는 테스트를 쓰고, 버그를 고치고, 결과를 확인한 뒤 확인한 내용을 알려 줍니다. 대부분의 작업은 이것으로 충분합니다.
+
+Grok Build에서는 시작하는 방식이 조금 다릅니다. Grok Build는 프롬프트 훅이 내놓은 답을 모델에게 넘기지 않아서, 훅이 `lit`을 대신 켜 줄 수 없습니다. 그 대신 Grok은 매 턴 LitGrok의 프로젝트 규칙을 읽습니다. 규칙은 프롬프트 맨 앞의 `lit`을 신호로 보고, 거기에 맞는 스킬은 Grok이 직접 고릅니다. 코드를 고치는 일이면 대개 `litwork`가 뽑힙니다. 어떤 스킬이 돌지 확실히 정하고 싶다면 스킬 이름을 슬래시 명령으로 치면 됩니다. `/litwork src/dates.js의 날짜 파싱 버그를 테스트와 함께 고쳐줘`도 같은 일을 합니다.
+
+**본격적으로.** 큰 작업은 한 단계씩 나아갑니다. 각 단계의 결과를 다음 단계가 이어받고, 필요 없는 단계는 건너뛰면 됩니다. 단계마다 스킬 이름 앞에 슬래시를 붙여 부릅니다.
+
+| 단계 | 입력 | 하는 일 |
+| --- | --- | --- |
+| 1. 넓게 보기 | `/lit-brainstorm <질문>` | 선택지를 많이 낸 뒤 점수를 매겨 고를 만한 몇 개로 추립니다 |
+| 2. 구체화 | `/deep-interview <아이디어>` | 목표가 분명해질 때까지 Grok이 질문합니다 |
+| 3. 계획 | `/lit-crucible <접근법>` 또는 `/lit-plan <작업>` | crucible은 접근법의 약점을 먼저 찌르고 살아남은 조건을 계획으로 넘깁니다. lit-plan은 단계를 `plans/`에 쓰고 승인을 기다립니다 |
+| 4. 실행 | 계획에 `yes`, 또는 `/litwork <작업>` | 정확히 `yes`라고 답하면 그 계획으로 `/start-work`가 시작됩니다. 계획 없는 작업은 `/litwork`가 테스트와 확인을 거치며 진행합니다 |
+| 5. 검토 | `/review-work` | 파일을 고치지 않는 여러 갈래로 검토하고, 발견한 문제부터 알려 줍니다 |
+| 6. 넘겨주기 | `handoff` 또는 `/lit-handoff` | 만든 것, 확인한 것, 남은 것을 `.handoff/HANDOFF.md`에 남깁니다 |
+
+설치는 프로젝트 폴더에서 한 줄입니다. 그다음 Git 루트에서 Grok Build를 다시 열고 `/hooks-trust`에서 훅을 신뢰해 주세요(처음 써 보는 전체 과정은 [처음 입력해 볼 것](#처음-입력해-볼-것)에 있습니다).
+
+```bash
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
+```
 
 ## 30초 설치
 

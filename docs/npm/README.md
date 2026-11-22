@@ -3,7 +3,7 @@
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
-LitGrok gives xAI's Grok Build the habit of planning before it edits, checking what it built, and leaving a handoff, so tomorrow's session starts where today's stopped. One npm command adds its skills, project rule and hooks to your project.
+LitGrok is an add-on for xAI's Grok Build. It makes Grok check its own work before it says "done", and leaves a note so the next session starts where this one stopped. One npm command adds its skills, project rule and hooks to your project.
 
 **[Full README on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [Guide](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide.md) · [All skills](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference.md)
 
@@ -14,7 +14,40 @@ LitGrok gives xAI's Grok Build the habit of planning before it edits, checking w
 
 <p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
-Long Grok Build sessions get compacted, a new session starts without what the last one knew, and "done" often just means the model said so. LitGrok gives each session a routine to follow: a written plan before the first edit, checks against that plan, and a handoff file the next session can read. It ships 42 skills, 11 agents, one project rule, and twelve hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
+You ask Grok Build for a feature. It writes the code and says it is finished, and a day later you find the tests never ran. You open a new session and explain the whole project again.
+
+With LitGrok you start the same request with `lit`. Grok first writes down what "finished" means for this task, adds a test that fails, makes it pass, and ends by telling you what it checked and what it could not. When you stop, type `handoff`. Grok saves a note, and the next session reads it before it carries on.
+
+It ships 42 skills, 11 agents, one project rule, and twelve hook registrations. Grok Build still runs the session and chooses the model. It suits work that runs longer than one sitting, such as a feature spread over a few days or a report someone else will read.
+
+## Two ways to use it
+
+**The easy way.** Start your request with `lit` and write the rest as usual:
+
+```text
+lit fix the date parsing bug in src/dates.js, with a test
+```
+
+Grok sets the goal, writes a failing test, fixes the bug, checks the result and tells you what it checked. Most tasks need nothing more.
+
+Grok Build starts this a little differently from other agents. It does not pass a prompt hook's reply on to the model, so no hook can switch `lit` on for you. Instead, Grok reads LitGrok's project rule on every turn. The rule treats `lit` at the start of a prompt as the signal, and Grok then picks the matching skill itself; for a code change that is usually `litwork`. When you want to be sure which skill runs, type its name as a slash command: `/litwork fix the date parsing bug in src/dates.js, with a test` does the same job.
+
+**The full workflow.** For a bigger job, go one step at a time. Each step hands its result to the next, and you can skip any step you do not need. Every step is a skill you call by name with a slash.
+
+| Step | Type | What happens |
+| --- | --- | --- |
+| 1. Explore | `/lit-brainstorm <question>` | Many options, scored, cut to a short list you pick from |
+| 2. Clarify | `/deep-interview <idea>` | Grok asks questions until the goal is clear |
+| 3. Plan | `/lit-crucible <approach>` or `/lit-plan <task>` | Crucible attacks the approach first and hands what survives to planning; lit-plan writes the steps to `plans/` and waits for your yes |
+| 4. Build | `yes` to the plan, or `/litwork <task>` | An exact `yes` starts `/start-work` on the plan; `/litwork` runs a task that has no plan, with tests and checks |
+| 5. Review | `/review-work` | Read-only review lanes, findings first |
+| 6. Hand off | `handoff` or `/lit-handoff` | What was built, checked and left, saved to `.handoff/HANDOFF.md` |
+
+Install with one line from your project's folder, then restart Grok Build from the Git root and trust the hooks in `/hooks-trust` ([The first thing to type](#the-first-thing-to-type) has the full first run):
+
+```bash
+npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
+```
 
 ## Install in 30 seconds
 
