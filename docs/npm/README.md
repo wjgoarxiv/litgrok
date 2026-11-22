@@ -1,18 +1,18 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
 LitGrok is an add-on for xAI's Grok Build. It makes Grok check its own work before it says "done", and leaves a note so the next session starts where this one stopped. One npm command adds its skills, project rule and hooks to your project.
 
-**[Full README on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [Guide](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide.md) · [All skills](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference.md)
+**[Full README on GitHub](https://github.com/wjgoarxiv/litgrok#readme)** · [Guide](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide.md) · [All skills](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills.md) · [한국어](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md) · [Install](#install-in-30-seconds) · [Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/reference.md)
 
 <p align="center">
-<a href="#install-in-30-seconds"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/badge-version.svg" alt="1.0.39" /></a>
-<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/badge-license.svg" alt="MIT license" /></a>
+<a href="#install-in-30-seconds"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/readme/badge-version.svg" alt="1.0.40" /></a>
+<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/readme/badge-license.svg" alt="MIT license" /></a>
 </p>
 
-<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
+<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/reference.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Docs</a> &nbsp; <a href="#install-in-30-seconds">Install</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/readme/lucide-play.svg" width="16" alt="" /> Cover motion</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
 You ask Grok Build for a feature. It writes the code and says it is finished, and a day later you find the tests never ran. You open a new session and explain the whole project again.
 
@@ -57,7 +57,7 @@ You need Node.js and Grok Build. In an interactive terminal, from the project yo
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-The files land in `<project>/.grok/`. Add `--user` to install under `~/.grok/` instead, or use `--package @litfamily/litgrok@1.0.39` to pin this release. Add `--dry-run` to see every destination before anything is written.
+The files land in `<project>/.grok/`. Add `--user` to install under `~/.grok/` instead, or use `--package @litfamily/litgrok@1.0.40` to pin this release. Add `--dry-run` to see every destination before anything is written.
 
 Trying a local package instead? Put its real absolute path in a variable, then run these two lines separately:
 
@@ -106,7 +106,7 @@ Beyond code, `lit-pptx` and `lit-docx` point you to wjgoarxiv-skills for slide d
 
 ## What changes after install
 
-The installer copies the skills, agents, project rule, and hooks into `.grok/`. The twelve hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
+The installer copies the skills, agents, project rule, and hooks into `.grok/`. The twelve hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
 
 If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first. Once a prompt starts a workflow skill, the row also shows the workflow stage, the tool running now and the last test result. Add `--notify` for Grok's terminal notification when a turn finishes.
 
@@ -145,6 +145,6 @@ If the status row is missing, add it with `install --user --status-line`. Grok r
 
 If LitGrok saves you some re-explaining, a [star on GitHub](https://github.com/wjgoarxiv/litgrok) helps other Grok Build users find it.
 
-[Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/reference.md) · [Changelog](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/CHANGELOG.md) · [Privacy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/docs/privacy.md) · [MIT license](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/LICENSE) · [Trademark policy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.39/TRADEMARK.md)
+[Reference](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/reference.md) · [Changelog](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/CHANGELOG.md) · [Privacy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/docs/privacy.md) · [MIT license](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/LICENSE) · [Trademark policy](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.40/TRADEMARK.md)
 
 The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it.
