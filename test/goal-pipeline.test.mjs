@@ -391,6 +391,25 @@ describe('lit run: one yes arms a goal without a plan', () => {
     assert.match(offer(loopProject(), 'lit add a flag', { before: { stage: 'done' } }).condition, /this is done: add a flag \[lit:/u);
   });
 
+  it('a request that ends with lit asks the goal question with the words before it', () => {
+    const done = (prompt, objective) => {
+      const result = offer(loopProject(), prompt);
+      assert.equal(result.did, 'asked', prompt);
+      assert.equal(result.condition.replace(/ \[lit:[0-9a-f]{8}\]$/u, ''), `\`npm test\` exits 0 and this is done: ${objective}`, prompt);
+    };
+    done('fix the login redirect lit', 'fix the login redirect');
+    done('로그인 버튼 고쳐줘 lit', '로그인 버튼 고쳐줘');
+    done('로그인 버튼 고쳐줘. 부탁해 lit', '로그인 버튼 고쳐줘. 부탁해');
+    done('fix the login redirect lit.', 'fix the login redirect');
+    done('fix the login redirect litwork', 'fix the login redirect');
+    done('로그인 버튼 고쳐줘 lit-loop', '로그인 버튼 고쳐줘');
+    done('lit-loop 로그인 버튼 고쳐줘', '로그인 버튼 고쳐줘');
+    for (const prompt of ['lit', 'lit.', 'lit!', 'litwork ?', 'lit-loop ...', 'please lit fix it', 'what does lit-loop do?', 'cancel lit', 'lit-plan a cache lit']) {
+      assert.equal(offer(loopProject(), prompt).did, 'none', prompt);
+    }
+    assert.equal(offer(loopProject(), 'also the lexer lit', { before: { stage: 'work' } }).did, 'none', 'a trailing repeat continues');
+  });
+
   it('asks nothing for a repeat, a named discipline, no test command, no objective, or an owned or pending goal', () => {
     const none = (cwd, prompt, extra) => assert.equal(offer(cwd, prompt, extra).did, 'none', prompt);
     none(loopProject(), 'lit also the lexer', { before: { stage: 'work' } });

@@ -242,11 +242,15 @@ function planTurnEnd({ workspaceRoot, sessionId, now }) {
 
 // What the prompt names as the objective of a run route: the words after a leading `lit` or `litwork` (and a
 // `loop`, `new` or `restart` word), or null when the prompt names another route or no work.
+// The run's objective: the words after the run word, or, when the prompt ends with it (`fix the footer lit`), the
+// words before it. A bare `lit`, or one with only punctuation after it, has none.
 function runObjective(prompt) {
-  const match = /^\s*\/?(?:litwork|lit)(?=$|[^\w-])\s*([\s\S]*)$/iu.exec(String(prompt ?? ''));
-  if (!match) return null;
-  const tail = match[1].replace(/^(?:(?:new|restart)(?=$|[^\w-])\s*)?(?:-?loop(?=$|[^\w-])\s*)?/iu, '');
-  return !tail.trim() || LOOP_ROUTE_DENY.test(tail.trimStart()) ? null : tail;
+  const text = String(prompt ?? '');
+  const empty = (value) => !/[\p{L}\p{N}]/u.test(value);
+  const match = /^\s*\/?(?:litwork|lit-loop|lit)(?=$|[^\w-])\s*([\s\S]*)$/iu.exec(text);
+  let tail = match ? match[1].replace(/^(?:(?:new|restart)(?=$|[^\w-])\s*)?(?:-?loop(?=$|[^\w-])\s*)?/iu, '') : '';
+  if (empty(tail)) tail = /^([\s\S]*?\S)\s+\/?(?:litwork|lit-loop|lit)[\s.!?。]*$/iu.exec(text)?.[1] ?? '';
+  return empty(tail) || LOOP_ROUTE_DENY.test(tail.trimStart()) ? null : tail;
 }
 
 // The first activation of a run route: a restart, a named switch away from another stage, or a bare `lit` with no

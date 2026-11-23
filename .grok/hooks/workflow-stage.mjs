@@ -62,6 +62,10 @@ const SPACED_REVIEW_PATTERN = /^\s*\/?lit\s+review(?=$|[^\w-])/iu;
 const BRAINSTORM_PATTERN = /^\s*\/?(?:lit-brainstorm|lit\s+(?:brainstorm|brainstorming|ideation|ideate|idea|ideas))(?=$|[^\w-])/iu;
 // Catch-up is no workflow stage either: it names its own discipline and leaves the row where it was.
 const ADHD_PATTERN = /^\s*\/?(?:lit-adhd|lit-rewind|lit\s+(?:adhd|rewind))(?=$|[^\w-])/iu;
+// `lit-loop` is the hyphenated spelling of a lit run, as the prompt's first or last word; a mention inside a
+// sentence is no route.
+const LEADING_LOOP_PATTERN = /^\s*\/?lit-loop(?=$|[^\w-])/iu;
+const TRAILING_LOOP_PATTERN = /(?:^|\s)\/?lit-loop[\s.!?。]*$/iu;
 
 /**
  * The stage a prompt names and how it enters it: 'switch' for a named skill (`discipline` is 'lit-plan' for the
@@ -72,8 +76,9 @@ export function entryFromPrompt(visibleText) {
   if (typeof visibleText !== 'string') return null;
   if (BRAINSTORM_PATTERN.test(visibleText)) return { stage: null, entry: 'switch', discipline: 'lit-brainstorm' };
   if (ADHD_PATTERN.test(visibleText)) return { stage: null, entry: 'switch', discipline: 'lit-adhd' };
+  if (LEADING_LOOP_PATTERN.test(visibleText)) return { stage: STAGE_OF.litwork, entry: 'switch' };
   const match = STAGE_PATTERN.exec(visibleText);
-  if (!match) return null;
+  if (!match) return TRAILING_LOOP_PATTERN.test(visibleText) ? { stage: STAGE_OF.litwork, entry: 'switch' } : null;
   const token = match[1].toLowerCase();
   if (token !== 'lit') return { stage: STAGE_OF[token], entry: 'switch' };
   if (SPACED_PLAN_PATTERN.test(visibleText)) return { stage: STAGE_OF['lit-plan'], entry: 'switch', discipline: 'lit-plan' };

@@ -111,6 +111,10 @@ test('a prompt that names a workflow skill sets the stage; mentions and other wo
   assert.equal(stageFromPrompt('please review-work the change'), 'review');
   assert.equal(stageFromPrompt('Explain the lit-planning of crops.'), null);
   assert.equal(stageFromPrompt('a literal question'), null);
+  assert.equal(stageFromPrompt('lit-loop fix the login button'), 'work', 'lit-loop is the run word');
+  assert.equal(stageFromPrompt('로그인 버튼 고쳐줘 lit-loop'), 'work', 'a trailing lit-loop routes as a leading one');
+  assert.equal(stageFromPrompt('로그인 버튼 고쳐줘 litwork'), 'work');
+  assert.equal(stageFromPrompt('what does lit-loop do?'), null, 'a mid-sentence mention is no route');
   assert.equal(stageFromPrompt(undefined), null);
 });
 
