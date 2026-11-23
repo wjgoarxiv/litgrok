@@ -6,6 +6,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
 import { rewindCellRgb } from './lit-mark.mjs';
+import { CHROME } from './lit-synthwave.mjs';
 import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
 import { readOtherSessions } from './session-rows.mjs';
 import { STAGES, readWorkflowState } from './workflow-stage.mjs';
@@ -17,9 +18,10 @@ const MAX_INPUT_BYTES = 64 * 1024;
 const ROLES = {
   accent: [255, 99, 55], dim: [138, 138, 138], empty: [68, 68, 68], rail: [70, 80, 92],
   yellow: [215, 175, 0], red: [215, 95, 95], green: [95, 175, 95], ink: [11, 15, 20], pink: [255, 45, 149],
+  pillInk: [11, 14, 20],
 };
-// The family mark: L, I and T on pink, violet and cyan.
-const BRAND_STOPS = [[255, 45, 149], [128, 137, 202], [0, 229, 255]];
+// The truecolor [🔥LIT] pill runs from the second to the fifth stop of the synthwave chrome.
+const PILL_STOPS = [CHROME[1], CHROME[4]].map((hex) => [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16)));
 // Grok cuts each line at 1024 characters, escapes included.
 const MAX_LINE_CHARACTERS = 1024;
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
@@ -463,16 +465,17 @@ function brandText(version, glyphs) {
   return `[${glyphs.fire}LIT${version ? ` v${version}` : ''}]`;
 }
 
-// The family mark: bold, the fire and the brackets in the terminal's own colour, L, I and T on the
-// gradient, the version in its last stop. 256 colours make it bold magenta and 16 colours bold cyan.
+// The family mark. In truecolor it is a pill: bold dark ink on a gradient from the second to the fifth
+// stop of LitGrok's synthwave chrome, one background step per cell, with a space in place of each bracket
+// (the same cells). 256 colours make it bold magenta and 16 colours bold cyan, brackets kept.
 function brandSegment(version, glyphs, paint, options = {}) {
   const paintBrand = (text) => {
     if (!paint.depth) return text;
     if (paint.depth === 256) return `\u001b[0m\u001b[1m\u001b[38;5;201m${text}\u001b[0m`;
     if (paint.depth === 16) return `\u001b[0m\u001b[1m\u001b[36m${text}\u001b[0m`;
-    const at = text.indexOf('LIT');
-    const letters = [...'LIT'].map((letter, index) => `${sgr(BRAND_STOPS[index], 24)}${letter}`).join('');
-    return `\u001b[0m\u001b[1m${text.slice(0, at)}${letters}${sgr(BRAND_STOPS[2], 24)}${text.slice(at + 3)}\u001b[0m`;
+    const cells = [...text.replace(/^\[/u, ' ').replace(/\]$/u, ' ')];
+    const fill = (index) => PILL_STOPS[0].map((value, at) => Math.round(value + (PILL_STOPS[1][at] - value) * (cells.length > 1 ? index / (cells.length - 1) : 0)));
+    return `\u001b[0m\u001b[1m${sgr(ROLES.pillInk, 24)}${cells.map((cell, index) => `${sgr(fill(index), 24, true)}${cell}`).join('')}\u001b[0m`;
   };
   // A narrow row lets the version go before anything else on the mark.
   return segment(brandText(version, glyphs), paintBrand, { ...options, shrink: () => brandText('', glyphs) });

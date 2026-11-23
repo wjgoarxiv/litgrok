@@ -698,6 +698,8 @@
     ".grok/hooks/lit-loop-goal.mjs",
     ".grok/hooks/lit-mark.mjs",
     ".grok/hooks/lit-status-line.mjs",
+    ".grok/hooks/lit-synthwave-rows.mjs",
+    ".grok/hooks/lit-synthwave.mjs",
     ".grok/hooks/litgrok-hud-state.mjs",
     ".grok/hooks/notice-record.mjs",
     ".grok/hooks/plan-gate.mjs",

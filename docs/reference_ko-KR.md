@@ -155,7 +155,7 @@ Grok Build에서는 어떤 훅도 압축을 시작할 수 없으므로 사용자
 ### 설치 출력
 
 `install`과 `uninstall`은 항상 공유 LitFamily frame으로 시작합니다 — 46글자 rule,
-package version과 `grok` 이름이 붙은 canonical LIT banner, stage card 두 개. `MODEL ROUTE`
+`LIT · grok build` tagline과 package version이 붙은 synthwave LIT mark, stage card 두 개. `MODEL ROUTE`
 card는 항상 `Model selection: host-owned`를 출력합니다. model과 reasoning effort
 선택은 Grok Build가 소유하므로 installer는 model 질문을 하지 않고 model key를
 쓰지 않습니다. 색상은 terminal을 따릅니다. `--no-color`, `NO_COLOR`, `CI`,
@@ -244,14 +244,23 @@ uninstall은 manifest의 해시와 아직 같은 파일을 지우고, 그 때문
 ## LIT mark와 시작 안내
 
 표준 mark(22×10), banner(44×20), micro(16×5)는 선택된 Ignition B의 맞물리는 벡터 심벌에서 가져옵니다.
-installer와 `--help`에는 banner와 `grok` 이름을 표시하고 기존 설치 카드는 유지합니다.
+installer와 `--help`는 아래의 synthwave mark를 표시하고 기존 설치 카드는 유지합니다.
 고정 원본은 각 글리프와 셀의 색을 기록합니다. Ignition Orange `#FF6337`, Signal Lime `#D7F75B`,
 Terminal Ivory `#F2EFDF`를 사용하며 truecolor가 없는 터미널에서는 각각 256색 번호 203, 191, 230을 사용합니다.
 배경색, 행별 그라데이션, 입체 그림자는 넣지 않습니다. `NO_COLOR`, `CI`가 있거나 비대화형 출력일 때에는
 installer 전체에 색상·줄 갱신 제어 문자를 넣지 않습니다. 환경 변수 값이 비어 있어도 같습니다. Mark API는 JSON 모드에서도 색을 끄지만 installer에는 JSON 명령이 없습니다. UTF-8이 아닌 locale이나
 `TERM=dumb`에서는 블록 대신 `LIT`를 표시합니다. `--help`는 파일을 설치하지 않습니다.
 
-installer, help, SessionStart는 패키지 내부의 독립적인 `.grok/hooks/lit-mark.mjs`를 사용합니다.
+installer frame과 `--help`는 `.grok/hooks/lit-synthwave.mjs`와 생성된 행 데이터
+`lit-synthwave-rows.mjs`(LitFamily spec digest로 고정)로 synthwave LIT mark를 그립니다. 크기는
+terminal 폭을 따릅니다. 76열 이상은 큰 장면, 44열 이상은 중간, 24열 이상은 작은 장면이고, 그보다 좁거나
+블록 글리프를 그릴 수 없으면 `LIT · grok build` 한 줄만 출력합니다. 폭을 모르면 80열로 봅니다. 색이 켜져
+있으면 한 칸에 두 픽셀을 truecolor나 256색 cube로 칠하고 LitGrok의 라일락·보라 chrome을 씁니다. 색이 꺼져
+있으면 escape byte 없이 글리프 장면을 출력합니다. stdout이 terminal이 아니면(pipe, agent의 tool call,
+CI log) `LIT · grok build` 한 줄과 version 줄만 출력합니다. hook은 이 mark를 출력하지 않습니다. truecolor
+status line의 `[🔥LIT v…]` mark는 같은 chrome 위의 공백으로 감싼 pill ` 🔥LIT v… `가 되고(폭은 같음),
+다른 색 깊이에서는 괄호가 있는 기존 mark를 유지합니다.
+SessionStart는 패키지 내부의 독립적인 `.grok/hooks/lit-mark.mjs`(Ignition B mark)를 사용합니다.
 `tools/generate-lit-mark.mjs`는 저장소 내부 `test/fixtures/lit-mark/ignition-b.json`의 글리프와
 색상 키를 해당 모듈에 넣고 두 README의 mark를 갱신합니다. `--check`는 파일을 쓰지 않고
 생성 결과가 오래되었는지 확인합니다. fixture와 개발용 생성기는 npm payload에 포함하지 않습니다.

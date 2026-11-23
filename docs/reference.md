@@ -160,10 +160,21 @@ and Terminal Ivory `#F2EFDF`. Terminals without truecolor use fixed 256-color
 approximations 203, 191, and 230. The mark sets no terminal background and has
 no row gradient or simulated shadow. `NO_COLOR`, `CI`, and non-TTY output
 disable all installer color and repaint codes, including when either variable has an empty value. The mark API also disables color for JSON mode; the installer does not expose a JSON command. Non-UTF-8 locales and `TERM=dumb` use plain
-`LIT`. `--help` prints the banner and usage without installing anything.
+`LIT`. `--help` prints the synthwave mark, the version and usage without installing anything.
 
-The package owns a self-contained `.grok/hooks/lit-mark.mjs`, used by the
-installer, help and SessionStart. `tools/generate-lit-mark.mjs` embeds the local
+The installer frame and `--help` draw the synthwave LIT mark from
+`.grok/hooks/lit-synthwave.mjs` and its generated rows in `lit-synthwave-rows.mjs`
+(pinned by the LitFamily spec digest). Its size follows the terminal width: the
+large scene from 76 columns, the medium one from 44, the small one from 24, and the
+single line `LIT · grok build` below that or when the width cannot draw block glyphs
+(an unknown width counts as 80). With colour on, each cell carries two pixels in
+truecolor or the 256-colour cube, in LitGrok's lilac-to-violet chrome; with colour
+off it prints the glyph scene with no escape byte. When stdout is not a terminal (a
+pipe, an agent's tool call, a CI log) it prints only `LIT · grok build` and the
+version line. No hook prints it. In truecolor the status line's `[🔥LIT v…]` mark
+becomes the space-padded pill ` 🔥LIT v… ` on the same chrome (same width); other colour
+depths keep their bracketed mark. The package owns a self-contained `.grok/hooks/lit-mark.mjs`
+for the Ignition B mark, used by SessionStart. `tools/generate-lit-mark.mjs` embeds the local
 `test/fixtures/lit-mark/ignition-b.json` rows and color keys into that module and
 refreshes both README heroes; `--check` detects stale output without writing.
 The fixtures and development generator stay outside the npm payload. The
@@ -174,7 +185,7 @@ in the test fixtures and no longer feeds current output. Functional progress
 and success/failure colors retain their existing meaning.
 
 Every `install` and `uninstall` run opens with the shared LitFamily frame — the
-46-glyph rule, the canonical LIT banner with the `grok` product lockup and package version, and two
+46-glyph rule, the synthwave LIT mark with its `LIT · grok build` tagline and the package version, and two
 stage cards. The `MODEL ROUTE` card always prints `Model selection: host-owned`:
 Grok Build owns model and reasoning-effort selection, so the installer asks no
 model question and writes no model keys. Colors follow the terminal: `--no-color`,

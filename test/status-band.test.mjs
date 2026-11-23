@@ -119,9 +119,9 @@ test('one-line mode keeps the family row within the 1024-character cut for the l
   for (const columns of ['120', '400']) {
     const { lines, plain } = runStatus(sb, { env: { COLUMNS: columns, LITGROK_HUD_LINES: '1' } });
     assert.equal(lines.length, 1);
-    assert.equal(plain[0], '[🔥LIT] | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │  🔥 LIT  IGNITED · lit-scientific-visualization 🔥');
+    assert.equal(plain[0], ' 🔥LIT  | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │  🔥 LIT  IGNITED · lit-scientific-visualization 🔥');
     const card = runStatus(sb, { env: { COLUMNS: columns } });
-    assert.match(card.plain[0], /^▎ \[🔥LIT\] \| {2}🔥 LIT {2}· lit-scientific-visualization +idle$/u, 'the card title carries the whole skill name');
+    assert.match(card.plain[0], /^▎ {2}🔥LIT {2}\| {2}🔥 LIT {2}· lit-scientific-visualization +idle$/u, 'the card title carries the whole skill name');
   }
 });
 
@@ -261,7 +261,7 @@ test('colour: truecolor by default, 256 and 16 colour fallbacks, and none for NO
 
   for (const [value, pattern] of [['256', /\u001b\[(?:38|48);5;\d{1,3}m/u], ['16', /\u001b\[(?:3[0-7]|4[0-7]|9[0-7]|10[0-7])m/u]]) {
     const fallback = run({ LITGROK_HUD_COLOR: value });
-    const text = (result) => result.plain.map((line) => line.replace(/ {2,}/gu, '  ').replace(/\d+s $/u, ''));
+    const text = (result) => result.plain.map((line) => line.replace('[🔥LIT]', ' 🔥LIT ').replace(/ {2,}/gu, '  ').replace(/\d+s $/u, ''));
     assert.deepEqual(text(fallback), text(truecolor), `${value}: the same text`);
     for (const line of fallback.lines) {
       assert.doesNotMatch(line, /\u001b\[(?:38|48);2;/u, `${value}: no truecolor escapes on any line`);
@@ -306,7 +306,7 @@ test('Nerd glyphs are opt-in and need colour for the rounded caps; ascii glyphs 
   const nerd = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd' }, turnAgoMs: 100_000, promptId: 'p1' });
   assert.match(nerd.lines[0], /\ue0b6/u);
   assert.match(nerd.lines[0], /\ue0b4/u);
-  assert.match(title(nerd), /^▎ \[🔥LIT\] \| \ue0b6🔥 LIT\ue0b4 · litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u);
+  assert.match(title(nerd), /^▎ {2}🔥LIT {2}\| \ue0b6🔥 LIT\ue0b4 · litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u);
 
   const nerdPlain = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd', LITGROK_HUD_COLOR: '0' }, turnAgoMs: 100_000, promptId: 'p1' });
   assert.match(title(nerdPlain), /^\[🔥LIT\] \| \(🔥 LIT\) · litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u, 'without colour the chips fall back to brackets');

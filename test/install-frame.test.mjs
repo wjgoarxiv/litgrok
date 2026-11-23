@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
-import { renderMark } from '../.grok/hooks/lit-mark.mjs';
+import { synthwaveRows } from '../.grok/hooks/lit-synthwave.mjs';
+import { MONO_ROWS } from '../.grok/hooks/lit-synthwave-rows.mjs';
 
 const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const PRODUCT_ROOT = dirname(TEST_DIRECTORY);
@@ -52,9 +53,10 @@ test('install output opens with the shared LitFamily frame and host-owned model 
     const { stdout } = io.read();
     const version = JSON.parse(readFileSync(join(PRODUCT_ROOT, 'package.json'), 'utf8')).version;
     const rule = `  ${'━'.repeat(46)}`;
-    const wordmark = renderMark({ size: 'banner', productName: `grok v${version}`, env: { LANG: 'en_US.UTF-8' }, isTTY: false }).map((row) => `   ${row}`).join('\n');
+    const wordmark = synthwaveRows({ columns: 80, mode: 'mono' }).join('\n');
     assert.ok(stdout.split('\n').filter((line) => line === rule).length >= 2, 'two 46-glyph rule lines frame the banner');
-    assert.ok(rendered(stdout).includes(wordmark), 'canonical banner and grok lockup must use the authoritative rows');
+    assert.ok(rendered(stdout).includes(`${wordmark}\n  litgrok v${version} · Grok Build skills, project rules, and hooks\n`), 'the synthwave glyph scene, its tagline and the version open the frame');
+    assert.ok(wordmark.includes(MONO_ROWS['B-L'][2]) && wordmark.endsWith('LIT · grok build'), 'an unknown width draws the large scene');
     assert.doesNotMatch(stdout, /\[/u, 'dry-run output is deterministic and contains no ANSI escapes');
     assert.match(rendered(stdout), /│ 02 · Payload\s+\d+ files · byte-identical copies only/u, 'banner keeps the discovered payload count');
     assert.match(stdout, /╭─ MODEL ROUTE/u);
@@ -76,6 +78,8 @@ test('frame respects NO_COLOR and stays prompt-free in non-interactive runs', as
     assert.equal(code, 0, io.read().stderr);
     const { stdout } = io.read();
     assert.doesNotMatch(stdout, /\[/u, 'NO_COLOR disables every ANSI sequence');
+    assert.match(stdout, /\nLIT · grok build\n {2}litgrok v\d+\.\d+\.\d+ · /u, 'a pipe gets the plain line and the version');
+    assert.doesNotMatch(stdout, /[█▀▄░]/u, 'a pipe gets no art');
     assert.match(stdout, /│ Model selection: host-owned/u);
     assert.match(stdout, /NON-INTERACTIVE/, 'non-interactive stays a non-mutating preview');
     assert.equal(existsSync(join(home, '.grok')), false, 'the frame must not change the no-write contract');
@@ -106,7 +110,7 @@ for (const [label, overrides, preview] of [
         assert.ok(stdout.includes(`${preview} — no files written`));
         assert.equal(existsSync(join(project, '.grok')), false, '--yes must not bypass the preview');
       } else {
-        assert.match(stdout, /\n   LIT\n/u, 'unsupported terminals use the plain wordmark');
+        assert.match(stdout, /\nLIT · grok build\n/u, 'unsupported terminals use the plain line');
         assert.match(stdout, /INSTALL STEPS/u);
         assert.match(stdout, /INSTALL RECEIPT/u);
         assert.equal(existsSync(join(project, '.grok/.litgrok-install-manifest.json')), true);

@@ -5,7 +5,8 @@ import { constants, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSyn
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderMark, terminalMode } from '../.grok/hooks/lit-mark.mjs';
+import { terminalMode, unicodeTerminal } from '../.grok/hooks/lit-mark.mjs';
+import { synthwaveRows } from '../.grok/hooks/lit-synthwave.mjs';
 import { applyStoredGround, backupIfSectionAbsent, decideGround, groundReport, ruleSourceForInstall, runGround } from './ground-rule.mjs';
 import { competingSummary, extensionsDoctorLine, runExtensions } from './extensions.mjs';
 import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from './status-line-config.mjs';
@@ -485,17 +486,32 @@ function scopeDescription(options, root) {
   return `${options.scope} scope → ${root} (use ${alternateFlag} for ${alternateScope} scope)`;
 }
 
+// The terminal's width in cells: the stream's own, then COLUMNS, and 80 when neither is known.
+function terminalColumns(stdout, env) {
+  if (Number.isInteger(stdout.columns) && stdout.columns > 0) return stdout.columns;
+  const columns = Number.parseInt(env.COLUMNS ?? '', 10);
+  return Number.isFinite(columns) && columns > 0 ? columns : 80;
+}
+
+// The synthwave mark at the terminal's colour depth; without colour the glyph scene, and the plain
+// line where the locale cannot draw block glyphs. A pipe, an agent's tool call or a CI log is not a
+// terminal anyone looks at, so it gets only the plain line. Only the installer frame and --help print it.
+function markRows(stdout, env, colors) {
+  if (!stdout.isTTY) return synthwaveRows({ mode: 'plain' });
+  const mode = colors ? terminalMode({ env, isTTY: stdout.isTTY }) : unicodeTerminal(env) ? 'mono' : 'plain';
+  return synthwaveRows({ columns: terminalColumns(stdout, env), mode });
+}
+
 function printInstallFrame(stdout, options, env, fileCount, root) {
   const colors = !options.noColor && !options.dryRun && terminalMode({ env, isTTY: stdout.isTTY }) !== 'none';
   const yellow = colors ? '\u001b[38;2;250;204;21m' : '';
   const reset = colors ? '\u001b[0m' : '';
-  const rule = `  ${'━'.repeat(46)}`;
+  const rule = `  ${'━'.repeat(Math.max(1, Math.min(46, terminalColumns(stdout, env) - 2)))}`;
   const payloadLabel = Number.isInteger(fileCount) ? `${fileCount} files · byte-identical copies only` : 'packaged .grok tree · byte-identical copies only';
   stdout.write(`${rule}\n`);
   stdout.write('\n');
-  const wordmarkRows = renderMark({ size: 'banner', productName: `grok v${packageVersion()}`, env, isTTY: stdout.isTTY, args: options.dryRun || options.noColor ? ['--no-color'] : [] });
-  stdout.write(`${wordmarkRows.map((row) => `   ${row}`).join('\n')}\n`);
-  stdout.write('       Grok Build skills, project rules, and hooks\n');
+  stdout.write(`${markRows(stdout, env, colors).join('\n')}\n`);
+  stdout.write(`  litgrok v${packageVersion()} · Grok Build skills, project rules, and hooks\n`);
   stdout.write('\n');
   stdout.write(`${rule}\n`);
   stdout.write(`  ╭─ ${options.command.toUpperCase()}\n`);
@@ -1221,7 +1237,8 @@ export async function run(args, context = {}) {
   const stderr = context.stderr ?? process.stderr;
   const cwd = context.cwd ?? process.cwd();
   if (args.some((arg) => arg === '--help' || arg === '-h') && args.every((arg) => ['--help', '-h', '--no-color'].includes(arg))) {
-    stdout.write(`${renderMark({ size: 'banner', productName: `grok v${packageVersion()}`, env, isTTY: stdout.isTTY, args }).join('\n')}\n\n${USAGE}`);
+    const colors = terminalMode({ env, isTTY: stdout.isTTY, args }) !== 'none';
+    stdout.write(`${markRows(stdout, env, colors).join('\n')}\nlitgrok v${packageVersion()}\n\n${USAGE}`);
     return 0;
   }
   const options = parseInstall(args);

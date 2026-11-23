@@ -120,11 +120,18 @@ test('terminal mark honors NO_COLOR CI pipes json and non-UTF-8 or dumb fallback
   for (const fallback of [{ ...env, LANG: 'C' }, { ...env, LC_ALL: 'C' }, { ...env, TERM: 'dumb' }, {}]) assert.deepEqual(renderMark({ env: fallback, isTTY: true }), ['LIT']);
 });
 
-test('help renders banner and product lockup without discovery or mutation', async (t) => {
+test('help renders the synthwave glyph scene and version without discovery or mutation', async (t) => {
   const root = scratch(t); let output = ''; let error = '';
-  const code = await run(['--help'], { cwd: root, env: { LANG: 'en_US.UTF-8' }, stdin: { isTTY: false }, stdout: { isTTY: false, write: (text) => { output += text; } }, stderr: { write: (text) => { error += text; } } });
-  assert.equal(code, 0, error); assert.ok(output.includes(variants.D[0])); assert.match(output, /grok v\d+\.\d+\.\d+/);
+  const code = await run(['--help'], { cwd: root, env: { LANG: 'en_US.UTF-8', NO_COLOR: '1' }, stdin: { isTTY: true }, stdout: { isTTY: true, write: (text) => { output += text; } }, stderr: { write: (text) => { error += text; } } });
+  assert.equal(code, 0, error); assert.ok(output.startsWith('                                                                     ·\n')); assert.ok(output.includes('\n                              LIT · grok build\nlitgrok v')); assert.match(output, /grok v\d+\.\d+\.\d+/);
   assert.match(output, /Usage:/); assert.ok(!output.includes('\x1b')); assert.equal(existsSync(join(root, '.grok')), false);
+});
+
+test('help in a pipe prints only the plain line and the version', async (t) => {
+  const root = scratch(t); let output = ''; let error = '';
+  const code = await run(['--help'], { cwd: root, env: { LANG: 'en_US.UTF-8', COLORTERM: 'truecolor' }, stdin: { isTTY: false }, stdout: { isTTY: false, write: (text) => { output += text; } }, stderr: { write: (text) => { error += text; } } });
+  assert.equal(code, 0, error); assert.match(output, /^LIT · grok build\nlitgrok v\d+\.\d+\.\d+\n\nUsage:/u);
+  assert.doesNotMatch(output, /[█▀▄░\u001b]/u); assert.equal(existsSync(join(root, '.grok')), false);
 });
 
 test('SessionStart prints standard mark once per session and again for a new session', (t) => {

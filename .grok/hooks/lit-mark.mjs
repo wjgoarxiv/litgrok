@@ -162,7 +162,7 @@ export function colorize(rows, { mode = 'none' } = {}) {
   });
 }
 
-function unicodeTerminal(env) {
+export function unicodeTerminal(env) {
   return env.TERM !== 'dumb' && /utf-?8/iu.test(env.LC_ALL || env.LC_CTYPE || env.LANG || '');
 }
 
