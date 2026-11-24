@@ -342,6 +342,8 @@ function ask(stdin, stdout) {
       line += String(chunk);
       if (!line.includes('\n')) return;
       stdin.off('data', onData);
+      // A terminal left flowing would keep the process alive after the install is done.
+      if (typeof stdin.pause === 'function') stdin.pause();
       resolvePromise(/^\s*y(es)?\s*$/iu.test(line));
     };
     if (typeof stdin.resume === 'function') stdin.resume();
@@ -349,7 +351,18 @@ function ask(stdin, stdout) {
   });
 }
 
-export async function decideGround({ scope, yes, noGround, env, stdin, stdout, home }) {
+function askCard(cards) {
+  return cards.confirm({
+    tag: 'LIT 1/1',
+    title: 'Ground rules',
+    note: 'Adds a short LitGrok section to your user rule, ~/.grok/rules/00-litgrok.md; No leaves it out, and later installs stop asking (litgrok ground on adds it).',
+    initial: false,
+    yesText: 'add them',
+    noText: 'leave them out',
+  });
+}
+
+export async function decideGround({ scope, yes, noGround, env, stdin, stdout, home, cards = null }) {
   const override = String(env.LITGROK_GROUND ?? '').trim().toLowerCase();
   if (override === 'on' || override === 'off') return { include: override === 'on', afterWrite: null };
   if (noGround) return { include: false, afterWrite: null };
@@ -357,7 +370,7 @@ export async function decideGround({ scope, yes, noGround, env, stdin, stdout, h
   if (yes) return { include: true, afterWrite: stored === 'off' && scope === 'user' ? 'clear-off' : null };
   if (stored === 'off') return { include: false, afterWrite: null };
   if (scope === 'user' && stdin?.isTTY && typeof stdin.on === 'function') {
-    const accepted = await ask(stdin, stdout);
+    const accepted = cards ? await askCard(cards) : await ask(stdin, stdout);
     if (!accepted) return { include: false, afterWrite: 'store-off' };
   }
   return { include: true, afterWrite: null };

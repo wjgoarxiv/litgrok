@@ -122,7 +122,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 설치 프로그램은 LitGrok의 스킬, 에이전트, 프로젝트 규칙, 훅을 `<project>/.grok/`에 복사하고 다른 곳은 건드리지
-않습니다. 설치 결과에는 `Status: Ready`가 있어야 하고, 사용자만 할 수 있는 두 단계([빠른 시작](#빠른-시작) 1단계)도
+않습니다. 마지막 카드에 `LitGrok … is ready`(`--yes`면 `Status: Ready`)가 있어야 하고, 사용자만 할 수 있는 두 단계([빠른 시작](#빠른-시작) 1단계)도
 함께 나옵니다. 나중에 같은 명령을 다시 실행하면 업데이트됩니다.
 
 | 옵션 | 하는 일 | 쓰는 때 |

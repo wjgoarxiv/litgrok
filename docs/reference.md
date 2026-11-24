@@ -186,12 +186,18 @@ glyphs and label; unrelated block rows use ivory. Historical round6 source stays
 in the test fixtures and no longer feeds current output. Functional progress
 and success/failure colors retain their existing meaning.
 
-Every `install` and `uninstall` run opens with the shared LitFamily frame — the
+Every plain `install` and `uninstall` run opens with the shared LitFamily frame — the
 46-glyph rule, the synthwave LIT mark with its `LIT · grok build` tagline and the package version, and two
 stage cards. The `MODEL ROUTE` card always prints `Model selection: host-owned`:
 Grok Build owns model and reasoning-effort selection, so the installer asks no
 model question and writes no model keys. Colors follow the terminal: `--no-color`,
 `NO_COLOR`, `CI`, or a non-TTY stream disables them without changing the lines.
+
+At a terminal, without `--yes` or a preview, the same run uses cards instead (`bin/install-cards.mjs`): the mark, the
+scope and file count, the ground-rules question as a card on a `--user` install, one row per finished step, and a
+closing card. They need stdin and stdout to be terminals with raw mode, at least 40 columns and 12 rows, and neither
+`CI`, `TERM=dumb` nor a preset `LITGROK_GROUND`; any other run keeps the frame below. Colour is 24-bit, 256 or 16 as
+the terminal allows, and a non-UTF-8 locale draws ASCII borders. Ctrl+C stops the run with nothing written.
 
 ```text
   ╭─ MODEL ROUTE

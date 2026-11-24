@@ -156,12 +156,18 @@ Grok Build에서는 어떤 훅도 압축을 시작할 수 없으므로 사용자
 
 ### 설치 출력
 
-`install`과 `uninstall`은 항상 공유 LitFamily frame으로 시작합니다 — 46글자 rule,
+일반 `install`과 `uninstall` 출력은 공유 LitFamily frame으로 시작합니다 — 46글자 rule,
 `LIT · grok build` tagline과 package version이 붙은 synthwave LIT mark, stage card 두 개. `MODEL ROUTE`
 card는 항상 `Model selection: host-owned`를 출력합니다. model과 reasoning effort
 선택은 Grok Build가 소유하므로 installer는 model 질문을 하지 않고 model key를
 쓰지 않습니다. 색상은 terminal을 따릅니다. `--no-color`, `NO_COLOR`, `CI`,
 non-TTY stream에서는 색상 없이 같은 줄을 출력합니다.
+
+terminal에서 `--yes`나 preview 없이 실행하면 같은 과정이 card로 나옵니다(`bin/install-cards.mjs`). mark, scope와
+파일 수, `--user` 설치의 기본 약속 질문 card, 끝난 step마다 한 줄, 마지막 card 순서입니다. stdin과 stdout이 raw
+mode를 쓸 수 있는 terminal이고 40열·12행 이상이며 `CI`, `TERM=dumb`, 미리 정한 `LITGROK_GROUND`가 없을 때만
+나오고, 나머지 실행은 아래 frame을 그대로 씁니다. 색상은 terminal에 따라 24-bit, 256, 16색이고, UTF-8이 아닌
+locale에서는 ASCII 테두리를 그립니다. Ctrl+C는 아무것도 쓰지 않고 멈춥니다.
 
 ```text
   ╭─ MODEL ROUTE

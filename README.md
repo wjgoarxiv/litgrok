@@ -122,7 +122,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
 The installer copies LitGrok's skills, agents, project rule and hooks into `<project>/.grok/` and changes nothing else.
-Its install receipt should read `Status: Ready` and names the two steps only you can take, which
+Its last card should say `LitGrok … is ready` (`Status: Ready` with `--yes`) and names the two steps only you can take, which
 [Quick start](#quick-start) step 1 covers. Running the same command later updates LitGrok.
 
 | Switch | What it does | When to use it |

@@ -26,6 +26,7 @@ test('npm rename preserves legacy ownership while refusing forged owners and mod
     mkdirSync(project);
     copyFileSync(join(root, 'bin/litgrok.mjs'), join(source, 'bin/litgrok.mjs'));
     copyFileSync(join(root, 'bin/ground-rule.mjs'), join(source, 'bin/ground-rule.mjs'));
+    copyFileSync(join(root, 'bin/install-cards.mjs'), join(source, 'bin/install-cards.mjs'));
     copyFileSync(join(root, 'bin/status-line-config.mjs'), join(source, 'bin/status-line-config.mjs'));
     copyFileSync(join(root, 'bin/extensions.mjs'), join(source, 'bin/extensions.mjs'));
     for (const name of ['lit-mark.mjs', 'lit-synthwave.mjs', 'lit-synthwave-rows.mjs']) copyFileSync(join(root, '.grok/hooks', name), join(source, '.grok/hooks', name));

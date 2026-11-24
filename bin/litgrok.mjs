@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { terminalMode, unicodeTerminal } from '../.grok/hooks/lit-mark.mjs';
 import { synthwaveRows } from '../.grok/hooks/lit-synthwave.mjs';
 import { applyStoredGround, backupIfSectionAbsent, decideGround, groundReport, ruleSourceForInstall, runGround } from './ground-rule.mjs';
+import { cardTerminal, createCards } from './install-cards.mjs';
 import { competingSummary, extensionsDoctorLine, runExtensions } from './extensions.mjs';
 import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from './status-line-config.mjs';
 
@@ -502,12 +503,19 @@ function markRows(stdout, env, colors) {
   return synthwaveRows({ columns: terminalColumns(stdout, env), mode });
 }
 
-function printInstallFrame(stdout, options, env, fileCount, root) {
+function printInstallFrame(stdout, options, env, fileCount, root, cards) {
   const colors = !options.noColor && !options.dryRun && terminalMode({ env, isTTY: stdout.isTTY }) !== 'none';
   const yellow = colors ? '\u001b[38;2;250;204;21m' : '';
   const reset = colors ? '\u001b[0m' : '';
   const rule = `  ${'━'.repeat(Math.max(1, Math.min(46, terminalColumns(stdout, env) - 2)))}`;
   const payloadLabel = Number.isInteger(fileCount) ? `${fileCount} files · byte-identical copies only` : 'packaged .grok tree · byte-identical copies only';
+  if (cards) {
+    stdout.write(`\n${markRows(stdout, env, colors).join('\n')}\n`);
+    stdout.write(`  litgrok v${packageVersion()} · Grok Build skills, project rules, and hooks\n\n`);
+    cards.text([`${options.command === 'install' ? 'Installs into' : 'Removes from'} ${scopeDescription(options, root)}`, payloadLabel]);
+    stdout.write('\n');
+    return colors;
+  }
   stdout.write(`${rule}\n`);
   stdout.write('\n');
   stdout.write(`${markRows(stdout, env, colors).join('\n')}\n`);
@@ -528,6 +536,23 @@ function statusMark(status, colors) {
   if (status === 'ok') return paint('✓', '38;2;80;200;80', colors);
   if (status === 'failed') return paint('✗', '38;2;230;60;60', colors);
   return colors ? paint('○', '38;2;148;163;184', true) : '[skip]';
+}
+
+// The same steps for a person at a terminal: one finished row each.
+class CardProgress {
+  constructor(cards) {
+    this.cards = cards;
+  }
+
+  open() {}
+
+  start() {}
+
+  finish(status, label, detail) {
+    this.cards.step(status, `${label[0]}${label.slice(1).toLowerCase()}`, detail || 'done');
+  }
+
+  close() {}
 }
 
 class InstallProgress {
@@ -624,6 +649,43 @@ function receiptCard(options, root, colors, { status, written, current }) {
   ].join('\n');
 }
 
+function closingCard(cards, options, root, { status, written, current, ground }) {
+  const removed = options.command === 'uninstall';
+  const title = removed ? 'LitGrok is removed' : status === 'Ready' ? `LitGrok ${packageVersion()} is ready` : `LitGrok ${packageVersion()} was already current`;
+  cards.summary({
+    title,
+    sections: [
+      {
+        head: removed ? 'Removed' : 'Installed',
+        rows: [
+          { status: 'ok', label: 'Scope', value: scopeDescription(options, root) },
+          ...(removed ? [] : [{ status: 'ok', label: 'Files', value: `${written} written · ${current} already-current` }]),
+          ...(ground ? [{ status: 'ok', label: 'Ground rules', value: ground }] : []),
+        ],
+      },
+      {
+        head: 'Settings',
+        rows: [
+          { label: 'Model route', value: 'host-owned; the installer writes no model keys' },
+          { label: 'Model picker', value: 'host limit — Grok Build owns session selection; no model keys are written' },
+          { label: 'Output styles', value: 'host limit — Grok Build exposes no output-style selector; the installer writes no style keys' },
+        ],
+      },
+      {
+        head: 'Next',
+        rows: [
+          ...(removed ? [] : [
+            { label: 'Hooks', value: 'project hooks require trust from a Git project root' },
+            { label: 'Trust', value: 'use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json' },
+          ]),
+          { label: 'Left to you', value: 'Installer never runs git init or changes trust' },
+          { label: 'Restart', value: 'restart Grok Build' },
+        ],
+      },
+    ],
+  });
+}
+
 function failureCard(options, root, colors, step, message, { showHookTrust = true } = {}) {
   return [
     '',
@@ -647,12 +709,39 @@ function errorText(error) {
   return error instanceof Error ? error.message : String(error);
 }
 
-function reportFailure(error, { stderr, stdout, options, root, colors, step }) {
+function reportFailure(error, { stderr, stdout, options, root, colors, step, cards }) {
   const lines = Array.isArray(error?.stderrLines) ? error.stderrLines : [`litgrok: ${errorText(error)}`];
   for (const line of lines) stderr.write(`${line}\n`);
-  stdout.write(failureCard(options, root, colors, error?.step ?? step, errorText(error), {
-    showHookTrust: error?.legacyOwnershipConflict !== true,
-  }));
+  const showHookTrust = error?.legacyOwnershipConflict !== true;
+  if (cards) {
+    cards.summary({
+      title: `LitGrok ${options.command} failed`,
+      failed: true,
+      sections: [
+        {
+          head: 'What happened',
+          rows: [
+            { status: 'failed', label: 'Step', value: error?.step ?? step },
+            { status: 'failed', label: 'Reason', value: errorText(error) },
+            { label: 'Scope', value: scopeDescription(options, root) },
+          ],
+        },
+        {
+          head: 'Next',
+          rows: [
+            { label: 'Fix', value: 'resolve the issue and rerun the install' },
+            ...(showHookTrust ? [
+              { label: 'Hooks', value: 'project hooks require trust from a Git project root' },
+              { label: 'Trust', value: 'use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json' },
+              { label: 'Left to you', value: 'Installer never runs git init or changes trust' },
+            ] : []),
+          ],
+        },
+      ],
+    });
+    return;
+  }
+  stdout.write(failureCard(options, root, colors, error?.step ?? step, errorText(error), { showHookTrust }));
 }
 
 function normalizedRelativePath(relativePath) {
@@ -956,24 +1045,30 @@ function oldEngineCaches(env, home, manifest, ownedBefore) {
   });
 }
 
+function extensionLines(caches, competing) {
+  return [
+    "LitGrok's core is complete and works on its own.",
+    'Nine skills that make files (decks, documents, figures, design and video covers) are now',
+    `LitFamily extensions, kept on the extension shelf at ${SHELF_URL}:`,
+    'lit-pptx, lit-docx, lit-scientific-visualization, lit-diagram-drawer, lit-schematic,',
+    'frontend-ui-ux, visual-qa, readme-studio and lit-typographic-motion.',
+    'Install the ones you use for the full LitFamily experience: litgrok extensions install <skill> --yes',
+    'It fetches the shelf, checks for other copies first and runs grok plugin install; litgrok extensions list, update, remove and check work the same way.',
+    `By hand, as each skill's note shows: git clone ${SHELF_URL}, then grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust`,
+    ...(competing.length > 0
+      ? [`Found ${competing.length === 1 ? 'a same-name copy' : `${competing.length} same-name copies`} of these skills outside the plugin store (${competing[0]}${competing.length > 1 ? ', ...' : ''}); run litgrok extensions check for the fix.`]
+      : []),
+    ...(caches.length > 0
+      ? [`Earlier releases left engine caches at ${caches.join(' and ')}. Nothing reads them now (the extensions keep their own), so you can delete them.`]
+      : []),
+  ];
+}
+
 function extensionsCard(colors, caches, competing = []) {
   const titleColor = '38;2;255;99;55';
   return [
     `  ${paint('╭─ LITFAMILY EXTENSIONS', titleColor, colors)}`,
-    "  │ LitGrok's core is complete and works on its own.",
-    '  │ Nine skills that make files (decks, documents, figures, design and video covers) are now',
-    `  │ LitFamily extensions, kept on the extension shelf at ${SHELF_URL}:`,
-    '  │ lit-pptx, lit-docx, lit-scientific-visualization, lit-diagram-drawer, lit-schematic,',
-    '  │ frontend-ui-ux, visual-qa, readme-studio and lit-typographic-motion.',
-    '  │ Install the ones you use for the full LitFamily experience: litgrok extensions install <skill> --yes',
-    '  │ It fetches the shelf, checks for other copies first and runs grok plugin install; litgrok extensions list, update, remove and check work the same way.',
-    `  │ By hand, as each skill's note shows: git clone ${SHELF_URL}, then grok plugin install "<path to your wjgoarxiv-skills clone>/variants/litgrok/<skill>" --trust`,
-    ...(competing.length > 0
-      ? [`  │ Found ${competing.length === 1 ? 'a same-name copy' : `${competing.length} same-name copies`} of these skills outside the plugin store (${competing[0]}${competing.length > 1 ? ', ...' : ''}); run litgrok extensions check for the fix.`]
-      : []),
-    ...(caches.length > 0
-      ? [`  │ Earlier releases left engine caches at ${caches.join(' and ')}. Nothing reads them now (the extensions keep their own), so you can delete them.`]
-      : []),
+    ...extensionLines(caches, competing).map((line) => `  │ ${line}`),
     `  ${paint('╰─', titleColor, colors)}`,
     '',
   ].join('\n');
@@ -1250,6 +1345,9 @@ export async function run(args, context = {}) {
   const home = env.HOME || env.USERPROFILE || homedir();
   const root = join(options.scope === 'project' ? cwd : home, '.grok');
   const displayRoot = resolve(root);
+  const cards = !options.yes && !options.dryRun && !options.noColor && !Object.hasOwn(env, 'NO_COLOR') && cardTerminal({ stdin, stdout, env })
+    ? createCards({ stdin, stdout, env })
+    : null;
   const payloadStarted = process.hrtime.bigint();
   let discoveredPayload;
   let payloadError;
@@ -1277,10 +1375,10 @@ export async function run(args, context = {}) {
 
   let files = discoveredPayload ? filesFromPayload(discoveredPayload) : null;
   const payloadElapsed = payloadError ? null : elapsedSince(payloadStarted);
-  const colors = printInstallFrame(stdout, options, env, files?.length, displayRoot);
+  const colors = printInstallFrame(stdout, options, env, files?.length, displayRoot, cards);
 
   if (payloadError) {
-    reportFailure(payloadError, { stderr, stdout, options, root: displayRoot, colors, step: 'PAYLOAD' });
+    reportFailure(payloadError, { stderr, stdout, options, root: displayRoot, colors, step: 'PAYLOAD', cards });
     return 1;
   }
 
@@ -1313,6 +1411,7 @@ export async function run(args, context = {}) {
         stdin,
         stdout,
         home,
+        cards,
       });
       includeGround = decision.include;
       groundAfter = decision.afterWrite;
@@ -1327,7 +1426,23 @@ export async function run(args, context = {}) {
     }
   }
 
-  const progress = new InstallProgress(stdout, colors);
+  function closeInstall(result, caches) {
+    if (!cards) {
+      stdout.write(receiptCard(options, displayRoot, colors, result));
+      if (caches) stdout.write(extensionsCard(colors, caches, competingSummary({ env, cwd })));
+      return;
+    }
+    const ground = options.command === 'install' && options.scope === 'user'
+      ? (includeGround ? 'in your user rule' : 'left out (litgrok ground on adds them)')
+      : null;
+    closingCard(cards, options, displayRoot, { ...result, ground });
+    if (!caches) return;
+    const lines = extensionLines(caches, competingSummary({ env, cwd }));
+    // The first five lines are one paragraph.
+    cards.text([lines.slice(0, 5).join(' '), ...lines.slice(5)], 'LitFamily extensions');
+  }
+
+  const progress = cards ? new CardProgress(cards) : new InstallProgress(stdout, colors);
   progress.open();
   let step = 'PAYLOAD';
   try {
@@ -1431,9 +1546,8 @@ export async function run(args, context = {}) {
         if (error && typeof error === 'object') error.step = 'WRITE';
         throw error;
       }
-      const receipt = receiptCard(options, displayRoot, colors, { status: 'Removed', written: 0, current: states.counts.current });
       progress.close();
-      stdout.write(receipt);
+      closeInstall({ status: 'Removed', written: 0, current: states.counts.current });
       return 0;
     }
 
@@ -1451,10 +1565,8 @@ export async function run(args, context = {}) {
       const statusDetail = configDetail(statusLineResult, notifyResult);
       if (groundAfter) applyStoredGround(home, groundAfter);
       skipStep(progress, 'WRITE', `SKIPPED · 0 written · ${states.counts.current} already-current${statusDetail}`);
-      const receipt = receiptCard(options, displayRoot, colors, { status: 'Already current', written: 0, current: states.counts.current });
       progress.close();
-      stdout.write(receipt);
-      stdout.write(extensionsCard(colors, caches, competingSummary({ env, cwd })));
+      closeInstall({ status: 'Already current', written: 0, current: states.counts.current }, caches);
       return 0;
     }
 
@@ -1488,14 +1600,12 @@ export async function run(args, context = {}) {
       if (error && typeof error === 'object') error.step = 'WRITE';
       throw error;
     }
-    const receipt = receiptCard(options, displayRoot, colors, { status: 'Ready', written: installed, current: states.counts.current });
     progress.close();
-    stdout.write(receipt);
-    stdout.write(extensionsCard(colors, caches, competingSummary({ env, cwd })));
+    closeInstall({ status: 'Ready', written: installed, current: states.counts.current }, caches);
     return 0;
   } catch (error) {
     progress.close();
-    reportFailure(error, { stderr, stdout, options, root: displayRoot, colors, step });
+    reportFailure(error, { stderr, stdout, options, root: displayRoot, colors, step, cards });
     return 1;
   } finally {
     cleanupGround();

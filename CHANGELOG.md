@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- The installer asks and reports in cards when a person runs it at a terminal. The ground-rules question of `install --user` is a bordered card with one sentence on what it does and what No means, and two buttons with the default filled and named: `y` or `n` answers at once, the arrow keys or Tab switch, Enter takes the filled button, Esc never answers, and Ctrl+C stops with nothing written. The answered card folds into one row, each finished step is one row, and a closing card says what was installed, what stays with Grok Build and what to do next. A refused file closes with a red card, with every refused path still printed in full. The question, its default and what it stores are unchanged.
+- Pipes, `CI`, `--yes`, previews, `TERM=dumb`, a preset `LITGROK_GROUND` and windows under 40 columns or 12 rows keep the earlier output byte for byte. Colour steps down to 256 and 16 colours, and a non-UTF-8 locale gets ASCII borders.
+- Fixed: after the ground-rules question, `install --user` finished but never returned to the shell until Ctrl+C. The installer now lets go of the terminal, at the plain prompt as well.
+- The guide shows the question card and the new closing card in both languages.
+
 ## 1.0.43 — 2026-11-25
 
 - The status line has a sunset. In truecolor, a half-sunk sun in gold, orange and pink stands in the part of the rows no text uses, with stars above it and a sea of `~ - .` that runs outward from it. While a turn runs it moves in steps, one at each redraw (about every 300 ms), by colour and by ASCII marks only: light ripples over the sun, the stars twinkle, and every nine seconds a shooting star crosses. Between turns it stands still and faded. It never covers a word, changes no row, word or width, and adds no line: the card's last three rows carry it, and the single row between workflows gets a small sun on the horizon. Where it has no room it gets smaller or stays away, and the twenty seconds after a finished turn belong to `✓ complete`. `lit-adhd` gives the sun its rewind colours and `YOUR TURN` an amber one.

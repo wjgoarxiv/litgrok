@@ -14,8 +14,10 @@ const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 // Carbon-style window cards of LitGrok's own installer, SessionStart hook, prompt hook and status-line command.
 // The card is the same on both page themes, so each -dark/-light pair holds the same picture.
 const screens = {
-  'install-done-dark.webp': 'd0dc21f99b47b1a627e49336cb5143addf65ed4ce2f95181602f63780897b3df',
-  'install-done-light.webp': 'd0dc21f99b47b1a627e49336cb5143addf65ed4ce2f95181602f63780897b3df',
+  'install-card-dark.webp': 'f1eca080ae59c94789a0d063390ef9a1c09ee3201c666463969a26f7764b10be',
+  'install-card-light.webp': 'f1eca080ae59c94789a0d063390ef9a1c09ee3201c666463969a26f7764b10be',
+  'install-done-dark.webp': 'e71a49048b9d315cf61931cf7a2e32a9c492cdbb93ce87be9480e4489d7dc8d4',
+  'install-done-light.webp': 'e71a49048b9d315cf61931cf7a2e32a9c492cdbb93ce87be9480e4489d7dc8d4',
   'install-dry-run-dark.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
   'install-dry-run-light.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
   'install-plan-dark.webp': 'ad9afa5cf46559229db9ddc0dcba50391be1175253c087a829021d3bd0f9fb72',
@@ -30,12 +32,13 @@ const MAX_SCREEN_BYTES = 245_760;
 const quotes = {
   'install-plan': ['INSTALL', '02 · Payload 380 files · byte-identical copies only', 'Model selection: host-owned'],
   'install-dry-run': ['DRY RUN — no files written', '02 · Payload 380 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
-  'install-done': ['INSTALL STEPS', 'PAYLOAD · 380 files discovered', 'WRITE · 380 written', 'INSTALL RECEIPT', 'Status: Ready', 'Next: restart Grok Build'],
+  'install-card': ['LIT 1/1', 'Ground rules [y/N]', '❯ No (default)', 'Enter = No', 'Ctrl+C stop'],
+  'install-done': ['Payload 393 files discovered', 'Write 393 written', 'is ready', 'project hooks require trust from a Git project root', 'restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
   'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $0.43 │ git main', '· litwork', '3 tools · 1 agent ● 1m42s', 'plan ✓ ━━━━', 'work 3/7', 'review · ──── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash 0:12'],
 };
-// The install plan was always a single picture; the other four keep their themed pair.
-const themedNames = ['install-done', 'session-start', 'install-dry-run', 'status-row'];
+// The install plan was always a single picture; the other five keep their themed pair.
+const themedNames = ['install-card', 'install-done', 'session-start', 'install-dry-run', 'status-row'];
 const singleNames = ['install-plan'];
 
 test('screen captures are the approved small lossless WebP files', () => {
@@ -64,7 +67,7 @@ test('both guide pages show every capture with alt text that quotes what it show
     const shown = new Set([...section.matchAll(/assets\/screens\/([\w.-]+\.webp)/gu)].map((match) => match[1]));
     assert.deepEqual([...shown].sort(), Object.keys(screens).sort(), `${file} must use exactly the shipped captures`);
     const pictures = [...section.matchAll(/<p align="center">(<picture>[\s\S]*?<\/picture>|<img [^>]*>)<\/p>/gu)].map((match) => match[1]);
-    assert.equal(pictures.length, themedNames.length + singleNames.length, `${file} shows five pictures`);
+    assert.equal(pictures.length, themedNames.length + singleNames.length, `${file} shows six pictures`);
     for (const html of pictures) assertCapture(file, html, './assets/screens/');
     assert.equal(section.split(label).length - 1, pictures.length, `${file}: every picture is labelled as a capture`);
     assert.ok(content.indexOf(heading) < content.indexOf(`\n${follows}\n`), `${file}: the captures come before the film`);

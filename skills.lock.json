@@ -1081,6 +1081,7 @@
     "TRADEMARK.md",
     "bin/extensions.mjs",
     "bin/ground-rule.mjs",
+    "bin/install-cards.mjs",
     "bin/litgrok.mjs",
     "bin/status-line-config.mjs",
     "docs/assets/cover-motion-still.webp",

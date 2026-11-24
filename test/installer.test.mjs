@@ -67,6 +67,7 @@ function syntheticPackage() {
   const executable = join(root, 'bin', 'litgrok.mjs');
   const hookCommand = join(root, '.grok', 'hooks', 'check.mjs');
   mkdirSync(dirname(executable), { recursive: true });
+  copyFileSync(join(PRODUCT_ROOT, 'bin', 'install-cards.mjs'), join(root, 'bin', 'install-cards.mjs'));
   copyFileSync(join(PRODUCT_ROOT, 'bin', 'status-line-config.mjs'), join(root, 'bin', 'status-line-config.mjs'));
   copyFileSync(join(PRODUCT_ROOT, 'bin', 'ground-rule.mjs'), join(root, 'bin', 'ground-rule.mjs'));
   copyFileSync(join(PRODUCT_ROOT, 'bin', 'extensions.mjs'), join(root, 'bin', 'extensions.mjs'));
