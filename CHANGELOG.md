@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Correction to 1.0.41: `doctor` does not print the synthwave LIT mark; `install`, `uninstall` and `--help` do.
+
 ## 1.0.41 — 2026-11-24
 
 - `install`, `uninstall`, `doctor` and `--help` now open with the synthwave LIT mark in LitGrok's lilac-to-violet chrome, sized to the terminal width, with the single line `LIT · grok build` on narrow terminals, without colour support, or when stdout is not a terminal. In truecolor the status line's `[🔥LIT v…]` mark becomes a gradient pill of the same width; other colour depths keep the bracketed mark.
