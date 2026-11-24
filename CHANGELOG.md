@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.42 — 2026-11-24
 
+- Both READMEs, the npm READMEs and the guide now explain the 1.0.41 changes: a request that ends with `lit`, `litwork` or `lit-loop` gets the goal question with the words before it, while the project rule still picks the skill from a leading `lit`; `install`, `uninstall` and `--help` open with the synthwave LIT mark, with the single line `LIT · grok build` on narrow terminals, without block glyphs, or in a pipe or log; and the status line's mark is a pill in truecolor.
 - Correction to 1.0.41: `doctor` does not print the synthwave LIT mark; `install`, `uninstall` and `--help` do.
 
 ## 1.0.41 — 2026-11-24
