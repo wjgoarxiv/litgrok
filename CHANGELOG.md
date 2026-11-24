@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.41 — 2026-11-24
+
+- `install`, `uninstall`, `doctor` and `--help` now open with the synthwave LIT mark in LitGrok's lilac-to-violet chrome, sized to the terminal width, with the single line `LIT · grok build` on narrow terminals, without colour support, or when stdout is not a terminal. In truecolor the status line's `[🔥LIT v…]` mark becomes a gradient pill of the same width; other colour depths keep the bracketed mark.
+- A request that ends with the activation word, such as `로그인 버튼 고쳐줘 lit` or `fix the login redirect litwork`, now gets the lit-loop goal question, with the words before `lit` as the objective. `lit-loop` as the first or last word now starts a run like `litwork`, so `lit-loop <task>` and `<task> lit-loop` also get the question. A bare `lit`, or `lit` with only punctuation after it (`lit.`, `lit!`), still asks nothing, and a mention inside a sentence (`what does lit-loop do?`) is still no route. The hook registrations did not change, so no new `/hooks-trust` is needed.
+
 ## 1.0.40 — 2026-11-22
 
 - Each goal question now comes with a short answer guide under it, so a first-time user knows what to type. The plan question (`Approve plan, start work and set goal`), the plain start question (`Approve plan and start work?`) and the `lit` loop question (`Set goal for this lit-loop`) each print a small table of the answers they take and what each one does, with the goal line itself shown in a code span where there is one, ending with `Type the word alone.` The model shows the guide in your language and keeps the answer words (`yes`, `edit`, `no`) in English, since only those exact words count. `goal-propose.mjs` prints the guide under its line, and the first tool call of a `lit` loop turn carries it with the question. The `(yes / … / no)` choices in each question and the rows of its guide come from one list, so they always match. The hook registrations did not change, so no new `/hooks-trust` is needed.
