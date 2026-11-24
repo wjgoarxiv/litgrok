@@ -18,7 +18,10 @@ import { updateWorkflowState } from '../.grok/hooks/workflow-stage.mjs';
 const HOOKS = join(dirname(dirname(fileURLToPath(import.meta.url))), '.grok', 'hooks');
 const SESSION = 'style-session';
 const ACCENT = '38;2;255;99;55';
-const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+// A terminal that names a light background shows the same words with no sunset beside them, so a whole row can be
+// compared; test/sunset.test.mjs proves the sunset moves none of them.
+const LIGHT = { COLORFGBG: '0;15' };
 
 // An installed copy (hooks beside a manifest) so the mark carries a version.
 function sandbox(t, { discipline = 'litwork', stage = null } = {}) {
@@ -63,20 +66,20 @@ function pill(text) {
 
 test('the mark is the bold [🔥LIT v…] pill on the synthwave chrome in truecolor, and simpler marks in fewer colours', (t) => {
   const sb = sandbox(t, { discipline: null });
-  const { lines, plain } = run(sb);
+  const { lines } = run(sb);
   assert.ok(lines[0].startsWith(pill('[🔥LIT v1.0.42]')), lines[0]);
   assert.ok(lines.every((line) => line.length <= 1024), 'the pill keeps every line within the 1024-character cut');
   for (const depth of ['256', '16', '0']) assert.doesNotMatch(run(sb, { env: { LITGROK_HUD_COLOR: depth } }).lines[0], /48;2;216;180;254/u, `no pill at depth ${depth}`);
   assert.doesNotMatch(run(sb, { env: { LITGROK_HUD_GLYPHS: 'ascii' } }).plain[0], /🔥/u, 'the ascii glyph set keeps its fire-free mark');
   assert.ok(run(sb, { env: { LITGROK_HUD_GLYPHS: 'ascii' } }).lines[0].startsWith(pill('[LIT v1.0.42]')), 'the ascii glyph set still gets the pill in truecolor');
-  assert.equal(plain[0], ' 🔥LIT v1.0.42  | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $1.87 │ git main');
+  assert.equal(run(sb, { env: LIGHT }).plain[0], ' 🔥LIT v1.0.42  | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $1.87 │ git main');
   assert.ok(run(sb, { env: { LITGROK_HUD_COLOR: '256' } }).lines[0].startsWith('\u001b[0m\u001b[1m\u001b[38;5;201m[🔥LIT v1.0.42]\u001b[0m'));
   assert.ok(run(sb, { env: { LITGROK_HUD_COLOR: '16' } }).lines[0].startsWith('\u001b[0m\u001b[1m\u001b[36m[🔥LIT v1.0.42]\u001b[0m'));
 });
 
 test('one accent carries every ordinary segment and separator, | after the mark and │ between the rest', (t) => {
   const sb = sandbox(t, { discipline: null });
-  const line = run(sb).lines[0];
+  const line = run(sb, { env: LIGHT }).lines[0];
   const mark = pill('[🔥LIT v1.0.42]');
   assert.ok(line.startsWith(mark));
   const afterMark = line.slice(mark.length);
@@ -105,10 +108,15 @@ test('the card: the mark, the pink 🔥 LIT chip and the discipline in the accen
   const sb = sandbox(t, { stage: [{ stage: 'plan' }, { ended: true }, { stage: 'work', plan: { done: 3, total: 7, next: '4. d' } }] });
   const { lines, plain } = run(sb);
   assert.match(plain[0], /^▎ {2}🔥LIT v1\.0\.42 {2}\| {2}🔥 LIT {2}· litwork +idle$/u);
-  assert.match(lines[0], /\u001b\[48;2;255;45;149m\u001b\[38;2;11;15;20m\u001b\[1m 🔥 LIT \u001b\[0m/u, 'the brand chip is pink with dark text');
+  assert.match(lines[0], /\u001b\[38;2;11;15;20m\u001b\[1m\u001b\[48;2;255;154;60m 🔥(?:\u001b\[48;2;[\d;]+m[ LIT]+){2}\u001b\[48;2;255;45;149m \u001b\[0m/u, 'the brand chip runs from orange to pink with dark text');
   assert.match(lines[0], new RegExp(`\\u001b\\[1m\\u001b\\[${ACCENT}mlitwork`, 'u'), 'the discipline is the bold accent');
-  assert.match(lines[0], new RegExp(`^\\u001b\\[${ACCENT}m▎`, 'u'), 'the card edge is the accent');
-  assert.equal(plain.at(-1), '▎ Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $1.87 │ git main', 'the figures keep the family order');
+  const edges = lines.map((line) => /^\u001b\[38;2;([\d;]+)m▎\u001b\[0m /u.exec(line)?.[1]);
+  assert.ok(edges.every(Boolean), 'the card edge opens every row');
+  assert.equal(new Set(edges).size, lines.length, 'and its colour runs down them');
+  const light = run(sb, { env: LIGHT });
+  assert.match(light.lines[0], new RegExp(`^\\u001b\\[${ACCENT}m▎`, 'u'), 'on a light background the card edge is the accent');
+  assert.match(light.lines[0], /\u001b\[48;2;255;45;149m\u001b\[38;2;11;15;20m\u001b\[1m 🔥 LIT \u001b\[0m/u, 'and the brand chip plain pink');
+  assert.equal(light.plain.at(-1), '▎ Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $1.87 │ git main', 'the figures keep the family order');
 });
 
 test('the stage map uses LitGrok\'s own stages as the family card draws them', (t) => {
@@ -116,7 +124,8 @@ test('the stage map uses LitGrok\'s own stages as the family card draws them', (
   const { lines, plain } = run(sb, { env: { LITGROK_HUD_COLOR: '0' } });
   assert.equal(plain[1], 'interview ✓ ━━━━ plan ✓ ━━━━ [work 3/7] ━━━━ review · ──── done ·');
   const map = run(sb).lines[1];
-  assert.match(map, /\u001b\[48;2;255;99;55m\u001b\[38;2;11;15;20m\u001b\[1m work 3\/7 \u001b\[0m/u, 'the current stage is an accent chip with dark text');
+  assert.match(map, /\u001b\[38;2;11;15;20m\u001b\[1m\u001b\[48;2;180;140;255m wo\u001b\[48;2;[\d;]+mrk\u001b\[48;2;[\d;]+m 3\/\u001b\[48;2;255;99;55m7 \u001b\[0m/u, 'the current stage is a chip from violet to the accent with dark text');
+  assert.match(run(sb, { env: LIGHT }).lines[1], /\u001b\[48;2;255;99;55m\u001b\[38;2;11;15;20m\u001b\[1m work 3\/7 \u001b\[0m/u, 'plain accent on a light background');
   assert.match(map, /\u001b\[38;2;138;138;138minterview ✓\u001b\[0m/u, 'a passed stage is dim with a tick');
   assert.match(map, /\u001b\[38;2;138;138;138mreview ·\u001b\[0m/u, 'a stage ahead is dim with a dot');
   assert.match(map, new RegExp(`\\u001b\\[${ACCENT}m━`, 'u'), 'rails into the current stage are the accent');
@@ -145,7 +154,7 @@ test('teammates never read blocked: a live subagent is a corner count, never a l
 
 test('the one-line row keeps the family order and lights the ignition mark after the gauge', (t) => {
   const sb = sandbox(t);
-  const { lines, plain } = run(sb, { env: { LITGROK_HUD_LINES: '1' } });
+  const { lines, plain } = run(sb, { env: { LITGROK_HUD_LINES: '1', ...LIGHT } });
   assert.equal(plain[0], ' 🔥LIT v1.0.42  | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │  🔥 LIT  IGNITED · litwork 🔥 │ $1.87 │ git main');
   assert.match(lines[0], new RegExp(`\\u001b\\[48;2;255;45;149m\\u001b\\[38;2;11;15;20m\\u001b\\[1m 🔥 LIT \\u001b\\[0m\\u001b\\[1m\\u001b\\[${ACCENT}m IGNITED · litwork 🔥`, 'u'));
   assert.equal(run(sb, { env: { LITGROK_HUD_LINES: '1', LITGROK_HUD_COLOR: '0' } }).plain[0], '[🔥LIT v1.0.42] | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ 🔥 LIT IGNITED · litwork 🔥 │ $1.87 │ git main');

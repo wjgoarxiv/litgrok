@@ -6,6 +6,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
 import { rewindCellRgb } from './lit-mark.mjs';
+import { blend, paintSunset } from './lit-sunset.mjs';
 import { CHROME } from './lit-synthwave.mjs';
 import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
 import { readOtherSessions } from './session-rows.mjs';
@@ -22,7 +23,15 @@ const ROLES = {
 };
 // The truecolor [🔥LIT] pill runs from the second to the fifth stop of the synthwave chrome.
 const PILL_STOPS = [CHROME[1], CHROME[4]].map((hex) => [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16)));
-// Grok cuts each line at 1024 characters, escapes included.
+// Truecolor only: the 🔥 LIT chip runs from orange to pink, the current-stage chip from violet to the accent, and
+// the card's edge from pink through violet to the accent.
+const VIOLET = [180, 140, 255];
+const CHIP_STOPS = { pink: [[255, 154, 60], ROLES.pink], accent: [VIOLET, ROLES.accent] };
+const CHIP_STEPS = 4;
+const FAINT_EDGE = [48, 54, 61];
+const GAUGE_TRACK = [42, 36, 64];
+// Grok shows five lines and cuts each at 1024 characters, escapes included.
+const MAX_LINES = 5;
 const MAX_LINE_CHARACTERS = 1024;
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
 // The card reads only the end of the session ledger, enough for a few hundred records.
@@ -847,6 +856,72 @@ function figuresLine({ status, glyphs, paint, handoff, maxCells, rail }) {
   });
 }
 
+// The truecolor finish of a laid-out line: the same cells in other colours, with rounded caps for the gauge's
+// brackets where the terminal draws them. It comes after the layout, so no word, row or column moves, and a step
+// that would push the line past Grok's cut is left out.
+function finishLine(line, { glyphs, round, edge }) {
+  const fits = (next) => (next.length <= MAX_LINE_CHARACTERS ? next : line);
+  for (const [role, [from, to]] of Object.entries(CHIP_STOPS)) {
+    const fill = `${sgr(ROLES[role], 24, true)}${sgr(ROLES.ink, 24)}\u001b[1m`;
+    const start = line.indexOf(fill);
+    if (start < 0) continue;
+    const end = line.indexOf('\u001b[0m', start);
+    const cells = [...line.slice(start + fill.length, end)];
+    const step = (index) => Math.floor((index / cells.length) * CHIP_STEPS);
+    const body = cells.map((cell, index) => (index > 0 && step(index) === step(index - 1)
+      ? cell : `${sgr(blend(from, to, step(index) / (CHIP_STEPS - 1)), 24, true)}${cell}`)).join('');
+    const cap = (text, rgb) => text.replace(sgr(ROLES[role], 24), sgr(rgb, 24));
+    const before = line.slice(0, start);
+    const open = `${sgr(ROLES[role], 24)}\ue0b6\u001b[0m`;
+    const head = before.endsWith(open) ? `${before.slice(0, -open.length)}${cap(open, from)}` : before;
+    const rest = line.slice(end);
+    const close = `\u001b[0m${sgr(ROLES[role], 24)}\ue0b4`;
+    line = fits(`${head}${sgr(ROLES.ink, 24)}\u001b[1m${body}${rest.startsWith(close) ? `${cap(close, to)}${rest.slice(close.length)}` : rest}`);
+  }
+  if (round) {
+    const bracket = (text) => `${sgr(ROLES.accent, 24)}${text}\u001b[0m`;
+    const start = line.indexOf(bracket('ctx ['));
+    const end = line.indexOf(bracket(']'), start);
+    if (start >= 0 && end > start) {
+      const [, color = '', filled = '', empty = ''] = /^(?:(\u001b\[[\d;]+m)([█▏▎▍▌▋▊▉]+)\u001b\[0m)?(?:\u001b\[[\d;]+m(░+)\u001b\[0m)?$/u.exec(line.slice(start + bracket('ctx [').length, end)) ?? [];
+      const track = sgr(GAUGE_TRACK, 24);
+      const gauge = `${bracket('ctx ')}${color || track}\ue0b6\u001b[0m${sgr(GAUGE_TRACK, 24, true)}${color}${filled}${' '.repeat(empty.length)}\u001b[0m${/^█+$/u.test(filled) && !empty ? color : track}\ue0b4\u001b[0m`;
+      line = fits(`${line.slice(0, start)}${gauge}${line.slice(end + bracket(']').length)}`);
+    }
+  }
+  const plainEdge = `${sgr(ROLES.accent, 24)}${glyphs.rail}`;
+  return line.startsWith(plainEdge) ? fits(`${sgr(edge, 24)}${line.slice(plainEdge.length - glyphs.rail.length)}`) : line;
+}
+
+// The caps U+E0B6 and U+E0B4 need a Nerd Font the user named, or a terminal that draws them itself: Windows
+// Terminal and the VS Code terminal.
+function drawsRoundCaps(glyphSetting, env = process.env) {
+  return glyphSetting === 'nerd' || (glyphSetting === undefined && (Boolean(env.WT_SESSION) || env.TERM_PROGRAM === 'vscode'));
+}
+
+// A terminal that names a light background (COLORFGBG ends in 7 or 15) keeps the rows as they were.
+function lightBackground(env = process.env) {
+  return /(?:^|;)(?:7|15)$/u.test(env.COLORFGBG ?? '');
+}
+
+// The finished rows with the sunset in the cells they leave free. It stays away from a finished turn and stands
+// above the extensions row, and moves only while a turn runs with the motion full.
+function dressed(lines, { glyphs, round, running, now, maxCells, scene, notice, waiting, rewind }) {
+  const out = lines.map((line, row) => {
+    const share = lines.length > 1 ? (row / (lines.length - 1)) * 2 : 0;
+    const edge = share < 1 ? blend(ROLES.pink, VIOLET, share) : blend(VIOLET, ROLES.accent, share - 1);
+    return finishLine(line, { glyphs, round, edge: running ? edge : blend(edge, FAINT_EDGE, 0.45) });
+  });
+  if (!scene) return out;
+  const seconds = running && hudMotion() === 'full' ? now / 1000 : null;
+  const under = Math.min(MAX_LINES, out.length - (notice ? 1 : 0));
+  const shown = paintSunset(out.slice(0, under), {
+    maxCells, cellWidth, seconds, dim: !running, amber: waiting,
+    rainbow: rewind ? (cell, cells) => rewindCellRgb(now, seconds === null ? 'off' : 'full', cell, cells) : null,
+  });
+  return [...shown, ...out.slice(under)];
+}
+
 function render(input) {
   try {
     recordContextForHandoff(input);
@@ -899,7 +974,11 @@ function render(input) {
     waiting: waitingOf(activity),
     burst: phase.phase === 'complete' && workflow?.stage === 'done',
   };
-  if (process.env.LITGROK_HUD_LINES === '1') return [compactRow({ ...shared, looks, phase })];
+  const finish = (lines, notice = false) => (depth !== 24 || glyphs === GLYPHS.ascii || lightBackground() ? lines : dressed(lines, {
+    glyphs, round: drawsRoundCaps(glyphSetting), running: turn.running, now, maxCells,
+    scene: phase.phase !== 'complete', notice, waiting: Boolean(looks.waiting), rewind: looks.look === 'rewind',
+  }));
+  if (process.env.LITGROK_HUD_LINES === '1') return finish([compactRow({ ...shared, looks, phase })]);
   let others = [];
   try {
     others = readOtherSessions(statusDirs(input), input?.session_id, now);
@@ -917,7 +996,7 @@ function render(input) {
   if (notice) otherLines.push(extensionsLine({ glyphs, paint, maxCells, rail }));
   // The card shows while a discipline is active or the session has a workflow stage; otherwise the
   // HUD is the single row, with the other sessions' rows under it.
-  if (!discipline && !workflow?.stage) return [compactRow({ ...shared, looks, phase }), ...otherLines];
+  if (!discipline && !workflow?.stage) return finish([compactRow({ ...shared, looks, phase }), ...otherLines], notice);
   const warning = warningText(input, activity, handoff);
   const live = turn.running ? activity?.live ?? null : null;
   const lines = [titleLine({ ...shared, phase, warning, activity: phase.phase === 'idle' ? null : activity, rail, looks })];
@@ -925,7 +1004,7 @@ function render(input) {
   const detail = detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail });
   if (detail) lines.push(detail);
   lines.push(figuresLine({ ...shared, rail }));
-  return [...lines, ...otherLines];
+  return finish([...lines, ...otherLines], notice);
 }
 
 

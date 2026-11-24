@@ -20,7 +20,7 @@ const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const HOOKS_DIRECTORY = join(PRODUCT_ROOT, '.grok', 'hooks');
 const STATUS_SCRIPT = join(HOOKS_DIRECTORY, 'lit-status-line.mjs');
 const SESSION = 'workflow-session';
-const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
 const PLAIN = { LITGROK_HUD_COLOR: '0' };
 const SPIN = '[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]';
 
@@ -314,7 +314,7 @@ test('other-session rows keep the width with colour on and off', (t) => {
       for (const line of plain) assert.ok(cells(line) <= columns - 1, `${columns} columns ${JSON.stringify(env)}: "${line}" is ${cells(line)} cells`);
       if (env !== PLAIN && env.NO_COLOR === undefined) assert.match(raw, /\u001b\[/u, 'colour on paints');
       else assert.doesNotMatch(raw, /\u001b\[/u, 'colour off has no escapes');
-      assert.equal(plain.filter((line) => /(?:running|idle)$/u.test(line) && !line.includes('LIT')).length, 2, `${columns}: both rows stay`);
+      assert.equal(plain.filter((line) => / (?:running|idle)(?: {2}|$)/u.test(line) && !line.includes('LIT')).length, 2, `${columns}: both rows stay`);
     }
   }
 });

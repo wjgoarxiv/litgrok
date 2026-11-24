@@ -32,6 +32,7 @@ function baseEnvironment(home) {
   delete env.CI;
   delete env.NO_COLOR;
   delete env.COLUMNS;
+  for (const key of ['COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION']) delete env[key];
   return env;
 }
 
@@ -221,6 +222,8 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
   const hook = runPromptHook({ home, workspace, stateRoot });
   assert.equal(hook.status, 0, hook.stderr);
   const ONE = { LITGROK_HUD_LINES: '1' };
+  // The same words with no sunset beside them; test/sunset.test.mjs proves the sunset moves none of them.
+  const LIGHT = { COLORFGBG: '0;15' };
 
   const plain = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, LITGROK_HUD_COLOR: '0' } });
   assert.equal(plain.status, 0, plain.stderr);
@@ -240,14 +243,14 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
   const idle = runStatus({ home, stateRoot, cwd: otherWorkspace, env: { LITGROK_HUD_COLOR: '0' } });
   assert.equal(idle.status, 0, idle.stderr);
   assert.equal(stripVTControlCharacters(idle.stdout).trim(), '[🔥LIT] | grok-4 │ ctx [█▎░] 42%', 'with nothing active the HUD stays one row');
-  const coloredIdle = runStatus({ home, stateRoot, cwd: otherWorkspace });
+  const coloredIdle = runStatus({ home, stateRoot, cwd: otherWorkspace, env: LIGHT });
   assert.equal(coloredIdle.status, 0, coloredIdle.stderr);
   assert.equal(stripVTControlCharacters(coloredIdle.stdout).trim(), '🔥LIT  | grok-4 │ ctx [█▎░] 42%', 'in colour the brackets become the pill\'s padding');
   assert.ok(coloredIdle.stdout.startsWith('\u001b[0m\u001b[1m\u001b[38;2;11;14;20m\u001b[48;2;216;180;254m '), 'the family mark is a space-padded pill on the synthwave chrome');
   assert.match(coloredIdle.stdout, /\u001b\[48;2;196;181;253m \u001b\[0m/u, 'the pill ends on chrome stop 4');
   assert.match(coloredIdle.stdout, /\u001b\[38;2;255;99;55m\[?█/u, 'a context below 70% is the accent');
 
-  const colored = runStatus({ home, stateRoot, cwd: workspace, env: ONE });
+  const colored = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, ...LIGHT } });
   assert.equal(colored.status, 0, colored.stderr);
   const visible = '[🔥LIT] | grok-4 │ ctx [█▎░] 42% │ 🔥 LIT IGNITED · lit-plan 🔥';
   assert.equal(stripVTControlCharacters(colored.stdout).trim(), '🔥LIT  | grok-4 │ ctx [█▎░] 42% │  🔥 LIT  IGNITED · lit-plan 🔥', 'in colour the 🔥 LIT of the mark is a padded chip');
@@ -266,12 +269,12 @@ test('status line renders activation, idle fallback, plain text, NO_COLOR, and a
     workspaceRoot: workspace,
     discipline: longDiscipline,
   });
-  const clippedDiscipline = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, COLUMNS: '60' } });
+  const clippedDiscipline = runStatus({ home, stateRoot, cwd: workspace, env: { ...ONE, ...LIGHT, COLUMNS: '60' } });
   assert.equal(clippedDiscipline.status, 0, clippedDiscipline.stderr);
   assert.match(stripVTControlCharacters(clippedDiscipline.stdout).trimEnd(), /^ 🔥LIT {2}\| … │ ctx \[█▎░\] 42% │ {2}🔥 LIT {2}IGNITED · [^\n]*… 🔥$/u, 'the model is clipped first, then the discipline');
   assert.match(clippedDiscipline.stdout, /\u001b\[38;2;255;99;55m IGNITED · [^\u001b]*… 🔥\u001b\[0m/u, 'the clipped ellipsis is painted after plain-text clipping');
 
-  const long = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), env: ONE, extra: { effort: { level: 'high' }, context_window: { used_percentage: 42, context_window_size: 256000 } } });
+  const long = runStatus({ home, stateRoot, cwd: workspace, model: 'grok-model-'.repeat(12), env: { ...ONE, ...LIGHT }, extra: { effort: { level: 'high' }, context_window: { used_percentage: 42, context_window_size: 256000 } } });
   assert.equal(long.status, 0, long.stderr);
   const bounded = stripVTControlCharacters(long.stdout).trim();
   assert.equal(bounded.split(/\r?\n/u).length, 1);

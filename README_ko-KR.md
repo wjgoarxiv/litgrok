@@ -368,6 +368,12 @@ LitGrok 스킬을 부르는 프롬프트가 나오기 전까지는 모델과 추
 truecolor 터미널에서는 상태 행의 `[🔥LIT v…]` 마크가 설치 프로그램의 마크와 같은 라일락에서 보라로 이어지는 색의
 알약 모양 ` 🔥LIT v… `로 바뀝니다. 폭은 그대로입니다. 색을 적게 쓰거나 아예 쓰지 않는 터미널에서는 괄호 마크가 남습니다.
 
+노을도 있습니다. truecolor 터미널에서는 카드에서 글자가 쓰지 않는 자리에 반쯤 잠긴 해와 별 몇 개, 해에서 바깥으로
+반짝이며 흐르는 바다가 그려집니다. 턴이 도는 동안에는 Grok이 화면을 다시 그릴 때마다 한 단계씩 움직여서 일이 진행 중이라는
+것을 한눈에 알 수 있고, 턴과 턴 사이에는 옅은 색으로 멈춰 있습니다. 글자를 가리거나 줄을 늘리는 일은 없고, 화면이 좁으면
+작아지거나 나오지 않습니다. `LITGROK_HUD_MOTION=off`는 움직임을 멈추고, `LITGROK_HUD_COLOR=256`은 노을을 뺍니다. 밝은
+테마에서도 256을 쓰면 됩니다. 사진과 다른 스위치는 [가이드](./docs/guide_ko-KR.md#상태-행-켜기-선택)에 있습니다.
+
 턴이 끝나면 카드는 다시 한 줄로 접히고, 작업이 어디까지 왔는지는 그대로 남습니다. 계획 턴이 계획을 아직 저장하지
 않았을 때, 핸드오프를 요청했을 때, 컨텍스트가 정해 둔 핸드오프 퍼센트에 가까워졌을 때처럼 손봐야 할 일이 생기면
 노란색으로 바뀝니다.
@@ -400,7 +406,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 컨텍스트가 정한 퍼센트의 10포인트 안으로 들어오면 상태 행에 노란 경고가 붙어 얼마나 가까운지 보여 줍니다. 턴이 끝났을 때 컨텍스트가 정한 퍼센트 이상이면 Stop 훅이 모델에게 한 단계 더 작업을 시키고 `lit-handoff` 절차대로 인수인계 문서를 쓰라고 한 번 요청하고, 카드에는 `⚠ handoff requested`가 뜹니다.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="960" alt="demo — grok status line이라는 제목의 터미널 카드. /litwork 턴 동안의 상태 카드 세 장이 있습니다. 카드마다 제목 줄에 [🔥LIT] | 🔥 LIT · litwork가, 오른쪽 끝에 2 tools와 1m04s가 있고, 그 아래 plan, work, review, done 단계 줄에서는 work가 켜져 있으며, 마지막 줄은 Grok 4.5 [high] │ ctx 54%/2m 또는 61%/2m │ handoff@60%입니다. 54%일 때 경고 줄은 ctx 54% → handoff at 60%, 61%일 때는 ctx 61% ≥ handoff at 60%입니다. Stop 훅이 핸드오프를 요청한 뒤에는 handoff requested가 됩니다." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="960" alt="demo — grok status line이라는 제목의 터미널 카드. /litwork 턴 동안의 상태 카드 세 장이 있습니다. 카드마다 제목 줄에 라일락 알약 안의 🔥LIT과 설치된 버전, 주황에서 분홍으로 이어지는 칩 | 🔥 LIT, · litwork가, 오른쪽 끝에 2 tools와 1m04s가 있고, 그 아래 plan, work, review, done 단계 줄에서는 work가 켜져 있으며, 마지막 줄은 Grok 4.5 [high] │ ctx 54%/2m 또는 61%/2m │ handoff@60%입니다. 아래 세 줄의 빈자리에는 금색, 주황, 분홍으로 반쯤 잠긴 해가 있고 위로 별, 옆으로 점점이 바다가 있습니다. 54%일 때 경고 줄은 ctx 54% → handoff at 60%, 61%일 때는 ctx 61% ≥ handoff at 60%입니다. Stop 훅이 핸드오프를 요청한 뒤에는 handoff requested가 됩니다." /></picture></p>
 
 문서가 저장되면 모델은 "Handoff saved. Run /compact now." 한 줄로 마무리합니다. 훅으로는 Grok의 압축을 시작할 수 없으니 이때 `/compact`를 직접 입력하세요. 그다음 턴이 끝날 때 LitGrok은 저장된 인수인계 문서를 모델에게 알려 주고, 현재 파일을 확인한 뒤 문서에 적힌 다음 단계부터 이어 가라고 요청합니다.
 

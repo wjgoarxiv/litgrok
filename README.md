@@ -374,6 +374,12 @@ small LIT card. Read it from top to bottom:
 In a truecolor terminal the row's `[🔥LIT v…]` mark is drawn as a pill, ` 🔥LIT v… `, on the same lilac-to-violet chrome
 as the installer's mark, and it keeps the same width. Terminals with fewer colours, or none, keep the bracketed mark.
 
+There is a sunset too. In truecolor, the part of the card no text uses shows a half-sunk sun, a few stars and a sea that
+glitters away from it. It moves a step at each of Grok's redraws while a turn runs, so a glance tells you work is going on,
+and it stands still and faded between turns. It never covers a word and adds no line; on a narrow screen it gets smaller or
+stays away. `LITGROK_HUD_MOTION=off` holds it still, and `LITGROK_HUD_COLOR=256` leaves it out, which also suits a light
+theme. The [guide](./docs/guide.md#an-optional-status-row) has the picture and the other switches.
+
 When the turn ends, the card folds back into the single line and keeps where the work got to. It turns yellow when
 something needs you: a planning turn that has not saved its plan, a handoff request, or a context close to your handoff
 percent.
@@ -406,7 +412,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on 60
 
 Once the context comes within ten points of your percent, the status row shows a yellow warning with how close it is. When a turn ends at or above your percent, the Stop hook keeps the model going for one more step and asks it, once, to write the handoff with the `lit-handoff` procedure; the card reads `⚠ handoff requested`.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="960" alt="Terminal card titled demo — grok status line. Three status cards during a /litwork turn, each titled [🔥LIT] | 🔥 LIT · litwork with 2 tools and 1m04s at the right, the stage map plan, work, review, done with work lit, and a last line reading Grok 4.5 [high] │ ctx 54%/2m or 61%/2m │ handoff@60%. At 54% the warning line reads ctx 54% → handoff at 60%. At 61% it reads ctx 61% ≥ handoff at 60%. After the Stop hook asks for the handoff it reads handoff requested." /></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="./docs/assets/auto-handoff/auto-handoff-session-dark.webp" /><img src="./docs/assets/auto-handoff/auto-handoff-session-light.webp" width="960" alt="Terminal card titled demo — grok status line. Three status cards during a /litwork turn, each titled 🔥LIT with the installed version on a lilac pill, then | 🔥 LIT on an orange-to-pink chip and · litwork, with 2 tools and 1m04s at the right, the stage map plan, work, review, done with work lit, and a last line reading Grok 4.5 [high] │ ctx 54%/2m or 61%/2m │ handoff@60%. A half-sunk sun in gold, orange and pink stands in the free part of the last three lines, with stars above and a dotted sea beside it. At 54% the warning line reads ctx 54% → handoff at 60%. At 61% it reads ctx 61% ≥ handoff at 60%. After the Stop hook asks for the handoff it reads handoff requested." /></picture></p>
 
 When the packet is saved, the model ends with one plain line: "Handoff saved. Run /compact now." Type `/compact` then, since Grok lets no hook start a compaction; the next time a turn ends, LitGrok points the model at the saved handoff and asks it to check the current files and continue from its next steps.
 

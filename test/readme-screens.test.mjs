@@ -21,8 +21,8 @@ const screens = {
   'install-plan-dark.webp': 'ad9afa5cf46559229db9ddc0dcba50391be1175253c087a829021d3bd0f9fb72',
   'session-start-dark.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
   'session-start-light.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
-  'status-row-dark.webp': '5cc43af2e7623e6f6ba0375f4821bcdd6d2022df3bedef7401b90e016ea2f0c8',
-  'status-row-light.webp': '5cc43af2e7623e6f6ba0375f4821bcdd6d2022df3bedef7401b90e016ea2f0c8',
+  'status-row-dark.webp': '6811d248abb9697a96bfc529253b11f26708a4fcbbd4a5d5d794d9b658cb3a35',
+  'status-row-light.webp': '6811d248abb9697a96bfc529253b11f26708a4fcbbd4a5d5d794d9b658cb3a35',
 };
 const MAX_SCREEN_BYTES = 245_760;
 
@@ -156,8 +156,8 @@ const autoHandoff = {
   'auto-handoff-off-light.webp': '8b54ebdf7243f8f10918579d034b2e62e05c457d8b65659b8d21f76af124524c',
   'auto-handoff-on-dark.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
   'auto-handoff-on-light.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
-  'auto-handoff-session-dark.webp': '21b676828675e98114a166b922b07e18f11fff8c556a7750cdcf5f8b4c968a40',
-  'auto-handoff-session-light.webp': '21b676828675e98114a166b922b07e18f11fff8c556a7750cdcf5f8b4c968a40',
+  'auto-handoff-session-dark.webp': '2e40065fb9d40f7ec8251a50170b0cc7a22e669bc0e227ef8642d83460706ce5',
+  'auto-handoff-session-light.webp': '2e40065fb9d40f7ec8251a50170b0cc7a22e669bc0e227ef8642d83460706ce5',
 };
 const autoHandoffQuotes = {
   'auto-handoff-on': ['litgrok auto-handoff on 60', 'Automatic handoff is ON at 60 percent for this project.', 'litgrok auto-handoff status', 'Automatic handoff: ON at 60 percent', 'It needs the LitGrok status line (litgrok install --user --status-line)'],

@@ -17,7 +17,10 @@ import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const STATUS_SCRIPT = join(PRODUCT_ROOT, '.grok', 'hooks', 'lit-status-line.mjs');
 const SESSION = 'band-session';
-const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+// A terminal that names a light background shows the same words with no sunset beside them, so a whole row can be
+// compared; test/sunset.test.mjs proves the sunset moves none of them.
+const LIGHT = { COLORFGBG: '0;15' };
 
 function sandbox(t, discipline = 'litwork') {
   const root = mkdtempSync(join(tmpdir(), 'litgrok-status-band-'));
@@ -117,10 +120,10 @@ const title = (result) => result.plain[0].replace(/ {2,}/gu, '  ');
 test('one-line mode keeps the family row within the 1024-character cut for the longest skill name', (t) => {
   const sb = sandbox(t, 'lit-scientific-visualization');
   for (const columns of ['120', '400']) {
-    const { lines, plain } = runStatus(sb, { env: { COLUMNS: columns, LITGROK_HUD_LINES: '1' } });
+    const { lines, plain } = runStatus(sb, { env: { COLUMNS: columns, LITGROK_HUD_LINES: '1', ...LIGHT } });
     assert.equal(lines.length, 1);
     assert.equal(plain[0], ' 🔥LIT  | Grok 4.5 [high] │ ctx [█▎░] 42%/2m │  🔥 LIT  IGNITED · lit-scientific-visualization 🔥');
-    const card = runStatus(sb, { env: { COLUMNS: columns } });
+    const card = runStatus(sb, { env: { COLUMNS: columns, ...LIGHT } });
     assert.match(card.plain[0], /^▎ {2}🔥LIT {2}\| {2}🔥 LIT {2}· lit-scientific-visualization +idle$/u, 'the card title carries the whole skill name');
   }
 });
@@ -251,7 +254,7 @@ test('colour: truecolor by default, 256 and 16 colour fallbacks, and none for NO
   seedLedger(sb.workspace, busyTurn());
   const run = (env) => runStatus(sb, { env: { COLUMNS: '400', ...env }, turnAgoMs: 100_000, promptId: 'p1' });
 
-  const truecolor = run({});
+  const truecolor = run(LIGHT);
   assert.equal(truecolor.lines.length, 2);
   assert.match(truecolor.lines[0], /\u001b\[48;2;255;45;149m/u, 'the brand chip is pink');
   assert.match(truecolor.lines[0], /\u001b\[1m\u001b\[38;2;255;99;55m● 1m\d\ds\u001b\[0m$/u, 'the running state is the bold accent');
@@ -303,7 +306,7 @@ test('the figures line shows cost, branch and worktree when Grok sends them, and
 test('Nerd glyphs are opt-in and need colour for the rounded caps; ascii glyphs print nothing outside ASCII', (t) => {
   const sb = sandbox(t);
   seedLedger(sb.workspace, busyTurn());
-  const nerd = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd' }, turnAgoMs: 100_000, promptId: 'p1' });
+  const nerd = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd', ...LIGHT }, turnAgoMs: 100_000, promptId: 'p1' });
   assert.match(nerd.lines[0], /\ue0b6/u);
   assert.match(nerd.lines[0], /\ue0b4/u);
   assert.match(title(nerd), /^▎ {2}🔥LIT {2}\| \ue0b6🔥 LIT\ue0b4 · litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u);

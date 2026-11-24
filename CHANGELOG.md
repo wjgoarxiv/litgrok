@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.43
+
+- The status line has a sunset. In truecolor, a half-sunk sun in gold, orange and pink stands in the part of the rows no text uses, with stars above it and a sea of `~ - .` that runs outward from it. While a turn runs it moves in steps, one at each redraw (about every 300 ms), by colour and by ASCII marks only: light ripples over the sun, the stars twinkle, and every nine seconds a shooting star crosses. Between turns it stands still and faded. It never covers a word, changes no row, word or width, and adds no line: the card's last three rows carry it, and the single row between workflows gets a small sun on the horizon. Where it has no room it gets smaller or stays away, and the twenty seconds after a finished turn belong to `✓ complete`. `lit-adhd` gives the sun its rewind colours and `YOUR TURN` an amber one.
+- With it, in truecolor: the `🔥 LIT` chip runs from orange to pink, the current-stage chip from violet to LitGrok's orange, and the bar down the card's left edge from pink through violet to orange. The context gauge takes round ends in place of its brackets, in the same cells, with `LITGROK_HUD_GLYPHS=nerd` and in Windows Terminal and the VS Code terminal, which draw them without a font.
+- `NO_COLOR`, `LITGROK_HUD_COLOR=0`, `256` or `16`, `LITGROK_HUD_GLYPHS=ascii` and a terminal that reports a light background through `COLORFGBG` keep the rows exactly as they were. `LITGROK_HUD_MOTION=off` or `subtle` holds the scene still. Grok does not tell a status command its theme, so on a light theme in a terminal that sets no `COLORFGBG`, use `LITGROK_HUD_COLOR=256`.
+- The guide's status-row picture and the automatic-handoff session picture are redrawn from the new output.
+
 ## 1.0.42 — 2026-11-24
 
 - Both READMEs, the npm READMEs and the guide now explain the 1.0.41 changes: a request that ends with `lit`, `litwork` or `lit-loop` gets the goal question with the words before it, while the project rule still picks the skill from a leading `lit`; `install`, `uninstall` and `--help` open with the synthwave LIT mark, with the single line `LIT · grok build` on narrow terminals, without block glyphs, or in a pipe or log; and the status line's mark is a pill in truecolor.
