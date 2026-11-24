@@ -74,6 +74,13 @@ so no hook can switch `lit` on for you. Instead, Grok reads LitGrok's project ru
 usually `litwork`, as in the film above. When you want to be sure which skill runs, type its name as a slash command:
 `/litwork fix the date parsing bug in src/dates.js, with a test` does the same job.
 
+The word can also come last, as in `fix the date parsing bug in src/dates.js lit` or `로그인 버튼 고쳐줘 lit`. LitGrok's
+hooks read that as the start of a run, the same as a leading `lit`: in a project with a test command, the first turn
+asks the goal question `Set goal for this lit-loop: /goal <condition>? (yes / no)`, with the words before `lit` as the
+finish line. A trailing `litwork` or `lit-loop` works the same way, and `lit-loop <task>` at the start counts as a run
+too. A bare `lit`, or `lit.` with only punctuation after it, asks nothing. The project rule still looks for `lit` at the
+start when it picks the skill, so put it first, or use `/litwork`, when you want to be sure which skill runs.
+
 **The full workflow.** For a bigger job, go one step at a time. Each step hands its result to the next, and you can
 skip any step you do not need. Every step is a skill you call by name with a slash.
 
@@ -363,6 +370,9 @@ small LIT card. Read it from top to bottom:
   tick, and the one you are in is lit with the plan tasks checked so far.
 - **Line under the map:** the next open task, the tool running right now and for how long, and how the last test run went.
 - **Last line:** the model, the context gauge, the cost and the branch.
+
+In a truecolor terminal the row's `[🔥LIT v…]` mark is drawn as a pill, ` 🔥LIT v… `, on the same lilac-to-violet chrome
+as the installer's mark, and it keeps the same width. Terminals with fewer colours, or none, keep the bracketed mark.
 
 When the turn ends, the card folds back into the single line and keeps where the work got to. It turns yellow when
 something needs you: a planning turn that has not saved its plan, a handoff request, or a context close to your handoff
@@ -686,6 +696,9 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall
 - **`doctor` only reads:** it prints the installed version and the `GROUND:` line, and when npm has a newer version, the command that installs it, leaving the choice to you.
 - **`uninstall` removes only what it put there:** it takes the scope you installed with (add `--user` for a user install), and if you edited a file, it stops before removing anything and names that file.
 - **A user uninstall** also takes out the status-line keys LitGrok wrote, if you left them unchanged.
+- **The LIT mark:** `install`, `uninstall` and `--help` open with the synthwave LIT mark, sized to your terminal's width.
+  A narrow terminal, a terminal that cannot draw block glyphs, or output that goes to a pipe or a log gets the single
+  line `LIT · grok build` instead, and `--no-color` or `NO_COLOR` draws the mark with no colour.
 
 The installer never runs `git init`, trusts hooks, signs in or picks a model for you; those
 steps, and your API keys, stay with you in Grok Build.

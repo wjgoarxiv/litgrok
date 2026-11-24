@@ -28,7 +28,7 @@
 
 아래 그림은 LitGrok이 터미널에 출력하는 내용입니다. 설치하기 전에 미리 볼 수 있도록 실었습니다. 그림마다 LitGrok의 설치 프로그램, SessionStart 훅, 프롬프트 훅, 상태 행 명령이 실제로 출력한 내용을 캡처했고, 빈 데모 프로젝트와 임시 홈 폴더에서 실행했습니다. 홈 폴더 경로만 `~`로 줄였습니다. 그림은 carbon.now.sh처럼 민트에서 하늘색으로 번지는 배경 위에 어두운 터미널 카드로 그렸고, 밝은 페이지와 어두운 페이지에서 똑같이 보입니다. 실제 터미널에서는 글꼴과 색이 다르게 보일 수 있습니다. 그림 속 버전 번호, 파일 개수, 걸린 시간은 캡처한 실행의 값입니다.
 
-설치 프로그램은 LIT 마크와 패키지 버전을 먼저 보여 준 뒤, 파일이 들어갈 위치와 개수를 알려 줍니다. Scope는 파일이 들어갈 폴더입니다. 여기서는 데모 프로젝트의 `.grok` 폴더이고, `--user`를 붙이면 홈 폴더가 됩니다. Payload는 파일 개수이고, 모두 원본과 바이트가 같은 복사본입니다. MODEL ROUTE 카드는 모델을 계속 Grok Build가 고른다고 알려 줍니다. 그래서 설치 프로그램은 모델을 묻지 않고 모델 키도 쓰지 않습니다.
+설치 프로그램은 LIT 마크와 패키지 버전을 먼저 보여 준 뒤, 파일이 들어갈 위치와 개수를 알려 줍니다. Scope는 파일이 들어갈 폴더입니다. 여기서는 데모 프로젝트의 `.grok` 폴더이고, `--user`를 붙이면 홈 폴더가 됩니다. Payload는 파일 개수이고, 모두 원본과 바이트가 같은 복사본입니다. MODEL ROUTE 카드는 모델을 계속 Grok Build가 고른다고 알려 줍니다. 그래서 설치 프로그램은 모델을 묻지 않고 모델 키도 쓰지 않습니다. 마크는 이제 LitGrok의 라일락에서 보라로 이어지는 색을 입힌 신스웨이브 LIT 장면이고, 터미널 폭에 맞춰 크기가 바뀝니다. `uninstall`과 `--help`도 이 마크로 시작합니다. 아래 그림은 예전 마크입니다. 터미널이 좁거나 블록 글자를 그릴 수 없을 때, 출력이 파이프나 로그로 갈 때는 `LIT · grok build` 한 줄만 나옵니다.
 
 <p align="center"><img src="./assets/screens/install-plan-dark.webp" width="960" alt="demo — litgrok install이라는 제목의 터미널 카드. ~/demo $ litgrok install --yes 다음에 주황색·크림색·라임색 블록 글자로 그린 LitGrok 마크가 있고, 그 옆에 grok v와 패키지 버전이, 그 아래에 Grok Build skills, project rules, and hooks 줄이 있습니다. 이어서 INSTALL 아래에 01 · Scope project scope → ~/demo/.grok (use --user for user scope)와 02 · Payload 380 files · byte-identical copies only, 그리고 whole packaged .grok tree, byte-identical copies only가 나옵니다. 그다음 MODEL ROUTE 아래에 Model selection: host-owned와 Grok Build owns model and effort; the installer writes no model keys가 있습니다." /></p>
 
@@ -100,7 +100,7 @@ LitGrok 스킬이 동작하지 않을 때 상태 행은 `[🔥LIT vX.Y.Z] | Grok
 
 어떤 이름이 뜰지는 가장 최근 프롬프트가 정합니다. 프롬프트에서 `lit-scientific-visualization`, `lit-handoff`, `autoconference`, `autoresearch`, `lit-plan`, `litwork` 가운데 가장 먼저 나오는 이름이 표시되고, `lit`만 쓰면 `litwork`로 보입니다. 인라인 코드나 코드 블록 안에 든 이름은 세지 않으니, 코드 조각을 붙여 넣어도 표시는 바뀌지 않습니다.
 
-프롬프트가 스킬을 시작하면 상태 행이 LIT 카드로 커집니다. 제목은 `[🔥LIT vX.Y.Z] |  🔥 LIT  · litwork`입니다. 패밀리 마크, 분홍 `🔥 LIT` 칩, 스킬 이름이 차례로 옵니다. 제목 오른쪽 끝은 턴이 무엇을 하는지 알려 줍니다. 도는 중이면 걸린 시간이 붙은 `● 1m42s`, 끝나면 20초 동안 초록 `✓ complete`, 그 밖에는 `idle`입니다. 그 칩 옆에는 지금까지의 도구 호출 수와 아직 도는 하위 에이전트 수가 붙습니다. 카드의 마지막 줄에는 모델, 컨텍스트 게이지, 비용, 브랜치가 그대로 남습니다. LitFamily 상태 행은 제품마다 한 가지 색을 쓰기 때문에 나머지는 모두 LitGrok의 불꽃 주황(`#FF6337`)이고, 왼쪽 가장자리의 가는 주황 막대가 카드를 묶어 줍니다. Grok Build 1.0.13의 상태 행에서 truecolor, 굵은 글씨, emoji가 모두 제대로 보였습니다.
+프롬프트가 스킬을 시작하면 상태 행이 LIT 카드로 커집니다. 제목은 `[🔥LIT vX.Y.Z] |  🔥 LIT  · litwork`입니다. 패밀리 마크, 분홍 `🔥 LIT` 칩, 스킬 이름이 차례로 옵니다. 제목 오른쪽 끝은 턴이 무엇을 하는지 알려 줍니다. 도는 중이면 걸린 시간이 붙은 `● 1m42s`, 끝나면 20초 동안 초록 `✓ complete`, 그 밖에는 `idle`입니다. 그 칩 옆에는 지금까지의 도구 호출 수와 아직 도는 하위 에이전트 수가 붙습니다. 카드의 마지막 줄에는 모델, 컨텍스트 게이지, 비용, 브랜치가 그대로 남습니다. LitFamily 상태 행은 제품마다 한 가지 색을 쓰기 때문에 나머지는 모두 LitGrok의 불꽃 주황(`#FF6337`)이고, 왼쪽 가장자리의 가는 주황 막대가 카드를 묶어 줍니다. Grok Build 1.0.13의 상태 행에서 truecolor, 굵은 글씨, emoji가 모두 제대로 보였습니다. truecolor에서는 `[🔥LIT vX.Y.Z]` 마크가 설치 프로그램 마크와 같은 라일락-보라 색의 알약 ` 🔥LIT vX.Y.Z `로 그려지고 폭은 그대로입니다. 256색이나 16색, 색이 없는 터미널에서는 괄호가 남습니다.
 
 손을 봐야 할 일이 생기면 카드에 노란 경고가 붙습니다. 계획 게이트가 계획을 아직 저장하지 않은 계획 턴을 붙잡았을 때, 자동 핸드오프가 핸드오프를 요청했을 때, 컨텍스트가 핸드오프 퍼센트에 가까워졌을 때입니다. 제목은 짧게, 제목 아래 줄은 `⚠ plan gate: save plans/<slug>.md`처럼 길게 알려 줍니다. 타이머는 Grok이 준 값을 쓰고, 수는 LitGrok의 세션 기록에서 셉니다. LitGrok이 읽을 수 없는 값은 짐작하지 않고 뺍니다. 화면이 좁으면 버전, 수, 칩부터 빠지고 스킬 이름, 지금 단계, 컨텍스트 게이지는 끝까지 남습니다.
 

@@ -32,6 +32,8 @@ Grok sets the goal, writes a failing test, fixes the bug, checks the result and 
 
 Grok Build starts this a little differently from other agents. It does not pass a prompt hook's reply on to the model, so no hook can switch `lit` on for you. Instead, Grok reads LitGrok's project rule on every turn. The rule treats `lit` at the start of a prompt as the signal, and Grok then picks the matching skill itself; for a code change that is usually `litwork`. When you want to be sure which skill runs, type its name as a slash command: `/litwork fix the date parsing bug in src/dates.js, with a test` does the same job.
 
+The word can also come last, as in `fix the date parsing bug in src/dates.js lit`. LitGrok's hooks read that as the start of a run too: in a project with a test command, the first turn asks the goal question with the words before `lit` as the finish line. A trailing `litwork` or `lit-loop` works the same way. The project rule still looks for `lit` at the start when it picks the skill, so put it first, or use `/litwork`, when you want to be sure.
+
 **The full workflow.** For a bigger job, go one step at a time. Each step hands its result to the next, and you can skip any step you do not need. Every step is a skill you call by name with a slash.
 
 | Step | Type | What happens |
@@ -108,7 +110,9 @@ Beyond code, `lit-pptx` and `lit-docx` point you to wjgoarxiv-skills for slide d
 
 The installer copies the skills, agents, project rule, and hooks into `.grok/`. The twelve hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.41/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
 
-If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first. Once a prompt starts a workflow skill, the row also shows the workflow stage, the tool running now and the last test result. Add `--notify` for Grok's terminal notification when a turn finishes.
+If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first. Once a prompt starts a workflow skill, the row also shows the workflow stage, the tool running now and the last test result. Add `--notify` for Grok's terminal notification when a turn finishes. In a truecolor terminal the row's `[🔥LIT v…]` mark becomes a lilac-to-violet pill of the same width.
+
+`install`, `uninstall` and `--help` open with the synthwave LIT mark, sized to the terminal. A narrow terminal, one that cannot draw block glyphs, or output to a pipe or a log gets the single line `LIT · grok build`.
 
 ## Safety and uninstall
 
