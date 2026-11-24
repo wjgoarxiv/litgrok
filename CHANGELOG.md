@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.43
+## 1.0.43 — 2026-11-25
 
 - The status line has a sunset. In truecolor, a half-sunk sun in gold, orange and pink stands in the part of the rows no text uses, with stars above it and a sea of `~ - .` that runs outward from it. While a turn runs it moves in steps, one at each redraw (about every 300 ms), by colour and by ASCII marks only: light ripples over the sun, the stars twinkle, and every nine seconds a shooting star crosses. Between turns it stands still and faded. It never covers a word, changes no row, word or width, and adds no line: the card's last three rows carry it, and the single row between workflows gets a small sun on the horizon. Where it has no room it gets smaller or stays away, and the twenty seconds after a finished turn belong to `✓ complete`. `lit-adhd` gives the sun its rewind colours and `YOUR TURN` an amber one.
 - With it, in truecolor: the `🔥 LIT` chip runs from orange to pink, the current-stage chip from violet to LitGrok's orange, and the bar down the card's left edge from pink through violet to orange. The context gauge takes round ends in place of its brackets, in the same cells, with `LITGROK_HUD_GLYPHS=nerd` and in Windows Terminal and the VS Code terminal, which draw them without a font.
