@@ -79,29 +79,34 @@ test('both guide pages show every capture with alt text that quotes what it show
 });
 
 test('both GitHub pages show the session film in the demo slot near the top, and the captures live in the guide', () => {
-  const opening = { 'README.md': 'A short film of a real Grok Build session in a small Node project', 'README_ko-KR.md': '작은 Node 프로젝트에서 실제로 진행한 Grok Build 세션을 짧은 영상으로 만들었고' };
+  const opening = { 'README.md': 'A silent loop of a Grok Build session with LitGrok', 'README_ko-KR.md': 'LitGrok을 쓰는 Grok Build 세션의 무음 반복 영상입니다' };
+  const films = { 'README.md': 'demo.webp', 'README_ko-KR.md': 'demo-ko.webp' };
   for (const file of ['README.md', 'README_ko-KR.md']) {
     const content = read(file);
     const slots = content.split('\n').filter((line) => line.startsWith('<!-- demo-gif -->'));
     assert.equal(slots.length, 1, `${file} has one demo slot`);
     assert.ok(content.indexOf(slots[0]) < content.indexOf('\n## '), `${file}: the demo slot sits above the first section`);
-    const alt = /^<!-- demo-gif --><p align="center"><img src="\.\/docs\/assets\/demo\.webp" width="960" alt="([^"]+)" \/><\/p>$/u.exec(slots[0])?.[1] ?? '';
+    const alt = new RegExp(`^<!-- demo-gif --><p align="center"><img src="\\./docs/assets/${films[file]}" width="960" alt="([^"]+)" /></p>$`, 'u').exec(slots[0])?.[1] ?? '';
     assert.ok(alt.startsWith(opening[file]), `${file}: the demo slot shows the session film with an honest alt`);
-    for (const quote of ['--shout', '[LIT v1.0.16] LIT IGNITED · litwork', 'Read 2 skills', 'pre_tool_use', 'Re-run tests and check the shout CLI', 'HELLO, ADA!', 'litwork complete · 35s · 2 tools']) assert.ok(alt.includes(quote), `${file}: the film alt quotes "${quote}"`);
+    for (const quote of ['--shout', 'litwork', 'tests ✗ 1', 'tests ✓ 2', '★ complete', 'HELLO, ADA!']) assert.ok(alt.includes(quote), `${file}: the film alt quotes "${quote}"`);
     assert.ok(alt.length <= 800, `${file}: the demo slot keeps its alt to the seven steps`);
     assert.doesNotMatch(content, /<sub>[^<]*(?:recorded|replayed|녹화|재생)/u, `${file}: no method caption under the demo`);
     assert.equal([...content.matchAll(/assets\/screens\//gu)].length, 0, `${file}: the captures live in the guide`);
   }
 });
 
-test('the README demo film is an animated WebP that stays out of the package and off the npm cards', () => {
-  const film = readFileSync(join(ROOT, 'docs/assets/demo.webp'));
-  assert.equal(film.subarray(0, 4).toString('latin1'), 'RIFF', 'demo.webp is a RIFF container');
-  assert.equal(film.subarray(8, 12).toString('latin1'), 'WEBP', 'demo.webp is a WebP');
-  assert.ok(film.length <= 8 * 1024 * 1024, `demo.webp stays within 8 MiB (${film.length} bytes)`);
+test('the README demo films are animated WebP loops that stay out of the package and off the npm cards', () => {
   const files = JSON.parse(read('package.json')).files;
-  assert.ok(!files.some((entry) => !entry.startsWith('!') && ('docs/assets/demo.webp' === entry || 'docs/assets/demo.webp'.startsWith(`${entry.replace(/\/$/u, '')}/`))), 'package.json files never ships demo.webp');
-  for (const card of ['docs/npm/README.md', 'docs/npm/README_ko-KR.md']) assert.doesNotMatch(read(card), /demo\.(?:gif|webp)/u, `${card} does not embed the demo film`);
+  for (const name of ['demo.webp', 'demo-ko.webp']) {
+    const film = readFileSync(join(ROOT, 'docs/assets', name));
+    assert.equal(film.subarray(0, 4).toString('latin1'), 'RIFF', `${name} is a RIFF container`);
+    assert.equal(film.subarray(8, 12).toString('latin1'), 'WEBP', `${name} is a WebP`);
+    assert.ok(film.includes(Buffer.from('ANIM')), `${name} is animated`);
+    assert.ok(film.length <= 8 * 1024 * 1024, `${name} stays within 8 MiB (${film.length} bytes)`);
+    const path = `docs/assets/${name}`;
+    assert.ok(!files.some((entry) => !entry.startsWith('!') && (path === entry || path.startsWith(`${entry.replace(/\/$/u, '')}/`))), `package.json files never ships ${name}`);
+  }
+  for (const card of ['docs/npm/README.md', 'docs/npm/README_ko-KR.md']) assert.doesNotMatch(read(card), /demo(?:-ko)?\.(?:gif|webp)/u, `${card} does not embed the demo film`);
 });
 
 function assertCapture(file, html, base, quoteSet = quotes) {

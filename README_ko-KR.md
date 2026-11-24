@@ -28,7 +28,9 @@ Grok이 기록을 남기고, 다음 세션은 그 기록부터 읽고 이어서 
 
 <p align="center"><a href="#30초-설치">설치</a> &nbsp; <a href="#빠른-시작">빠른 시작</a> &nbsp; <a href="#만들-수-있는-것">결과물</a> &nbsp; <a href="./docs/guide_ko-KR.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 안내서</a> &nbsp; <a href="./docs/skills_ko-KR.md">스킬</a> &nbsp; <a href="./docs/guide_ko-KR.md#움직임으로-보기"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> 영상</a> &nbsp; <a href="./docs/guide_ko-KR.md#안전하게-설치하고-지우기"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> 안전</a> &nbsp; <a href="./docs/reference_ko-KR.md">상세 안내</a> &nbsp; <a href="./README.md">English</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="작은 Node 프로젝트에서 실제로 진행한 Grok Build 세션을 짧은 영상으로 만들었고, 일곱 단계로 흘러갑니다. 1. 요청이 lit으로 시작합니다: lit add a --shout flag that prints the greeting in capitals, with a test. 2. LitGrok이 켜지고 상태 행에 [LIT v1.0.16] LIT IGNITED · litwork가 뜹니다. 3. 먼저 플레이북을 읽습니다. 프로젝트 지침과 코드 변경 스킬을 읽고 Read 2 skills가 보입니다. 4. greet.js를 고치기 전에 테스트부터 씁니다. 5. 이어서 고치고, 고칠 때마다 pre_tool_use와 post_tool_use 훅에 체크 표시가 붙습니다. 6. 실제로 테스트를 돌립니다: Re-run tests and check the shout CLI. 7. 증거와 함께 끝납니다. node greet.js --shout Ada가 이제 HELLO, ADA!를 출력하고, 상태 행에 litwork complete · 35s · 2 tools가 뜹니다." /></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo-ko.webp" width="960" alt="LitGrok을 쓰는 Grok Build 세션의 무음 반복 영상입니다. 프롬프트 &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot;를 보내면 상태줄이 LIT pill, litwork, 단계 지도, 다음 작업이 이름으로 보이는 0/3 작업 막대의 네 줄 카드로 바뀝니다. 도구가 돌 때마다 카운터가 올라가고, node greet.js --shout Ada가 HELLO, ADA!를 출력하면 카드는 tests ✗ 1에서 tests ✓ 2로 바뀌며, 리뷰 레인 모양을 거쳐 ★ complete를 한 번 보인 뒤 20초 뒤 노을 아래에서 쉽니다. 약 300 ms 단위로 다시 그립니다." /></p>
+
+<p align="center"><sub>상태줄은 LitGrok이 샘플 세션 기록으로 직접 그린 출력이고, 그 주변의 Grok Build 화면은 다시 그린 것입니다.</sub></p>
 
 <details>
 <summary>왜 LitGrok인지, 누구에게 맞는지</summary>
@@ -46,7 +48,7 @@ LitGrok은 세션마다 따라갈 순서를 줍니다. 큰 변경은 첫 수정 
 다이어그램과 장치 모식도를 그리고, 딱딱한 한국어나 영어 문장을 다듬는 일도 하며, LitGrok 자체에는 계정도 로그인도
 필요 없습니다.
 
-위 영상은 실제 세션 하나를 담았습니다. 첫 줄은 사용자가 입력하고, 둘째 줄은 훅이 답하고, 셋째 줄은 상태 행이 작업을
+위 영상은 요청 하나가 끝나기까지의 한 판입니다. 첫 줄은 사용자가 입력하고, 둘째 줄은 훅이 답하고, 셋째 줄은 상태 행이 작업을
 따라 바뀝니다. 세 줄로 줄이면 이렇습니다.
 
 ```text
@@ -714,7 +716,7 @@ Grok Build에서 사용자가 직접 다룹니다.
 
 커버의 장갑 로봇 일곱은 LitFamily의 일곱 제품입니다. 각 제품은 자기 호스트에서 따로 동작하니, 쓰는 것 하나만 설치하면 되고 다른 제품은 필요 없습니다.
 
-커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다. 편집할 수 있는 벡터 원본은 `docs/assets/cover.svg`에 있고, 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 대신 보입니다. 실제 Grok Build 세션을 보여 주는 것은 이 페이지 위쪽의 영상입니다.
+커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다. 편집할 수 있는 벡터 원본은 `docs/assets/cover.svg`에 있고, 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 대신 보입니다. 이 페이지 위쪽의 영상은 상태줄이 일하는 모습을 보여 줍니다. 상태줄은 LitGrok이 직접 그린 출력이고 그 주변의 Grok Build 화면은 다시 그린 것입니다.
 
 <p align="center"><img src="./docs/assets/readme/ascii-readme.svg" width="480" alt="LIT ASCII B 마크 — Grok" /></p>
 

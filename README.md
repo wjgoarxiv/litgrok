@@ -28,7 +28,9 @@ project's `.grok/` folder.
 
 <p align="center"><a href="#install-in-30-seconds">Install</a> &nbsp; <a href="#quick-start">Quick start</a> &nbsp; <a href="#what-you-can-make">Showcase</a> &nbsp; <a href="./docs/guide.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Guide</a> &nbsp; <a href="./docs/skills.md">Skills</a> &nbsp; <a href="./docs/guide.md#watch-it-in-motion"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> Film</a> &nbsp; <a href="./docs/guide.md#safety-and-uninstall"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> Safety</a> &nbsp; <a href="./docs/reference.md">Reference</a> &nbsp; <a href="./README_ko-KR.md">한국어</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="A short film of a real Grok Build session in a small Node project, in seven steps. 1, the request starts with lit: lit add a --shout flag that prints the greeting in capitals, with a test. 2, LitGrok lights up: the status line reads [LIT v1.0.16] LIT IGNITED · litwork. 3, it reads its playbook, the project guidance and the code-change skill, and shows Read 2 skills. 4, the test is written first, before greet.js changes. 5, then the fix, checked: the pre_tool_use and post_tool_use hooks tick on each edit. 6, real tests: Re-run tests and check the shout CLI. 7, done, with evidence: node greet.js --shout Ada now prints HELLO, ADA!, and the status line reads litwork complete · 35s · 2 tools." /></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="A silent loop of a Grok Build session with LitGrok. The prompt &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot; turns the status line into a four-row card: the LIT pill, litwork, the stage map and a task bar at 0/3 with the next task named. Each tool ticks the counter; the card shows tests ✗ 1, then tests ✓ 2 once node greet.js --shout Ada prints HELLO, ADA!, switches to its review lanes, shows ★ complete once, and 20 seconds later rests under a sunset. It redraws in steps of about 300 ms." /></p>
+
+<p align="center"><sub>The status line is LitGrok's own output, run on sample session records; the Grok Build screen around it is redrawn.</sub></p>
 
 <details>
 <summary>Why LitGrok, and who it suits</summary>
@@ -46,8 +48,8 @@ prove fixed, a refactor you want reviewed before it merges. It also builds edita
 diagrams and equipment schematics, and cleans up stiff English or Korean prose. LitGrok itself needs no account or
 sign-in.
 
-The film above is one real session: you type the first line, the hooks answer with the second, and the status row walks
-the third as the work happens. Stripped down to three lines, it goes like this:
+The loop above is one request from start to finish: you type the first line, the hooks answer with the second, and the
+status row walks the third as the work happens. Stripped down to three lines, it goes like this:
 
 ```text
 you typed   lit add a --shout flag that prints the greeting in capitals, with a test
@@ -726,7 +728,7 @@ steps, and your API keys, stay with you in Grok Build.
 
 The seven armored robots on the cover stand for the seven LitFamily products. Each one works on its own in its own host: install just the one you use, and it needs none of the others.
 
-The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it. The editable vector version is `docs/assets/cover.svg`, and if your system asks for reduced motion, you see a still frame instead. The film near the top of this page is the one that shows a real Grok Build session.
+The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it. The editable vector version is `docs/assets/cover.svg`, and if your system asks for reduced motion, you see a still frame instead. The film near the top of this page shows the status line at work: the line is LitGrok's own output and the Grok Build screen around it is redrawn.
 
 <p align="center"><img src="./docs/assets/readme/ascii-readme.svg" width="480" alt="LIT ASCII B mark — Grok" /></p>
 
