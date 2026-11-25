@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.44 — 2026-11-25
 
 - The README cover is a new loop: a terminal in the sunset look with a short conversation, a pixel LITFAMILY wordmark, a striped half-sunk sun and the status lines, in place of the seven robot panels. The still for reduced motion is its first frame; both files are smaller.
 - The README demo is a new silent loop of one request on the four-row status card (task bar, tests verdict, review lanes, the finish, the sunset), with a Korean copy for the Korean page; the Grok Build screen around the status line is redrawn.
