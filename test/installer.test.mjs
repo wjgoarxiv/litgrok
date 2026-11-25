@@ -942,11 +942,11 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.ok(landing.includes(`${assets}/cover-motion.webp" width="100%"`));
     const heroAlt = landing.match(/<img src="[^"]+cover-motion\.webp" width="100%" alt="([^"]+)" \/>/u)?.[1] ?? '';
     if (english) {
-      assert.equal(heroAlt, 'LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up.');
+      assert.equal(heroAlt, 'LitFamily motion cover: a terminal in a sunset look. A short Grok Build conversation sits at the top, a pixel LITFAMILY wordmark and a striped half-sunk sun fill the middle with the row of seven product names lighting LITGROK, and LitGrok\'s status lines close the screen at the bottom.');
     } else {
-      assert.match(heroAlt, /^LitFamily 모션 커버: .*LitGrok 로봇.*KEEP THE WORK LIT\./u);
+      assert.match(heroAlt, /^LitFamily 모션 커버: 노을빛 터미널 화면입니다\..*LITGROK/u);
     }
-    assert.ok(!landing.includes(`${assets}/cover.webp"`), `${readmeName} shows the robot cover once, as the motion cover`);
+    assert.ok(!landing.includes(`${assets}/cover.webp"`), `${readmeName} shows the cover once, as the motion cover`);
     assert.equal([...landing.matchAll(/width="100%"/gu)].length, 1, `${readmeName} leads with one full-width picture`);
     const referenceUrl = prefix === './' ? `./${referencePath}` : `https://cdn.jsdelivr.net/npm/@litfamily/litgrok@${packageJson.version}/${referencePath}`;
     assert.ok(landing.includes(referenceUrl), `${readmeName}: the detailed reference must use its repository-relative (GitHub) or packaged npm-safe URL`);

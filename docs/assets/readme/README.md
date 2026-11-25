@@ -25,12 +25,12 @@ the GIF is an alternative link. Motion files, the outlined ASCII mark, and the L
 npm package. The version and license badges ship in the package so npmjs can
 render them.
 
-The landing pages lead with `../cover-motion.webp`, the looping 960×640 robot
-cover: the seven robot panels power on one by one, the LitGrok robot wakes, then
-LITFAMILY and KEEP THE WORK LIT. light up
-(SHA-256 `c1829ddcfddc1a725d3db5e72833feecde1ba1e0efeaa515da94bfbaa1c194fa`).
-Readers who prefer reduced motion get `../cover-motion-still.webp`, its fully lit
-hold frame (SHA-256 `562001cc45a52062d57c8db0a2f5491e33eba6efe753da1cb3f56df874aa63d5`).
+The landing pages lead with `../cover-motion.webp`, the looping 960×640 cover:
+a terminal in the sunset look with a short conversation, a pixel LITFAMILY wordmark,
+a striped half-sunk sun and LitGrok's status lines
+(SHA-256 `f731a72a45a102eb22f71b2741a4591f0ea506813598b66c0c7fa8ae7da636f5`).
+Readers who prefer reduced motion get `../cover-motion-still.webp`, its first
+frame (SHA-256 `82e8cf45fcf5dd8a2ce40280fb55e60124ac4a6c4bd411ea6dbc2cabce014dc1`).
 `../cover.webp` is the static seven-robot export with LitGrok lit
 (SHA-256 `7a1eaf59b2292f1b879ab82d53bd645e5c2cafc83189ced49a84f946d83d58c0`);
 the landing pages no longer show it. The SVG cover remains the editable,

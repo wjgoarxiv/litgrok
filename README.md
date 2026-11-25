@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: seven armored robots power on one by one, the LitGrok robot wakes with glowing eyes and a lit frame, then LITFAMILY and KEEP THE WORK LIT. light up." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily motion cover: a terminal in a sunset look. A short Grok Build conversation sits at the top, a pixel LITFAMILY wordmark and a striped half-sunk sun fill the middle with the row of seven product names lighting LITGROK, and LitGrok's status lines close the screen at the bottom." /></picture></p>
 
 <div align="center"><table>
 <tr><th colspan="2">LitGrok Bot · the Grok Bot cover</th></tr>
@@ -726,7 +726,7 @@ steps, and your API keys, stay with you in Grok Build.
 
 ## LITFAMILY
 
-The seven armored robots on the cover stand for the seven LitFamily products. Each one works on its own in its own host: install just the one you use, and it needs none of the others.
+The cover shows LitGrok's status lines in the sunset look under the LITFAMILY wordmark, and the seven LitFamily products each work on their own in their own host: install just the one you use, and it needs none of the others.
 
 The cover is brand motion made with the LitFamily motion skill: animated artwork, with no Grok session recorded in it. The editable vector version is `docs/assets/cover.svg`, and if your system asks for reduced motion, you see a still frame instead. The film near the top of this page shows the status line at work: the line is LitGrok's own output and the Grok Build screen around it is redrawn.
 

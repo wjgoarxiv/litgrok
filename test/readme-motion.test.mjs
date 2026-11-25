@@ -32,7 +32,7 @@ function assertMotionCover(name, text, cover, still, { liveBadges = false } = {}
   assert.ok(text.includes(`<source media="(prefers-reduced-motion: no-preference)" srcset="${cover}" />`), `${name}: motion source`);
   assert.ok(text.includes(`<img src="${cover}" width="100%"`), `${name}: img fallback keeps the motion cover`);
   assert.ok(text.indexOf(cover) < text.indexOf("<h1 align=\"center\">LitGrok"), `${name}: cover leads the README`);
-  assert.ok(!text.includes('docs/assets/cover.webp"'), `${name}: the motion robot cover replaces the static robot cover`);
+  assert.ok(!text.includes('docs/assets/cover.webp"'), `${name}: the motion cover replaces the static cover`);
   assert.equal([...text.matchAll(/width="100%"/gu)].length, 1, `${name}: the motion cover is the only full-width image`);
   assert.doesNotMatch(text, /View the static (?:family )?cover|정지 (?:패밀리 )?표지 보기/u, `${name}: no hidden static-cover link remains`);
   assert.doesNotMatch(text, /unpublished local candidate|아직 공개되지 않은 로컬 후보/u);
@@ -83,7 +83,7 @@ test('the GitHub and npm pages count the LitFamily as its seven members', () => 
   for (const name of ['README.md', 'README_ko-KR.md']) {
     const text = read(name);
     const section = text.slice(text.indexOf('\n## LITFAMILY\n'));
-    assert.match(section, name === 'README.md' ? /seven armored robots on the cover stand for the seven LitFamily products/u : /장갑 로봇 일곱은 LitFamily의 일곱 제품/u, `${name}: the family section names seven`);
+    assert.match(section, name === 'README.md' ? /seven LitFamily products each work on their own in their own host/u : /LitFamily의 일곱 제품은 각자 자기 호스트에서 따로 동작하니/u, `${name}: the family section names seven`);
   }
 });
 
@@ -123,7 +123,7 @@ test('npm READMEs lead with the pinned motion cover and send readers to the full
   for (const [name, reference, install, guide] of NPM_PAGES) {
     const text = read(name);
     assertMotionCover(name, text, COVER_FALLBACK, MOTION_STILL);
-    assert.ok(!text.includes(STATIC_COVER), `${name}: the motion robot cover replaces the static robot cover`);
+    assert.ok(!text.includes(STATIC_COVER), `${name}: the motion cover replaces the static cover`);
     assert.ok(text.includes(`href="${packageUrl}${reference}"`));
     assert.ok(text.includes(`href="${install}"`));
     assert.ok(text.includes(`href="${packageUrl}LICENSE"`));
@@ -173,8 +173,8 @@ test('README artwork retains approved bytes, notices and static release metadata
   assert.equal(sha('docs/assets/cover.webp'), '7a1eaf59b2292f1b879ab82d53bd645e5c2cafc83189ced49a84f946d83d58c0');
   const motionCover = readFileSync(join(ROOT, 'docs/assets/cover-motion.webp'));
   assert.ok(motionCover.length <= 2_621_440, 'motion cover must stay under 2.5 MiB');
-  assert.equal(createHash('sha256').update(motionCover).digest('hex'), 'c1829ddcfddc1a725d3db5e72833feecde1ba1e0efeaa515da94bfbaa1c194fa');
-  assert.equal(sha('docs/assets/cover-motion-still.webp'), '562001cc45a52062d57c8db0a2f5491e33eba6efe753da1cb3f56df874aa63d5');
+  assert.equal(createHash('sha256').update(motionCover).digest('hex'), 'f731a72a45a102eb22f71b2741a4591f0ea506813598b66c0c7fa8ae7da636f5');
+  assert.equal(sha('docs/assets/cover-motion-still.webp'), '82e8cf45fcf5dd8a2ce40280fb55e60124ac4a6c4bd411ea6dbc2cabce014dc1');
   for (const [name, hash] of Object.entries(approved)) assert.equal(sha(`${ASSETS}/${name}`), hash, name);
   assert.deepEqual(readdirSync(join(ROOT, ASSETS)).filter((name) => name.startsWith('lucide-')).sort(), ['lucide-book-open.svg', 'lucide-play.svg', 'lucide-shield-check.svg']);
   const svg = read(`${ASSETS}/ascii-readme.svg`);

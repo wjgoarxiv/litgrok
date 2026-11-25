@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 일곱 로봇 패널이 차례로 켜지고, LitGrok 로봇의 눈과 테두리가 빛난 뒤 LITFAMILY와 KEEP THE WORK LIT. 문구가 밝아지는 영상" /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 노을빛 터미널 화면입니다. 위쪽에는 짧은 Grok Build 대화가 있고, 가운데는 픽셀 글자 LITFAMILY와 줄무늬 해가 채우며 일곱 제품 이름 줄에서 LITGROK가 켜지고, 아래에는 LitGrok의 상태줄이 화면을 마무리합니다." /></picture></p>
 
 <div align="center"><table>
 <tr><th colspan="2">LitGrok Bot · Grok Bot 커버</th></tr>
@@ -714,7 +714,7 @@ Grok Build에서 사용자가 직접 다룹니다.
 
 ## LITFAMILY
 
-커버의 장갑 로봇 일곱은 LitFamily의 일곱 제품입니다. 각 제품은 자기 호스트에서 따로 동작하니, 쓰는 것 하나만 설치하면 되고 다른 제품은 필요 없습니다.
+커버는 LITFAMILY 글자 아래에 노을빛으로 그린 LitGrok의 상태줄을 보여 주고, LitFamily의 일곱 제품은 각자 자기 호스트에서 따로 동작하니, 쓰는 것 하나만 설치하면 되고 다른 제품은 필요 없습니다.
 
 커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다. 편집할 수 있는 벡터 원본은 `docs/assets/cover.svg`에 있고, 시스템에서 동작 줄이기를 켜 두었다면 정지 프레임이 대신 보입니다. 이 페이지 위쪽의 영상은 상태줄이 일하는 모습을 보여 줍니다. 상태줄은 LitGrok이 직접 그린 출력이고 그 주변의 Grok Build 화면은 다시 그린 것입니다.
 
