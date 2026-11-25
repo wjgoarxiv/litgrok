@@ -299,6 +299,8 @@ export function cardLines(card) {
     const each = Math.ceil(others.length / (notice ? 1 : 2));
     for (let at = 0; at < others.length; at += each) body.push(bodyLine({ ...base, left: others.slice(at, at + each).map((other, index) => otherSegment(other, glyphs, { drop: index })) }));
     if (notice) body.push(bodyLine({ ...base, left: notice }));
+    // Two rows, so the sun has a dome.
+    if (body.length < 2) body.push(bodyLine({ ...base, left: [] }));
   }
   const full = body.length + 2;
   const height = shownLines >= 2 && shownLines < full ? shownLines : full;

@@ -4,7 +4,8 @@
 // the motion is stepped: each run draws the scene for its own clock. Between turns `seconds` is null and the
 // scene stands still. The sun's shape never moves; its light does, and the sea and stars change ASCII marks.
 
-const MAX_LINE_CHARACTERS = 1024;
+import { MAX_LINE_CHARACTERS } from './lit-layout.mjs';
+
 const RESET = '\u001b[0m';
 // No light is drawn this close to a word.
 const CLEAR = 3;

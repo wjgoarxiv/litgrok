@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { drawsRoundCaps, hasIconFont } from '../.grok/hooks/lit-caps.mjs';
 import { gauge, pill } from '../.grok/hooks/lit-card.mjs';
-import { cellWidth } from '../.grok/hooks/lit-layout.mjs';
+import { MAX_LINE_CHARACTERS, cellWidth, layoutLine, segment } from '../.grok/hooks/lit-layout.mjs';
+import { paintSunset } from '../.grok/hooks/lit-sunset.mjs';
 import { rememberedIconFont, writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
 import { writeLiveness } from '../.grok/hooks/session-liveness.mjs';
 import { updateWorkflowState } from '../.grok/hooks/workflow-stage.mjs';
@@ -113,7 +114,7 @@ test('every state is one framed card in both forms, at every width', (t) => {
       assert.doesNotMatch(square.plain.join('\n'), CAPS, `${name} ${columns}: no cap in the square form`);
       const words = (result) => result.plain.map((line) => line.match(/[\p{L}\p{N}$%@]+/gu)?.join(' '));
       assert.deepEqual(words(round), words(square), `${name} ${columns}: the same words in the same order`);
-      assert.equal(round.plain.length, state.discipline === null ? (state.others ? 5 : 3) : 5, `${name} ${columns}`);
+      assert.equal(round.plain.length, state.discipline === null ? (state.others ? 5 : 4) : 5, `${name} ${columns}`);
     }
   }
 });
@@ -164,6 +165,54 @@ test('wide, combining, joined and hostile text never moves the frame', (t) => {
         assertFramed(run(sb, { columns, env, extra: { model: { display_name: text }, workspace: { current_dir: sb.workspace, branch: text, git_worktree: text } } }), columns, `${JSON.stringify(text)} ${columns}`);
       }
     }
+  }
+});
+
+test('no line passes 1024 characters: the rainbow with a long task in every width, and the cut itself to the character', (t) => {
+  assert.equal(MAX_LINE_CHARACTERS, 1024, 'Grok cuts the 1025th character');
+  const long = '한국어 an unusually long task title that fills its sixty cells';
+  const stage = [...WORK.slice(0, 2), { stage: 'work', plan: { done: 99, total: 100, next: long.slice(0, 60) } }, WORK[3]];
+  const extra = { model: { display_name: `Grok ${long}` }, workspace: { branch: long, git_worktree: long }, cost: { total_cost_usd: 98765.43 } };
+  const env = { ...ROUND, LITGROK_AUTO_HANDOFF: '1', LITGROK_AUTO_HANDOFF_PERCENT: '50' };
+  let longest = 0;
+  for (const state of [{ discipline: 'lit-adhd', ledger: TURN, stage }, { discipline: 'review-work', ledger: TURN, stage: [...stage, { stage: 'review' }], others: 3 }]) {
+    const sb = sandbox(t, state);
+    for (let columns = 36; columns <= 212; columns += 8) {
+      for (const later of [0, 700]) {
+        const card = run(sb, { columns, env, later, extra: { ...extra, workspace: { current_dir: sb.workspace, ...extra.workspace } } });
+        assertFramed(card, columns, `${state.discipline} ${columns}`);
+        longest = Math.max(longest, ...card.lines.map((line) => line.length));
+      }
+    }
+  }
+  assert.ok(longest > 900, `the worst case is a full one (${longest})`);
+  // Padding a line by one character at a time meets the cut exactly: 1024 is drawn, 1025 never is.
+  const padded = (count) => segment('row', () => `\u001b[${'0'.repeat(count)}mrow`, {});
+  const last = segment('last', (text) => text, { drop: 1 });
+  const laid = (count) => layoutLine({ left: [padded(count)], right: [last], separator: { plain: ' ', painted: ' ' }, rail: { plain: '', painted: '' }, maxCells: 40, ellipsis: '…' });
+  const lengths = Array.from({ length: 80 }, (_, at) => laid(940 + at).length);
+  assert.equal(Math.max(...lengths), 1024);
+  const drawn = Array.from({ length: 400 }, (_, at) => paintSunset([`\u001b[${'0'.repeat(at + 300)}mword\u001b[0m${' '.repeat(60)}`], { maxCells: 100, cellWidth, seconds: 3 })[0].length);
+  assert.equal(Math.max(...drawn), 1024);
+});
+
+test('with no workflow the card is four lines under a sun of two rows, or three where Grok shows three', (t) => {
+  const sb = sandbox(t, STATES.ready);
+  for (const columns of [60, 80, 100, 160]) {
+    const { plain } = run(sb, { running: false, columns, env: ROUND });
+    assert.equal(plain.length, 4, `${columns}`);
+    assert.match(plain[1], /[▃▅▇█]{8}/u, `${columns}: the dome`);
+    assert.match(plain[2], /▆▇+▆/u, `${columns}: the waterline`);
+  }
+  const short = run(sb, { running: false, env: { ...ROUND, LINES: '3' } });
+  assert.match(short.plain[2], /^╰.*╯$/u);
+  assert.equal(short.plain[3], ' ', 'and the blank line lets it grow back');
+});
+
+test('done and review keep a sun at 80 columns', (t) => {
+  for (const name of ['done', 'review']) {
+    const sb = sandbox(t, STATES[name]);
+    assert.match(run(sb, { columns: 80, env: ROUND, running: STATES[name].running ?? true }).plain.join('\n'), /[▂▃▄▅▆▇█]{8}/u, name);
   }
 });
 

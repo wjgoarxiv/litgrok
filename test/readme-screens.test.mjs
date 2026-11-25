@@ -23,8 +23,8 @@ const screens = {
   'install-plan-dark.webp': 'ad9afa5cf46559229db9ddc0dcba50391be1175253c087a829021d3bd0f9fb72',
   'session-start-dark.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
   'session-start-light.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
-  'status-row-dark.webp': '01a7f0ac0172122c381336dbf2062e74c0f71fcbec4f89f36666a9e5093b55f3',
-  'status-row-light.webp': '01a7f0ac0172122c381336dbf2062e74c0f71fcbec4f89f36666a9e5093b55f3',
+  'status-row-dark.webp': '46adcd874967d2e518717fcb29b07ecc913bda50ac4316f1900e93cf3517f4c1',
+  'status-row-light.webp': '46adcd874967d2e518717fcb29b07ecc913bda50ac4316f1900e93cf3517f4c1',
 };
 const MAX_SCREEN_BYTES = 245_760;
 
