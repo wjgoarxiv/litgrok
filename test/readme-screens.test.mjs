@@ -16,22 +16,22 @@ const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 const screens = {
   'install-card-dark.webp': 'c5a675f0f5a0deaa8bd5d095fcbcd4a187fa24d502b258d05e3b8d01b34c302d',
   'install-card-light.webp': 'c5a675f0f5a0deaa8bd5d095fcbcd4a187fa24d502b258d05e3b8d01b34c302d',
-  'install-done-dark.webp': 'd06c6453b7b720969235f04406322c65e0aabf2a5c3a62d9edeb87f192748784',
-  'install-done-light.webp': 'd06c6453b7b720969235f04406322c65e0aabf2a5c3a62d9edeb87f192748784',
-  'install-dry-run-dark.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
-  'install-dry-run-light.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
-  'install-plan-dark.webp': 'ad9afa5cf46559229db9ddc0dcba50391be1175253c087a829021d3bd0f9fb72',
+  'install-done-dark.webp': 'af2fadcb1e71f3b448d7277d3de89fffaf51749353a5afbd78caaf801c21fc82',
+  'install-done-light.webp': 'af2fadcb1e71f3b448d7277d3de89fffaf51749353a5afbd78caaf801c21fc82',
+  'install-dry-run-dark.webp': 'e20fe13b730f5bec78a7e6e5d6a56d6192bc6e5ce45ae9d31562d859f23da506',
+  'install-dry-run-light.webp': 'e20fe13b730f5bec78a7e6e5d6a56d6192bc6e5ce45ae9d31562d859f23da506',
+  'install-plan-dark.webp': '1592c6ec0a11b98797bc3d371e79764ff8b9976b31265ce819fa80672f5c0c09',
   'session-start-dark.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
   'session-start-light.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
-  'status-row-dark.webp': '46adcd874967d2e518717fcb29b07ecc913bda50ac4316f1900e93cf3517f4c1',
-  'status-row-light.webp': '46adcd874967d2e518717fcb29b07ecc913bda50ac4316f1900e93cf3517f4c1',
+  'status-row-dark.webp': 'ef3084cc2aee0ea7f7a48ee726d65a96842083a914e4615309ea7747101ff329',
+  'status-row-light.webp': 'ef3084cc2aee0ea7f7a48ee726d65a96842083a914e4615309ea7747101ff329',
 };
 const MAX_SCREEN_BYTES = 245_760;
 
 // What each picture must quote in its alt text, in the language of the page.
 const quotes = {
-  'install-plan': ['INSTALL', '02 · Payload 380 files · byte-identical copies only', 'Model selection: host-owned'],
-  'install-dry-run': ['DRY RUN — no files written', '02 · Payload 380 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
+  'install-plan': ['INSTALL', '02 · Payload 396 files · byte-identical copies only', 'Model selection: host-owned'],
+  'install-dry-run': ['DRY RUN — no files written', '02 · Payload 396 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
   'install-card': ['LIT 1/1', 'Ground rules [y/N]', '❯ No (default)', 'Enter = No', 'Ctrl+C stop'],
   'install-done': ['Install steps 4 of 4 checked', 'Files 396 written', 'is installed', 'project hooks require trust from a Git project root', 'restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
@@ -164,8 +164,8 @@ const autoHandoff = {
   'auto-handoff-off-light.webp': '8b54ebdf7243f8f10918579d034b2e62e05c457d8b65659b8d21f76af124524c',
   'auto-handoff-on-dark.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
   'auto-handoff-on-light.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
-  'auto-handoff-session-dark.webp': '845778cdc34d9bebbbebdc30b97ca796a2bf5a11929cf7d4aaa25e065c13e328',
-  'auto-handoff-session-light.webp': '845778cdc34d9bebbbebdc30b97ca796a2bf5a11929cf7d4aaa25e065c13e328',
+  'auto-handoff-session-dark.webp': '3160bb94ac39eec50580ab8ca6c1ed813e33d7f8c0b02aa8698ba7cec52854d2',
+  'auto-handoff-session-light.webp': '3160bb94ac39eec50580ab8ca6c1ed813e33d7f8c0b02aa8698ba7cec52854d2',
 };
 const autoHandoffQuotes = {
   'auto-handoff-on': ['litgrok auto-handoff on 60', 'Automatic handoff is ON at 60 percent for this project.', 'litgrok auto-handoff status', 'Automatic handoff: ON at 60 percent', 'It needs the LitGrok status line (litgrok install --user --status-line)'],
