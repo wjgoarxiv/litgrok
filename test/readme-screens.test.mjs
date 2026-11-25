@@ -88,7 +88,7 @@ test('both GitHub pages show the session film in the demo slot near the top, and
     assert.ok(content.indexOf(slots[0]) < content.indexOf('\n## '), `${file}: the demo slot sits above the first section`);
     const alt = new RegExp(`^<!-- demo-gif --><p align="center"><img src="\\./docs/assets/${films[file]}" width="960" alt="([^"]+)" /></p>$`, 'u').exec(slots[0])?.[1] ?? '';
     assert.ok(alt.startsWith(opening[file]), `${file}: the demo slot shows the session film with an honest alt`);
-    for (const quote of ['--shout', 'litwork', 'tests ✗ 1', 'tests ✓ 2', '★ complete', 'HELLO, ADA!']) assert.ok(alt.includes(quote), `${file}: the film alt quotes "${quote}"`);
+    for (const quote of ['--shout', 'litwork', 'tests ✗ 1', 'tests ✓ 2', 'DONE ★', 'HELLO, ADA!']) assert.ok(alt.includes(quote), `${file}: the film alt quotes "${quote}"`);
     assert.ok(alt.length <= 800, `${file}: the demo slot keeps its alt to the seven steps`);
     assert.doesNotMatch(content, /<sub>[^<]*(?:recorded|replayed|녹화|재생)/u, `${file}: no method caption under the demo`);
     assert.equal([...content.matchAll(/assets\/screens\//gu)].length, 0, `${file}: the captures live in the guide`);

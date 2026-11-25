@@ -28,7 +28,7 @@ Grok이 기록을 남기고, 다음 세션은 그 기록부터 읽고 이어서 
 
 <p align="center"><a href="#30초-설치">설치</a> &nbsp; <a href="#빠른-시작">빠른 시작</a> &nbsp; <a href="#만들-수-있는-것">결과물</a> &nbsp; <a href="./docs/guide_ko-KR.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 안내서</a> &nbsp; <a href="./docs/skills_ko-KR.md">스킬</a> &nbsp; <a href="./docs/guide_ko-KR.md#움직임으로-보기"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> 영상</a> &nbsp; <a href="./docs/guide_ko-KR.md#안전하게-설치하고-지우기"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> 안전</a> &nbsp; <a href="./docs/reference_ko-KR.md">상세 안내</a> &nbsp; <a href="./README.md">English</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo-ko.webp" width="960" alt="LitGrok을 쓰는 Grok Build 세션의 무음 반복 영상입니다. 프롬프트 &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot;를 보내면 상태줄이 테두리 있는 카드로 자랍니다. 위 테두리에는 LIT pill과 litwork, 안에는 단계 지도와 다음 작업이 이름으로 보이는 0/3 작업 게이지, 아래 테두리에는 컨텍스트, 모델, 브랜치, 버전이 있습니다. 도구가 돌 때마다 위 테두리의 도구 수가 올라가고, node greet.js --shout Ada가 HELLO, ADA!를 출력하면 카드는 tests ✗ 1에서 tests ✓ 2로 바뀌며, 리뷰 레인 모양을 거쳐 초록 테두리의 DONE으로 끝난 뒤 어두워진 노을 아래에서 쉽니다. 약 300 ms 단위로 다시 그립니다." /></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo-ko.webp" width="960" alt="LitGrok을 쓰는 Grok Build 세션의 무음 반복 영상입니다. 프롬프트 &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot;를 보내면 상태줄이 테두리 있는 카드로 자랍니다. 위 테두리에는 LIT pill과 litwork, 안에는 단계 지도와 다음 작업이 이름으로 보이는 0/3 작업 게이지, 아래 테두리에는 컨텍스트, 모델, 브랜치, 버전이 있습니다. 도구가 돌 때마다 위 테두리의 도구 수가 올라가고, node greet.js --shout Ada가 HELLO, ADA!를 출력하면 카드는 tests ✗ 1에서 tests ✓ 2로 바뀌며, 리뷰 레인 모양을 거쳐 초록 테두리의 DONE ★로 끝난 뒤 어두워진 노을 아래에서 쉽니다. 약 300 ms 단위로 다시 그립니다." /></p>
 
 <p align="center"><sub>상태줄은 LitGrok이 샘플 세션 기록으로 직접 그린 출력이고, 그 주변의 Grok Build 화면은 다시 그린 것입니다.</sub></p>
 
@@ -132,7 +132,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 | `--dry-run` | 파일이 들어갈 곳을 모두 보여 주고 아무것도 쓰지 않음 | 먼저 살펴보고 싶을 때 |
 | `--user` | `~/.grok/`에 설치해 어느 프로젝트에서나 스킬과 규칙이 있게 함 | 모든 프로젝트에서 쓰고 싶을 때 |
 | `--user`에 붙인 `--status-line` | LIT 상태 행을 켬 | Grok은 상태 행을 사용자 설정에서만 읽음 |
-| `@latest` 자리의 `--package @litfamily/litgrok@1.0.44` | 이 릴리스로 고정 | 팀 전체가 같은 파일을 쓰게 하고 싶을 때 |
+| `@latest` 자리의 `--package @litfamily/litgrok@1.0.45` | 이 릴리스로 고정 | 팀 전체가 같은 파일을 쓰게 하고 싶을 때 |
 
 <details>
 <summary>같은 패키지를 두는 곳: 이 프로젝트, 사용자 계정, Grok Bot</summary>

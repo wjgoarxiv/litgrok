@@ -28,7 +28,7 @@ project's `.grok/` folder.
 
 <p align="center"><a href="#install-in-30-seconds">Install</a> &nbsp; <a href="#quick-start">Quick start</a> &nbsp; <a href="#what-you-can-make">Showcase</a> &nbsp; <a href="./docs/guide.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> Guide</a> &nbsp; <a href="./docs/skills.md">Skills</a> &nbsp; <a href="./docs/guide.md#watch-it-in-motion"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> Film</a> &nbsp; <a href="./docs/guide.md#safety-and-uninstall"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> Safety</a> &nbsp; <a href="./docs/reference.md">Reference</a> &nbsp; <a href="./README_ko-KR.md">한국어</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="A silent loop of a Grok Build session with LitGrok. The prompt &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot; grows the status line into a framed card: the LIT pill and litwork on the top edge, the stage map, a task gauge at 0/3 with the next task named, and context, model, branch and version on the bottom edge. Each tool ticks the count on the top edge; the card shows tests ✗ 1, then tests ✓ 2 once node greet.js --shout Ada prints HELLO, ADA!, switches to its review lanes, ends on DONE with a green frame, and later rests under a dimmed sunset. It redraws in steps of about 300 ms." /></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo.webp" width="960" alt="A silent loop of a Grok Build session with LitGrok. The prompt &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot; grows the status line into a framed card: the LIT pill and litwork on the top edge, the stage map, a task gauge at 0/3 with the next task named, and context, model, branch and version on the bottom edge. Each tool ticks the count on the top edge; the card shows tests ✗ 1, then tests ✓ 2 once node greet.js --shout Ada prints HELLO, ADA!, switches to its review lanes, ends on DONE ★ with a green frame, and later rests under a dimmed sunset. It redraws in steps of about 300 ms." /></p>
 
 <p align="center"><sub>The status line is LitGrok's own output, run on sample session records; the Grok Build screen around it is redrawn.</sub></p>
 
@@ -132,7 +132,7 @@ Its last card should say `LitGrok … is ready` (`Status: Ready` with `--yes`) a
 | `--dry-run` | Prints every destination and writes nothing | You want to look first |
 | `--user` | Installs under `~/.grok/`, so the skills and rule are in every project | You want LitGrok everywhere |
 | `--status-line`, added to `--user` | Adds the LIT status row | Grok reads the row only from user settings |
-| `--package @litfamily/litgrok@1.0.44` in place of `@latest` | Pins this release | A team wants everyone on the same files |
+| `--package @litfamily/litgrok@1.0.45` in place of `@latest` | Pins this release | A team wants everyone on the same files |
 
 <details>
 <summary>Where the same package can live: this project, your user account or Grok Bot</summary>
