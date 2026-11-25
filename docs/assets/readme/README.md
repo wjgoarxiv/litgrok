@@ -28,9 +28,9 @@ render them.
 The landing pages lead with `../cover-motion.webp`, the looping 960×640 cover:
 a terminal in the sunset look with a short conversation, a pixel LITFAMILY wordmark,
 a striped half-sunk sun and LitGrok's status lines
-(SHA-256 `f731a72a45a102eb22f71b2741a4591f0ea506813598b66c0c7fa8ae7da636f5`).
+(SHA-256 `4d53a98b9a6b2e611da4c7a7b5be235326e28673294be4f66eabe200cd0cae15`).
 Readers who prefer reduced motion get `../cover-motion-still.webp`, its first
-frame (SHA-256 `82e8cf45fcf5dd8a2ce40280fb55e60124ac4a6c4bd411ea6dbc2cabce014dc1`).
+frame (SHA-256 `ffcc031c90b50e83449a8b76172c8f5bab97063d1d9821ccfa5729ec67f0044f`).
 `../cover.webp` is the static seven-robot export with LitGrok lit
 (SHA-256 `7a1eaf59b2292f1b879ab82d53bd645e5c2cafc83189ced49a84f946d83d58c0`);
 the landing pages no longer show it. The SVG cover remains the editable,

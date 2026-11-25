@@ -7,6 +7,7 @@
 - Fixed: a row wider than 200 cells could spend Grok's 1,024 characters a line on colours, and a name with zero-width or combining characters could push the right edge out of line.
 - The installer's cards follow the same look: the mark centred over the cards, a step pill on the border (`LIT 1/1`), round or square buttons with one filled chip, one blank row between blocks and every value in one column. The steps are one card that folds to `✓ Install steps  4 of 4 checked`; a step that stops leaves the card on screen above a red `INSTALL STOPPED` card. Warnings are counted in the folded row and printed in full under it. The closing card now says where a status line or a finish notice was configured, or that an existing setting of yours was left alone, paths in it start with `~`, and the extension commands stand whole on lines of their own.
 - Unchanged: the question, its default and what it stores; `NO_COLOR`, 256 and 16 colours, ASCII and light-background rows of the status line, apart from chips and gauges that now share one kind of end; and, byte for byte, the installer's output in a pipe, in `CI`, with `--yes`, in a preview, with `TERM=dumb` or with a preset `LITGROK_GROUND`.
+- The README cover is redrawn with the framed card round the whole screen, and the README demo with the new card.
 - The guide's status-row and installer pictures and the automatic-handoff session picture are redrawn from the new output.
 
 ## 1.0.44 — 2026-11-25

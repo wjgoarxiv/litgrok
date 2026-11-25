@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 노을빛 터미널 화면입니다. 위쪽에는 짧은 Grok Build 대화가 있고, 가운데는 픽셀 글자 LITFAMILY와 줄무늬 해가 채우며 일곱 제품 이름 줄에서 LITGROK가 켜지고, 아래에는 LitGrok의 상태줄이 화면을 마무리합니다." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="./docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="./docs/assets/cover-motion.webp" /><img src="./docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 노을빛 터미널 화면입니다. LitGrok의 모서리가 둥근 상태 카드가 단계 지도, 작업 게이지, 스킬 줄, 컨텍스트 게이지와 함께 화면을 두르고, 가운데는 픽셀 글자 LITFAMILY와 줄무늬 해가 채우며 일곱 제품 이름 줄에서 LITGROK가 켜지고, 아래에서는 Grok Build 프롬프트에 요청이 입력됩니다." /></picture></p>
 
 <div align="center"><table>
 <tr><th colspan="2">LitGrok Bot · Grok Bot 커버</th></tr>
@@ -28,7 +28,7 @@ Grok이 기록을 남기고, 다음 세션은 그 기록부터 읽고 이어서 
 
 <p align="center"><a href="#30초-설치">설치</a> &nbsp; <a href="#빠른-시작">빠른 시작</a> &nbsp; <a href="#만들-수-있는-것">결과물</a> &nbsp; <a href="./docs/guide_ko-KR.md"><img src="./docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 안내서</a> &nbsp; <a href="./docs/skills_ko-KR.md">스킬</a> &nbsp; <a href="./docs/guide_ko-KR.md#움직임으로-보기"><img src="./docs/assets/readme/lucide-play.svg" width="16" alt="" /> 영상</a> &nbsp; <a href="./docs/guide_ko-KR.md#안전하게-설치하고-지우기"><img src="./docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> 안전</a> &nbsp; <a href="./docs/reference_ko-KR.md">상세 안내</a> &nbsp; <a href="./README.md">English</a></p>
 
-<!-- demo-gif --><p align="center"><img src="./docs/assets/demo-ko.webp" width="960" alt="LitGrok을 쓰는 Grok Build 세션의 무음 반복 영상입니다. 프롬프트 &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot;를 보내면 상태줄이 LIT pill, litwork, 단계 지도, 다음 작업이 이름으로 보이는 0/3 작업 막대의 네 줄 카드로 바뀝니다. 도구가 돌 때마다 카운터가 올라가고, node greet.js --shout Ada가 HELLO, ADA!를 출력하면 카드는 tests ✗ 1에서 tests ✓ 2로 바뀌며, 리뷰 레인 모양을 거쳐 ★ complete를 한 번 보인 뒤 20초 뒤 노을 아래에서 쉽니다. 약 300 ms 단위로 다시 그립니다." /></p>
+<!-- demo-gif --><p align="center"><img src="./docs/assets/demo-ko.webp" width="960" alt="LitGrok을 쓰는 Grok Build 세션의 무음 반복 영상입니다. 프롬프트 &quot;lit add a --shout flag that prints the greeting in capitals, with a test&quot;를 보내면 상태줄이 테두리 있는 카드로 자랍니다. 위 테두리에는 LIT pill과 litwork, 안에는 단계 지도와 다음 작업이 이름으로 보이는 0/3 작업 게이지, 아래 테두리에는 컨텍스트, 모델, 브랜치, 버전이 있습니다. 도구가 돌 때마다 위 테두리의 도구 수가 올라가고, node greet.js --shout Ada가 HELLO, ADA!를 출력하면 카드는 tests ✗ 1에서 tests ✓ 2로 바뀌며, 리뷰 레인 모양을 거쳐 초록 테두리의 DONE으로 끝난 뒤 어두워진 노을 아래에서 쉽니다. 약 300 ms 단위로 다시 그립니다." /></p>
 
 <p align="center"><sub>상태줄은 LitGrok이 샘플 세션 기록으로 직접 그린 출력이고, 그 주변의 Grok Build 화면은 다시 그린 것입니다.</sub></p>
 

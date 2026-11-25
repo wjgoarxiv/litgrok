@@ -942,7 +942,7 @@ test('landing docs link the repository cover and retain the complete lifecycle i
     assert.ok(landing.includes(`${assets}/cover-motion.webp" width="100%"`));
     const heroAlt = landing.match(/<img src="[^"]+cover-motion\.webp" width="100%" alt="([^"]+)" \/>/u)?.[1] ?? '';
     if (english) {
-      assert.equal(heroAlt, 'LitFamily motion cover: a terminal in a sunset look. A short Grok Build conversation sits at the top, a pixel LITFAMILY wordmark and a striped half-sunk sun fill the middle with the row of seven product names lighting LITGROK, and LitGrok\'s status lines close the screen at the bottom.');
+      assert.equal(heroAlt, 'LitFamily motion cover: a terminal in a sunset look. LitGrok\'s round-cornered status card frames the screen with its stage map, task gauge, skills row and context gauge, a pixel LITFAMILY wordmark and a striped half-sunk sun fill the middle, the row of seven product names lights LITGROK, and a Grok Build prompt types a request at the bottom.');
     } else {
       assert.match(heroAlt, /^LitFamily 모션 커버: 노을빛 터미널 화면입니다\..*LITGROK/u);
     }

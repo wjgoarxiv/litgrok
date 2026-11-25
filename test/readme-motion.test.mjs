@@ -173,8 +173,8 @@ test('README artwork retains approved bytes, notices and static release metadata
   assert.equal(sha('docs/assets/cover.webp'), '7a1eaf59b2292f1b879ab82d53bd645e5c2cafc83189ced49a84f946d83d58c0');
   const motionCover = readFileSync(join(ROOT, 'docs/assets/cover-motion.webp'));
   assert.ok(motionCover.length <= 2_621_440, 'motion cover must stay under 2.5 MiB');
-  assert.equal(createHash('sha256').update(motionCover).digest('hex'), 'f731a72a45a102eb22f71b2741a4591f0ea506813598b66c0c7fa8ae7da636f5');
-  assert.equal(sha('docs/assets/cover-motion-still.webp'), '82e8cf45fcf5dd8a2ce40280fb55e60124ac4a6c4bd411ea6dbc2cabce014dc1');
+  assert.equal(createHash('sha256').update(motionCover).digest('hex'), '4d53a98b9a6b2e611da4c7a7b5be235326e28673294be4f66eabe200cd0cae15');
+  assert.equal(sha('docs/assets/cover-motion-still.webp'), 'ffcc031c90b50e83449a8b76172c8f5bab97063d1d9821ccfa5729ec67f0044f');
   for (const [name, hash] of Object.entries(approved)) assert.equal(sha(`${ASSETS}/${name}`), hash, name);
   assert.deepEqual(readdirSync(join(ROOT, ASSETS)).filter((name) => name.startsWith('lucide-')).sort(), ['lucide-book-open.svg', 'lucide-play.svg', 'lucide-shield-check.svg']);
   const svg = read(`${ASSETS}/ascii-readme.svg`);
