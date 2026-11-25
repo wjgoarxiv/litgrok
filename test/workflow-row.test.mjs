@@ -20,7 +20,7 @@ const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const HOOKS_DIRECTORY = join(PRODUCT_ROOT, '.grok', 'hooks');
 const STATUS_SCRIPT = join(HOOKS_DIRECTORY, 'lit-status-line.mjs');
 const SESSION = 'workflow-session';
-const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'KITTY_WINDOW_ID', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
 const PLAIN = { LITGROK_HUD_COLOR: '0' };
 const SPIN = '[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]';
 
@@ -76,7 +76,7 @@ function runStatus(sb, { env = {}, turnAgoMs, promptId } = {}) {
   };
   if (promptId) input.prompt_id = promptId;
   if (turnAgoMs !== undefined) input.turn = { started_at_ms: Date.now() - turnAgoMs };
-  const baseEnv = { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot };
+  const baseEnv = { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot, TERM: 'xterm-256color', SSH_CONNECTION: 'test' };
   for (const key of ENV_KEYS) delete baseEnv[key];
   const result = spawnSync(process.execPath, [STATUS_SCRIPT], { cwd: sb.workspace, encoding: 'utf8', env: { ...baseEnv, COLUMNS: '120', ...env }, input: `${JSON.stringify(input)}\n` });
   assert.equal(result.status, 0, result.stderr);
@@ -314,7 +314,10 @@ test('other-session rows keep the width with colour on and off', (t) => {
       for (const line of plain) assert.ok(cells(line) <= columns - 1, `${columns} columns ${JSON.stringify(env)}: "${line}" is ${cells(line)} cells`);
       if (env !== PLAIN && env.NO_COLOR === undefined) assert.match(raw, /\u001b\[/u, 'colour on paints');
       else assert.doesNotMatch(raw, /\u001b\[/u, 'colour off has no escapes');
-      assert.equal(plain.filter((line) => / (?:running|idle)(?: {2}|$)/u.test(line) && !line.includes('LIT')).length, 2, `${columns}: both rows stay`);
+      const framed = plain[0].startsWith('╭');
+      assert.equal(framed, columns >= 36 && env.LITGROK_HUD_COLOR === '24', `${columns}: the card needs 35 cells and truecolor`);
+      if (!framed) assert.equal(plain.filter((line) => / (?:running|idle)(?: {2}|$)/u.test(line) && !line.includes('LIT')).length, 2, `${columns}: both rows stay`);
+      else if (columns === 79) assert.match(plain.join('\n'), /● lit-sc[^\n]* running · · [^\n]* idle/u, 'the card keeps both on one of its rows');
     }
   }
 });
@@ -343,7 +346,7 @@ test('colour: accent rails with a pink head while a turn runs, fallbacks, and no
   seedWorkflow(sb.workspace, { stage: 'interview' }, { stage: 'plan' }, { stage: 'work', plan: { done: 3, total: 7 } }, { test: { verdict: 'pass', count: 214 } });
   const run = (env, turn = true) => runStatus(sb, { env, ...(turn ? { turnAgoMs: 100_000, promptId: 'p1' } : {}) });
 
-  const truecolor = run({});
+  const truecolor = run({ COLORFGBG: '0;15' });
   const row = truecolor.lines[1];
   const railColours = new Set([...row.matchAll(/\u001b\[38;2;(\d+;\d+;\d+)m━/gu)].map((match) => match[1]));
   assert.deepEqual([...railColours].sort(), ['255;45;149', '255;99;55', '70;80;92'], `rails are the accent into the current stage and grey after it, with the head; got ${[...railColours].join(' ')}`);
@@ -354,7 +357,7 @@ test('colour: accent rails with a pink head while a turn runs, fallbacks, and no
   assert.match(truecolor.lines[2], /\u001b\[1m\u001b\[38;2;255;99;55m[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Bash/u, 'the live step is the bold accent');
   assert.match(truecolor.lines[2], /\u001b\[1m\u001b\[38;2;95;175;95mtests ✓ 214/u, 'a passing run is green');
   seedLedger(sb.workspace, [...liveTurn(), ['PostToolUse', 25, { tool: { name: 'run_terminal_command', inputSha256: 'x' } }], ['Stop', 24, { signal: 'turn-ended' }]]);
-  const between = run({}, false);
+  const between = run({ COLORFGBG: '0;15' }, false);
   assert.equal(between.lines.length, 4);
   assert.doesNotMatch(between.lines[1], /38;2;255;45;149m━/u, 'no head between turns');
   seedLedger(sb.workspace, liveTurn());

@@ -32,7 +32,7 @@ function baseEnvironment(home) {
   delete env.CI;
   delete env.NO_COLOR;
   delete env.COLUMNS;
-  for (const key of ['COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION']) delete env[key];
+  for (const key of ['COLORFGBG', 'KITTY_WINDOW_ID', 'LITGROK_HUD_GLYPHS', 'TERM_PROGRAM', 'WT_SESSION']) delete env[key];
   return env;
 }
 
@@ -648,7 +648,7 @@ test('a held plan gate and a live question show YOUR TURN in amber until the use
   const amber = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '24' } });
   assert.equal(amber.status, 0, amber.stderr);
   assert.ok(amber.stdout.includes('YOUR TURN'), 'the held turn names the wait');
-  assert.match(amber.stdout, /\u001b\[1m\u001b\[38;2;215;175;0m[^\u001b]*YOUR TURN/u, 'the wait is bold amber');
+  assert.match(amber.stdout, /\u001b\[1;38;2;255;190;80m[^\u001b]*YOUR TURN/u, 'the wait is bold amber');
   const asking = [
     { event: 'UserPromptSubmit', promptId: 'p2', recordedAt: now },
     { event: 'PreToolUse', recordedAt: now, tool: { name: 'ask_user_question' } },
@@ -679,11 +679,11 @@ test('the test lane follows the workflow verdict; lanes without a report stay di
   });
   const coloured = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '24', COLUMNS: '200' } });
   assert.equal(coloured.status, 0, coloured.stderr);
-  assert.match(coloured.stdout, /\u001b\[38;2;95;175;95mtest\u001b/u, 'a passing test lane is green');
+  assert.match(coloured.stdout, /\u001b\[1;38;2;95;175;95mtest ✓ 3\u001b/u, 'a passing test lane is green');
   assert.match(coloured.stdout, /\u001b\[38;2;138;138;138mbehavior\u001b/u, 'a lane with no report stays dim');
   updateWorkflowState(file, sessionId, { test: { verdict: 'fail', count: 3 } });
   const failed = statusWithSession({ home, stateRoot, workspace, sessionId, env: { LITGROK_HUD_COLOR: '24', COLUMNS: '200' } });
-  assert.match(failed.stdout, /\u001b\[38;2;215;95;95mtest\u001b/u, 'a failing test lane is red');
+  assert.match(failed.stdout, /\u001b\[1;38;2;215;95;95mtest ✗ 3\u001b/u, 'a failing test lane is red');
 });
 
 test('a finished done stage bursts once, then settles', (t) => {

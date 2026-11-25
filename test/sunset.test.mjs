@@ -16,7 +16,7 @@ import { updateWorkflowState } from '../.grok/hooks/workflow-stage.mjs';
 
 const HOOKS = join(dirname(dirname(fileURLToPath(import.meta.url))), '.grok', 'hooks');
 const SESSION = 'sunset-session';
-const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT', 'NODE_OPTIONS'];
+const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'KITTY_WINDOW_ID', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT', 'NODE_OPTIONS'];
 const LIGHT = { COLORFGBG: '0;15' };
 const SUN = /[▁▂▃▄▅▆▇]/u;
 const cellWidth = (character) => (/[가-힣\u{1f300}-\u{1faff}]/u.test(character) ? 2 : 1);
@@ -128,7 +128,7 @@ const TURN = [['UserPromptSubmit', 100, { promptId: 'p1' }], ['PostToolUse', 90,
 
 // The real script fed Grok's payload, with its clock held at `NOW` plus `later` milliseconds.
 function run(sb, { env = {}, later = 0, running = true, columns = 120, extra = {}, hooks = HOOKS } = {}) {
-  const base = { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot };
+  const base = { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot, TERM: 'xterm-256color', SSH_CONNECTION: 'test' };
   for (const key of ENV_KEYS) delete base[key];
   const input = { cwd: sb.workspace, session_id: SESSION, workspace: { current_dir: sb.workspace, branch: 'main' }, model: { display_name: 'Grok 4.5' }, effort: { level: 'high' }, context_window: { used_percentage: 42, context_window_size: 2000000 }, ...(running ? { prompt_id: 'p1', turn: { started_at_ms: NOW - 100_000 } } : {}), ...extra };
   const result = spawnSync(process.execPath, ['--import', `data:text/javascript,Date.now=()=>${NOW + later}`, join(hooks, 'lit-status-line.mjs')], {
@@ -138,30 +138,34 @@ function run(sb, { env = {}, later = 0, running = true, columns = 120, extra = {
   return result.stdout.slice(0, -1).split('\n');
 }
 
-test('the real status line keeps every word, row and width with the scene on', (t) => {
+test('the card keeps every word and column whatever the scene does, and the one-line row keeps its own', (t) => {
   for (const [name, options] of Object.entries({ work: { ledger: TURN }, quiet: { discipline: null, stage: null }, skill: { stage: null, ledger: TURN }, review: { discipline: 'review-work', ledger: TURN }, rewind: { discipline: 'lit-adhd', ledger: TURN } })) {
     const sb = sandbox(t, options);
-    for (const columns of [20, 40, 60, 80, 100, 120, 160, 260, 400]) {
-      for (const env of [{}, { LITGROK_HUD_LINES: '1' }]) {
-        const scene = run(sb, { columns, env });
-        const bare = run(sb, { columns, env: { ...env, ...LIGHT } });
-        assert.equal(scene.length, bare.length, `${name} ${columns}: the same rows`);
-        scene.forEach((line, row) => {
-          const [now, old] = [line, bare[row]].map((text) => styledCells(text));
-          old.forEach((cell, at) => {
-            if (cell && cell[0] !== ' ') assert.equal(now[at]?.[0], cell[0], `${name} ${columns}: "${stripVTControlCharacters(bare[row])}"`);
-          });
-          assert.ok(line.length <= 1024, `${name} ${columns}: ${line.length} characters`);
-          assert.ok(now.length <= columns - 1, `${name} ${columns}: ${now.length} cells`);
-        });
+    for (const columns of [36, 40, 60, 80, 100, 120, 160, 260, 400]) {
+      const frames = [0, 300, 2600, 6200, 9400].map((later) => run(sb, { columns, later }));
+      for (const lines of frames) {
+        assert.equal(lines.length, frames[0].length, `${name} ${columns}: the same rows`);
+        for (const line of lines) assert.ok(line.length <= 1024 && cellCount(stripVTControlCharacters(line)) === Math.min(columns - 1, 200), `${name} ${columns}`);
       }
+      const letters = (lines) => lines.map((line) => stripVTControlCharacters(line).replace(/[^\p{L}\p{N}│╭╮╰╯]/gu, ' ')).join('\n').replace(/\d/gu, '0');
+      assert.equal(new Set(frames.map(letters)).size, 1, `${name} ${columns}: no word moves`);
+    }
+    for (const columns of [20, 30, 60, 120, 400]) {
+      const env = { LITGROK_HUD_LINES: '1' };
+      const [scene] = run(sb, { columns, env });
+      const [bare] = run(sb, { columns, env: { ...env, ...LIGHT } });
+      const [now, old] = [scene, bare].map((text) => styledCells(text));
+      old.forEach((cell, at) => {
+        if (cell && cell[0] !== ' ') assert.equal(now[at]?.[0], cell[0], `${name} ${columns}: "${stripVTControlCharacters(bare)}"`);
+      });
+      assert.ok(scene.length <= 1024 && now.length <= columns - 1, `${name} ${columns}`);
     }
   }
 });
 
 test('a running turn moves the scene; a still clock, an idle session and reduced motion hold it', (t) => {
   const sb = sandbox(t, { ledger: TURN });
-  const figures = (options) => run(sb, options).at(-1);
+  const figures = (options) => run(sb, options).at(-2);
   assert.equal(SUN.test(figures({})), true);
   assert.notEqual(figures({}), figures({ later: 300 }), 'the next redraw shows the next step');
   for (const motion of ['off', 'subtle']) {
@@ -171,63 +175,48 @@ test('a running turn moves the scene; a still clock, an idle session and reduced
   }
   const idle = sandbox(t, { ledger: [...TURN, ['Stop', 60]] });
   const still = run(idle, { running: false });
-  assert.match(still.at(-1), SUN);
+  assert.match(still.at(-2), SUN);
   assert.deepEqual(run(idle, { running: false, later: 4321 }), still, 'between turns every row stands still');
   assert.equal(run(sb, {}).length, still.length, 'the card is as tall at rest as at work');
 });
 
-test('fewer colours, no colour, ASCII glyphs, a light background and a finished turn have no scene', (t) => {
+test('fewer colours, no colour, ASCII glyphs, and a light background have no scene', (t) => {
   const sb = sandbox(t, { ledger: TURN });
   for (const env of [{ NO_COLOR: '' }, { LITGROK_HUD_COLOR: '0' }, { LITGROK_HUD_COLOR: '256' }, { LITGROK_HUD_COLOR: '16' }, { LITGROK_HUD_GLYPHS: 'ascii' }, LIGHT]) {
     const text = stripVTControlCharacters(run(sb, { env }).join('\n'));
     assert.doesNotMatch(text, /[▁▂▃▄▅▆▇~]/u, JSON.stringify(env));
   }
   const done = run(sandbox(t, { ledger: [...TURN, ['Stop', 5]] }), { running: false });
-  assert.doesNotMatch(done.join('\n'), /[▁▂▃▄▅▆▇~]/u, 'the completion has the row to itself');
+  assert.match(done.join('\n'), SUN, 'a finished turn keeps its sun, standing still');
 });
 
-test('the first session shows the scene above the extensions row and leaves that row alone', (t) => {
-  for (const [name, options, rows] of [['card', { ledger: TURN }, 5], ['quiet', { discipline: null, stage: null }, 2]]) {
+test('the first session shows the extensions row inside the card and adds no line for it', (t) => {
+  for (const [name, options] of [['card', { ledger: TURN }], ['quiet', { discipline: null, stage: null }]]) {
     const sb = sandbox(t, options);
     // An installed copy that has shown its extensions row to no session yet.
     const hooks = join(dirname(sb.home), 'installed', '.grok', 'hooks');
     mkdirSync(hooks, { recursive: true });
     for (const file of readdirSync(HOOKS)) if (file.endsWith('.mjs')) copyFileSync(join(HOOKS, file), join(hooks, file));
     writeFileSync(join(dirname(hooks), '.litgrok-install-manifest.json'), '{"version":"1.2.3"}\n');
-    for (const columns of [120, 260]) {
-      const scene = run(sb, { hooks, columns, running: name === 'card' });
-      const bare = run(sb, { hooks, columns, running: name === 'card', env: LIGHT });
-      assert.equal(scene.length, rows, `${name}: no line is added`);
-      assert.equal(bare.length, rows);
-      assert.match(scene.slice(0, -1).join('\n'), SUN, `${name} ${columns}: the sun stands above the row`);
-      assert.match(stripVTControlCharacters(scene.at(-1)), /LitFamily extensions · github\.com\/wjgoarxiv\/wjgoarxiv-skills/u);
-      const words = (line) => line.slice(line.indexOf(' '));
-      assert.equal(words(scene.at(-1)), words(bare.at(-1)), `${name} ${columns}: the row keeps its words, link and colours`);
+    for (const columns of [120, 190]) {
+      const lines = run(sb, { hooks, columns, running: name === 'card' });
+      assert.equal(lines.length, name === 'card' ? 5 : 4);
+      const row = stripVTControlCharacters(lines.at(-2));
+      assert.match(row, /^│ LitFamily extensions · github\.com\/wjgoarxiv\/wjgoarxiv-skills · litgrok extensions install <skill>/u, `${name} ${columns}`);
+      assert.match(row, /│$/u);
+      assert.ok(lines.at(-2).length <= 1024);
     }
   }
 });
 
 test('YOUR TURN turns the sun amber and lit-adhd gives it the rewind wheel', (t) => {
   const pink = /\u001b\[48;2;26;16;48m\u001b\[38;2;255;(?:4\d|5\d|6\d|7\d|8\d|9\d|10\d);1[34]\dm▆/u;
-  assert.match(run(sandbox(t, { ledger: TURN })).at(-1), pink);
-  const ask = run(sandbox(t, { ledger: [...TURN.slice(0, 2), ['PreToolUse', 3, { tool: { name: 'ask_user_question' } }]] })).at(-1);
+  assert.match(run(sandbox(t, { ledger: TURN })).at(-2), pink);
+  const ask = run(sandbox(t, { ledger: [...TURN.slice(0, 2), ['PreToolUse', 3, { tool: { name: 'ask_user_question' } }]] })).at(-2);
   assert.match(ask, SUN);
   assert.doesNotMatch(ask, pink);
-  const rewind = run(sandbox(t, { discipline: 'lit-adhd', ledger: TURN })).at(-1);
+  const rewind = run(sandbox(t, { discipline: 'lit-adhd', ledger: TURN })).at(-2);
   assert.match(rewind, SUN);
   assert.doesNotMatch(rewind, pink);
   assert.doesNotMatch(stripVTControlCharacters(rewind), /~/u, 'and keeps its own colours with no sea');
-});
-
-test('the gauge takes round caps only where the terminal draws them, in the same cells', (t) => {
-  const sb = sandbox(t, { discipline: null, stage: null });
-  const row = (env, extra) => stripVTControlCharacters(run(sb, { env, running: false, extra })[0]);
-  const square = 'ctx [█▎░] 42%/2m';
-  const round = 'ctx █▎  42%/2m';
-  assert.equal(round.length, square.length);
-  for (const env of [{ LITGROK_HUD_GLYPHS: 'nerd' }, { WT_SESSION: 'x' }, { TERM_PROGRAM: 'vscode' }]) assert.ok(row(env).includes(round), JSON.stringify(env));
-  for (const env of [{}, { TERM_PROGRAM: 'Apple_Terminal' }, { WT_SESSION: 'x', LITGROK_HUD_GLYPHS: 'basic' }, { WT_SESSION: 'x', LITGROK_HUD_COLOR: '256' }, { LITGROK_HUD_GLYPHS: 'nerd', NO_COLOR: '' }]) {
-    assert.ok(row(env).includes(square), JSON.stringify(env));
-  }
-  for (const [percent, cells] of [[0, '   '], [100, '███']]) assert.ok(row({ WT_SESSION: 'x' }, { context_window: { used_percentage: percent } }).includes(`ctx ${cells} ${percent}%`));
 });

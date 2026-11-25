@@ -357,8 +357,8 @@ function askCard(cards) {
     title: 'Ground rules',
     note: 'Adds a short LitGrok section to your user rule, ~/.grok/rules/00-litgrok.md; No leaves it out, and later installs stop asking (litgrok ground on adds it).',
     initial: false,
-    yesText: 'add them',
-    noText: 'leave them out',
+    yesText: 'add',
+    noText: 'leave out',
   });
 }
 

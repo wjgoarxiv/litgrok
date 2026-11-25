@@ -129,23 +129,24 @@ function seaCell(from, time, sea) {
   return { text: here > 1 ? '~' : here > 0.55 ? '-' : '.', rgb: blend(FAINT, base, Math.max(0.35, Math.min(1, 0.18 + level(block) * 0.55))) };
 }
 
-// Where the sun stands on the last `rows` lines, or null when it has no room: no text within two cells of it (three for a one-row sun, which shares its row), and
-// no line so full of escapes that the sun would pass the cut. Over several rows its place is fixed by the width; a
-// one-row sun moves right to stand clear of the row's text.
-function sunPlace(lines, grids, rows, maxCells) {
-  const wide = sunShape(rows)[0].length;
+// Where the sun stands on the last `rows` lines, or null when it has no room: no text within two cells of a sun over
+// several rows or three of one that shares its row, and no line so full of escapes that the sun would pass the cut.
+// It stands at 62% of the width, or the next free place right of that. Over three rows it leaves `rightEdge` cells.
+function sunPlace(lines, grids, rows, maxCells, rightEdge) {
+  const shape = sunShape(rows);
+  const wide = shape[0].length;
   const under = grids.slice(-rows);
   const bare = lines.slice(-rows);
   const margin = rows > 1 ? 2 : CLEAR;
-  const clear = (at) => at >= margin && at + wide + margin <= maxCells && under.every(({ columns }, row) => (
+  // A row of the dome needs room only for the cells it has.
+  const reach = shape.map((cells) => [cells.findIndex(Boolean), cells.findLastIndex(Boolean) + 1]);
+  const clear = (at) => at >= margin && under.every(({ columns }, row) => (
     // Spaces out to the sun count toward the cut too.
     bare[row].length + columns.slice(0, at).filter((column) => column?.extra).length + SUN_ROW_CHARACTERS <= MAX_LINE_CHARACTERS
-    && columns.slice(at - margin, at + wide + margin).every((column) => column?.free)));
-  if (rows > 1) {
-    const at = Math.min(Math.round(maxCells * 0.62), maxCells - wide - RIGHT_EDGE);
-    return clear(at) ? at : null;
-  }
-  for (let at = Math.round(maxCells * 0.62); at + wide + margin <= maxCells; at += 1) if (clear(at)) return at;
+    && columns.slice(at + reach[row][0] - margin, at + reach[row][1] + margin).every((column) => column?.free)));
+  const last = maxCells - wide - (rows === 3 ? rightEdge : margin);
+  const first = Math.round(maxCells * 0.62);
+  for (let at = Math.min(first, last); at <= last; at += 1) if (clear(at)) return at;
   return null;
 }
 
@@ -154,16 +155,16 @@ function sunPlace(lines, grids, rows, maxCells) {
  * null for a still scene; `dim` fades it between turns; `rainbow(cell, cells)` gives the rewind look's colours
  * and `amber` the YOUR TURN ones.
  */
-export function paintSunset(lines, { maxCells, cellWidth, seconds = null, dim = false, rainbow = null, amber = false }) {
+export function paintSunset(lines, { maxCells, cellWidth, seconds = null, dim = false, rainbow = null, amber = false, rightEdge = RIGHT_EDGE }) {
   const time = seconds ?? 0;
   const scene = lines.slice(-3);
   const grids = scene.map((line) => columnsOf(line, cellWidth));
   for (const { columns } of grids) while (columns.length < maxCells) columns.push({ before: '', text: ' ', free: true, extra: true });
   let rows = scene.length;
-  let at = sunPlace(scene, grids, rows, maxCells);
-  if (at === null && rows > 1) {
-    rows = 1;
-    at = sunPlace(scene, grids, rows, maxCells);
+  let at = null;
+  for (; rows > 0; rows -= 1) {
+    at = sunPlace(scene, grids, rows, maxCells, rightEdge);
+    if (at !== null || rows === 1) break;
   }
   if (at === null && seconds === null) return lines;
   const shape = sunShape(rows);

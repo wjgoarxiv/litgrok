@@ -14,17 +14,17 @@ const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 // Carbon-style window cards of LitGrok's own installer, SessionStart hook, prompt hook and status-line command.
 // The card is the same on both page themes, so each -dark/-light pair holds the same picture.
 const screens = {
-  'install-card-dark.webp': 'f1eca080ae59c94789a0d063390ef9a1c09ee3201c666463969a26f7764b10be',
-  'install-card-light.webp': 'f1eca080ae59c94789a0d063390ef9a1c09ee3201c666463969a26f7764b10be',
-  'install-done-dark.webp': 'e71a49048b9d315cf61931cf7a2e32a9c492cdbb93ce87be9480e4489d7dc8d4',
-  'install-done-light.webp': 'e71a49048b9d315cf61931cf7a2e32a9c492cdbb93ce87be9480e4489d7dc8d4',
+  'install-card-dark.webp': 'c5a675f0f5a0deaa8bd5d095fcbcd4a187fa24d502b258d05e3b8d01b34c302d',
+  'install-card-light.webp': 'c5a675f0f5a0deaa8bd5d095fcbcd4a187fa24d502b258d05e3b8d01b34c302d',
+  'install-done-dark.webp': 'd06c6453b7b720969235f04406322c65e0aabf2a5c3a62d9edeb87f192748784',
+  'install-done-light.webp': 'd06c6453b7b720969235f04406322c65e0aabf2a5c3a62d9edeb87f192748784',
   'install-dry-run-dark.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
   'install-dry-run-light.webp': '3653616b34a95511ca06896e1b99058135b0d6c5a96a6d684e66475c471d5f41',
   'install-plan-dark.webp': 'ad9afa5cf46559229db9ddc0dcba50391be1175253c087a829021d3bd0f9fb72',
   'session-start-dark.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
   'session-start-light.webp': 'd07774527e10333ef01cd6833d87466351e7d58f9323504878d7e4a0fc73877f',
-  'status-row-dark.webp': '6811d248abb9697a96bfc529253b11f26708a4fcbbd4a5d5d794d9b658cb3a35',
-  'status-row-light.webp': '6811d248abb9697a96bfc529253b11f26708a4fcbbd4a5d5d794d9b658cb3a35',
+  'status-row-dark.webp': '01a7f0ac0172122c381336dbf2062e74c0f71fcbec4f89f36666a9e5093b55f3',
+  'status-row-light.webp': '01a7f0ac0172122c381336dbf2062e74c0f71fcbec4f89f36666a9e5093b55f3',
 };
 const MAX_SCREEN_BYTES = 245_760;
 
@@ -33,9 +33,9 @@ const quotes = {
   'install-plan': ['INSTALL', '02 · Payload 380 files · byte-identical copies only', 'Model selection: host-owned'],
   'install-dry-run': ['DRY RUN — no files written', '02 · Payload 380 files', 'would install ~/demo/.grok/agents/litgrok-executor.md'],
   'install-card': ['LIT 1/1', 'Ground rules [y/N]', '❯ No (default)', 'Enter = No', 'Ctrl+C stop'],
-  'install-done': ['Payload 393 files discovered', 'Write 393 written', 'is ready', 'project hooks require trust from a Git project root', 'restart Grok Build'],
+  'install-done': ['Install steps 4 of 4 checked', 'Files 396 written', 'is installed', 'project hooks require trust from a Git project root', 'restart Grok Build'],
   'session-start': ['LitGrok payload present: skills, project rules, hooks, and the npx installer.'],
-  'status-row': ['| Grok 4.5 [high] │ ctx [█▎░] 42%/2m │ $0.43 │ git main', '· litwork', '3 tools · 1 agent ● 1m42s', 'plan ✓ ━━━━', 'work 3/7', 'review · ──── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash 0:12'],
+  'status-row': ['2m · Grok 4.5 [high] · $0.43 · git main', '· litwork 1m42s', '3 tools · ● 1 agent · WORK ●', 'plan ✓ ━━', 'work 3/7', 'review · ── done ·', 'task 3/7', 'next ▸ 4. Document the flag', 'tests ✓ 3', 'Bash · 0:12', 'RUNNING ●'],
 };
 // The install plan was always a single picture; the other five keep their themed pair.
 const themedNames = ['install-card', 'install-done', 'session-start', 'install-dry-run', 'status-row'];
@@ -164,8 +164,8 @@ const autoHandoff = {
   'auto-handoff-off-light.webp': '8b54ebdf7243f8f10918579d034b2e62e05c457d8b65659b8d21f76af124524c',
   'auto-handoff-on-dark.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
   'auto-handoff-on-light.webp': '0e1f9283255410a2ba842793df65e2748b4f32af98d3082e5415f57a48b277a4',
-  'auto-handoff-session-dark.webp': '2e40065fb9d40f7ec8251a50170b0cc7a22e669bc0e227ef8642d83460706ce5',
-  'auto-handoff-session-light.webp': '2e40065fb9d40f7ec8251a50170b0cc7a22e669bc0e227ef8642d83460706ce5',
+  'auto-handoff-session-dark.webp': '845778cdc34d9bebbbebdc30b97ca796a2bf5a11929cf7d4aaa25e065c13e328',
+  'auto-handoff-session-light.webp': '845778cdc34d9bebbbebdc30b97ca796a2bf5a11929cf7d4aaa25e065c13e328',
 };
 const autoHandoffQuotes = {
   'auto-handoff-on': ['litgrok auto-handoff on 60', 'Automatic handoff is ON at 60 percent for this project.', 'litgrok auto-handoff status', 'Automatic handoff: ON at 60 percent', 'It needs the LitGrok status line (litgrok install --user --status-line)'],

@@ -1,32 +1,39 @@
 // What a person at a terminal sees during `litgrok install` and `litgrok uninstall`: the ground-rules
-// question as a card, one row per finished step, and a closing card. cardTerminal() decides; every other
-// run (a pipe, CI, --yes, a preview, TERM=dumb, a tiny window) keeps the plain text in litgrok.mjs.
+// question as a card, the steps as a card that folds to one row, and a closing card. cardTerminal() decides;
+// every other run (a pipe, CI, --yes, a preview, TERM=dumb, a tiny window) keeps the plain text in litgrok.mjs.
+//
+// Round caps are asked for once, as the status line asks, and every pill, chip and button end follows that answer.
+// Without them the same cells are filled instead, so no width ever changes.
 
 import { emitKeypressEvents } from 'node:readline';
+import { drawsRoundCaps } from '../.grok/hooks/lit-caps.mjs';
 import { terminalMode, unicodeTerminal } from '../.grok/hooks/lit-mark.mjs';
 
 const SMALLEST = Object.freeze({ columns: 40, rows: 12 });
 const WIDEST_CARD = 100;
-const LABEL_CELLS = 16;
+// Every value starts in this column, under a folded answer's label, a step's name and a closing card's label alike.
+const VALUE_COLUMN = 24;
+const BUTTON_CELLS = 15;
 const SETTLE_MS = 30;
 const PLAIN_TERMS = /^(?:ansi|cygwin|linux|rxvt|screen|vt\d+|xterm)$/u;
 
 // [r, g, b, 16-colour foreground code]
 const PINK = [255, 45, 149, 95];
-const VIOLET = [167, 139, 250, 94];
-const ORANGE = [255, 99, 55, 91];
-const GOLD = [255, 170, 60, 93];
-const GREEN = [80, 200, 80, 92];
-const RED = [230, 60, 60, 91];
-const INK = [12, 10, 24, 30];
-const BORDER = Object.freeze([PINK, VIOLET, ORANGE]);
+const VIOLET = [180, 140, 255, 94];
+const ACCENT = [255, 99, 55, 91];
+const ORANGE = [255, 143, 60, 93];
+const GREEN = [80, 230, 140, 92];
+const RED = [255, 85, 119, 91];
+const AMBER = [255, 176, 46, 93];
+const INK = [11, 14, 20, 30];
+const BORDER = Object.freeze([PINK, VIOLET, ACCENT]);
 
 const UNICODE = Object.freeze({
-  corners: '╭╮╰╯', across: '─', down: '│', ok: '✓', failed: '✗', skipped: '○', note: '·', pointer: '❯', arrows: '← →',
+  corners: '╭╮╰╯', across: '─', down: '│', ok: '✓', failed: '✗', warning: '!', note: '·', dot: '·', pointer: '❯', arrows: '← →',
   chosen: '╔═╗║╚═╝', other: '╭─╮│╰─╯',
 });
 const ASCII = Object.freeze({
-  corners: '++++', across: '-', down: '|', ok: 'ok', failed: 'x', skipped: '-', note: '-', pointer: '>', arrows: 'Left Right',
+  corners: '++++', across: '-', down: '|', ok: 'ok', failed: 'x', warning: '!', note: '-', dot: '-', pointer: '>', arrows: 'Left Right',
   chosen: '#=###=#', other: '+-+|+-+',
 });
 const ASCII_WORDS = Object.freeze({ '·': '-', '→': '->', '—': '-', '…': '...' });
@@ -48,8 +55,8 @@ function withoutEscapes(text) {
 function cellsOf(text) {
   let total = 0;
   for (const character of withoutEscapes(text)) {
-    if (/[\p{Mark}‍]/u.test(character)) continue;
-    total += /[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹯＀-｠￠-￦\u{1f300}-\u{1faff}\u{20000}-\u{3fffd}]/u.test(character) ? 2 : 1;
+    if (/[\p{Mark}\p{Cf}]/u.test(character)) continue;
+    total += /[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹯＀-｠￠-￦\u{1f300}-\u{1faff}\u{20000}-\u{3fffd}]/u.test(character) ? 2 : 1;
   }
   return total;
 }
@@ -101,10 +108,18 @@ function between(stops, at) {
   return [...mixed, stops[Math.round(position)][3]];
 }
 
+// A terminal that names a light background keeps square ends, as the status line does.
+function lightBackground(env) {
+  return /(?:^|;)(?:7|15)$/u.test(env.COLORFGBG ?? '');
+}
+
 export function createCards({ stdin, stdout, env, host = process, settleMs = SETTLE_MS }) {
   const depth = colorDepth(env, stdout);
   const ascii = !unicodeTerminal(env);
   const sign = ascii ? ASCII : UNICODE;
+  const round = depth === 'truecolor' && !ascii && !lightBackground(env) && drawsRoundCaps(env);
+  // Rows stand together while answers fold; any other block starts after one blank row.
+  let lastBlock = 'text';
 
   const columns = () => stdout.columns || 80;
   const rows = () => stdout.rows || 24;
@@ -146,9 +161,13 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     return output;
   }
 
-  function pill(text) {
+  // Filled text. The first and last cell are round caps, or filled like the rest: the same width either way.
+  function chip(text, stops) {
     if (depth === 'none') return `[${text}]`;
-    return gradient(` ${text} `, [GOLD, ORANGE, PINK], (back) => ({ color: INK, back, bold: true }));
+    const fill = (back) => ({ color: INK, back, bold: true });
+    if (!round) return gradient(` ${text} `, stops, fill);
+    const span = cellsOf(text) + 2;
+    return paint('\ue0b6', { color: stops[0] }) + gradient(text, stops, fill, 1, span) + paint('\ue0b4', { color: stops.at(-1) });
   }
 
   function card({ tag = 'LIT', title, body, failed = false }) {
@@ -156,10 +175,10 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     const stops = failed ? [RED, RED] : BORDER;
     const edge = (text, from) => gradient(text, stops, (color) => ({ color }), from, width);
     const [topLeft, topRight, bottomLeft, bottomRight] = sign.corners;
-    const badge = pill(tag);
+    const badge = chip(tag, [ORANGE, PINK]);
     const name = say(title);
-    const onBorder = cellsOf(badge) + cellsOf(name) + 8 <= width;
-    const head = onBorder ? `${badge} ${bold(name)} ` : badge;
+    const onBorder = cellsOf(badge) + cellsOf(name) + 9 <= width;
+    const head = onBorder ? ` ${badge} ${quiet(sign.dot)} ${bold(name)} ` : ` ${badge} `;
     const used = 2 + cellsOf(head);
     const lines = onBorder ? body : [...wrapCells(name, width - 4).map(bold), ...body];
     return [
@@ -170,39 +189,44 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
   }
 
   function markFor(status) {
-    if (status === 'ok') return paint(sign.ok, { color: GREEN, bold: true });
-    if (status === 'failed') return paint(sign.failed, { color: RED, bold: true });
-    return paint(status === 'skipped' ? sign.skipped : sign.note, { color: VIOLET, bold: true });
+    const color = { ok: GREEN, failed: RED, warning: AMBER }[status] ?? VIOLET;
+    return paint(sign[status] ?? sign.note, { color, bold: true });
   }
 
   // A finished line: mark, label, value. A long value wraps under itself.
   function foldedRow(status, label, value) {
-    const lead = ` ${padTo(markFor(status), cellsOf(sign.ok))} ${padTo(say(label), LABEL_CELLS)}`;
-    const indent = ' '.repeat(cellsOf(lead));
+    const start = ` ${padTo(markFor(status), cellsOf(sign.ok))} ${say(label)}`;
+    const lead = cellsOf(start) < VALUE_COLUMN && columns() >= VALUE_COLUMN * 2 ? padTo(start, VALUE_COLUMN) : `${start} `;
     return wrapCells(say(value), Math.max(12, columns() - 1 - cellsOf(lead)))
-      .map((line, index) => `${index === 0 ? lead : indent}${status === 'failed' ? paint(line, { color: RED, bold: true }) : line}`)
+      .map((line, index) => `${index === 0 ? lead : ' '.repeat(cellsOf(lead))}${paint(line, { color: status === 'failed' ? RED : undefined, bold: true })}`)
       .join('\n');
   }
 
+  function fold(status, label, value) {
+    const gap = lastBlock === 'fold' ? '' : '\n';
+    lastBlock = 'fold';
+    return `${gap}${foldedRow(status, label, value)}\n`;
+  }
+
   function buttons({ yes, initial, small }) {
-    const suffix = innerCells() >= 44 ? ' (default)' : ' default';
-    const labelCells = 5 + suffix.length;
+    const roomy = innerCells() >= 44;
+    const suffix = roomy ? ' (default)' : ' default';
+    const labelCells = roomy ? BUTTON_CELLS : 5 + suffix.length;
     const pair = [true, false].map((value) => {
       const chosen = value === yes;
       const label = padTo(`${chosen ? sign.pointer : ' '} ${value ? 'Yes' : 'No'}${value === initial ? suffix : ''}`, labelCells);
-      if (small) {
-        if (!chosen) return [` ${label} `];
-        return [depth === 'none' ? `[${label}]` : gradient(` ${label} `, [PINK, VIOLET], (back) => ({ color: INK, back, bold: true }))];
-      }
-      if (chosen && depth !== 'none' && !ascii) {
-        const face = `  ${label}  `;
-        const lip = (glyph) => gradient(glyph.repeat(face.length), [PINK, VIOLET], (color) => ({ color }));
-        return [lip('▄'), gradient(face, [PINK, VIOLET], (back) => ({ color: INK, back, bold: true })), lip('▀')];
-      }
-      const [a, b, c, side, d, e, f] = chosen ? sign.chosen : sign.other;
-      const style = chosen ? (text) => paint(text, { color: PINK, bold: true }) : quiet;
-      const middle = `${style(side)} ${chosen ? bold(label) : label} ${style(side)}`;
-      return [style(a + b.repeat(labelCells + 2) + c), middle, style(d + e.repeat(labelCells + 2) + f)];
+      const lit = chosen ? chip(label, [PINK, VIOLET]) : ` ${label} `;
+      if (small) return [chosen ? lit : quiet(lit)];
+      const filled = chosen && depth !== 'none' && !ascii;
+      const [a, b, c, side, d, e, f] = chosen && !filled ? sign.chosen : sign.other;
+      const span = labelCells + 6;
+      const style = (text, from) => (chosen ? gradient(text, [PINK, VIOLET], (color) => ({ color, bold: !filled }), from, span) : quiet(text));
+      const middle = filled ? lit : ` ${chosen ? bold(label) : label} `;
+      return [
+        style(a + b.repeat(span - 2) + c, 0),
+        `${style(side, 0)} ${middle} ${style(side, span - 1)}`,
+        style(d + e.repeat(span - 2) + f, 0),
+      ];
     });
     return pair[0].map((left, index) => `${left}  ${pair[1][index]}`);
   }
@@ -218,7 +242,7 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     return lines.map(quiet);
   }
 
-  // Roomy when the window allows it, then without blank lines, then with one-line buttons.
+  // Roomy when the window allows it, then without its blank rows, then with one-line buttons.
   function questionRows({ tag, title, note, initial, yes }) {
     const noteLines = wrapCells(say(note), innerCells());
     const enter = `Enter = ${yes ? 'Yes' : 'No'}`;
@@ -230,7 +254,8 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     let drawn;
     for (const { lead = [], body } of [
       { lead: [''], body: ['', ...noteLines, '', ...big, '', ...hints] },
-      { lead: [''], body: [...noteLines, '', ...big, '', ...hints] },
+      { body: ['', ...noteLines, '', ...big, '', ...hints] },
+      { body: [...noteLines, ...big, ...hints] },
       { body: [...noteLines, ...small, ...hints] },
       { body: [...noteLines, ...small, ...hintLines(['y / n', enter, 'Ctrl+C stop'])] },
     ]) {
@@ -248,11 +273,13 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     const up = (count) => (count > 0 ? `\u001b[${count}A` : '');
     const draw = (from = onScreen.length) => {
       const next = questionRows({ tag, title, note, initial, yes });
-      stdout.write(`${up(from)}\r${next.map((row) => `${row}\u001b[K\r\n`).join('')}\u001b[J`);
+      // A row that did not change is stepped over, so a key press redraws the buttons and the hint only.
+      const same = (row, index) => from === onScreen.length && next.length === onScreen.length && row === onScreen[index];
+      stdout.write(`${up(from)}\r${next.map((row, index) => (same(row, index) ? '\r\n' : `${row}\u001b[K\r\n`)).join('')}\u001b[J`);
       onScreen = next;
     };
-    const fold = (row) => {
-      stdout.write(`${up(onScreen.length)}\r\u001b[J${row}\n`);
+    const close = (row) => {
+      stdout.write(`${up(onScreen.length)}\r\u001b[J${row}`);
       onScreen = [];
     };
 
@@ -320,7 +347,8 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
             if (!held) return;
             stdin.setRawMode(true);
             cursor(false);
-            draw(0);
+            onScreen = [];
+            draw();
           });
           host.kill(0, 'SIGTSTP');
         };
@@ -330,7 +358,10 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
         listen(stdout, 'resize', () => {
           // Rows drawn for the old width may have wrapped: step over what they take up now.
           const taken = onScreen.reduce((sum, row) => sum + Math.max(1, Math.ceil(cellsOf(row) / columns())), 0);
-          if (ready) draw(Math.min(taken, rows() - 1));
+          if (!ready) return;
+          const from = Math.min(taken, rows() - 1);
+          onScreen = [];
+          draw(from);
         });
         setTimeout(() => {
           if (stopKey !== null) return;
@@ -338,10 +369,10 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
           draw();
         }, settleMs);
       });
-      fold(foldedRow('ok', title, answer ? yesText : noText));
+      close(fold('ok', title, answer ? yesText : noText));
       return answer;
     } catch (error) {
-      fold(foldedRow('failed', title, 'stopped'));
+      close(fold('failed', title, 'stopped'));
       throw error;
     } finally {
       for (const remove of listeners) remove();
@@ -351,43 +382,103 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     }
   }
 
+  /**
+   * The steps as one card that is redrawn in place. The steps run without a pause between them, so nothing spins.
+   * A run that stopped part way keeps the card; a finished one folds to a row.
+   */
+  function work({ title, steps }) {
+    const states = steps.map(({ name, text }) => ({ name, text, status: 'waiting' }));
+    let onScreen = [];
+    const lines = () => {
+      const valueCells = innerCells() - (VALUE_COLUMN - 3);
+      const longest = Math.max(...states.map(({ name }) => cellsOf(name)));
+      // One column for every step's text: the family column, or just past the longest name in a narrow window.
+      const start = Math.max(...states.map(({ text }) => cellsOf(say(text)))) <= valueCells ? VALUE_COLUMN - 5 : longest + 2;
+      return states.flatMap(({ name, text, status }) => {
+        const mark = status === 'waiting' ? quiet(sign.note) : markFor(status);
+        const lead = `${padTo(mark, 2)}${padTo(status === 'waiting' ? quiet(name) : bold(name), start)}`;
+        const room = innerCells() - cellsOf(lead);
+        if (status === 'failed') {
+          return wrapCells(say(text), room).map((line, index) => `${index === 0 ? lead : ' '.repeat(cellsOf(lead))}${paint(line, { color: RED, bold: true })}`);
+        }
+        const value = say(text);
+        return [cellsOf(value) <= room ? lead + (status === 'waiting' ? quiet(value) : value) : lead.trimEnd()];
+      });
+    };
+    const draw = () => {
+      const next = [...(lastBlock === 'card' ? [] : ['']), ...card({ title, body: ['', ...lines()] })];
+      const fits = next.length < rows();
+      if (!fits && onScreen.length === 0) return;
+      const back = onScreen.length > 0 ? `\u001b[${onScreen.length}A` : '';
+      stdout.write(`${back}\r${next.map((row, index) => (onScreen[index] === row ? '\r\n' : `${row}\u001b[K\r\n`)).join('')}`);
+      onScreen = next;
+    };
+    return {
+      open: draw,
+      finish(status, name, text) {
+        Object.assign(states.find((state) => state.name === name), { status, text });
+        draw();
+      },
+      close({ warnings = 0 } = {}) {
+        if (states.some(({ status }) => status === 'failed' || status === 'waiting')) {
+          lastBlock = 'text';
+          return;
+        }
+        const back = onScreen.length > 0 ? `\u001b[${onScreen.length}A\r\u001b[J` : '';
+        const note = warnings > 0 ? ` · ${warnings} warning${warnings === 1 ? '' : 's'} below` : '';
+        stdout.write(`${back}${fold(warnings > 0 ? 'warning' : 'ok', 'Install steps', `${states.length} of ${states.length} checked${note}`)}`);
+      },
+    };
+  }
+
   /** The closing card. `sections` are { head, rows: [{ status, label, value }] }; every value is wrapped in full. */
   function summary({ title, sections, failed = false }) {
-    const markCells = cellsOf(sign.ok) + 1;
-    const labelCells = 2 + Math.max(...sections.flatMap((section) => section.rows.map(({ label }) => cellsOf(label))));
     const stacked = innerCells() < 56;
     const body = [];
     for (const section of sections) {
       body.push('', paint(section.head, { color: failed ? RED : PINK, bold: true }));
       for (const { status = 'note', label, value } of section.rows) {
-        const lead = padTo(markFor(status), markCells);
-        const valueCells = innerCells() - markCells - (stacked ? 0 : labelCells);
-        const lines = wrapCells(say(value), valueCells);
-        if (stacked) {
-          body.push(lead + bold(label), ...lines.map((line) => ' '.repeat(markCells) + line));
-        } else {
-          lines.forEach((line, index) => body.push(
-            (index === 0 ? lead + padTo(bold(label), labelCells) : ' '.repeat(markCells + labelCells)) + line,
-          ));
-        }
+        const mark = padTo(markFor(status), 2);
+        const strong = status === 'failed' || status === 'warning';
+        const shown = (line) => (strong ? paint(line, { color: status === 'failed' ? RED : undefined, bold: true }) : line);
+        const start = stacked ? '' : padTo(mark + bold(say(label)), Math.max(VALUE_COLUMN - 3, cellsOf(mark + label) + 1));
+        const indent = stacked ? 2 : cellsOf(start);
+        const lines = wrapCells(say(value), innerCells() - indent);
+        if (stacked) body.push(mark + bold(say(label)));
+        lines.forEach((line, index) => body.push((index === 0 && !stacked ? start : ' '.repeat(indent)) + shown(line)));
       }
     }
-    stdout.write(`\n${card({ title, body, failed }).join('\n')}\n\n`);
+    stdout.write(`\n${card({ title, body, failed }).join('\n')}\n`);
+    lastBlock = 'card';
   }
 
-  function step(status, label, value) {
-    stdout.write(`${foldedRow(status, label, value)}\n`);
+  /** One dim line or more under the mark, wrapped to the cards' width. */
+  function intro(line) {
+    stdout.write(`\n${wrapCells(say(line), cardCells()).map((part) => ` ${quiet(part)}\n`).join('')}`);
+    lastBlock = 'text';
   }
 
-  /** Plain wrapped text under the cards, optionally with a bold heading. */
+  /** The mark, and the product's name under it, centred over the cards. */
+  function banner(mark, name) {
+    const centred = (lines) => {
+      const indent = ' '.repeat(Math.max(0, 1 + Math.floor((cardCells() - Math.max(...lines.map(cellsOf))) / 2)));
+      return lines.map((line) => `${indent}${line}\n`).join('');
+    };
+    stdout.write(`\n${centred(mark)}${centred(wrapCells(say(name), cardCells()))}`);
+  }
+
+  /** Plain wrapped text under the cards with a bold heading. A { command } line is never wrapped. */
   function text(lines, heading) {
-    const room = Math.min(WIDEST_CARD, columns() - 2);
-    if (heading) stdout.write(` ${bold(say(heading))}\n`);
-    const indent = heading ? '   ' : ' ';
+    stdout.write(`\n ${bold(say(heading))}\n`);
     for (const line of lines) {
-      for (const part of wrapCells(say(line), room - indent.length)) stdout.write(`${indent}${heading ? part : quiet(part)}\n`);
+      if (line.command) {
+        stdout.write(`     ${line.command}\n`);
+        continue;
+      }
+      for (const part of wrapCells(say(line), cardCells() - 2)) stdout.write(`   ${part}\n`);
     }
+    lastBlock = 'text';
   }
 
-  return { confirm, step, summary, text };
+  return { banner, confirm, intro, summary, text, work };
 }

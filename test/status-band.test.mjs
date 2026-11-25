@@ -17,7 +17,7 @@ import { writeHudRecords } from '../.grok/hooks/litgrok-hud-state.mjs';
 const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const STATUS_SCRIPT = join(PRODUCT_ROOT, '.grok', 'hooks', 'lit-status-line.mjs');
 const SESSION = 'band-session';
-const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
+const ENV_KEYS = ['CI', 'NO_COLOR', 'COLUMNS', 'LITGROK_HUD_COLOR', 'LITGROK_HUD_LINES', 'LITGROK_HUD_GLYPHS', 'LITGROK_HUD_MOTION', 'COLORFGBG', 'TERM_PROGRAM', 'WT_SESSION', 'KITTY_WINDOW_ID', 'LITGROK_AUTO_HANDOFF', 'LITGROK_AUTO_HANDOFF_PERCENT'];
 // A terminal that names a light background shows the same words with no sunset beside them, so a whole row can be
 // compared; test/sunset.test.mjs proves the sunset moves none of them.
 const LIGHT = { COLORFGBG: '0;15' };
@@ -91,7 +91,7 @@ function runStatus(sb, { env = {}, turnAgoMs, sessionId = SESSION, promptId, per
   if (sessionId !== null) input.session_id = sessionId;
   if (promptId) input.prompt_id = promptId;
   if (turnAgoMs !== undefined) input.turn = { started_at_ms: Date.now() - turnAgoMs };
-  const baseEnv = { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot };
+  const baseEnv = { ...process.env, HOME: sb.home, LITGROK_HUD_STATE_ROOT: sb.stateRoot, TERM: 'xterm-256color', SSH_CONNECTION: 'test' };
   for (const key of ENV_KEYS) delete baseEnv[key];
   const result = spawnSync(process.execPath, [STATUS_SCRIPT], {
     cwd: sb.workspace,
@@ -283,11 +283,11 @@ test('colour: truecolor by default, 256 and 16 colour fallbacks, and none for NO
 
 test('the card\'s context gauge keeps the family bands: the accent, yellow at 70% and red at 90%', (t) => {
   const sb = sandbox(t);
-  const tone = (percent) => /ctx \[\u001b\[0m\u001b\[38;2;(\d+;\d+;\d+)m/u.exec(runStatus(sb, { percent }).lines.at(-1))[1];
+  const tone = (percent) => /ctx \[\u001b\[0m\u001b\[38;2;(\d+;\d+;\d+)m/u.exec(runStatus(sb, { percent, env: LIGHT }).lines.at(-1))[1];
   assert.equal(tone(42), '255;99;55');
   assert.equal(tone(71), '215;175;0');
   assert.equal(tone(90), '215;95;95');
-  const handoff = runStatus(sb, { percent: 61, env: { LITGROK_AUTO_HANDOFF: '1', LITGROK_AUTO_HANDOFF_PERCENT: '60' } });
+  const handoff = runStatus(sb, { percent: 61, env: { LITGROK_AUTO_HANDOFF: '1', LITGROK_AUTO_HANDOFF_PERCENT: '60', ...LIGHT } });
   assert.match(handoff.lines.at(-1), /\u001b\[38;2;255;99;55m61%/u, 'a handoff percent warns in its own words, not in the gauge');
 });
 
@@ -307,9 +307,10 @@ test('Nerd glyphs are opt-in and need colour for the rounded caps; ascii glyphs 
   const sb = sandbox(t);
   seedLedger(sb.workspace, busyTurn());
   const nerd = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd', ...LIGHT }, turnAgoMs: 100_000, promptId: 'p1' });
-  assert.match(nerd.lines[0], /\ue0b6/u);
-  assert.match(nerd.lines[0], /\ue0b4/u);
-  assert.match(title(nerd), /^▎ {2}🔥LIT {2}\| \ue0b6🔥 LIT\ue0b4 · litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u);
+  assert.doesNotMatch(nerd.raw, /[\ue0b4\ue0b6]/u, 'caps belong to the truecolor card on a dark background');
+  const dark = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd' }, turnAgoMs: 100_000, promptId: 'p1' });
+  assert.match(dark.plain[0], /^╭─ \ue0b6🔥 LIT\ue0b4 · litwork 1m4\ds ─+ \uf0ad 3 · \uf111 \uf0c0 1 · RUNNING \uf111 ─╮$/u);
+  assert.match(title(nerd), /^▎ {2}🔥LIT {2}\| {2}🔥 LIT {2}· litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u);
 
   const nerdPlain = runStatus(sb, { env: { LITGROK_HUD_GLYPHS: 'nerd', LITGROK_HUD_COLOR: '0' }, turnAgoMs: 100_000, promptId: 'p1' });
   assert.match(title(nerdPlain), /^\[🔥LIT\] \| \(🔥 LIT\) · litwork {2}\uf0ad 3 · \uf0c0 1 \uf111 \uf017 1m4\ds$/u, 'without colour the chips fall back to brackets');

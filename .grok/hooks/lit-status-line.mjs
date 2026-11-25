@@ -5,22 +5,17 @@ import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, real
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
+import { drawsRoundCaps, hasIconFont } from './lit-caps.mjs';
+import { cardLines, gauge } from './lit-card.mjs';
 import { rewindCellRgb } from './lit-mark.mjs';
+import { MAX_LINE_CHARACTERS, ROLES, bandOf, cellWidth, clipCells, clock, duration, layoutLine, painter, plainText, segment, sgr, width } from './lit-layout.mjs';
 import { blend, paintSunset } from './lit-sunset.mjs';
 import { CHROME } from './lit-synthwave.mjs';
-import { readHudRecordForCwd, writeContextRecord } from './litgrok-hud-state.mjs';
+import { readHudRecordForCwd, rememberedIconFont, writeContextRecord } from './litgrok-hud-state.mjs';
 import { readOtherSessions } from './session-rows.mjs';
 import { STAGES, readWorkflowState } from './workflow-stage.mjs';
 
 const MAX_INPUT_BYTES = 64 * 1024;
-// The family look: ONE LitGrok accent, flame orange (255 99 55, LitGrok's tick in the v7 armory), for all
-// ordinary text and separators. Colour means more only in the context bands (yellow at 70%, red at 90%),
-// the pink 🔥 LIT chip, the current-stage chip, a warning, a test verdict and a finished turn.
-const ROLES = {
-  accent: [255, 99, 55], dim: [138, 138, 138], empty: [68, 68, 68], rail: [70, 80, 92],
-  yellow: [215, 175, 0], red: [215, 95, 95], green: [95, 175, 95], ink: [11, 15, 20], pink: [255, 45, 149],
-  pillInk: [11, 14, 20],
-};
 // The truecolor [🔥LIT] pill runs from the second to the fifth stop of the synthwave chrome.
 const PILL_STOPS = [CHROME[1], CHROME[4]].map((hex) => [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16)));
 // Truecolor only: the 🔥 LIT chip runs from orange to pink, the current-stage chip from violet to the accent, and
@@ -29,10 +24,8 @@ const VIOLET = [180, 140, 255];
 const CHIP_STOPS = { pink: [[255, 154, 60], ROLES.pink], accent: [VIOLET, ROLES.accent] };
 const CHIP_STEPS = 4;
 const FAINT_EDGE = [48, 54, 61];
-const GAUGE_TRACK = [42, 36, 64];
 // Grok shows five lines and cuts each at 1024 characters, escapes included.
 const MAX_LINES = 5;
-const MAX_LINE_CHARACTERS = 1024;
 const RECORD_SCHEMA = 'litgrok.hook-event/v1';
 // The card reads only the end of the session ledger, enough for a few hundred records.
 const LEDGER_TAIL_BYTES = 128 * 1024;
@@ -42,8 +35,6 @@ const CLOCK_SKEW_MS = 5 * 1000;
 // A turn the ledger has not heard from for this long is no longer shown as running.
 const LEDGER_TURN_QUIET_MS = 10 * 60 * 1000;
 const TOOL_EVENTS = new Set(['PostToolUse', 'PostToolUseFailure']);
-const ANSI_16 = [[0, 0, 0], [205, 0, 0], [0, 205, 0], [205, 205, 0], [0, 0, 238], [205, 0, 205], [0, 205, 205], [229, 229, 229],
-  [127, 127, 127], [255, 0, 0], [0, 255, 0], [255, 255, 0], [92, 92, 255], [255, 0, 255], [0, 255, 255], [255, 255, 255]];
 const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 // Every symbol the card draws, per glyph set. `ascii` is for terminals and fonts without box, braille or emoji.
@@ -87,16 +78,6 @@ async function readInput() {
   }
 }
 
-function plainText(value, fallback) {
-  if (typeof value !== 'string') return fallback;
-  const cleaned = value
-    .replace(/\u001b\[[0-?]*[ -/]*[@-~]/gu, '')
-    .replace(/[\u0000-\u001f\u007f-\u009f]/gu, ' ')
-    .replace(/\s+/gu, ' ')
-    .trim();
-  return cleaned || fallback;
-}
-
 // The installer writes its manifest beside the hooks folder, so an installed copy can name its version.
 function installedVersion() {
   try {
@@ -122,59 +103,6 @@ function finitePercent(value) {
   return typeof value === 'number' && Number.isFinite(value) ? Math.round(Math.max(0, Math.min(100, value))) : null;
 }
 
-function cellWidth(character) {
-  if (/\p{Mark}/u.test(character) || character === '‍') return 0;
-  return /[ᄀ-ᅟ〈〉⺀-꓏가-힣豈-﫿︐-︙︰-﹯＀-｠￠-￦\u{1f300}-\u{1faff}\u{20000}-\u{3fffd}]/u.test(character) ? 2 : 1;
-}
-
-function width(text) {
-  return [...text].reduce((total, character) => total + cellWidth(character), 0);
-}
-
-function clipCells(text, maximum, ellipsis = '…') {
-  if (width(text) <= maximum) return text;
-  let result = '';
-  for (const character of text) {
-    if (width(result) + cellWidth(character) + width(ellipsis) > maximum) break;
-    result += character;
-  }
-  return maximum >= width(ellipsis) ? `${result.trimEnd()}${ellipsis}` : '';
-}
-
-function distance(left, right) {
-  return left.reduce((total, value, index) => total + (value - right[index]) ** 2, 0);
-}
-
-function xterm256(rgb) {
-  const levels = [0, 95, 135, 175, 215, 255];
-  const nearest = (value) => levels.reduce((best, level, index) => (Math.abs(level - value) < Math.abs(levels[best] - value) ? index : best), 0);
-  const cube = rgb.map(nearest);
-  const gray = Math.max(0, Math.min(23, Math.round((rgb.reduce((total, value) => total + value, 0) / 3 - 8) / 10)));
-  const grayValue = 8 + gray * 10;
-  return distance(rgb, [grayValue, grayValue, grayValue]) < distance(rgb, cube.map((index) => levels[index]))
-    ? 232 + gray
-    : 16 + cube[0] * 36 + cube[1] * 6 + cube[2];
-}
-
-// depth is 24 (truecolor), 256 or 16; the 16-colour codes are the nearest of the standard xterm palette.
-function sgr(rgb, depth, background = false) {
-  if (depth === 256) return `\u001b[${background ? 48 : 38};5;${xterm256(rgb)}m`;
-  if (depth === 16) {
-    const index = ANSI_16.reduce((best, color, at) => (distance(rgb, color) < distance(rgb, ANSI_16[best]) ? at : best), 0);
-    return `\u001b[${(index < 8 ? 30 : 82) + index + (background ? 10 : 0)}m`;
-  }
-  return `\u001b[${background ? 48 : 38};2;${rgb.join(';')}m`;
-}
-
-// A painter for one colour depth; depth 0 returns the text untouched.
-function painter(depth) {
-  return {
-    depth,
-    fg: (text, role, bold = false) => (depth && text ? `${bold ? '\u001b[1m' : ''}${sgr(ROLES[role], depth)}${text}\u001b[0m` : text),
-    hue: (text, rgb, bold = false) => (depth && text ? `${bold ? '\u001b[1m' : ''}${sgr(rgb, depth)}${text}\u001b[0m` : text),
-  };
-}
-
 // The rewind look's motion: 'full' cycles the hue, 'subtle' drifts it slowly, 'off' holds one still
 // rainbow frame. Anything else is 'full'.
 function hudMotion(env = process.env) {
@@ -184,17 +112,12 @@ function hudMotion(env = process.env) {
 
 // A filled chip on the pink (the brand) or the accent (the current stage) with dark text and a space of
 // padding each side; a Nerd Font gives it rounded caps, and without colour it falls back to brackets.
-function chip(text, background, paint, nerd, open = '(', close = ')') {
+function chip(text, background, paint, round, open = '(', close = ')') {
   if (!paint.depth) return { plain: `${open}${text}${close}`, painted: `${open}${text}${close}` };
   const fill = `${sgr(ROLES[background], paint.depth, true)}${sgr(ROLES.ink, paint.depth)}\u001b[1m`;
-  if (!nerd) return { plain: ` ${text} `, painted: `${fill} ${text} \u001b[0m` };
+  if (!round) return { plain: ` ${text} `, painted: `${fill} ${text} \u001b[0m` };
   const cap = (glyph) => `${sgr(ROLES[background], paint.depth)}${glyph}\u001b[0m`;
   return { plain: `${text}`, painted: `${cap('')}${fill}${text}\u001b[0m${cap('')}` };
-}
-
-// Below 70% a gauge keeps the accent; 70% turns it yellow and 90% red, as the family gauges do.
-function bandOf(percent) {
-  return percent >= 90 ? 'red' : percent >= 70 ? 'yellow' : 'accent';
 }
 
 function blockBar(percent, cells, glyphs) {
@@ -203,20 +126,6 @@ function blockBar(percent, cells, glyphs) {
   const filled = Math.floor(exact);
   const partial = partials.length > 1 && filled < cells && exact > filled ? Math.max(1, Math.min(partials.length - 1, Math.round((exact - filled) * partials.length))) : 0;
   return { filled: `${full.repeat(filled)}${partials[partial]}`, empty: empty.repeat(cells - filled - (partial > 0 ? 1 : 0)) };
-}
-
-function duration(ms) {
-  const seconds = Math.floor(ms / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m${String(seconds % 60).padStart(2, '0')}s`;
-  return `${Math.floor(seconds / 3600)}h${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}m`;
-}
-
-function clock(ms) {
-  const seconds = Math.floor(Math.max(0, ms) / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const rest = String(seconds % 60).padStart(2, '0');
-  return minutes < 60 ? `${minutes}:${rest}` : `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}:${rest}`;
 }
 
 // Automatic handoff needs Grok's context percent, which only the status line receives. Nothing is
@@ -369,74 +278,25 @@ function phaseOf(now, activity, turn) {
   return { phase: 'idle', timer: null };
 }
 
-/**
- * A piece of a line. `paint` colours the text it is given. A narrow row works down from the highest
- * `drop` or `clip` number (0 never): a drop removes the segment, a clip shortens it through
- * `shrink(cells)`, which returns the text at that width or '' when it cannot get that small. `lead` (and
- * its coloured form `leadPainted`) is what stands before it, instead of the line's separator.
- */
-const segment = (text, paint = (value) => value, { drop = 0, clip = 0, shrink = null, lead = null, leadPainted = null, minCells = 1 } = {}) => ({
-  text, paint, drop, clip, shrink, lead, leadPainted, minCells,
-});
-
-// Lays one line out of segments; `right` segments sit flush with the row's right edge.
-function layoutLine({ left, right = [], separator, rail, maxCells, ellipsis }) {
-  const items = [...left.map((item) => ({ ...item, side: 'left' })), ...right.map((item) => ({ ...item, side: 'right' }))];
-  for (;;) {
-    const join = (side, painted) => items.filter((item) => item.side === side).map((item, index) => {
-      // A segment that comes straight after the first one may take its own lead (`|` after the mark).
-      const own = index === 1 && item.firstLead ? item.firstLead : item;
-      const lead = index === 0 ? '' : own.lead ?? separator.plain;
-      const paintedLead = index === 0 ? '' : own.leadPainted ?? own.lead ?? separator.painted;
-      return painted ? `${paintedLead}${item.paint(item.text)}` : `${lead}${item.text}`;
-    }).join('');
-    const leftPlain = `${rail.plain}${join('left', false)}`;
-    const rightPlain = join('right', false);
-    const bare = `${rail.painted}${join('left', true)}${join('right', true)}`;
-    // The padding that pushes the right side to the edge counts toward Grok's cut as well.
-    const gap = rightPlain ? Math.max(2, Math.min(maxCells - width(leftPlain) - width(rightPlain), MAX_LINE_CHARACTERS - bare.length)) : 0;
-    const total = width(leftPlain) + gap + width(rightPlain);
-    const painted = `${rail.painted}${join('left', true)}${' '.repeat(gap)}${join('right', true)}`;
-    if (total <= maxCells && painted.length <= MAX_LINE_CHARACTERS) return painted;
-    // The highest drop or clip number goes first; a clipped segment can still be dropped later.
-    const steps = items.flatMap((item) => [...(item.drop > 0 ? [{ item, at: item.drop, drop: true }] : []), ...(item.clip > 0 ? [{ item, at: item.clip, drop: false }] : [])]);
-    if (steps.length === 0) {
-      // Nothing left to drop or shorten: the last segment goes, and the first is kept to the end.
-      if (items.length > 1) items.pop();
-      else return `${rail.painted}${clipCells(items[0]?.text ?? '', Math.max(0, maxCells - width(rail.plain)), ellipsis)}`;
-      continue;
-    }
-    const step = steps.reduce((best, candidate) => (candidate.at > best.at || (candidate.at === best.at && !candidate.drop) ? candidate : best));
-    const target = step.item;
-    if (step.drop) {
-      items.splice(items.indexOf(target), 1);
-      continue;
-    }
-    // A segment that cannot get small enough shrinks as far as it goes, and the next step follows.
-    const shrink = (cells) => (target.shrink ? target.shrink(cells) : clipCells(target.text, cells, ellipsis));
-    if (total > maxCells) {
-      const shorter = shrink(Math.max(target.minCells, width(target.text) - (total - maxCells)));
-      if (shorter && width(shorter) < width(target.text)) target.text = shorter;
-    } else {
-      // Escapes count toward Grok's cut too, so a row can be too long while it fits its columns: the
-      // segment shrinks until its painted form is short enough.
-      const excess = painted.length - MAX_LINE_CHARACTERS;
-      const length = target.paint(target.text).length;
-      for (let cells = width(target.text) - 1; cells >= target.minCells; cells -= 1) {
-        const shorter = shrink(cells);
-        if (shorter && (length - target.paint(shorter).length >= excess || cells === target.minCells)) {
-          target.text = shorter;
-          break;
-        }
-      }
-    }
-    target.clip = 0;
-  }
+// The figures as plain values, for the card's bottom edge.
+function figuresOf(status, glyphs, handoff) {
+  const cost = status?.cost?.total_cost_usd;
+  const branch = plainText(status?.workspace?.branch, '');
+  const worktree = plainText(status?.workspace?.git_worktree, '');
+  return {
+    model: plainText(status?.model?.display_name, plainText(status?.model?.id, 'grok')),
+    effort: effortLevel(status?.effort?.level),
+    percent: finitePercent(status?.context_window?.used_percentage),
+    size: windowSize(status?.context_window?.context_window_size),
+    handoff: handoff.active ? handoff.percent : null,
+    cost: typeof cost === 'number' && Number.isFinite(cost) && cost >= 0.005 ? `$${cost < 100 ? cost.toFixed(2) : Math.round(cost)}` : '',
+    branch: branch ? `${clipCells(branch, 32, glyphs.ellipsis)}${worktree ? ` ${glyphs.dot} ${clipCells(worktree, 20, glyphs.ellipsis)}` : ''}` : '',
+  };
 }
 
 // The figures in the family order: model [effort] │ ctx [█▎░] n%/size, then the automatic handoff percent,
 // the session's cost and the Git branch, each left out when Grok did not send it.
-function figureSegments(status, { glyphs, paint, handoff }) {
+function figureSegments(status, { glyphs, paint, handoff, round = false }) {
   const model = plainText(status?.model?.display_name, plainText(status?.model?.id, 'grok'));
   const effort = effortLevel(status?.effort?.level);
   const percent = finitePercent(status?.context_window?.used_percentage);
@@ -453,7 +313,8 @@ function figureSegments(status, { glyphs, paint, handoff }) {
     const band = bandOf(percent);
     const bar = blockBar(percent, 3, glyphs);
     const figure = `${percent}%${size ? `/${size}` : ''}`;
-    segments.push(segment(`ctx [${bar.filled}${bar.empty}] ${figure}`, () => (
+    if (round) segments.push(segment(`ctx ${' '.repeat(5)} ${figure}`, () => `${accent('ctx ')}${gauge(percent, 5, ROLES[band], true)} ${paint.fg(figure, band)}`));
+    else segments.push(segment(`ctx [${bar.filled}${bar.empty}] ${figure}`, () => (
       `${accent('ctx [')}${paint.fg(bar.filled, band)}${paint.fg(bar.empty, 'empty')}${accent(']')} ${paint.fg(figure, band)}`)));
   }
   if (handoff.active) segments.push(segment(`handoff@${handoff.percent}%`, accent, { drop: 4 }));
@@ -477,14 +338,17 @@ function brandText(version, glyphs) {
 // The family mark. In truecolor it is a pill: bold dark ink on a gradient from the second to the fifth
 // stop of LitGrok's synthwave chrome, one background step per cell, with a space in place of each bracket
 // (the same cells). 256 colours make it bold magenta and 16 colours bold cyan, brackets kept.
-function brandSegment(version, glyphs, paint, options = {}) {
+function brandSegment(version, glyphs, paint, { round = false, ...options } = {}) {
   const paintBrand = (text) => {
     if (!paint.depth) return text;
     if (paint.depth === 256) return `\u001b[0m\u001b[1m\u001b[38;5;201m${text}\u001b[0m`;
     if (paint.depth === 16) return `\u001b[0m\u001b[1m\u001b[36m${text}\u001b[0m`;
     const cells = [...text.replace(/^\[/u, ' ').replace(/\]$/u, ' ')];
     const fill = (index) => PILL_STOPS[0].map((value, at) => Math.round(value + (PILL_STOPS[1][at] - value) * (cells.length > 1 ? index / (cells.length - 1) : 0)));
-    return `\u001b[0m\u001b[1m${sgr(ROLES.pillInk, 24)}${cells.map((cell, index) => `${sgr(fill(index), 24, true)}${cell}`).join('')}\u001b[0m`;
+    const body = (from, to) => `\u001b[1m${sgr(ROLES.pillInk, 24)}${cells.slice(from, to).map((cell, at) => `${sgr(fill(from + at), 24, true)}${cell}`).join('')}\u001b[0m`;
+    const last = cells.length - 1;
+    // Round caps take the two padding cells.
+    return round ? `${sgr(fill(0), 24)}\ue0b6\u001b[0m${body(1, last)}${sgr(fill(last), 24)}\ue0b4\u001b[0m` : `\u001b[0m${body(0, last + 1)}`;
   };
   // A narrow row lets the version go before anything else on the mark.
   return segment(brandText(version, glyphs), paintBrand, { ...options, shrink: () => brandText('', glyphs) });
@@ -530,9 +394,9 @@ function waitingOf(activity) {
 // Without colour it reads 🔥 LIT IGNITED · <discipline> 🔥. A narrow row clips the discipline, never the frame.
 // While lit-adhd is the discipline the mark keeps its shape but the discipline rides a hue that turns
 // (one still rainbow frame when the HUD motion is off): the tint, never a flash.
-function ignitionSegment(discipline, glyphs, paint, nerd, options = {}) {
+function ignitionSegment(discipline, glyphs, paint, round, options = {}) {
   const label = glyphs.fire ? `${glyphs.fire} LIT` : 'LIT';
-  const brand = chip(label, 'pink', paint, nerd, '', '');
+  const brand = chip(label, 'pink', paint, round, '', '');
   const build = (name) => `${brand.plain} IGNITED ${glyphs.dot} ${name}${glyphs.fire ? ` ${glyphs.fire}` : ''}`;
   const frame = width(build(''));
   const ignitionLook = options.look ?? lookOf(discipline);
@@ -575,16 +439,16 @@ function figureLeads(figures, glyphs, paint, afterMark) {
 // handoff percent, cost and branch. It is the whole HUD between workflows and in LITGROK_HUD_LINES=1
 // mode. A narrow row gives up the branch, the handoff percent, the cost and the version, then clips the
 // model name and last the discipline.
-function compactRow({ status, discipline, version, glyphs, paint, nerd, handoff, maxCells, looks = null, phase = null }) {
-  const [model, context, ...extras] = figureSegments(status, { glyphs, paint, handoff });
+function compactRow({ status, discipline, version, glyphs, paint, round, handoff, maxCells, looks = null, phase = null }) {
+  const [model, context, ...extras] = figureSegments(status, { glyphs, paint, handoff, round });
   const figures = [model, context];
   if (discipline) {
     figures.push(looks?.look === 'lanes'
-      ? ignitionSegment(discipline, glyphs, paint, nerd, { clip: 1, lanes: looks.lanes, look: looks.look })
-      : ignitionSegment(discipline, glyphs, paint, nerd, { clip: 1 }));
+      ? ignitionSegment(discipline, glyphs, paint, round, { clip: 1, lanes: looks.lanes, look: looks.look })
+      : ignitionSegment(discipline, glyphs, paint, round, { clip: 1 }));
   }
   figures.push(...extras);
-  const left = [brandSegment(version, glyphs, paint, { clip: 3 }), ...figureLeads(figures, glyphs, paint, true)];
+  const left = [brandSegment(version, glyphs, paint, { clip: 3, round }), ...figureLeads(figures, glyphs, paint, true)];
   const right = [];
   if (looks?.waiting) right.push(segment(`YOUR TURN · ${looks.waiting.reason}`, (text) => paint.fg(text, 'yellow', true), {
     drop: 0.6, clip: 3, minCells: width('YOUR TURN'),
@@ -624,7 +488,7 @@ function mapPieces(workflow, { rail, compact }, glyphs) {
     }
     if (index === current) pieces.push({ text: stageLabel(workflow, glyphs), role: 'current' });
     else if (index > current) pieces.push({ text: compact ? glyphs.dot : `${stage} ${glyphs.dot}`, role: 'dim' });
-    else if (workflow.visited.includes(stage)) pieces.push({ text: compact ? glyphs.tick : `${stage} ${glyphs.tick}`, role: 'dim' });
+    else if (workflow.visited.includes(stage)) pieces.push({ text: compact ? glyphs.tick : `${stage} ${glyphs.tick}`, role: 'dim', behind: true });
     else pieces.push({ text: compact ? glyphs.unlit : stage, role: 'dim' });
   });
   return { pieces, current };
@@ -632,9 +496,9 @@ function mapPieces(workflow, { rail, compact }, glyphs) {
 
 // While a turn runs, one pink cell rides the rail into the current stage and moves on at each redraw
 // (Grok redraws about every 300 ms during a turn).
-function renderMap(workflow, tier, { paint, glyphs, nerd, running, now }) {
+function renderMap(workflow, tier, { paint, glyphs, round, running, now }) {
   const { pieces, current } = mapPieces(workflow, tier, glyphs);
-  const pill = (text) => chip(text, 'accent', paint, nerd, '[', ']');
+  const pill = (text) => chip(text, 'accent', paint, round, '[', ']');
   const plain = pieces.map(({ text, role }) => (role === 'current' ? pill(text).plain : text)).join('');
   if (!paint.depth) return { plain, painted: plain };
   const head = running ? [current > 0 ? current : 1, Math.floor(now / 300) % tier.rail] : null;
@@ -657,7 +521,7 @@ function mapLine(workflow, context, rail, maxCells) {
     if (width(map.plain) <= room && map.painted.length + rail.painted.length <= MAX_LINE_CHARACTERS) return `${rail.painted}${map.painted}`;
   }
   const label = clipCells(stageLabel(workflow, context.glyphs), Math.max(1, room - 2), context.glyphs.ellipsis);
-  return `${rail.painted}${chip(label, 'accent', context.paint, context.nerd, '[', ']').painted}`;
+  return `${rail.painted}${chip(label, 'accent', context.paint, context.round, '[', ']').painted}`;
 }
 
 function toolLabel(name) {
@@ -673,8 +537,8 @@ function railFor(paint, glyphs) {
 // The card's title: the mark, the pink 🔥 LIT chip and the discipline, then at the right edge the turn's
 // tool calls and subagents beside its state, as the family card's corner reads (● 1m42s running,
 // ✓ complete, ⚠ a warning, idle).
-function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, activity, maxCells, rail, now, looks = null }) {
-  const brand = chip(glyphs.fire ? `${glyphs.fire} LIT` : 'LIT', 'pink', paint, nerd);
+function titleLine({ discipline, version, glyphs, paint, round, phase, warning, activity, maxCells, rail, now, looks = null }) {
+  const brand = chip(glyphs.fire ? `${glyphs.fire} LIT` : 'LIT', 'pink', paint, round);
   const name = discipline ?? 'workflow';
   const look = looks?.look ?? lookOf(discipline);
   const lanes = look === 'lanes' ? (looks?.lanes ?? laneStates(null)) : null;
@@ -713,7 +577,7 @@ function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, a
     }
     : (cells) => `${glyphs.dot} ${disciplineName(name, glyphs, Math.max(1, cells - width(glyphs.dot) - 1))}`;
   const left = [
-    brandSegment(version, glyphs, paint, { clip: 3 }),
+    brandSegment(version, glyphs, paint, { clip: 3, round }),
     { ...segment(brand.plain, () => brand.painted), lead: ' | ', leadPainted: paint.fg(' | ', 'accent') },
     segment(nameText, namePaint, {
       clip: 0.5, minCells: lanes ? width(`REVIEW ${reported}/${lanes.length}`) : width(glyphs.dot) + 2, shrink: shrinkName,
@@ -740,14 +604,14 @@ function titleLine({ discipline, version, glyphs, paint, nerd, phase, warning, a
 
 // The detail line: checked plan tasks with the next one, the last test verdict and the long form of a
 // warning on the left; the tool in flight with its clock on the right.
-function detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail }) {
+function detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail, round = false }) {
   const left = [];
   const plan = workflow?.plan;
   if (plan?.total > 0) {
-    const cells = Math.min(plan.total, 10);
+    const cells = round ? Math.max(4, Math.min(plan.total, 10)) : Math.min(plan.total, 10);
     const filled = Math.round((plan.done / plan.total) * cells);
     const bar = `${glyphs.full.repeat(filled)}${glyphs.empty.repeat(cells - filled)}`;
-    left.push(segment(`task ${plan.done}/${plan.total} ${bar}`, () => `${paint.fg('task ', 'dim')}${paint.fg(`${plan.done}/${plan.total}`, 'accent', true)} ${paint.fg(glyphs.full.repeat(filled), 'accent')}${paint.fg(glyphs.empty.repeat(cells - filled), 'empty')}`));
+    left.push(segment(`task ${plan.done}/${plan.total} ${bar}`, () => `${paint.fg('task ', 'dim')}${paint.fg(`${plan.done}/${plan.total}`, 'accent', true)} ${round ? gauge((plan.done / plan.total) * 100, cells, ROLES.accent, true) : `${paint.fg(glyphs.full.repeat(filled), 'accent')}${paint.fg(glyphs.empty.repeat(cells - filled), 'empty')}`}`));
     if (typeof plan.next === 'string' && plan.next && plan.done < plan.total) {
       const lead = `next ${glyphs.next} `;
       const title = plainText(plan.next, '');
@@ -831,14 +695,18 @@ function extensionsNoticeSession(sessionId) {
   }
 }
 
+function extensionsSegments(paint) {
+  return [
+    segment('LitFamily extensions', (text) => paint.fg(text, 'accent', true)),
+    segment('github.com/wjgoarxiv/wjgoarxiv-skills', (text) => paint.fg(text, 'accent')),
+    segment('litgrok extensions install <skill>', (text) => paint.fg(text, 'accent'), { drop: 1 }),
+    segment('decks, documents, figures, design and video covers install beside LitGrok', (text) => paint.fg(text, 'dim'), { drop: 2 }),
+  ];
+}
+
 function extensionsLine({ glyphs, paint, maxCells, rail }) {
   return layoutLine({
-    left: [
-      segment('LitFamily extensions', (text) => paint.fg(text, 'accent', true)),
-      segment('github.com/wjgoarxiv/wjgoarxiv-skills', (text) => paint.fg(text, 'accent')),
-      segment('litgrok extensions install <skill>', (text) => paint.fg(text, 'accent'), { drop: 1 }),
-      segment('decks, documents, figures, design and video covers install beside LitGrok', (text) => paint.fg(text, 'dim'), { drop: 2 }),
-    ],
+    left: extensionsSegments(paint),
     separator: { plain: ` ${glyphs.dot} `, painted: ` ${paint.fg(glyphs.dot, 'dim')} ` },
     rail,
     maxCells,
@@ -846,9 +714,9 @@ function extensionsLine({ glyphs, paint, maxCells, rail }) {
   });
 }
 
-function figuresLine({ status, glyphs, paint, handoff, maxCells, rail }) {
+function figuresLine({ status, glyphs, paint, handoff, maxCells, rail, round }) {
   return layoutLine({
-    left: figureLeads(figureSegments(status, { glyphs, paint, handoff }), glyphs, paint, false),
+    left: figureLeads(figureSegments(status, { glyphs, paint, handoff, round }), glyphs, paint, false),
     separator: { plain: ' ', painted: ' ' },
     rail,
     maxCells,
@@ -856,10 +724,9 @@ function figuresLine({ status, glyphs, paint, handoff, maxCells, rail }) {
   });
 }
 
-// The truecolor finish of a laid-out line: the same cells in other colours, with rounded caps for the gauge's
-// brackets where the terminal draws them. It comes after the layout, so no word, row or column moves, and a step
+// The truecolor finish of a laid-out line: the same cells in other colours. It comes after the layout, so no word, row or column moves, and a step
 // that would push the line past Grok's cut is left out.
-function finishLine(line, { glyphs, round, edge }) {
+function finishLine(line, { glyphs, edge }) {
   const fits = (next) => (next.length <= MAX_LINE_CHARACTERS ? next : line);
   for (const [role, [from, to]] of Object.entries(CHIP_STOPS)) {
     const fill = `${sgr(ROLES[role], 24, true)}${sgr(ROLES.ink, 24)}\u001b[1m`;
@@ -878,25 +745,8 @@ function finishLine(line, { glyphs, round, edge }) {
     const close = `\u001b[0m${sgr(ROLES[role], 24)}\ue0b4`;
     line = fits(`${head}${sgr(ROLES.ink, 24)}\u001b[1m${body}${rest.startsWith(close) ? `${cap(close, to)}${rest.slice(close.length)}` : rest}`);
   }
-  if (round) {
-    const bracket = (text) => `${sgr(ROLES.accent, 24)}${text}\u001b[0m`;
-    const start = line.indexOf(bracket('ctx ['));
-    const end = line.indexOf(bracket(']'), start);
-    if (start >= 0 && end > start) {
-      const [, color = '', filled = '', empty = ''] = /^(?:(\u001b\[[\d;]+m)([█▏▎▍▌▋▊▉]+)\u001b\[0m)?(?:\u001b\[[\d;]+m(░+)\u001b\[0m)?$/u.exec(line.slice(start + bracket('ctx [').length, end)) ?? [];
-      const track = sgr(GAUGE_TRACK, 24);
-      const gauge = `${bracket('ctx ')}${color || track}\ue0b6\u001b[0m${sgr(GAUGE_TRACK, 24, true)}${color}${filled}${' '.repeat(empty.length)}\u001b[0m${/^█+$/u.test(filled) && !empty ? color : track}\ue0b4\u001b[0m`;
-      line = fits(`${line.slice(0, start)}${gauge}${line.slice(end + bracket(']').length)}`);
-    }
-  }
   const plainEdge = `${sgr(ROLES.accent, 24)}${glyphs.rail}`;
   return line.startsWith(plainEdge) ? fits(`${sgr(edge, 24)}${line.slice(plainEdge.length - glyphs.rail.length)}`) : line;
-}
-
-// The caps U+E0B6 and U+E0B4 need a Nerd Font the user named, or a terminal that draws them itself: Windows
-// Terminal and the VS Code terminal.
-function drawsRoundCaps(glyphSetting, env = process.env) {
-  return glyphSetting === 'nerd' || (glyphSetting === undefined && (Boolean(env.WT_SESSION) || env.TERM_PROGRAM === 'vscode'));
 }
 
 // A terminal that names a light background (COLORFGBG ends in 7 or 15) keeps the rows as they were.
@@ -906,11 +756,11 @@ function lightBackground(env = process.env) {
 
 // The finished rows with the sunset in the cells they leave free. It stays away from a finished turn and stands
 // above the extensions row, and moves only while a turn runs with the motion full.
-function dressed(lines, { glyphs, round, running, now, maxCells, scene, notice, waiting, rewind }) {
+function dressed(lines, { glyphs, running, now, maxCells, scene, notice, waiting, rewind }) {
   const out = lines.map((line, row) => {
     const share = lines.length > 1 ? (row / (lines.length - 1)) * 2 : 0;
     const edge = share < 1 ? blend(ROLES.pink, VIOLET, share) : blend(VIOLET, ROLES.accent, share - 1);
-    return finishLine(line, { glyphs, round, edge: running ? edge : blend(edge, FAINT_EDGE, 0.45) });
+    return finishLine(line, { glyphs, edge: running ? edge : blend(edge, FAINT_EDGE, 0.45) });
   });
   if (!scene) return out;
   const seconds = running && hudMotion() === 'full' ? now / 1000 : null;
@@ -941,7 +791,9 @@ function render(input) {
   const paint = painter(depth);
   const glyphSetting = process.env.LITGROK_HUD_GLYPHS;
   const glyphs = Object.hasOwn(GLYPHS, glyphSetting ?? '') ? GLYPHS[glyphSetting] : GLYPHS.basic;
-  const nerd = glyphSetting === 'nerd';
+  // Round caps belong to truecolor on a dark background; everything else keeps one square form.
+  const framed = depth === 24 && glyphs !== GLYPHS.ascii && !lightBackground();
+  const round = framed && drawsRoundCaps(process.env, () => rememberedIconFont(() => hasIconFont()));
   // Grok sets COLUMNS to the width of the row; without it the row keeps to 79 cells.
   const columns = Number.parseInt(process.env.COLUMNS ?? '', 10);
   const maxCells = Number.isFinite(columns) && columns >= 20 ? Math.min(columns, 1000) - 1 : 79;
@@ -953,7 +805,7 @@ function render(input) {
   }
   const version = installedVersion();
   const now = Date.now();
-  const shared = { status: input, discipline, version, glyphs, paint, nerd, handoff, maxCells, now };
+  const shared = { status: input, discipline, version, glyphs, paint, round, handoff, maxCells, now };
   let activity = null;
   try {
     activity = turnActivity(readLedgerTail(input), input?.prompt_id);
@@ -974,8 +826,8 @@ function render(input) {
     waiting: waitingOf(activity),
     burst: phase.phase === 'complete' && workflow?.stage === 'done',
   };
-  const finish = (lines, notice = false) => (depth !== 24 || glyphs === GLYPHS.ascii || lightBackground() ? lines : dressed(lines, {
-    glyphs, round: drawsRoundCaps(glyphSetting), running: turn.running, now, maxCells,
+  const finish = (lines, notice = false) => (!framed ? lines : dressed(lines, {
+    glyphs, running: turn.running, now, maxCells,
     scene: phase.phase !== 'complete', notice, waiting: Boolean(looks.waiting), rewind: looks.look === 'rewind',
   }));
   if (process.env.LITGROK_HUD_LINES === '1') return finish([compactRow({ ...shared, looks, phase })]);
@@ -994,14 +846,28 @@ function render(input) {
     notice = false;
   }
   if (notice) otherLines.push(extensionsLine({ glyphs, paint, maxCells, rail }));
+  if (framed) {
+    const live = turn.running ? activity?.live ?? null : null;
+    const card = cardLines({
+      glyphs, round, phase, activity, workflow, live, looks, discipline, version, now, maxCells, running: turn.running, motion: hudMotion(),
+      warning: warningText(input, activity, handoff), figures: figuresOf(input, glyphs, handoff),
+      others: others.map((row) => ({ ...row, label: plainText(row.label, 'session'), pane: plainText(row.pane, '') })),
+      notice: notice ? extensionsSegments(paint) : null,
+      mapAt: (tier) => mapPieces(workflow, tier, glyphs),
+      next: workflow?.plan && workflow.plan.done < workflow.plan.total ? plainText(workflow.plan.next, '') : '',
+      spinner: glyphs.spinner[Math.floor(now / 100) % glyphs.spinner.length], toolName: live ? toolLabel(live.name) : '',
+      shownLines: Number.parseInt(process.env.LINES ?? '', 10) || 0,
+    });
+    if (card) return card;
+  }
   // The card shows while a discipline is active or the session has a workflow stage; otherwise the
   // HUD is the single row, with the other sessions' rows under it.
   if (!discipline && !workflow?.stage) return finish([compactRow({ ...shared, looks, phase }), ...otherLines], notice);
   const warning = warningText(input, activity, handoff);
   const live = turn.running ? activity?.live ?? null : null;
   const lines = [titleLine({ ...shared, phase, warning, activity: phase.phase === 'idle' ? null : activity, rail, looks })];
-  if (workflow?.stage) lines.push(mapLine(workflow, { paint, glyphs, nerd, running: turn.running, now }, rail, maxCells));
-  const detail = detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail });
+  if (workflow?.stage) lines.push(mapLine(workflow, { paint, glyphs, round, running: turn.running, now }, rail, maxCells));
+  const detail = detailLine({ workflow, live, warning, glyphs, paint, now, maxCells, rail, round });
   if (detail) lines.push(detail);
   lines.push(figuresLine({ ...shared, rail }));
   return finish([...lines, ...otherLines], notice);

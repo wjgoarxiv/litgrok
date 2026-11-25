@@ -464,6 +464,13 @@ function configDetail(...results) {
   return results.filter(Boolean).map((result) => ` · ${result.detail}`).join('');
 }
 
+// The same results as rows of the closing card. A setting of the user's that was left as it is needs their eye.
+function settingRows(statusLine, notification) {
+  return [['Status line', statusLine], ['Finish notice', notification]].filter(([, result]) => result).map(([label, { changed, detail }]) => ({
+    status: changed || /already managed/u.test(detail) ? 'ok' : /preserved|not configured/u.test(detail) ? 'warning' : 'note', label, value: detail,
+  }));
+}
+
 function packageVersion() {
   try {
     const version = JSON.parse(readFileSync(join(PACKAGE_ROOT, 'package.json'), 'utf8')).version;
@@ -497,10 +504,26 @@ function terminalColumns(stdout, env) {
 // The synthwave mark at the terminal's colour depth; without colour the glyph scene, and the plain
 // line where the locale cannot draw block glyphs. A pipe, an agent's tool call or a CI log is not a
 // terminal anyone looks at, so it gets only the plain line. Only the installer frame and --help print it.
-function markRows(stdout, env, colors) {
+function markRows(stdout, env, colors, columns = terminalColumns(stdout, env)) {
   if (!stdout.isTTY) return synthwaveRows({ mode: 'plain' });
   const mode = colors ? terminalMode({ env, isTTY: stdout.isTTY }) : unicodeTerminal(env) ? 'mono' : 'plain';
-  return synthwaveRows({ columns: terminalColumns(stdout, env), mode });
+  return synthwaveRows({ columns, mode });
+}
+
+// Beside the cards a short window gets a smaller mark, so the mark and the first card share the screen.
+function cardMarkColumns(stdout, env) {
+  const rows = stdout.rows || 24;
+  return Math.min(terminalColumns(stdout, env) - 2, rows >= 48 ? 100 : rows >= 34 ? 75 : 43);
+}
+
+// A path the way a person reads it: from `~` when it is inside the home folder.
+function homePath(path, env) {
+  const home = resolve(env.HOME || env.USERPROFILE || homedir());
+  return path === home || path.startsWith(`${home}${sep}`) ? `~${path.slice(home.length)}` : path;
+}
+
+function alternateScope(options) {
+  return options.scope === 'project' ? 'project scope; use --user for user scope' : 'user scope; use --project for project scope';
 }
 
 function printInstallFrame(stdout, options, env, fileCount, root, cards) {
@@ -510,10 +533,8 @@ function printInstallFrame(stdout, options, env, fileCount, root, cards) {
   const rule = `  ${'━'.repeat(Math.max(1, Math.min(46, terminalColumns(stdout, env) - 2)))}`;
   const payloadLabel = Number.isInteger(fileCount) ? `${fileCount} files · byte-identical copies only` : 'packaged .grok tree · byte-identical copies only';
   if (cards) {
-    stdout.write(`\n${markRows(stdout, env, colors).join('\n')}\n`);
-    stdout.write(`  litgrok v${packageVersion()} · Grok Build skills, project rules, and hooks\n\n`);
-    cards.text([`${options.command === 'install' ? 'Installs into' : 'Removes from'} ${scopeDescription(options, root)}`, payloadLabel]);
-    stdout.write('\n');
+    cards.banner(markRows(stdout, env, colors, cardMarkColumns(stdout, env)), `litgrok v${packageVersion()} · Grok Build skills, project rules, and hooks`);
+    cards.intro(`${options.command === 'install' ? 'Installs into' : 'Removes from'} ${homePath(root, env)}, ${options.scope} scope (${options.scope === 'project' ? '--user for user' : '--project for project'} scope). ${Number.isInteger(fileCount) ? `${fileCount} files, byte-identical copies` : 'Byte-identical copies only'}.`);
     return colors;
   }
   stdout.write(`${rule}\n`);
@@ -538,21 +559,39 @@ function statusMark(status, colors) {
   return colors ? paint('○', '38;2;148;163;184', true) : '[skip]';
 }
 
-// The same steps for a person at a terminal: one finished row each.
+// The same steps for a person at a terminal: one card, then one row. Warnings wait until the card is folded.
 class CardProgress {
-  constructor(cards) {
-    this.cards = cards;
+  constructor(cards, options) {
+    this.notes = [];
+    this.work = cards.work({
+      title: options.command === 'install' ? `Installing LitGrok ${packageVersion()}` : 'Removing LitGrok',
+      steps: [
+        { name: 'Payload', text: 'read the packaged files' },
+        { name: 'Safety', text: 'check the install path' },
+        { name: 'Ownership', text: 'compare every file with the last install' },
+        { name: 'Write', text: options.command === 'install' ? 'copy the files' : 'remove the files' },
+      ],
+    });
   }
 
-  open() {}
+  open() {
+    this.work.open();
+  }
 
   start() {}
 
-  finish(status, label, detail) {
-    this.cards.step(status, `${label[0]}${label.slice(1).toLowerCase()}`, detail || 'done');
+  note(stderr, line) {
+    this.notes.push([stderr, line]);
   }
 
-  close() {}
+  finish(status, label, detail) {
+    this.work.finish(status === 'skipped' ? 'note' : status, `${label[0]}${label.slice(1).toLowerCase()}`, detail || 'done');
+  }
+
+  close() {
+    this.work.close({ warnings: this.notes.length });
+    for (const [stderr, line] of this.notes.splice(0)) stderr.write(`${line}\n`);
+  }
 }
 
 class InstallProgress {
@@ -581,6 +620,10 @@ class InstallProgress {
       this.render();
     }, SPINNER_INTERVAL_MS);
     if (typeof this.timer.unref === 'function') this.timer.unref();
+  }
+
+  note(stderr, line) {
+    stderr.write(`${line}\n`);
   }
 
   finish(status, label, detail, elapsed) {
@@ -649,17 +692,17 @@ function receiptCard(options, root, colors, { status, written, current }) {
   ].join('\n');
 }
 
-function closingCard(cards, options, root, { status, written, current, ground }) {
+function closingCard(cards, options, root, env, { files, settings, ground }) {
   const removed = options.command === 'uninstall';
-  const title = removed ? 'LitGrok is removed' : status === 'Ready' ? `LitGrok ${packageVersion()} is ready` : `LitGrok ${packageVersion()} was already current`;
   cards.summary({
-    title,
+    title: removed ? 'LitGrok is removed' : `LitGrok ${packageVersion()} is installed`,
     sections: [
       {
         head: removed ? 'Removed' : 'Installed',
         rows: [
-          { status: 'ok', label: 'Scope', value: scopeDescription(options, root) },
-          ...(removed ? [] : [{ status: 'ok', label: 'Files', value: `${written} written · ${current} already-current` }]),
+          { status: 'ok', label: 'Scope', value: `${homePath(root, env)} (${alternateScope(options)})` },
+          { status: 'ok', label: 'Files', value: files },
+          ...settings,
           ...(ground ? [{ status: 'ok', label: 'Ground rules', value: ground }] : []),
         ],
       },
@@ -709,21 +752,22 @@ function errorText(error) {
   return error instanceof Error ? error.message : String(error);
 }
 
-function reportFailure(error, { stderr, stdout, options, root, colors, step, cards }) {
+function reportFailure(error, { stderr, stdout, options, root, env, colors, step, cards }) {
   const lines = Array.isArray(error?.stderrLines) ? error.stderrLines : [`litgrok: ${errorText(error)}`];
+  if (cards) stdout.write('\n');
   for (const line of lines) stderr.write(`${line}\n`);
   const showHookTrust = error?.legacyOwnershipConflict !== true;
   if (cards) {
     cards.summary({
-      title: `LitGrok ${options.command} failed`,
+      title: `${options.command.toUpperCase()} STOPPED`,
       failed: true,
       sections: [
         {
           head: 'What happened',
           rows: [
-            { status: 'failed', label: 'Step', value: error?.step ?? step },
+            { status: 'failed', label: 'Stage', value: error?.step ?? step },
             { status: 'failed', label: 'Reason', value: errorText(error) },
-            { label: 'Scope', value: scopeDescription(options, root) },
+            { label: 'Scope', value: `${homePath(root, env)} (${alternateScope(options)})` },
           ],
         },
         {
@@ -1064,6 +1108,12 @@ function extensionLines(caches, competing) {
   ];
 }
 
+// Under the cards a command stands on a line of its own, whole, so it can be copied.
+function commandsApart(line) {
+  const [, lead, first, second] = /^([^:]+:) (litgrok .*|git clone \S+)(?:, then (grok .*))?$/u.exec(line) ?? [];
+  return first ? [lead, { command: first }, ...(second ? ['then', { command: second }] : [])] : [line];
+}
+
 function extensionsCard(colors, caches, competing = []) {
   const titleColor = '38;2;255;99;55';
   return [
@@ -1378,7 +1428,7 @@ export async function run(args, context = {}) {
   const colors = printInstallFrame(stdout, options, env, files?.length, displayRoot, cards);
 
   if (payloadError) {
-    reportFailure(payloadError, { stderr, stdout, options, root: displayRoot, colors, step: 'PAYLOAD', cards });
+    reportFailure(payloadError, { stderr, stdout, options, root: displayRoot, env, colors, step: 'PAYLOAD', cards });
     return 1;
   }
 
@@ -1435,14 +1485,14 @@ export async function run(args, context = {}) {
     const ground = options.command === 'install' && options.scope === 'user'
       ? (includeGround ? 'in your user rule' : 'left out (litgrok ground on adds them)')
       : null;
-    closingCard(cards, options, displayRoot, { ...result, ground });
+    closingCard(cards, options, displayRoot, env, { ...result, ground });
     if (!caches) return;
     const lines = extensionLines(caches, competingSummary({ env, cwd }));
     // The first five lines are one paragraph.
-    cards.text([lines.slice(0, 5).join(' '), ...lines.slice(5)], 'LitFamily extensions');
+    cards.text([lines.slice(0, 5).join(' '), ...lines.slice(5).flatMap(commandsApart)], 'LitFamily extensions');
   }
 
-  const progress = cards ? new CardProgress(cards) : new InstallProgress(stdout, colors);
+  const progress = cards ? new CardProgress(cards, options) : new InstallProgress(stdout, colors);
   progress.open();
   let step = 'PAYLOAD';
   try {
@@ -1514,8 +1564,8 @@ export async function run(args, context = {}) {
       };
     });
 
-    for (const preserved of states.preservedSkills) stderr.write(`Warning: keeping modified legacy skill at ${preserved}; review or remove it yourself.\n`);
-    for (const kept of states.kept) stderr.write(`${keptFileWarning(kept)}\n`);
+    for (const preserved of states.preservedSkills) progress.note(stderr, `Warning: keeping modified legacy skill at ${preserved}; review or remove it yourself.`);
+    for (const kept of states.kept) progress.note(stderr, keptFileWarning(kept));
     const caches = oldEngineCaches(env, home, states.manifest, states.counts.owned + states.legacyCounts.owned);
 
     step = 'WRITE';
@@ -1547,7 +1597,10 @@ export async function run(args, context = {}) {
         throw error;
       }
       progress.close();
-      closeInstall({ status: 'Removed', written: 0, current: states.counts.current });
+      closeInstall({
+        status: 'Removed', written: 0, current: states.counts.current,
+        files: `${removed} removed · ${states.counts.missing} already absent`, settings: settingRows(statusLineResult, notifyResult),
+      });
       return 0;
     }
 
@@ -1566,13 +1619,18 @@ export async function run(args, context = {}) {
       if (groundAfter) applyStoredGround(home, groundAfter);
       skipStep(progress, 'WRITE', `SKIPPED · 0 written · ${states.counts.current} already-current${statusDetail}`);
       progress.close();
-      closeInstall({ status: 'Already current', written: 0, current: states.counts.current }, caches);
+      closeInstall({
+        status: 'Already current', written: 0, current: states.counts.current,
+        files: `already current · 0 written · ${states.counts.current} already-current`, settings: settingRows(statusLineResult, notifyResult),
+      }, caches);
       return 0;
     }
 
     const writeStarted = process.hrtime.bigint();
     progress.start('WRITE');
     let installed = 0;
+    let written = '';
+    let settings = [];
     try {
       for (let index = 0; index < files.length; index += 1) {
         if (states.states[index] === 'current') continue;
@@ -1594,18 +1652,20 @@ export async function run(args, context = {}) {
       const legacyDetail = removedLegacy === 0 ? '' : ` · ${removedLegacy} legacy removed`;
       const statusDetail = configDetail(statusLineResult, notifyResult);
       if (groundAfter) applyStoredGround(home, groundAfter);
-      progress.finish('ok', 'WRITE', `${installed} written · ${states.counts.current} already-current · ${states.counts.owned} owned${legacyDetail}${statusDetail}`, elapsedSince(writeStarted));
+      written = `${installed} written · ${states.counts.current} already-current · ${states.counts.owned} owned${legacyDetail}`;
+      settings = settingRows(statusLineResult, notifyResult);
+      progress.finish('ok', 'WRITE', `${written}${statusDetail}`, elapsedSince(writeStarted));
     } catch (error) {
       progress.finish('failed', 'WRITE', errorText(error), elapsedSince(writeStarted));
       if (error && typeof error === 'object') error.step = 'WRITE';
       throw error;
     }
     progress.close();
-    closeInstall({ status: 'Ready', written: installed, current: states.counts.current }, caches);
+    closeInstall({ status: 'Ready', written: installed, current: states.counts.current, files: written, settings }, caches);
     return 0;
   } catch (error) {
     progress.close();
-    reportFailure(error, { stderr, stdout, options, root: displayRoot, colors, step, cards });
+    reportFailure(error, { stderr, stdout, options, root: displayRoot, env, colors, step, cards });
     return 1;
   } finally {
     cleanupGround();

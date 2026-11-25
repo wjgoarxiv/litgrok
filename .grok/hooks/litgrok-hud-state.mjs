@@ -193,3 +193,30 @@ export function readNewestContextRecord(env = process.env, now = new Date()) {
     return null;
   }
 }
+
+const FONT_ANSWER = 'icon-font.json';
+const FONT_ANSWER_MS = 24 * 60 * 60 * 1000;
+
+/** Whether an icon font is installed, as `look()` last said within a day: the status line runs too often to look each time. */
+export function rememberedIconFont(look, env = process.env, now = Date.now()) {
+  let root = null;
+  try {
+    root = stateRootPath(env, [], true);
+    const path = join(root, FONT_ANSWER);
+    const status = lstatSync(path);
+    if (status.isFile() && status.size <= MAX_RECORD_BYTES) {
+      const record = JSON.parse(readFileSync(path, 'utf8'));
+      const age = now - Date.parse(record?.at);
+      if (typeof record?.found === 'boolean' && age >= 0 && age <= FONT_ANSWER_MS) return record.found;
+    }
+  } catch {
+    // No answer yet, or none that can be trusted: look again.
+  }
+  const found = look();
+  try {
+    if (root) writeRecord(root, FONT_ANSWER, { found, at: new Date(now).toISOString() });
+  } catch {
+    // Without a state folder each run looks for itself.
+  }
+  return found;
+}

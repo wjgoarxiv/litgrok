@@ -14,7 +14,9 @@ import { run } from '../bin/litgrok.mjs';
 
 const BIN = fileURLToPath(new URL('../bin/litgrok.mjs', import.meta.url));
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
-const ENV = Object.freeze({ LANG: 'en_US.UTF-8', TERM: 'xterm-256color', COLORTERM: 'truecolor' });
+const ENV = Object.freeze({ LANG: 'en_US.UTF-8', TERM: 'xterm-256color', COLORTERM: 'truecolor', SSH_CONNECTION: 'test' });
+const ROUND = Object.freeze({ ...ENV, LITGROK_HUD_GLYPHS: 'round' });
+const CAPS = /[\ue0b4\ue0b6]/u;
 const RIGHT = '\u001b[C';
 const LEFT = '\u001b[D';
 
@@ -50,7 +52,7 @@ function fakeHost(platform = 'linux') {
   return host;
 }
 
-const QUESTION = { tag: 'LIT 1/1', title: 'Ground rules', note: 'Adds a short section; No leaves it out.', initial: false, yesText: 'add them', noText: 'leave them out' };
+const QUESTION = { tag: 'LIT 1/1', title: 'Ground rules', note: 'Adds a short section; No leaves it out.', initial: false, yesText: 'add', noText: 'leave out' };
 
 async function ask(keys, { question = QUESTION, env = ENV, size, host = fakeHost() } = {}) {
   const io = terminal(size);
@@ -79,10 +81,10 @@ test('the card names the step, the question, the default and the keys, and y, n 
     const { value, stdout, stdin } = await answerOf(keys);
     assert.equal(value, expected, JSON.stringify(keys));
     const first = plain(stdout.frames.find((frame) => frame.includes('Ctrl+C stop')));
-    assert.match(first, /LIT 1\/1 +Ground rules \[y\/N\]/u);
+    assert.match(first, /╭─ {2}LIT 1\/1 {2}· Ground rules \[y\/N\] ─/u);
     assert.match(first, /❯ No \(default\)/u);
     assert.match(first, /Enter = No/u);
-    assert.match(stdout.text(), expected ? /✓ Ground rules +add them\n$/u : /✓ Ground rules +leave them out\n$/u, 'the card folds to one row');
+    assert.match(stdout.text(), expected ? /✓ Ground rules {9}add\n$/u : /✓ Ground rules {9}leave out\n$/u, 'the card folds to one row');
     assert.deepEqual(stdin.raw, [true, false], 'raw mode is given back');
     assert.ok(stdout.raw().lastIndexOf('\u001b[?25h') > stdout.raw().lastIndexOf('\u001b[?25l'), 'the cursor is shown again');
     assert.equal(stdin.isPaused(), true, 'a paused terminal lets the process end');
@@ -178,8 +180,8 @@ test('colour follows the terminal: 24-bit, 256, 16, none with ASCII borders', as
   assert.doesNotMatch(basic, /[34]8;[25];/u);
   const bare = await shown({ LC_ALL: 'C', TERM: 'xterm-256color' });
   assert.doesNotMatch(bare, /\u001b\[[0-9;]*m/u);
-  assert.match(plain(bare), /\+-\[LIT 1\/1\] Ground rules \[y\/N\] -+\+/u);
-  assert.match(plain(bare), /# > No \(default\) +#/u);
+  assert.match(plain(bare), /\+- \[LIT 1\/1\] - Ground rules \[y\/N\] -+\+/u);
+  assert.match(plain(bare), /# {2}> No \(default\) {3}#/u);
   assert.match(plain(bare), /^[\x20-\x7e\n]*$/u, 'nothing but ASCII');
 });
 
@@ -199,6 +201,123 @@ test('wrapping drops nothing and counts wide characters', () => {
   const lines = wrapCells(`Scope is ${path}`, 12);
   assert.equal(lines.join('').replace('Scope is', ''), path);
   for (const line of lines) assert.ok([...line].reduce((sum, ch) => sum + (/[가-힣]/u.test(ch) ? 2 : 1), 0) <= 12, line);
+});
+
+const FORMS = Object.freeze({
+  round: ROUND, square: ENV, light: { ...ROUND, COLORFGBG: '0;15' }, indexed: { ...ROUND, COLORTERM: '' }, basic: { ...ROUND, COLORTERM: '', TERM: 'xterm' }, ascii: { ...ROUND, LC_ALL: 'C' },
+});
+const bare = (text) => plain(text).replace(/[\ue0b4\ue0b6]/gu, ' ');
+
+async function everyCard(env, size) {
+  const io = terminal(size);
+  const cards = createCards({ ...io, env, host: fakeHost(), settleMs: 1 });
+  cards.banner(['MARK', 'mark'], 'litgrok v9.9.9 · a name that is longer than the narrowest window allows');
+  cards.intro('Installs into ~/.grok, user scope (--project for project scope). 9 files, byte-identical copies.');
+  const asking = cards.confirm(QUESTION);
+  await delay(8);
+  io.stdin.write('y');
+  await asking;
+  const work = cards.work({ title: 'Installing LitGrok 9.9.9', steps: [{ name: 'Payload', text: 'read the packaged files' }, { name: 'Ownership', text: 'compare every file with the last install' }] });
+  work.open();
+  work.finish('ok', 'Payload', '9 files discovered');
+  work.finish('ok', 'Ownership', '9 missing · 0 already-current · 0 owned · 0 conflicts');
+  work.close();
+  const sections = [
+    { head: 'Installed', rows: [{ status: 'ok', label: 'Scope', value: '~/.grok (user scope; use --project for project scope)' }, { status: 'warning', label: 'Status line', value: 'existing user status_line preserved' }] },
+    { head: 'Next', rows: [{ label: 'A label longer than its column', value: 'still followed by its value' }] },
+  ];
+  cards.summary({ title: 'LitGrok 9.9.9 is installed', sections });
+  cards.text(['Plain words under the cards.', { command: 'litgrok extensions install <skill> --yes' }], 'LitFamily extensions');
+  return io.stdout;
+}
+
+test('every card fits every window in every form, with a straight frame, and the caps change no width and no word', async () => {
+  for (const columns of [40, 60, 80, 100, 120]) {
+    for (const rows of [12, 16, 24, 60]) {
+      const shown = {};
+      for (const [form, env] of Object.entries(FORMS)) {
+        const name = `${form} ${columns}x${rows}`;
+        const stdout = await everyCard(env, { columns, rows });
+        const text = stdout.text();
+        shown[form] = text;
+        for (const line of text.split('\n')) {
+          if (/litgrok extensions install/u.test(line)) continue;
+          assert.ok(cells(line) < columns, `${name}: ${line}`);
+          if (/^ [╭│╰+|]/u.test(line)) assert.equal(cells(line), Math.min(100, columns - 2) + 1, `${name}: ${line}`);
+        }
+        assert.equal(CAPS.test(text), form === 'round', `${name}: caps`);
+        assert.doesNotMatch(text, /[░▒▓▯▐▌▄▀]/u, `${name}: no texture`);
+        if (form === 'round') assert.equal([...text.matchAll(/\ue0b6/gu)].length, [...text.matchAll(/\ue0b4/gu)].length, `${name}: every fill has both caps`);
+        assert.match(text, /Ctrl\+C stop/u, name);
+      }
+      assert.equal(bare(shown.round), bare(shown.square), `${columns}x${rows}: round and square say the same in the same cells`);
+      assert.equal(shown.light, shown.square, 'a light background keeps square ends');
+    }
+  }
+});
+
+test('one blank row stands between blocks, values start in column 24, and the pill names the step', async () => {
+  const stdout = await everyCard(ENV, { columns: 80, rows: 60 });
+  // What stays on screen: each redraw replaces the rows the cursor went back over.
+  const screen = [];
+  for (const frame of stdout.frames) {
+    const up = Number(/^\u001b\[(\d+)A/u.exec(frame)?.[1] ?? 0);
+    if (/\u001b\[\?25/u.test(frame)) continue;
+    const lines = plain(frame).split('\n').slice(0, -1);
+    if (up > 0 && frame.includes('\u001b[J')) screen.splice(screen.length - up, up, ...lines);
+    else if (up > 0) lines.forEach((line, index) => { if (line !== '') screen[screen.length - up + index] = line; });
+    else screen.push(...lines);
+  }
+  for (let index = 1; index < screen.length; index += 1) assert.ok(screen[index] !== '' || screen[index - 1] !== '', `two blank rows at ${index}`);
+  const at = (pattern) => screen.findIndex((line) => pattern.test(line));
+  assert.equal(at(/✓ Ground rules/u) + 1, at(/✓ Install steps/u), 'folded rows stand together');
+  for (const block of [/Installs into/u, /✓ Ground rules/u, /is installed/u, /^ LitFamily extensions/u]) assert.equal(screen[at(block) - 1], '', String(block));
+  for (const value of ['add', '2 of 2 checked', '~/.grok', 'existing user']) assert.equal(screen.find((line) => line.includes(value) && /[✓!]/u.test(line)).indexOf(value), 24, value);
+  assert.match(screen[at(/is installed/u)], /^ ╭─ {2}LIT {2}· LitGrok 9\.9\.9 is installed ─+╮$/u);
+  assert.match(screen[at(/is installed/u) + 1], /^ │ +│$/u);
+  assert.match(screen.join('\n'), /│ · A label longer than its column still followed by its value/u);
+  assert.match(screen.join('\n'), /^ {5}litgrok extensions install <skill> --yes$/mu);
+});
+
+test('colours: ink on the pill and the chip, a warning in amber, a stop in red on every side', async () => {
+  const round = (await everyCard(ROUND, { columns: 100, rows: 60 })).raw();
+  assert.match(round, /\u001b\[38;2;255;143;60m\ue0b6\u001b\[0m\u001b\[1;38;2;11;14;20;48;2;/u, 'the step pill starts orange');
+  assert.match(round, /\u001b\[38;2;255;45;149m\ue0b6\u001b\[0m\u001b\[1;38;2;11;14;20;48;2;/u, 'the lit button starts pink');
+  assert.match(round, /\u001b\[38;2;180;140;255m\ue0b4/u, 'and ends violet');
+  assert.match(round, /\u001b\[1;38;2;255;176;46m!/u);
+  const { stdout, ...io } = terminal({ columns: 100, rows: 60 });
+  createCards({ ...io, stdout, env: ROUND, host: fakeHost() }).summary({ title: 'INSTALL STOPPED', failed: true, sections: [{ head: 'What happened', rows: [{ status: 'failed', label: 'Reason', value: 'it did' }] }] });
+  const sides = stdout.raw().split('\n').filter((line) => /[│╭╰]/u.test(line));
+  for (const line of sides) assert.match(line, /^ \u001b\[38;2;255;85;119m[│╭╰]/u);
+  assert.match(stdout.raw(), /\u001b\[38;2;255;143;60m\ue0b6/u, 'the pill keeps its colour');
+});
+
+test('a key press rewrites the buttons and the hint, not the whole card', async () => {
+  const { stdout, stdin, pending } = await ask([LEFT]);
+  const frames = stdout.frames.filter((frame) => /Ctrl\+C stop/u.test(frame));
+  assert.equal(frames.length, 2);
+  assert.match(frames[0], /Adds a short section/u);
+  assert.doesNotMatch(frames[1], /Adds a short section|LIT 1\/1/u);
+  assert.match(plain(frames[1]), /❯ Yes/u);
+  stdin.write('n');
+  await pending;
+});
+
+test('warnings wait for the work card, which folds with a ! and their count; a stopped one stays', async () => {
+  const steps = [{ name: 'Safety', text: 'check' }, { name: 'Write', text: 'copy' }];
+  const finished = terminal();
+  const work = createCards({ ...finished, env: ENV, host: fakeHost() }).work({ title: 'Installing', steps });
+  work.open();
+  for (const { name } of steps) work.finish('ok', name, 'done');
+  work.close({ warnings: 2 });
+  assert.match(finished.stdout.text(), /! Install steps +2 of 2 checked · 2 warnings below\n$/u);
+  const stopped = terminal();
+  const broken = createCards({ ...stopped, env: ENV, host: fakeHost() }).work({ title: 'Installing', steps });
+  broken.open();
+  broken.finish('failed', 'Safety', 'a symlink is in the way');
+  broken.close();
+  assert.doesNotMatch(stopped.stdout.text(), /Install steps/u);
+  assert.match(stopped.stdout.text(), /· Write +copy[\s\S]*✗ Safety +a symlink is in the way/u);
 });
 
 function project() {
@@ -222,9 +341,10 @@ test('a user install at a terminal asks in a card and closes with a card; the st
   try {
     const yes = await install(['install', '--user'], 'y', box);
     assert.equal(yes.code, 0, yes.stderr);
-    assert.match(yes.out, /✓ Ground rules +add them\n/u);
+    assert.match(yes.out, /✓ Ground rules +add\n/u);
+    assert.match(yes.out, /^ ✓ Install steps +4 of 4 checked\n/mu);
     for (const label of ['Payload', 'Safety', 'Ownership', 'Write']) assert.match(yes.out, new RegExp(`✓ ${label} `, 'u'));
-    assert.match(yes.out, new RegExp(`LIT +LitGrok ${VERSION.replaceAll('.', '\\.')} is ready`, 'u'));
+    assert.match(yes.out, new RegExp(`LIT +· LitGrok ${VERSION.replaceAll('.', '\\.')} is installed`, 'u'));
     assert.match(yes.out, /Hooks +project hooks require trust from a Git project root/u);
     assert.match(yes.out, /Installer never runs git init or changes trust/u);
     assert.match(yes.out, /restart Grok Build/u);
@@ -237,7 +357,7 @@ test('a user install at a terminal asks in a card and closes with a card; the st
     assert.equal(JSON.parse(readFileSync(join(box.home, '.grok/litgrok-ground.json'), 'utf8')).mode, 'off');
     const quiet = await install(['install', '--user'], null, box);
     assert.doesNotMatch(quiet.out, /Ctrl\+C stop/u, 'a stored no is not asked again');
-    assert.match(quiet.out, /was already current/u);
+    assert.match(quiet.out, /✓ Files +already current · 0 written/u);
     const gone = await install(['uninstall', '--user'], null, box);
     assert.equal(gone.code, 0, gone.stderr);
     assert.match(gone.out, /LitGrok is removed/u);
@@ -255,7 +375,8 @@ test('a refused install names the file on stderr and closes with a failure card'
     const refused = await install(['install'], null, box);
     assert.equal(refused.code, 1);
     assert.ok(refused.stderr.includes(`Refusing to overwrite different existing file: ${target}`));
-    assert.match(refused.out, /✗ Ownership[\s\S]*LitGrok install failed[\s\S]*✗ Step +OWNERSHIP/u);
+    assert.match(refused.out, /✗ Ownership[\s\S]*INSTALL STOPPED[\s\S]*✗ Stage +OWNERSHIP[\s\S]*✗ Reason[\s\S]*Next\b/u);
+    assert.doesNotMatch(refused.out, /Install steps|is installed/u, 'the work card stays, and nothing claims an install');
     assert.equal(readFileSync(target, 'utf8'), 'mine\n');
   } finally {
     rmSync(box.home, { recursive: true, force: true });
@@ -272,7 +393,7 @@ test('--yes, previews and a preset answer keep the plain text on a terminal', as
       const { code, out } = await install(args, null, { home: box.home, env: { ...box.env, ...env } });
       assert.equal(code, 0);
       assert.match(out, /╭─ MODEL ROUTE/u, JSON.stringify([args, env]));
-      assert.doesNotMatch(out, /LIT 1\/1|is ready/u);
+      assert.doesNotMatch(out, /LIT 1\/1|is installed/u);
     } finally {
       rmSync(box.home, { recursive: true, force: true });
     }
@@ -316,7 +437,7 @@ test('the real installer answers keys in a real terminal and then ends', { skip:
     await until(/❯ Yes/u);
     tmux('send-keys', 'Enter');
     await until(/ENDED 0/u);
-    assert.match(screen(), /✓ Ground rules +add them/u);
+    assert.match(screen(), /✓ Ground rules +add\n/u);
     assert.doesNotMatch(screen(), /Ctrl\+C stop/u, 'the card folded away');
     assert.equal(existsSync(join(box.home, '.grok/skills/lit-plan/SKILL.md')), true);
   } finally {

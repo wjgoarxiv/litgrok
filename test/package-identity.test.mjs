@@ -29,7 +29,7 @@ test('npm rename preserves legacy ownership while refusing forged owners and mod
     copyFileSync(join(root, 'bin/install-cards.mjs'), join(source, 'bin/install-cards.mjs'));
     copyFileSync(join(root, 'bin/status-line-config.mjs'), join(source, 'bin/status-line-config.mjs'));
     copyFileSync(join(root, 'bin/extensions.mjs'), join(source, 'bin/extensions.mjs'));
-    for (const name of ['lit-mark.mjs', 'lit-synthwave.mjs', 'lit-synthwave-rows.mjs']) copyFileSync(join(root, '.grok/hooks', name), join(source, '.grok/hooks', name));
+    for (const name of ['lit-caps.mjs', 'lit-mark.mjs', 'lit-synthwave.mjs', 'lit-synthwave-rows.mjs']) copyFileSync(join(root, '.grok/hooks', name), join(source, '.grok/hooks', name));
     copyFileSync(join(root, 'package.json'), join(source, 'package.json'));
     const sourceSkill = join(source, '.grok/skills/example/SKILL.md');
     writeFileSync(sourceSkill, 'old owned payload\n');
