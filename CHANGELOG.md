@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.46 — 2026-11-26
+
+- `litgrok install --agent` prints the install steps for a coding agent and writes nothing. Help, the first card and a run without a person at the terminal point to it; the guide names the full `auto-handoff on <percent>` command.
+- `install --glyphs round|square` saves the ends in `~/.grok/litgrok-hud.json`, where later installs and SSH sessions keep it; `--glyphs auto` takes it back, and `LITGROK_HUD_GLYPHS=auto` passes over it.
+- Every install and `litgrok doctor` end with one `ROUND_ENDS:` line: `shown`, `ready`, `check` or `square`, with the reason and one fix.
+- A preview's last line says nothing was installed. `NO_COLOR` with `--yes` only takes the colour away.
+
 ## 1.0.45 — 2026-11-25
 
 - The status row is now one framed card, in a truecolor terminal on a dark background. The title stands on the top edge with a single flame `🔥 LIT` pill, the skill and its time, the tool calls, the subagents and the turn's state (`WORK ●`, `YOUR TURN`, `DONE ✓`, `ERROR ✗`, `IDLE ○`); inside are the stage map with the tool in flight, the task with a gauge and the next step, and the skill as a pill with the last test verdict and any warning; the bottom edge carries the context gauge, the model, the cost, the branch and the version. The frame runs from pink through violet to orange, and its colour says the state. While work is on the card always takes Grok's five lines, so the row does not jump; with no workflow it is four lines under a two-row sun. The three-row sun stands wherever the words leave room. A short terminal gets a shorter card with a closed frame, and a row under 35 cells keeps the earlier unframed rows.

@@ -133,7 +133,7 @@ Its last card should say `LitGrok … is ready` (`Status: Ready` with `--yes`) a
 | `--round` | Adds a small icon font when none is here, for round ends in the status row | The row draws square ends |
 | `--user` | Installs under `~/.grok/`, so the skills and rule are in every project | You want LitGrok everywhere |
 | `--status-line`, added to `--user` | Adds the LIT status row | Grok reads the row only from user settings |
-| `--package @litfamily/litgrok@1.0.45` in place of `@latest` | Pins this release | A team wants everyone on the same files |
+| `--package @litfamily/litgrok@1.0.46` in place of `@latest` | Pins this release | A team wants everyone on the same files |
 
 <details>
 <summary>Where the same package can live: this project, your user account or Grok Bot</summary>

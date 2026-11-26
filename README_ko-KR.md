@@ -133,7 +133,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 | `--round` | 아이콘 글꼴이 없을 때 상태 행의 둥근 끝을 위한 작은 글꼴을 추가함 | 상태 행의 끝이 네모일 때 |
 | `--user` | `~/.grok/`에 설치해 어느 프로젝트에서나 스킬과 규칙이 있게 함 | 모든 프로젝트에서 쓰고 싶을 때 |
 | `--user`에 붙인 `--status-line` | LIT 상태 행을 켬 | Grok은 상태 행을 사용자 설정에서만 읽음 |
-| `@latest` 자리의 `--package @litfamily/litgrok@1.0.45` | 이 릴리스로 고정 | 팀 전체가 같은 파일을 쓰게 하고 싶을 때 |
+| `@latest` 자리의 `--package @litfamily/litgrok@1.0.46` | 이 릴리스로 고정 | 팀 전체가 같은 파일을 쓰게 하고 싶을 때 |
 
 <details>
 <summary>같은 패키지를 두는 곳: 이 프로젝트, 사용자 계정, Grok Bot</summary>
