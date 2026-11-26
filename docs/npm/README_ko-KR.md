@@ -110,7 +110,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.45/hooks/hooks.json)에 있는 훅 등록 열두 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
 
-지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다. 프롬프트가 작업 흐름 스킬을 시작하면 지금 단계, 돌고 있는 도구, 마지막 테스트 결과도 함께 보입니다. 턴이 끝날 때 Grok의 터미널 알림을 받으려면 `--notify`를 붙이세요. 어두운 배경의 truecolor 터미널에서는 상태 행이 테두리 하나로 묶인 카드가 되어 불꽃 알약, 단계 지도, 작업 게이지를 담고 아랫변에 컨텍스트 게이지를 둡니다. 글자가 쓰지 않는 자리에는 노을이 그려지며, 턴이 도는 동안 화면을 다시 그릴 때마다 한 단계씩 움직이고 턴 사이에는 멈춰 있습니다. 터미널이나 Nerd Font가 그릴 수 있으면 끝이 둥글고, `LITGROK_HUD_GLYPHS=round`나 `basic`으로 직접 정할 수 있습니다. `LITGROK_HUD_MOTION=off`는 움직임을 멈추고 `LITGROK_HUD_COLOR=256`은 테두리 없는 줄을 씁니다.
+지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다. 프롬프트가 작업 흐름 스킬을 시작하면 지금 단계, 돌고 있는 도구, 마지막 테스트 결과도 함께 보입니다. 턴이 끝날 때 Grok의 터미널 알림을 받으려면 `--notify`를 붙이세요. 어두운 배경의 truecolor 터미널에서는 상태 행이 테두리 하나로 묶인 카드가 되어 불꽃 알약, 단계 지도, 작업 게이지를 담고 아랫변에 컨텍스트 게이지를 둡니다. 글자가 쓰지 않는 자리에는 노을이 그려지며, 턴이 도는 동안 화면을 다시 그릴 때마다 한 단계씩 움직이고 턴 사이에는 멈춰 있습니다. 터미널이나 Nerd Font가 그릴 수 있으면 끝이 둥글고, `install --glyphs round`나 `square`로 선택을 저장할 수 있으며, `install --round`는 아이콘 글꼴이 없을 때 작은 글꼴을 추가합니다. `LITGROK_HUD_MOTION=off`는 움직임을 멈추고 `LITGROK_HUD_COLOR=256`은 테두리 없는 줄을 씁니다.
 
 `install`, `uninstall`, `--help`는 터미널 폭에 맞춘 신스웨이브 LIT 마크로 시작합니다. 터미널이 좁거나 블록 글자를 그릴 수 없을 때, 출력이 파이프나 로그로 갈 때는 `LIT · grok build` 한 줄만 나옵니다.
 
@@ -121,7 +121,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 어떤 때는 미리보기만 하고 끝납니다. 무엇을 할지 보여 준 뒤 `no files written`을 출력하고 멈추는데, `--yes`를 붙여도 다음 경우에는 그렇습니다.
 
 - `--dry-run`: 먼저 계획만 보겠다고 한 경우
-- `--no-color`를 붙였거나 환경에 `NO_COLOR`가 있는 경우(빈 값도 포함). 실제로 설치하려면 이 변수를 지우세요.
+- `--no-color`를 붙인 경우(`--yes`를 붙이면 환경의 `NO_COLOR`는 색만 뺍니다).
 - 환경에 `CI`가 있는 경우. CI 작업은 늘 미리보기로 끝납니다.
 
 `--yes` 없이 스크립트처럼 터미널이 연결되지 않은 곳에서 실행해도 미리보기입니다.

@@ -110,7 +110,7 @@ Beyond code, `lit-pptx` and `lit-docx` point you to wjgoarxiv-skills for slide d
 
 The installer copies the skills, agents, project rule, and hooks into `.grok/`. The twelve hook registrations in [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.45/hooks/hooks.json) run only in a trusted Git root, and they log the order of events in `.grok/litgrok/session-ledger/`. Everything runs inside your Grok session, and nothing runs in the background; when the session ends, the work waits for the next one.
 
-If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first. Once a prompt starts a workflow skill, the row also shows the workflow stage, the tool running now and the last test result. Add `--notify` for Grok's terminal notification when a turn finishes. In a truecolor terminal on a dark background the row is one framed card with a flame pill, a stage map, a task gauge and the context gauge on its bottom edge, and a sunset fills the part no text uses: it moves a step at each redraw while a turn runs and stands still between turns. Ends are round where your terminal or a Nerd Font can draw them; `LITGROK_HUD_GLYPHS=round` or `basic` decides it. `LITGROK_HUD_MOTION=off` holds the scene still and `LITGROK_HUD_COLOR=256` keeps the plain rows.
+If you'd like a status row showing the active LitGrok skill, the model and how much context is used, add it with `install --user --status-line`. It writes `[ui.status_line]` into `~/.grok/config.toml` and backs up an existing file first. Once a prompt starts a workflow skill, the row also shows the workflow stage, the tool running now and the last test result. Add `--notify` for Grok's terminal notification when a turn finishes. In a truecolor terminal on a dark background the row is one framed card with a flame pill, a stage map, a task gauge and the context gauge on its bottom edge, and a sunset fills the part no text uses: it moves a step at each redraw while a turn runs and stands still between turns. Ends are round where your terminal or a Nerd Font can draw them; `install --glyphs round` or `square` saves your choice, and `install --round` adds a small icon font when none is here. `LITGROK_HUD_MOTION=off` holds the scene still and `LITGROK_HUD_COLOR=256` keeps the plain rows.
 
 `install`, `uninstall` and `--help` open with the synthwave LIT mark, sized to the terminal. A narrow terminal, one that cannot draw block glyphs, or output to a pipe or a log gets the single line `LIT · grok build`.
 
@@ -121,7 +121,7 @@ Before it upgrades or removes a file, the installer checks that the file is one 
 Some runs only preview: the installer lists what it would do, prints `no files written`, and stops, even with `--yes`. That happens with:
 
 - `--dry-run`, when you want to see the plan first;
-- `--no-color`, or `NO_COLOR` in the environment, even empty (unset it when you mean to install);
+- `--no-color` (with `--yes`, `NO_COLOR` in the environment only takes the color away);
 - `CI` in the environment, so CI jobs always get a preview.
 
 Without `--yes`, a run with no terminal attached, such as a script, is a preview too.

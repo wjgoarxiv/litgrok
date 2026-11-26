@@ -67,15 +67,12 @@ function syntheticPackage() {
   const executable = join(root, 'bin', 'litgrok.mjs');
   const hookCommand = join(root, '.grok', 'hooks', 'check.mjs');
   mkdirSync(dirname(executable), { recursive: true });
-  copyFileSync(join(PRODUCT_ROOT, 'bin', 'install-cards.mjs'), join(root, 'bin', 'install-cards.mjs'));
-  copyFileSync(join(PRODUCT_ROOT, 'bin', 'status-line-config.mjs'), join(root, 'bin', 'status-line-config.mjs'));
-  copyFileSync(join(PRODUCT_ROOT, 'bin', 'ground-rule.mjs'), join(root, 'bin', 'ground-rule.mjs'));
-  copyFileSync(join(PRODUCT_ROOT, 'bin', 'extensions.mjs'), join(root, 'bin', 'extensions.mjs'));
+  for (const name of ['agent-guide', 'extensions', 'ground-rule', 'install-cards', 'round-ends', 'status-line-config']) copyFileSync(join(PRODUCT_ROOT, 'bin', `${name}.mjs`), join(root, 'bin', `${name}.mjs`));
   mkdirSync(join(root, '.grok', 'skills', 'litgrok', 'references'), { recursive: true });
   mkdirSync(join(root, '.grok', 'rules'), { recursive: true });
   mkdirSync(dirname(hookCommand), { recursive: true });
   copyFileSync(join(PRODUCT_ROOT, 'bin', 'litgrok.mjs'), executable);
-  for (const name of ['lit-caps.mjs', 'lit-mark.mjs', 'lit-synthwave.mjs', 'lit-synthwave-rows.mjs']) copyFileSync(join(PRODUCT_ROOT, '.grok', 'hooks', name), join(root, '.grok', 'hooks', name));
+  for (const name of ['lit-caps.mjs', 'litgrok-hud-state.mjs', 'lit-mark.mjs', 'lit-synthwave.mjs', 'lit-synthwave-rows.mjs']) copyFileSync(join(PRODUCT_ROOT, '.grok', 'hooks', name), join(root, '.grok', 'hooks', name));
   writeFileSync(join(root, '.grok', 'skills', 'litgrok', 'SKILL.md'), 'skill\n');
   writeFileSync(join(root, '.grok', 'skills', 'litgrok', 'references', 'guide.md'), 'guide\n');
   writeFileSync(join(root, '.grok', 'rules', '00-litgrok.md'), 'rule\n');
@@ -1139,7 +1136,7 @@ test('installer discovers and installs every regular file below the packaged .gr
       assert.ok(existsSync(join(project, '.grok', ...relativePath)), `missing installed ${relativePath.join('/')}`);
     }
     // Five fixture files plus the three mark modules the synthetic installer needs to draw its frame.
-    assert.match(installIo.read().stdout, /Written vs already-current: 9 written · 0 already-current/i);
+    assert.match(installIo.read().stdout, /Written vs already-current: 10 written · 0 already-current/i);
     assert.match(installIo.read().stdout, /\/hooks-trust/);
     assert.match(installIo.read().stdout, /Git project root/);
     assert.match(installIo.read().stdout, /grok --trust inspect --json/);

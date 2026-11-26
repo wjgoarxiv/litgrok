@@ -278,14 +278,17 @@ test('a narrow row, a light background, fewer colours and one-line mode stay wit
 test('the round rule: the setting, then the terminal, then SSH, then an installed font', () => {
   const never = () => assert.fail('the fonts were searched');
   const yes = () => true;
+  // A home without a saved choice.
+  const HOME = join(tmpdir(), 'litgrok-no-such-home');
   for (const setting of ['nerd', 'round']) assert.equal(drawsRoundCaps({ LITGROK_HUD_GLYPHS: setting, SSH_CONNECTION: 'x' }, never), true);
-  for (const setting of ['basic', 'ascii']) assert.equal(drawsRoundCaps({ LITGROK_HUD_GLYPHS: setting, WT_SESSION: 'x' }, never), false);
-  for (const env of [{ WT_SESSION: 'x' }, { TERM_PROGRAM: 'vscode' }, { TERM_PROGRAM: 'WezTerm' }, { TERM_PROGRAM: 'ghostty' }, { TERM: 'xterm-kitty' }, { KITTY_WINDOW_ID: '1' }]) {
+  for (const setting of ['basic', 'ascii']) assert.equal(drawsRoundCaps({ HOME, LITGROK_HUD_GLYPHS: setting, WT_SESSION: 'x' }, never), false);
+  for (const own of [{ WT_SESSION: 'x' }, { TERM_PROGRAM: 'vscode' }, { TERM_PROGRAM: 'WezTerm' }, { TERM_PROGRAM: 'ghostty' }, { TERM: 'xterm-kitty' }, { KITTY_WINDOW_ID: '1' }]) {
+    const env = { HOME, ...own };
     assert.equal(drawsRoundCaps(env, never), true, JSON.stringify(env));
     assert.equal(drawsRoundCaps({ ...env, SSH_CONNECTION: 'x' }, never), true, `${JSON.stringify(env)} over SSH`);
   }
-  assert.equal(drawsRoundCaps({ SSH_CONNECTION: 'x', TERM_PROGRAM: 'Apple_Terminal' }, never), false);
-  for (const env of [{}, { TERM_PROGRAM: 'Apple_Terminal' }, { LITGROK_HUD_GLYPHS: 'fancy' }]) {
+  assert.equal(drawsRoundCaps({ HOME, SSH_CONNECTION: 'x', TERM_PROGRAM: 'Apple_Terminal' }, never), false);
+  for (const env of [{ HOME }, { HOME, TERM_PROGRAM: 'Apple_Terminal' }, { HOME, LITGROK_HUD_GLYPHS: 'fancy' }]) {
     assert.equal(drawsRoundCaps(env, yes), true, JSON.stringify(env));
     assert.equal(drawsRoundCaps(env, () => false), false, JSON.stringify(env));
   }

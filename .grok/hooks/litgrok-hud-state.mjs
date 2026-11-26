@@ -197,8 +197,23 @@ export function readNewestContextRecord(env = process.env, now = new Date()) {
 const FONT_ANSWER = 'icon-font.json';
 const FONT_ANSWER_MS = 24 * 60 * 60 * 1000;
 
-/** Whether an icon font is installed, as `look()` last said within a day: the status line runs too often to look each time. */
-export function rememberedIconFont(look, env = process.env, now = Date.now()) {
+/** Drops the remembered answer, so the next status line looks again. */
+export function forgetIconFont(env = process.env) {
+  try {
+    const root = stateRootPath(env, [], false);
+    if (!root) return;
+    const path = join(root, FONT_ANSWER);
+    if (lstatSync(path).isFile()) unlinkSync(path);
+  } catch {
+    // Nothing was remembered, or the folder cannot be trusted and is not read either.
+  }
+}
+
+/**
+ * Whether an icon font is installed, as `look()` last said within a day: the status line runs too often to look each
+ * time. An answer older than `notBefore` does not count: the installer's temporary folder can be a different one.
+ */
+export function rememberedIconFont(look, env = process.env, now = Date.now(), notBefore = null) {
   let root = null;
   try {
     root = stateRootPath(env, [], true);
@@ -207,7 +222,8 @@ export function rememberedIconFont(look, env = process.env, now = Date.now()) {
     if (status.isFile() && status.size <= MAX_RECORD_BYTES) {
       const record = JSON.parse(readFileSync(path, 'utf8'));
       const age = now - Date.parse(record?.at);
-      if (typeof record?.found === 'boolean' && age >= 0 && age <= FONT_ANSWER_MS) return record.found;
+      const outdated = notBefore !== null && Date.parse(record?.at) < Date.parse(notBefore);
+      if (typeof record?.found === 'boolean' && age >= 0 && age <= FONT_ANSWER_MS && !outdated) return record.found;
     }
   } catch {
     // No answer yet, or none that can be trusted: look again.

@@ -240,6 +240,15 @@ export function installStatusLine(root, options = {}) {
   return { changed: true, detail: 'user status line configured' };
 }
 
+// Whether the user config runs LitGrok's status line, as installed or as the user changed it.
+export function statusLineOn(root) {
+  try {
+    return splitLines(readConfig(join(root, 'config.toml')).text).some((line) => lineText(line).includes('lit-status-line.mjs'));
+  } catch {
+    return false;
+  }
+}
+
 // The opt-in finish alert. Any notification setting of the user's own is left as it is.
 export function installNotifications(root, options = {}) {
   const path = join(root, 'config.toml');

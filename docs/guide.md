@@ -110,7 +110,9 @@ The label comes from your latest prompt. LitGrok looks for the first of these na
 
 Once a prompt starts a skill, the row grows into the LIT card, which always takes the five lines Grok shows, so it does not jump while work runs. Its top edge reads `🔥 LIT · litwork 1m42s` with the tool calls, the subagents still running and the state at the right: the stage (`WORK ●`) while a turn runs, a green `DONE ✓` for twenty seconds after it finishes, `YOUR TURN` with the reason when Grok waits for you, `ERROR ✗` after a turn that failed, or `IDLE ○`. The frame says the same by colour: pink through violet to LitGrok's flame orange (`#FF6337`) at work, amber for your turn, red for an error, green when done, and faded when idle. Inside are the stage map with the tool in flight, the task gauge with the next open task, and the skill as a pill with the last test verdict, a warning, and other sessions of the same workspace when there are any. With fewer colours the card is four unframed lines with a bar down the left edge and the chips in one flat colour. Truecolor, bold and emoji all displayed correctly in the status row on Grok Build 1.0.13.
 
-Ends are one shape everywhere. Every pill and gauge of the row, and every pill and button of the installer, is round, or every one is square; the two never mix. `LITGROK_HUD_GLYPHS=round` (or `nerd`, which also adds small icons) makes them round, and `basic` or `ascii` makes them square. Without that setting they are round in Windows Terminal, the VS Code terminal, WezTerm, Ghostty and kitty, which draw round ends themselves; square over SSH, where the fonts on this machine are not the ones on screen; and otherwise round when a font file on this machine is named like a Nerd Font. LitGrok reads only the file names, and keeps the answer for a day in its temporary folder.
+Ends are one shape everywhere. Every pill and gauge of the row, and every pill and button of the installer, is round, or every one is square; the two never mix. `litgrok install --glyphs round` or `square` saves your choice in `~/.grok/litgrok-hud.json`, where later installs and SSH sessions keep it, and `--glyphs auto` takes it back. `LITGROK_HUD_GLYPHS=round` (or `nerd`, which also adds small icons) makes them round for one environment, `square`, `basic` or `ascii` makes them square, and `auto` passes over the saved choice. On auto they are round in Windows Terminal, the VS Code terminal, WezTerm, Ghostty and kitty, which draw round ends themselves; square over SSH, where the fonts on this machine are not the ones on screen; and otherwise round when a font file on this machine is named like a Nerd Font. LitGrok reads only the file names, and keeps the answer for a day in its temporary folder.
+
+An installed icon font is one half: the terminal has to use it too. `litgrok install --round` adds `SymbolsNerdFontMono-Regular.ttf` (the symbols-only Nerd Font v3.5.1) with its license to `~/Library/Fonts` on macOS or `${XDG_DATA_HOME:-~/.local/share}/fonts` on Linux, when no icon font is there yet. It downloads one archive with a pinned SHA-256, or reads the copy named in `LITGROK_ICON_FONT_ARCHIVE`; a failure leaves the install as it is and says why, and `uninstall` removes only the files it added and you left unchanged. Every install and `litgrok doctor` end with a `ROUND_ENDS:` line: `shown`, `ready`, `check` or `square`, with the reason and one fix. For `check`, look at the pill that `litgrok install --agent` prints: if both ends are round, rerun the install with `--glyphs round`; if you see boxes, set a full Nerd Font in your terminal or the symbols font as its fallback. Terminal.app has no fallback setting, so it needs a full Nerd Font.
 
 A short terminal shows fewer of the card's lines. Grok says how many, and the card then drops lines from its middle and keeps its frame closed; when the window grows it grows back.
 
@@ -136,13 +138,13 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run
 
 Before it upgrades or removes a file, the installer checks that the file is one it put there. If you edited the file, it belongs to something else, or the path looks unsafe (a symlink, say), the installer stops before writing anything and names the file it refused.
 
-Some runs only preview. The installer lists what it would do, prints `no files written`, and stops. That happens in these cases, even if you pass `--yes`:
+Some runs only preview. The installer lists what it would do, prints `no files written`, and stops; its last line says nothing was installed. That happens in these cases, even if you pass `--yes`:
 
 - `--dry-run`: you asked to see the plan first.
-- `--no-color`, or `NO_COLOR` in the environment, even with an empty value. Unset it when you mean to install.
+- `--no-color`: a preview without color.
 - `CI` in the environment. A CI job always gets a preview.
 
-Without `--yes`, a run that has no terminal attached, such as a script or a pipe, is a preview too. Add `--yes` when a script should really install; it then works without a terminal, as long as none of the cases above apply.
+Without `--yes`, a run that has no terminal attached, such as a script or a pipe, is a preview too, and so is one with `NO_COLOR` in the environment, even empty. Add `--yes` when a script should really install; it then works without a terminal, and `NO_COLOR` only takes the color away, as long as none of the cases above apply.
 
 To remove LitGrok, uninstall the way you installed it: plain for a project install, with `--user` for a user install.
 

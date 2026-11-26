@@ -14,7 +14,8 @@ import { run } from '../bin/litgrok.mjs';
 
 const BIN = fileURLToPath(new URL('../bin/litgrok.mjs', import.meta.url));
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
-const ENV = Object.freeze({ LANG: 'en_US.UTF-8', TERM: 'xterm-256color', COLORTERM: 'truecolor', SSH_CONNECTION: 'test' });
+// A home that holds no saved choice, so the machine's own one never decides a shape here.
+const ENV = Object.freeze({ HOME: join(tmpdir(), 'litgrok-no-such-home'), LANG: 'en_US.UTF-8', TERM: 'xterm-256color', COLORTERM: 'truecolor', SSH_CONNECTION: 'test' });
 const ROUND = Object.freeze({ ...ENV, LITGROK_HUD_GLYPHS: 'round' });
 const CAPS = /[\ue0b4\ue0b6]/u;
 const RIGHT = '\u001b[C';
@@ -167,6 +168,36 @@ test('every card row fits the window from 40 to 120 columns and in short windows
   for (const row of resized.stdout.card()) assert.ok(cells(row) < 44, row);
   resized.stdin.write('n');
   await resized.pending;
+});
+
+test('the agent hint takes an empty row of the first card only, and changes no height', async () => {
+  const hints = ['Agent? See npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --agent.', 'Agent? See litgrok install --agent.'];
+  for (const columns of [40, 60, 80, 120]) {
+    for (const rows of [12, 16, 24, 50]) {
+      const shown = [];
+      for (const given of [[], hints]) {
+        const io = terminal({ columns, rows });
+        const cards = createCards({ ...io, env: ENV, host: fakeHost(), settleMs: 5, hints: given });
+        for (let turn = 0; turn < 2; turn += 1) {
+          const pending = cards.confirm(QUESTION);
+          await delay(10);
+          shown.push(io.stdout.card());
+          io.stdin.write('n');
+          await pending;
+        }
+      }
+      const [plainFirst, plainSecond, first, second] = shown;
+      const name = `${columns}x${rows}`;
+      assert.equal(first.length, plainFirst.length, name);
+      assert.deepEqual(second, plainSecond, name);
+      for (const row of first) assert.ok(cells(row) < columns, `${name}: ${row}`);
+      const hinted = first.filter((row) => row.includes('Agent? See'));
+      if (plainFirst.some((row) => /^ │ +│$/u.test(row)) && columns >= 60 && rows >= 24) assert.equal(hinted.length, 1, name);
+      assert.ok(hinted.length <= 1, name);
+      if (columns === 120 && rows === 50) assert.ok(hinted[0].includes(hints[0]));
+      if (columns === 60 && rows === 50) assert.ok(hinted[0].includes(hints[1]));
+    }
+  }
 });
 
 test('colour follows the terminal: 24-bit, 256, 16, none with ASCII borders', async () => {
@@ -349,6 +380,8 @@ test('a user install at a terminal asks in a card and closes with a card; the st
     assert.match(yes.out, /Installer never runs git init or changes trust/u);
     assert.match(yes.out, /restart Grok Build/u);
     assert.match(yes.out, /LitFamily extensions\n/u);
+    assert.match(yes.out, /\n ROUND_ENDS: square \(no surface enabled; [^\n]+\)\n$/u, 'the card run ends with the same one line');
+    assert.match(yes.out, /Agent\? See /u);
     assert.doesNotMatch(yes.out, /INSTALL RECEIPT|INSTALL STEPS|MODEL ROUTE/u);
     assert.equal(inspectGround(readFileSync(join(box.home, '.grok/rules/00-litgrok.md'), 'utf8')).state, 'present');
     const again = await install(['install', '--user'], 'n', box);

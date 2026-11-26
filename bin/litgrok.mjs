@@ -7,10 +7,13 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import { fileURLToPath } from 'node:url';
 import { terminalMode, unicodeTerminal } from '../.grok/hooks/lit-mark.mjs';
 import { synthwaveRows } from '../.grok/hooks/lit-synthwave.mjs';
+import { GLYPH_CHOICES, hasIconFont, hudSettingsPath } from '../.grok/hooks/lit-caps.mjs';
+import { AGENT_COMMAND, AGENT_HINTS, AGENT_POINTER, agentGuide } from './agent-guide.mjs';
 import { applyStoredGround, backupIfSectionAbsent, decideGround, groundReport, ruleSourceForInstall, runGround } from './ground-rule.mjs';
 import { cardTerminal, createCards } from './install-cards.mjs';
 import { competingSummary, extensionsDoctorLine, runExtensions } from './extensions.mjs';
-import { installNotifications, installStatusLine, removeNotifications, removeStatusLine } from './status-line-config.mjs';
+import { ARCHIVE_VARIABLE, ICON_FONT, addIconFont, grokOnPath, planIconFont, removableFont, removeHudSettings, removeIconFont, roundEnds, saveGlyphs, unsafeSettings } from './round-ends.mjs';
+import { installNotifications, installStatusLine, removeNotifications, removeStatusLine, statusLineOn } from './status-line-config.mjs';
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PAYLOAD_ROOT = join(PACKAGE_ROOT, '.grok');
@@ -434,7 +437,8 @@ const PRE_MANIFEST_LEGACY_PAYLOAD_HASHES = Object.freeze({
   'skills/visual-qa/scripts/verify-evidence-manifest.mjs': '94be132b01eff2af91775a6e9c6841c6ecf008d44f641c61a4bf16726c11f779',
   'skills/lit-korean/SKILL.md': 'dc2e4b0ea2ff6acca904f05767a62448387571e4183a615d5e53b230704ee828',
 });
-const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok extensions list|check|install|update|remove|prune-backups (litgrok extensions --help)\n';
+export const INSTALL_FLAGS = Object.freeze(['--user', '--project', '--status-line', '--notify', '--round', '--glyphs', '--dry-run', '--no-color', '--yes', '--no-ground', '--agent']);
+const USAGE = 'Usage: litgrok [install|uninstall] [--user|--project] [--status-line] [--notify] [--round] [--glyphs auto|round|square] [--dry-run] [--no-color] [--yes] [--no-ground]\n       litgrok install --agent\n       litgrok ground on|off|status\n       litgrok ground project [--dir <path>] [--remove] [--dry-run]\n       litgrok auto-handoff on [percent]|off|status\n       litgrok doctor [--no-color]\n       litgrok extensions list|check|install|update|remove|prune-backups (litgrok extensions --help)\n';
 const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\u001b[2K';
@@ -443,7 +447,13 @@ function parseInstall(args) {
   const remaining = [...args];
   let command = 'install';
   if (['install', 'uninstall'].includes(remaining[0])) command = remaining.shift();
-  if (remaining.some((argument) => !['--user', '--project', '--status-line', '--notify', '--dry-run', '--no-color', '--yes', '--no-ground'].includes(argument))) return null;
+  let glyphs = null;
+  if (remaining.includes('--glyphs')) {
+    [, glyphs] = remaining.splice(remaining.indexOf('--glyphs'), 2);
+    if (!GLYPH_CHOICES.includes(glyphs)) return null;
+  }
+  if (remaining.some((argument) => ['--glyphs', '--agent'].includes(argument) || !INSTALL_FLAGS.includes(argument))) return null;
+  if ((glyphs || remaining.includes('--round')) && command !== 'install') return null;
   if (remaining.includes('--user') && remaining.includes('--project')) return null;
   // Both opt-ins change ~/.grok/config.toml, which only a user install may touch.
   if ((remaining.includes('--status-line') || remaining.includes('--notify')) && (command !== 'install' || !remaining.includes('--user'))) return null;
@@ -455,6 +465,8 @@ function parseInstall(args) {
     noGround: remaining.includes('--no-ground'),
     statusLine: remaining.includes('--status-line'),
     notify: remaining.includes('--notify'),
+    round: remaining.includes('--round'),
+    glyphs,
     scope: remaining.includes('--user') ? 'user' : 'project',
   };
 }
@@ -465,10 +477,23 @@ function configDetail(...results) {
 }
 
 // The same results as rows of the closing card. A setting of the user's that was left as it is needs their eye.
-function settingRows(statusLine, notification) {
-  return [['Status line', statusLine], ['Finish notice', notification]].filter(([, result]) => result).map(([label, { changed, detail }]) => ({
+function settingRows(statusLine, notification, glyphs = null) {
+  return [['Status line', statusLine], ['Finish notice', notification], ['Row ends', glyphs]].filter(([, result]) => result).map(([label, { changed, detail }]) => ({
     status: changed || /already managed/u.test(detail) ? 'ok' : /preserved|not configured/u.test(detail) ? 'warning' : 'note', label, value: detail,
   }));
+}
+
+function glyphsResult(env, home, glyphs) {
+  if (!glyphs) return null;
+  saveGlyphs(env, home, glyphs);
+  return { changed: true, detail: `glyphs ${glyphs} saved` };
+}
+
+function iconFontText(font) {
+  if (font.state === 'added') return `added ${font.paths.join(', ')}`;
+  if (font.state === 'here') return 'an icon font is already here; nothing added';
+  if (font.state === 'unsupported') return 'no font is added on Windows';
+  return `not installed: ${font.why}`;
 }
 
 function packageVersion() {
@@ -526,7 +551,7 @@ function alternateScope(options) {
   return options.scope === 'project' ? 'project scope; use --user for user scope' : 'user scope; use --project for project scope';
 }
 
-function printInstallFrame(stdout, options, env, fileCount, root, cards) {
+function printInstallFrame(stdout, options, env, fileCount, root, cards, pointer) {
   const colors = !options.noColor && !options.dryRun && terminalMode({ env, isTTY: stdout.isTTY }) !== 'none';
   const yellow = colors ? '\u001b[38;2;250;204;21m' : '';
   const reset = colors ? '\u001b[0m' : '';
@@ -538,6 +563,7 @@ function printInstallFrame(stdout, options, env, fileCount, root, cards) {
     return colors;
   }
   stdout.write(`${rule}\n`);
+  if (pointer) stdout.write(`  ${AGENT_POINTER}\n`);
   stdout.write('\n');
   stdout.write(`${markRows(stdout, env, colors).join('\n')}\n`);
   stdout.write(`  litgrok v${packageVersion()} · Grok Build skills, project rules, and hooks\n`);
@@ -570,6 +596,7 @@ class CardProgress {
         { name: 'Safety', text: 'check the install path' },
         { name: 'Ownership', text: 'compare every file with the last install' },
         { name: 'Write', text: options.command === 'install' ? 'copy the files' : 'remove the files' },
+        ...(options.round ? [{ name: 'Icon font', text: 'add it when none is here' }] : []),
       ],
     });
   }
@@ -671,7 +698,7 @@ function skipStep(progress, label, detail) {
   progress.finish('skipped', label, detail, elapsedSince(started));
 }
 
-function receiptCard(options, root, colors, { status, written, current }) {
+function receiptCard(options, root, colors, { status, written, current, host }) {
   const statusColor = status === 'Ready' || status === 'Already current' || status === 'Removed' ? '38;2;80;200;80' : '38;2;230;60;60';
   const titleColor = status === 'Failed' ? '38;2;230;60;60' : '38;2;255;99;55';
   return [
@@ -686,13 +713,14 @@ function receiptCard(options, root, colors, { status, written, current }) {
     '  │ Hooks: project hooks require trust from a Git project root',
     '  │ Trust: use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json',
     '  │ Installer never runs git init or changes trust',
+    ...(host ? [`  │ Host: ${host}`] : []),
     '  │ Next: restart Grok Build',
     `  ${paint('╰─', titleColor, colors)}`,
     '',
   ].join('\n');
 }
 
-function closingCard(cards, options, root, env, { files, settings, ground }) {
+function closingCard(cards, options, root, env, { files, settings, ground, host }) {
   const removed = options.command === 'uninstall';
   cards.summary({
     title: removed ? 'LitGrok is removed' : `LitGrok ${packageVersion()} is installed`,
@@ -717,6 +745,7 @@ function closingCard(cards, options, root, env, { files, settings, ground }) {
       {
         head: 'Next',
         rows: [
+          ...(host ? [{ status: 'warning', label: 'Host', value: host }] : []),
           ...(removed ? [] : [
             { label: 'Hooks', value: 'project hooks require trust from a Git project root' },
             { label: 'Trust', value: 'use /hooks-trust or, on Grok Build 1.0.13, grok --trust inspect --json' },
@@ -1333,26 +1362,33 @@ async function latestRegistryVersion(fetchFn) {
 
 // Read-only: prints the package version and, at most, one notify-only update line.
 // It never installs; the user runs the printed command themselves.
-async function runDoctor(args, { env, cwd, stdout, stderr, fetchFn }) {
+async function runDoctor(args, { env, cwd, stdout, stderr, fetchFn, platform, iconFont }) {
   if (args.some((argument) => argument !== '--no-color')) {
     stderr.write(USAGE);
     return 1;
   }
   const current = packageVersion();
   stdout.write(`litgrok ${current}\n${groundReport(env)}\n${extensionsDoctorLine({ env, cwd })}\n`);
-  if (UPDATE_OPT_OUTS.some((name) => Object.hasOwn(env, name))) return 0;
-  let latest;
-  try {
-    latest = await latestRegistryVersion(fetchFn);
-  } catch {
-    stdout.write('update check unavailable (offline or registry unreachable)\n');
-    return 0;
+  if (!UPDATE_OPT_OUTS.some((name) => Object.hasOwn(env, name))) {
+    try {
+      const latest = await latestRegistryVersion(fetchFn);
+      if (isNewerVersion(latest, current)) stdout.write(`newer version available: ${latest} (run: ${UPDATE_INSTALL_LINE})\n`);
+    } catch {
+      stdout.write('update check unavailable (offline or registry unreachable)\n');
+    }
   }
-  if (isNewerVersion(latest, current)) stdout.write(`newer version available: ${latest} (run: ${UPDATE_INSTALL_LINE})\n`);
+  const home = env.HOME || env.USERPROFILE || homedir();
+  stdout.write(`${roundEnds({ env, home, stdout, platform, iconFont })}\n`);
   return 0;
 }
 
 export async function run(args, context = {}) {
+  if (args.includes('--agent') && (args[0] === 'install' || args[0].startsWith('-'))) {
+    (context.stdout ?? process.stdout).write(agentGuide());
+    return 0;
+  }
+  const platform = context.platform ?? process.platform;
+  const iconFont = context.iconFont ?? hasIconFont;
   if (args[0] === 'auto-handoff') {
     const { runAutoHandoff } = await import('../.grok/hooks/auto-handoff.mjs');
     return runAutoHandoff(args.slice(1), { env: context.env ?? process.env, stdout: context.stdout ?? process.stdout, stderr: context.stderr ?? process.stderr, cwd: context.cwd ?? process.cwd() });
@@ -1374,6 +1410,8 @@ export async function run(args, context = {}) {
       stdout: context.stdout ?? process.stdout,
       stderr: context.stderr ?? process.stderr,
       fetchFn: context.fetch ?? globalThis.fetch,
+      platform,
+      iconFont,
     });
   }
   const env = context.env ?? process.env;
@@ -1383,7 +1421,7 @@ export async function run(args, context = {}) {
   const cwd = context.cwd ?? process.cwd();
   if (args.some((arg) => arg === '--help' || arg === '-h') && args.every((arg) => ['--help', '-h', '--no-color'].includes(arg))) {
     const colors = terminalMode({ env, isTTY: stdout.isTTY, args }) !== 'none';
-    stdout.write(`${markRows(stdout, env, colors).join('\n')}\nlitgrok v${packageVersion()}\n\n${USAGE}`);
+    stdout.write(`${markRows(stdout, env, colors).join('\n')}\nlitgrok v${packageVersion()}\n\n${USAGE}\nAre you an agent? Run ${AGENT_COMMAND} and follow it.\n`);
     return 0;
   }
   const options = parseInstall(args);
@@ -1396,7 +1434,7 @@ export async function run(args, context = {}) {
   const root = join(options.scope === 'project' ? cwd : home, '.grok');
   const displayRoot = resolve(root);
   const cards = !options.yes && !options.dryRun && !options.noColor && !Object.hasOwn(env, 'NO_COLOR') && cardTerminal({ stdin, stdout, env })
-    ? createCards({ stdin, stdout, env })
+    ? createCards({ stdin, stdout, env, hints: options.command === 'install' ? AGENT_HINTS : [] })
     : null;
   const payloadStarted = process.hrtime.bigint();
   let discoveredPayload;
@@ -1425,7 +1463,9 @@ export async function run(args, context = {}) {
 
   let files = discoveredPayload ? filesFromPayload(discoveredPayload) : null;
   const payloadElapsed = payloadError ? null : elapsedSince(payloadStarted);
-  const colors = printInstallFrame(stdout, options, env, files?.length, displayRoot, cards);
+  const unattended = Object.hasOwn(env, 'CI') || !stdin.isTTY || !stdout.isTTY;
+  const colors = printInstallFrame(stdout, options, env, files?.length, displayRoot, cards, options.command === 'install' && unattended);
+  const host = options.command === 'install' && !grokOnPath(env, platform) ? 'no grok command on PATH; install Grok Build to use LitGrok' : null;
 
   if (payloadError) {
     reportFailure(payloadError, { stderr, stdout, options, root: displayRoot, env, colors, step: 'PAYLOAD', cards });
@@ -1434,7 +1474,8 @@ export async function run(args, context = {}) {
 
   const reasons = [];
   if (options.dryRun) reasons.push('DRY RUN');
-  if (options.noColor || Object.hasOwn(env, 'NO_COLOR')) reasons.push('NO COLOR');
+  // With --yes the environment variable only takes the colour away.
+  if (options.noColor || (Object.hasOwn(env, 'NO_COLOR') && !options.yes)) reasons.push('NO COLOR');
   // --yes accepts a non-TTY stdin/stdout, but never overrides CI: CI stays a forced preview.
   if (Object.hasOwn(env, 'CI') || (!options.yes && (!stdin.isTTY || !stdout.isTTY))) reasons.push('NON-INTERACTIVE');
 
@@ -1444,7 +1485,24 @@ export async function run(args, context = {}) {
     for (const line of previewOwnership(root, files, options.command)) stdout.write(`${line}\n`);
     if (options.statusLine) stdout.write(`would configure user status line ${join(root, 'config.toml')}\n`);
     if (options.notify) stdout.write(`would configure user finish notification ${join(root, 'config.toml')}\n`);
+    if (options.round) {
+      const plan = planIconFont({ env, home, platform, iconFont });
+      if (plan.state !== 'add') stdout.write(`icon font: ${iconFontText(plan)}\n`);
+      else {
+        for (const path of plan.paths) stdout.write(`would add icon font file ${path}\n`);
+        stdout.write(`would record it in ${plan.manifest}; the files come from ${env[ARCHIVE_VARIABLE] ? ARCHIVE_VARIABLE : ICON_FONT.url}\n`);
+      }
+    }
+    if (options.glyphs) stdout.write(`would save glyphs ${options.glyphs} in ${hudSettingsPath({ ...env, HOME: home })}\n`);
+    if (options.command === 'uninstall') {
+      if (options.scope === 'user' || !statusLineOn(join(home, '.grok'))) {
+        for (const path of removableFont(home)) stdout.write(`would remove icon font file ${path}; other products may then draw square ends\n`);
+      }
+      if (options.scope === 'user') stdout.write(`would remove the saved choice of ends, if any, ${hudSettingsPath({ ...env, HOME: home })}\n`);
+    }
+    if (host) stdout.write(`Host: ${host}\n`);
     printHookTrustRequirement(files);
+    stdout.write(`Nothing was ${options.command === 'install' ? 'installed' : 'removed'}: this was a preview (${reasons.join(' / ')}).\n`);
     return 0;
   }
 
@@ -1476,20 +1534,48 @@ export async function run(args, context = {}) {
     }
   }
 
+  // Runs when the files are in place, so a font that cannot be added never stops an install.
+  async function fontStep(progress) {
+    if (!options.round) return null;
+    const started = process.hrtime.bigint();
+    progress.start('ICON FONT');
+    const font = await addIconFont({ env, home, platform, iconFont, pins: context.iconFontPins ?? ICON_FONT, fetchFn: context.fetch ?? globalThis.fetch });
+    progress.finish(['added', 'here'].includes(font.state) ? 'ok' : 'skipped', 'ICON FONT', iconFontText(font), elapsedSince(started));
+    return font;
+  }
+
+  // What an uninstall did with the icon font of an earlier --round.
+  function fontRemoval() {
+    const ours = removableFont(home);
+    if (options.scope === 'project' && statusLineOn(join(home, '.grok'))) {
+      return ours.length > 0 ? 'The icon font stays: the LIT status row still uses it.' : null;
+    }
+    const removed = removeIconFont(env, home);
+    if (options.scope === 'user') removeHudSettings(env, home);
+    return removed.length > 0 ? `Removed the icon font: ${removed.join(', ')}. Other products may then draw square ends.` : null;
+  }
+
   function closeInstall(result, caches) {
+    const ends = options.command === 'install' ? roundEnds({ env, home, stdout, platform, iconFont, font: result.font }) : result.removal;
     if (!cards) {
-      stdout.write(receiptCard(options, displayRoot, colors, result));
+      stdout.write(receiptCard(options, displayRoot, colors, { ...result, host }));
       if (caches) stdout.write(extensionsCard(colors, caches, competingSummary({ env, cwd })));
+      if (ends) stdout.write(`${ends}\n`);
       return;
     }
     const ground = options.command === 'install' && options.scope === 'user'
       ? (includeGround ? 'in your user rule' : 'left out (litgrok ground on adds them)')
       : null;
-    closingCard(cards, options, displayRoot, env, { ...result, ground });
-    if (!caches) return;
+    const font = result.font ? [{ status: result.font.state === 'failed' ? 'warning' : 'ok', label: 'Icon font', value: iconFontText(result.font) }] : [];
+    closingCard(cards, options, displayRoot, env, { ...result, settings: [...result.settings, ...font], ground, host });
+    if (!caches) {
+      if (ends) cards.line(ends);
+      return;
+    }
     const lines = extensionLines(caches, competingSummary({ env, cwd }));
     // The first five lines are one paragraph.
     cards.text([lines.slice(0, 5).join(' '), ...lines.slice(5).flatMap(commandsApart)], 'LitFamily extensions');
+    cards.line(ends);
   }
 
   const progress = cards ? new CardProgress(cards, options) : new InstallProgress(stdout, colors);
@@ -1501,8 +1587,9 @@ export async function run(args, context = {}) {
     step = 'SAFETY';
     runStep(progress, 'SAFETY', () => {
       const unsafe = unsafeInstallAncestor(root, files);
-      if (unsafe) {
-        const message = `Refusing ${unsafe.reason} in install path: ${unsafe.path}`;
+      const unsafeState = options.glyphs ? unsafeSettings(env, home) : null;
+      if (unsafe || unsafeState) {
+        const message = unsafe ? `Refusing ${unsafe.reason} in install path: ${unsafe.path}` : unsafeState;
         const error = new Error(message);
         error.step = 'SAFETY';
         error.stderrLines = [message];
@@ -1575,6 +1662,7 @@ export async function run(args, context = {}) {
       let removed = 0;
       let statusLineResult = null;
       let notifyResult = null;
+      let removal = null;
       try {
         if (options.scope === 'user') {
           statusLineResult = removeStatusLine(root);
@@ -1589,6 +1677,7 @@ export async function run(args, context = {}) {
         removeRetiredDirectories(states.retiredDirectories);
         removeEmptyPayloadDirectories(payloadDirectories(root, [...files, ...states.legacyEntries]));
         removeOwnershipManifest(root, states.manifest);
+        removal = fontRemoval();
         const statusDetail = configDetail(statusLineResult, notifyResult);
         progress.finish('ok', 'WRITE', `${removed} removed · ${states.counts.missing} already absent${statusDetail}`, elapsedSince(writeStarted));
       } catch (error) {
@@ -1599,7 +1688,7 @@ export async function run(args, context = {}) {
       progress.close();
       closeInstall({
         status: 'Removed', written: 0, current: states.counts.current,
-        files: `${removed} removed · ${states.counts.missing} already absent`, settings: settingRows(statusLineResult, notifyResult),
+        files: `${removed} removed · ${states.counts.missing} already absent`, settings: settingRows(statusLineResult, notifyResult), removal,
       });
       return 0;
     }
@@ -1607,21 +1696,24 @@ export async function run(args, context = {}) {
     if (states.states.every((state) => state === 'current') && states.legacyStates.every((state) => state === 'missing') && states.retiredDirectories.length === 0) {
       let statusLineResult = null;
       let notifyResult = null;
+      let endsResult = null;
       try {
         writeOwnershipManifest(root, files, states.manifest);
         if (options.statusLine) statusLineResult = installStatusLine(root);
         if (options.notify) notifyResult = installNotifications(root);
+        endsResult = glyphsResult(env, home, options.glyphs);
       } catch (error) {
         if (error && typeof error === 'object') error.step = 'WRITE';
         throw error;
       }
-      const statusDetail = configDetail(statusLineResult, notifyResult);
+      const statusDetail = configDetail(statusLineResult, notifyResult, endsResult);
       if (groundAfter) applyStoredGround(home, groundAfter);
       skipStep(progress, 'WRITE', `SKIPPED · 0 written · ${states.counts.current} already-current${statusDetail}`);
+      const font = await fontStep(progress);
       progress.close();
       closeInstall({
         status: 'Already current', written: 0, current: states.counts.current,
-        files: `already current · 0 written · ${states.counts.current} already-current`, settings: settingRows(statusLineResult, notifyResult),
+        files: `already current · 0 written · ${states.counts.current} already-current`, settings: settingRows(statusLineResult, notifyResult, endsResult), font,
       }, caches);
       return 0;
     }
@@ -1649,19 +1741,21 @@ export async function run(args, context = {}) {
       writeOwnershipManifest(root, files, states.manifest);
       const statusLineResult = options.statusLine ? installStatusLine(root) : null;
       const notifyResult = options.notify ? installNotifications(root) : null;
+      const endsResult = glyphsResult(env, home, options.glyphs);
       const legacyDetail = removedLegacy === 0 ? '' : ` · ${removedLegacy} legacy removed`;
-      const statusDetail = configDetail(statusLineResult, notifyResult);
+      const statusDetail = configDetail(statusLineResult, notifyResult, endsResult);
       if (groundAfter) applyStoredGround(home, groundAfter);
       written = `${installed} written · ${states.counts.current} already-current · ${states.counts.owned} owned${legacyDetail}`;
-      settings = settingRows(statusLineResult, notifyResult);
+      settings = settingRows(statusLineResult, notifyResult, endsResult);
       progress.finish('ok', 'WRITE', `${written}${statusDetail}`, elapsedSince(writeStarted));
     } catch (error) {
       progress.finish('failed', 'WRITE', errorText(error), elapsedSince(writeStarted));
       if (error && typeof error === 'object') error.step = 'WRITE';
       throw error;
     }
+    const font = await fontStep(progress);
     progress.close();
-    closeInstall({ status: 'Ready', written: installed, current: states.counts.current, files: written, settings }, caches);
+    closeInstall({ status: 'Ready', written: installed, current: states.counts.current, files: written, settings, font }, caches);
     return 0;
   } catch (error) {
     progress.close();

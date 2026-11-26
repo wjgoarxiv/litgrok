@@ -7,7 +7,9 @@ limited to the dependency-free `bin/litgrok.mjs` installer, documented,
 package-owned hook commands under `.grok/hooks/`, and explicitly invoked skill
 scripts. `lit-pptx`, `lit-docx`, the drawing skills and the film and README skills moved to wjgoarxiv-skills,
 each as a one-skill Grok Build plugin under `variants/litgrok/<id>/`; LitGrok ships only their same-name notes. The installer may copy or
-remove the packaged `.grok` tree only at documented project or user paths. The `litgrok auto-handoff`
+remove the packaged `.grok` tree only at documented project or user paths. One added write is opt-in: `--round` puts the
+font files `SymbolsNerdFontMono-Regular.ttf` and `SymbolsNerdFontMono-LICENSE.txt` in the user's font folder and their
+manifest at `~/.grok/litgrok-icon-font.json`, and `~/.grok/litgrok-hud.json` keeps that run's time and the `--glyphs` choice. The `litgrok auto-handoff`
 command is the one other writer: it saves `.grok/litgrok/auto-handoff.json` in the project on the
 user's request, and the opt-in status-line command keeps a per-session context record in the
 temporary HUD state root. The package-owned hooks keep four more kinds of project state under

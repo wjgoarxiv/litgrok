@@ -130,6 +130,7 @@ Its last card should say `LitGrok … is ready` (`Status: Ready` with `--yes`) a
 | Switch | What it does | When to use it |
 | --- | --- | --- |
 | `--dry-run` | Prints every destination and writes nothing | You want to look first |
+| `--round` | Adds a small icon font when none is here, for round ends in the status row | The row draws square ends |
 | `--user` | Installs under `~/.grok/`, so the skills and rule are in every project | You want LitGrok everywhere |
 | `--status-line`, added to `--user` | Adds the LIT status row | Grok reads the row only from user settings |
 | `--package @litfamily/litgrok@1.0.45` in place of `@latest` | Pins this release | A team wants everyone on the same files |
@@ -162,28 +163,48 @@ rule work while the hooks wait. [Quick start](#quick-start) step 1 walks through
 ### Let a coding agent install it
 
 Open the agent in the project folder and paste the prompt below. It asks the agent to show you its plan and wait for
-your yes, to use only the official npm package, and to check the result before it reports back.
+your yes, to use only the official npm package, and to check the result before it reports back. It also offers the LIT
+status row and a small icon font for its round ends.
 
 <details>
 <summary>The install prompt for a coding agent</summary>
 
-An agent's shell has no terminal attached, which is why the install lines carry `--yes` and clear `NO_COLOR` and `CI`;
-without that the installer only previews.
+An agent's shell has no terminal attached, so the install lines carry `--yes`, and they clear `CI`, which would turn the
+install into a preview. `litgrok install --agent` prints the same steps.
 
 ```text
 Install LitGrok, the skill pack for xAI's Grok Build, into this project.
 Use only the official npm package @litfamily/litgrok. Do not clone repositories, run other install scripts or use any other package.
-Before you change anything, show me your plan and wait for my yes.
+Check first that Node.js and Grok Build are installed and that this folder is the project's Git root. If it is not a Git repository, ask me before running git init.
 
-1. Check that Node.js and Grok Build are installed and that this folder is the project's Git root. If it is not a Git repository, ask me before running git init.
-2. Preview the install and show me where the files would go:
-   npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run
-3. Install. Your shell has no terminal, so pass --yes and clear NO_COLOR and CI, or the installer only previews:
-   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes
-4. Ask me whether I also want the LitGrok status row. It is a user install: it copies LitGrok into ~/.grok/ and adds a status line to ~/.grok/config.toml after backing it up. Only if I say yes, run:
-   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line --yes
-5. Verify: the install receipt says "Status: Ready", and the project now has .grok/skills, .grok/rules and .grok/hooks. If the output says "no files written", tell me the reason printed on that line instead of trying other flags.
-6. Report what was written and where, anything the installer refused, and anything you could not check. Then remind me to restart Grok Build from the project's Git root and to trust the hooks with /hooks-trust.
+1. Preview. It writes nothing:
+   npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run --round
+   Show me what it would change.
+2. Ask me. One answer is enough for all of it:
+   - Keep every default? Then the command in step 4 stays as it is. Any other answer adds its flags to the end of that command.
+   - Where should it go? Default: this project's .grok folder. --user: in ~/.grok, for every project.
+   - Show the LIT status row at the bottom of Grok Build? Default: no. --user --status-line: yes; it copies LitGrok into ~/.grok and adds the row to ~/.grok/config.toml after a backup. The row is where the rounded ends show.
+   - Send a terminal notification when a turn finishes? Default: no. --user --notify: yes.
+   - Add the short LitGrok ground rules to the LitGrok rule file? Default: yes. --no-ground: no.
+   - Which ends should the status row draw? Default: auto, or the choice saved earlier. --glyphs: round, square or auto after the flag.
+   - Automatic handoff starts off; I can choose it later with npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on <percent>.
+   - Icon font: --round adds SymbolsNerdFontMono-Regular.ttf and its license to ~/Library/Fonts (macOS) or ${XDG_DATA_HOME:-~/.local/share}/fonts (Linux), only when no icon font is here. On Windows it adds no font.
+3. Wait for my yes. Use only this package; add no other source, and do not approve hooks, trust or sign-in for me.
+4. Install:
+   env -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes --round
+   With the status row it is:
+   env -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes --round --user --status-line
+   In Windows PowerShell or cmd, with any other flags before the last quote:
+   cmd /c "set CI=&& npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes --round"
+5. Update, later: the same command again, with the flags of the first install. The saved choice of ends stays.
+6. Check. The install says "Status: Ready" or "Status: Already current" and prints one ROUND_ENDS: line. Then run:
+   npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
+   It passes when it exits 0 and prints "litgrok" with the version and one ROUND_ENDS: line. If the last line of the install says nothing was installed, or a step fails, show me the lines and stop.
+7. Rounded ends. Show me this and ask if both ends are round:  LIT 
+   - Round: run the install line again with --glyphs round added. The choice is saved. Undo it with --glyphs auto.
+   - Boxes: run the install line again with --glyphs square added. Round ends then need the terminal's own font to be a full Nerd Font, or the symbols font as its fallback (iTerm2 Non-ASCII Font, VS Code terminal.integrated.fontFamily, kitty symbol_map). Terminal.app has no fallback setting, so it needs a full Nerd Font.
+   - Over SSH or on a phone, when I cannot tell: leave it. --glyphs auto is the default.
+8. Report what was written and where, anything the installer refused, and anything you could not check. Then remind me of what only I can do: restart Grok Build from the project's Git root, review and trust the project hooks with /hooks-trust, and sign in to Grok Build.
 ```
 
 </details>
@@ -375,7 +396,7 @@ LIT card. Read it from top to bottom:
 - **Bottom edge:** the context gauge, the model, the cost, the branch and the version.
 
 That is the card of a truecolor terminal on a dark background. Pills and gauges have round ends there when your terminal or
-an installed Nerd Font can draw them, and square ones otherwise; `LITGROK_HUD_GLYPHS=round` or `basic` decides it yourself.
+an installed Nerd Font can draw them, and square ones otherwise; `litgrok install --glyphs round` or `square` saves your choice.
 Terminals with fewer colours, or none, and narrow rows get the same facts in plain unframed rows.
 
 There is a sunset too. In truecolor, the part of the card no text uses shows a half-sunk sun, a few stars and a sea that

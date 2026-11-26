@@ -91,7 +91,7 @@ test('frame respects NO_COLOR and stays prompt-free in non-interactive runs', as
 for (const [label, overrides, preview] of [
   ['CI=""', { CI: '' }, 'NON-INTERACTIVE'],
   ['CI="1"', { CI: '1' }, 'NON-INTERACTIVE'],
-  ['NO_COLOR=""', { NO_COLOR: '' }, 'NO COLOR'],
+  ['NO_COLOR=""', { NO_COLOR: '' }, null],
   ['TERM=dumb', { TERM: 'dumb' }, null],
   ['LC_ALL=C', { LC_ALL: 'C' }, null],
 ]) {
@@ -110,7 +110,7 @@ for (const [label, overrides, preview] of [
         assert.ok(stdout.includes(`${preview} — no files written`));
         assert.equal(existsSync(join(project, '.grok')), false, '--yes must not bypass the preview');
       } else {
-        assert.match(stdout, /\nLIT · grok build\n/u, 'unsupported terminals use the plain line');
+        assert.match(stdout, /LIT · grok build\n/u, 'without colour the mark ends in the plain line');
         assert.match(stdout, /INSTALL STEPS/u);
         assert.match(stdout, /INSTALL RECEIPT/u);
         assert.equal(existsSync(join(project, '.grok/.litgrok-install-manifest.json')), true);

@@ -113,13 +113,15 @@ function lightBackground(env) {
   return /(?:^|;)(?:7|15)$/u.test(env.COLORFGBG ?? '');
 }
 
-export function createCards({ stdin, stdout, env, host = process, settleMs = SETTLE_MS }) {
+// `hints` is one line in longest-first forms, shown dim in an empty row of the first card that has room for it.
+export function createCards({ stdin, stdout, env, host = process, settleMs = SETTLE_MS, hints = [] }) {
   const depth = colorDepth(env, stdout);
   const ascii = !unicodeTerminal(env);
   const sign = ascii ? ASCII : UNICODE;
   const round = depth === 'truecolor' && !ascii && !lightBackground(env) && drawsRoundCaps(env);
   // Rows stand together while answers fold; any other block starts after one blank row.
   let lastBlock = 'text';
+  let firstCard = true;
 
   const columns = () => stdout.columns || 80;
   const rows = () => stdout.rows || 24;
@@ -242,8 +244,18 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     return lines.map(quiet);
   }
 
+  // The row the first card leaves empty, for the hint; every other card keeps it empty.
+  function takeHintRow() {
+    const mine = firstCard;
+    firstCard = false;
+    return () => {
+      const hint = mine ? hints.map(say).find((form) => cellsOf(form) <= innerCells()) : undefined;
+      return hint === undefined ? '' : quiet(hint);
+    };
+  }
+
   // Roomy when the window allows it, then without its blank rows, then with one-line buttons.
-  function questionRows({ tag, title, note, initial, yes }) {
+  function questionRows({ tag, title, note, initial, yes, hintRow }) {
     const noteLines = wrapCells(say(note), innerCells());
     const enter = `Enter = ${yes ? 'Yes' : 'No'}`;
     const hints = hintLines(['y / n answer', `${sign.arrows} switch`, enter, 'Ctrl+C stop']);
@@ -253,8 +265,8 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     const heading = `${title} ${initial ? '[Y/n]' : '[y/N]'}`;
     let drawn;
     for (const { lead = [], body } of [
-      { lead: [''], body: ['', ...noteLines, '', ...big, '', ...hints] },
-      { body: ['', ...noteLines, '', ...big, '', ...hints] },
+      { lead: [''], body: ['', ...noteLines, '', ...big, hintRow(), ...hints] },
+      { body: ['', ...noteLines, '', ...big, hintRow(), ...hints] },
       { body: [...noteLines, ...big, ...hints] },
       { body: [...noteLines, ...small, ...hints] },
       { body: [...noteLines, ...small, ...hintLines(['y / n', enter, 'Ctrl+C stop'])] },
@@ -269,10 +281,11 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
   async function confirm({ tag, title, note, initial, yesText = 'yes', noText = 'no' }) {
     let yes = initial;
     let onScreen = [];
+    const hintRow = takeHintRow();
     const cursor = (shown) => stdout.write(shown ? '\u001b[?25h' : '\u001b[?25l');
     const up = (count) => (count > 0 ? `\u001b[${count}A` : '');
     const draw = (from = onScreen.length) => {
-      const next = questionRows({ tag, title, note, initial, yes });
+      const next = questionRows({ tag, title, note, initial, yes, hintRow });
       // A row that did not change is stepped over, so a key press redraws the buttons and the hint only.
       const same = (row, index) => from === onScreen.length && next.length === onScreen.length && row === onScreen[index];
       stdout.write(`${up(from)}\r${next.map((row, index) => (same(row, index) ? '\r\n' : `${row}\u001b[K\r\n`)).join('')}\u001b[J`);
@@ -389,6 +402,7 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
   function work({ title, steps }) {
     const states = steps.map(({ name, text }) => ({ name, text, status: 'waiting' }));
     let onScreen = [];
+    const hintRow = takeHintRow();
     const lines = () => {
       const valueCells = innerCells() - (VALUE_COLUMN - 3);
       const longest = Math.max(...states.map(({ name }) => cellsOf(name)));
@@ -406,7 +420,7 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
       });
     };
     const draw = () => {
-      const next = [...(lastBlock === 'card' ? [] : ['']), ...card({ title, body: ['', ...lines()] })];
+      const next = [...(lastBlock === 'card' ? [] : ['']), ...card({ title, body: [hintRow(), ...lines()] })];
       const fits = next.length < rows();
       if (!fits && onScreen.length === 0) return;
       const back = onScreen.length > 0 ? `\u001b[${onScreen.length}A` : '';
@@ -467,6 +481,12 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     stdout.write(`\n${centred(mark)}${centred(wrapCells(say(name), cardCells()))}`);
   }
 
+  /** One line that has to stay whole, so it can be read by a program. */
+  function line(text) {
+    stdout.write(`\n ${text}\n`);
+    lastBlock = 'text';
+  }
+
   /** Plain wrapped text under the cards with a bold heading. A { command } line is never wrapped. */
   function text(lines, heading) {
     stdout.write(`\n ${bold(say(heading))}\n`);
@@ -480,5 +500,5 @@ export function createCards({ stdin, stdout, env, host = process, settleMs = SET
     lastBlock = 'text';
   }
 
-  return { banner, confirm, intro, summary, text, work };
+  return { banner, confirm, intro, line, summary, text, work };
 }

@@ -5,7 +5,7 @@ import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, real
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveAutoHandoff } from './auto-handoff.mjs';
-import { drawsRoundCaps, hasIconFont } from './lit-caps.mjs';
+import { drawsRoundCaps, hasIconFont, readHudSettings } from './lit-caps.mjs';
 import { cardLines, gauge } from './lit-card.mjs';
 import { rewindCellRgb } from './lit-mark.mjs';
 import { MAX_LINE_CHARACTERS, ROLES, bandOf, cellWidth, clipCells, clock, duration, layoutLine, painter, plainText, segment, sgr, width } from './lit-layout.mjs';
@@ -793,7 +793,7 @@ function render(input) {
   const glyphs = Object.hasOwn(GLYPHS, glyphSetting ?? '') ? GLYPHS[glyphSetting] : GLYPHS.basic;
   // Round caps belong to truecolor on a dark background; everything else keeps one square form.
   const framed = depth === 24 && glyphs !== GLYPHS.ascii && !lightBackground();
-  const round = framed && drawsRoundCaps(process.env, () => rememberedIconFont(() => hasIconFont()));
+  const round = framed && drawsRoundCaps(process.env, () => rememberedIconFont(() => hasIconFont(), process.env, Date.now(), readHudSettings().fontCheckedAt));
   // Grok sets COLUMNS to the width of the row; without it the row keeps to 79 cells.
   const columns = Number.parseInt(process.env.COLUMNS ?? '', 10);
   const maxCells = Number.isFinite(columns) && columns >= 20 ? Math.min(columns, 1000) - 1 : 79;

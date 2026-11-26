@@ -130,6 +130,7 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 | 옵션 | 하는 일 | 쓰는 때 |
 | --- | --- | --- |
 | `--dry-run` | 파일이 들어갈 곳을 모두 보여 주고 아무것도 쓰지 않음 | 먼저 살펴보고 싶을 때 |
+| `--round` | 아이콘 글꼴이 없을 때 상태 행의 둥근 끝을 위한 작은 글꼴을 추가함 | 상태 행의 끝이 네모일 때 |
 | `--user` | `~/.grok/`에 설치해 어느 프로젝트에서나 스킬과 규칙이 있게 함 | 모든 프로젝트에서 쓰고 싶을 때 |
 | `--user`에 붙인 `--status-line` | LIT 상태 행을 켬 | Grok은 상태 행을 사용자 설정에서만 읽음 |
 | `@latest` 자리의 `--package @litfamily/litgrok@1.0.45` | 이 릴리스로 고정 | 팀 전체가 같은 파일을 쓰게 하고 싶을 때 |
@@ -162,28 +163,48 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ### 코딩 에이전트에게 설치 맡기기
 
 프로젝트 폴더에서 에이전트를 열고 아래 프롬프트를 붙여 넣으세요. 이 프롬프트는 에이전트에게 계획을 먼저 보여 주고
-승인을 기다리라고, 공식 npm 패키지만 쓰라고, 결과를 확인한 뒤에 보고하라고 지시합니다.
+승인을 기다리라고, 공식 npm 패키지만 쓰라고, 결과를 확인한 뒤에 보고하라고 지시합니다. LIT 상태 행과, 둥근 끝을 위한
+작은 아이콘 글꼴도 원하는지 물어봅니다.
 
 <details>
 <summary>코딩 에이전트용 설치 프롬프트</summary>
 
-에이전트의 셸에는 터미널이 연결되어 있지 않습니다. 그래서 설치 줄에 `--yes`를 붙이고 `NO_COLOR`와 `CI`를 지웁니다.
-그렇게 하지 않으면 설치 프로그램은 미리보기만 하고 끝납니다.
+에이전트의 셸에는 터미널이 연결되어 있지 않습니다. 그래서 설치 줄에 `--yes`를 붙이고, 설치를 미리보기로 바꾸는 `CI`를
+지웁니다. `litgrok install --agent`도 같은 단계를 영어로 보여 줍니다.
 
 ```text
 xAI Grok Build용 스킬 묶음인 LitGrok을 이 프로젝트에 설치해 줘.
 공식 npm 패키지 @litfamily/litgrok만 써. 저장소를 클론하거나, 다른 설치 스크립트를 실행하거나, 다른 패키지를 쓰지 마.
-무엇이든 바꾸기 전에 계획을 먼저 보여 주고 내가 승인할 때까지 기다려.
+먼저 Node.js와 Grok Build가 설치되어 있는지, 이 폴더가 프로젝트의 Git 루트인지 확인해. Git 저장소가 아니면 git init을 실행하기 전에 나에게 물어봐.
 
-1. Node.js와 Grok Build가 설치되어 있는지, 이 폴더가 프로젝트의 Git 루트인지 확인해. Git 저장소가 아니면 git init을 실행하기 전에 나에게 물어봐.
-2. 설치를 미리 보고, 파일이 어디에 들어갈지 보여 줘.
-   npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run
-3. 설치해. 네 셸에는 터미널이 없으니 --yes를 붙이고 NO_COLOR와 CI를 지워. 그렇지 않으면 미리보기만 하고 끝나.
-   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes
-4. LitGrok 상태 행도 원하는지 나에게 물어봐. 상태 행은 사용자 설치라서 LitGrok을 ~/.grok/에도 복사하고, ~/.grok/config.toml을 백업한 뒤 상태 행 설정을 추가해. 내가 원한다고 할 때만 실행해.
-   env -u NO_COLOR -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --user --status-line --yes
-5. 확인해. 설치 결과에 "Status: Ready"가 있고, 프로젝트에 .grok/skills, .grok/rules, .grok/hooks가 생겼는지 봐. 출력에 "no files written"이 있으면 다른 옵션을 시도하지 말고 그 줄에 적힌 이유를 알려 줘.
-6. 무엇을 어디에 썼는지, 설치 프로그램이 거부한 것, 확인하지 못한 것을 보고해. 마지막으로 프로젝트의 Git 루트에서 Grok Build를 다시 시작하고 /hooks-trust로 훅을 신뢰하라고 알려 줘.
+1. 미리 봐. 아무것도 쓰지 않아.
+   npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --dry-run --round
+   무엇이 바뀌는지 나에게 보여 줘.
+2. 나에게 물어봐. 한 번에 대답할게.
+   - 모두 기본값으로 할까? 그러면 4단계 명령을 그대로 써. 다른 대답이 있으면 그 옵션을 명령 끝에 붙여.
+   - 어디에 설치할까? 기본값: 이 프로젝트의 .grok 폴더. --user: 모든 프로젝트에서 쓰도록 ~/.grok에 설치.
+   - Grok Build 아래쪽에 LIT 상태 행을 보여 줄까? 기본값: 아니요. --user --status-line: 예. LitGrok을 ~/.grok에 복사하고, ~/.grok/config.toml을 백업한 뒤 상태 행을 추가해. 둥근 끝이 보이는 곳이 이 상태 행이야.
+   - 턴이 끝나면 터미널 알림을 보낼까? 기본값: 아니요. --user --notify: 예.
+   - LitGrok 규칙 파일에 짧은 기본 규칙(ground rules)을 넣을까? 기본값: 예. --no-ground: 아니요.
+   - 상태 행의 끝을 어떻게 그릴까? 기본값: auto 또는 전에 저장한 선택. --glyphs: 옵션 뒤에 round, square, auto 가운데 하나.
+   - 자동 핸드오프는 꺼진 채로 시작해. 나중에 내가 npm exec --yes --package @litfamily/litgrok@latest -- litgrok auto-handoff on <percent>로 켤 수 있어.
+   - 아이콘 글꼴: --round는 이 컴퓨터에 아이콘 글꼴이 없을 때만 SymbolsNerdFontMono-Regular.ttf와 라이선스 파일을 ~/Library/Fonts(macOS)나 ${XDG_DATA_HOME:-~/.local/share}/fonts(Linux)에 추가해. Windows에서는 글꼴을 추가하지 않아.
+3. 내가 예라고 할 때까지 기다려. 이 패키지만 쓰고 다른 소스를 추가하지 마. 훅 승인, 신뢰, 로그인은 나 대신 하지 마.
+4. 설치해.
+   env -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes --round
+   상태 행까지 원하면 이 명령이야.
+   env -u CI npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes --round --user --status-line
+   Windows PowerShell나 cmd에서는 이 명령을 쓰고, 다른 옵션은 마지막 따옴표 앞에 붙여.
+   cmd /c "set CI=&& npm exec --yes --package @litfamily/litgrok@latest -- litgrok install --yes --round"
+5. 나중에 업데이트할 때는 처음 설치한 옵션으로 같은 명령을 다시 실행해. 저장한 끝 모양은 그대로 남아.
+6. 확인해. 설치 결과에 "Status: Ready"나 "Status: Already current"가 있고 ROUND_ENDS: 줄이 하나 나와. 그다음 실행해.
+   npm exec --yes --package @litfamily/litgrok@latest -- litgrok doctor
+   종료 코드가 0이고 "litgrok"과 버전, ROUND_ENDS: 줄 하나가 나오면 통과야. 설치의 마지막 줄에 아무것도 설치하지 않았다고 나오거나(Nothing was installed) 어느 단계가 실패하면 그 줄을 나에게 보여 주고 멈춰.
+7. 둥근 끝을 확인해. 이것을 보여 주고 양쪽 끝이 둥근지 나에게 물어봐:  LIT 
+   - 둥글면: 설치 명령에 --glyphs round를 붙여 다시 실행해. 선택이 저장돼. 되돌리려면 --glyphs auto.
+   - 네모 상자로 보이면: 설치 명령에 --glyphs square를 붙여 다시 실행해. 둥근 끝을 보려면 터미널 글꼴이 전체 Nerd Font이거나 symbols 글꼴이 대체 글꼴이어야 해(iTerm2 Non-ASCII Font, VS Code terminal.integrated.fontFamily, kitty symbol_map). Terminal.app에는 대체 글꼴 설정이 없어서 전체 Nerd Font가 필요해.
+   - SSH나 휴대폰이라 내가 알 수 없으면: 그대로 둬. 기본값은 --glyphs auto야.
+8. 무엇을 어디에 썼는지, 설치 프로그램이 거부한 것, 확인하지 못한 것을 보고해. 그리고 나만 할 수 있는 일을 알려 줘: 프로젝트의 Git 루트에서 Grok Build 다시 시작하기, /hooks-trust로 프로젝트 훅을 살펴보고 신뢰하기, Grok Build에 로그인하기.
 ```
 
 </details>
@@ -369,7 +390,7 @@ LitGrok 스킬을 부르는 프롬프트가 나오기 전까지는 컨텍스트 
 - **아랫변:** 컨텍스트 게이지, 모델, 비용, 브랜치, 버전이 남습니다.
 
 어두운 배경의 truecolor 터미널에서 보이는 카드입니다. 터미널이나 설치된 Nerd Font가 그릴 수 있으면 알약과 게이지의
-끝이 모두 둥글고, 아니면 모두 네모입니다. `LITGROK_HUD_GLYPHS=round`나 `basic`으로 직접 정할 수도 있습니다. 색을 적게
+끝이 모두 둥글고, 아니면 모두 네모입니다. `litgrok install --glyphs round`나 `square`로 선택을 저장할 수도 있습니다. 색을 적게
 쓰거나 아예 쓰지 않는 터미널과 좁은 화면에서는 같은 내용을 테두리 없는 줄로 보여 줍니다.
 
 노을도 있습니다. truecolor 터미널에서는 카드에서 글자가 쓰지 않는 자리에 반쯤 잠긴 해와 별 몇 개, 해에서 바깥으로
