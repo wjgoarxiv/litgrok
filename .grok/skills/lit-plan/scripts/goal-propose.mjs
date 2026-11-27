@@ -17,7 +17,7 @@ import { closeSync, constants, lstatSync, mkdirSync, openSync, readFileSync, ren
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { GOAL_DIR, GOAL_STATUS, compileCondition, conditionHash, consentKey, falsify, goalGuide, goalId, lintCondition, parseDoneWhen } from './goal-condition.mjs';
+import { GOAL_DIR, GOAL_STATUS, compileCondition, conditionHash, consentKey, falsify, goalGuide, goalId, lintCondition, parseDoneWhen, scopeLinesHash } from './goal-condition.mjs';
 
 const noFollow = constants.O_NOFOLLOW ?? 0;
 
@@ -61,6 +61,8 @@ export function proposeGoal({ cwd, planArg, now = Date.now(), timeoutMs, run } =
     ? { version: 2, plan, condition: goal.condition, reason: null, id: goal.id, check: goal.check }
     : { version: 2, plan, condition: null, reason: goal.reason, id: goalId(plan, ''), check: null };
   consent.hash = conditionHash(consentKey(consent));
+  // The charter and scope lines the user is asked about; start-work grants them only if they are unchanged at yes.
+  consent.scopeHash = scopeLinesHash(planText);
   consent.askedAt = new Date(now).toISOString();
   const staging = join(directory, `consent.json.${process.pid}.tmp`);
   const descriptor = openSync(staging, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow, 0o600);

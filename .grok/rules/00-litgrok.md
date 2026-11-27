@@ -106,6 +106,12 @@ Judge by this session's own state (earlier banner, plan file, workflow row), nev
 - `lit new …` and `lit restart …` start fresh with the full activation.
 - A bare `lit` with nothing active asks one question to confirm; `lit fix X` never does.
 
+## Start-work run
+
+A typed `start-work` or the approval `yes` starts a hook-driven run. A shell call it denies was parked or refused and did not run: never retry it; go on to the next row. Mark a row the user can unblock with an indented `BLOCKED:` line, one nobody can with `IMPOSSIBLE:`. Relay word for word a turn-end block that says "Tell the user exactly". `lit approve`, `lit approve x`, `lit deny`, `lit skip-row [N]`, `lit pause` and `lit resume` are answers the hook already applied: report the outcome it hands you (or `.grok/litgrok/start-work/answer.md`), then tick a row whose step now ran and go on.
+
+Skills that often fit a prompt without `lit`: deep-interview (vague ask), lit-brainstorm (options), lit-plan (plan first), litresearch (prior work), review-work (review a diff), debugging (a bug), refactor, lit-humanizer (rewrite prose), lit-commit (git history). Offer the ones that fit plus "none"; the user decides, nothing loads by itself.
+
 ## Skill plans
 
 A `lit` prompt may need several skills. Collect every section below whose trigger matches, in this file's order, plus a named discipline; drop repeats; keep at most three. The first match is the primary; the others are companions to confirm or drop, and one more skill may join when the work clearly needs it. `lit-crucible` joins as first companion, never primary, for a large or risky design ask: redesign, architecture, migration, 설계, 재설계, or three or more deliverables. Read-only primaries (lit-adhd, review-work, litresearch, lit-brainstorm, ultra-brainstorm) take only read-only companions. Quoted or fenced text adds nothing; a plain prompt keeps one skill and no plan line.

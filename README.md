@@ -342,6 +342,12 @@ go
 
 - **`/litwork`** follows its checklist to the end, so you can see what was done and what was only assumed.
 - **`/lit-plan` and `/start-work`** suit a larger change: you read and approve the plan before `/start-work` runs it.
+  You can then walk away. At each turn end LitGrok checks the plan and keeps Grok going while a row is open; when every
+  row is ticked and the plan's `## Done when` check passes, the run closes itself and Grok tells you so in one line.
+  A step that could reach outside the project, such as a push, is held back instead of run, and when you return one
+  short list shows what waits for you. Answer it with `lit approve` for the local steps, `lit approve x` (exactly that,
+  on its own) for the outward ones, `lit deny` to drop them, `lit skip-row` for a row that cannot be done, or
+  `lit pause` and `lit resume`.
 - **`/review-work`** picks the mode from what exists: a branch, a diff or ticked plan rows mean the change, and a plan
   with no ticked rows means the plan. `/review-work plan` or `/review-work work` forces one. A change goes through six
   read-only lanes, the findings are ranked by the evidence behind each one, and fixing is a separate step.

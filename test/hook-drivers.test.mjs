@@ -184,7 +184,8 @@ test('hook configs use the nested documented shape and package-owned commands', 
         {
           type: 'command',
           command: `${stem}.mjs`,
-          timeout: 5,
+          // Stop runs the start-work Done-when check (90 s cap) and UserPromptSubmit replays approved steps (100 s).
+          timeout: ['Stop', 'UserPromptSubmit'].includes(eventName) ? 120 : 5,
         },
       ],
     };

@@ -34,7 +34,7 @@ describe('Done when compiler and lint', () => {
     const done = parseDoneWhen(PLAN);
     assert.deepEqual(done, { ok: true, check: 'npm test' });
     const built = compileCondition({ plan: 'plans/cache.md', check: done.check });
-    assert.match(built.condition, /^Every row in plans\/cache\.md is ticked and `npm test` exits 0 \[lit:[0-9a-f]{8}\]$/u);
+    assert.match(built.condition, /^Every row in plans\/cache\.md is ticked and `npm test` exits 0, or the latest reply starts with WAITING-ON-USER:, or after 30 turns \[lit:[0-9a-f]{8}\]$/u);
     assert.equal(compileCondition({ plan: 'plans/cache.md', check: 'npm test' }).condition, built.condition, 'deterministic');
   });
 
@@ -64,9 +64,10 @@ describe('goal-propose and consent', () => {
     const cwd = project();
     const { line, consent } = proposeGoal({ cwd, planArg: 'plans/cache.md', run: failing });
     assert.equal(line, GOAL_STATUS.asked(consent.condition));
-    assert.match(line, /^Approve plan, start work and set goal: \/goal Every row in plans\/cache\.md is ticked and `npm test` exits 0 \[lit:[0-9a-f]{8}\]\? \(yes \/ edit \/ no\)$/u);
+    assert.match(line, /^Approve plan, start work and set goal: \/goal Every row in plans\/cache\.md is ticked and `npm test` exits 0, or the latest reply starts with WAITING-ON-USER:, or after 30 turns \[lit:[0-9a-f]{8}\]\? \(yes \/ edit \/ no\)$/u);
     const saved = JSON.parse(readFileSync(join(cwd, '.grok', 'litgrok', 'goal', 'consent.json'), 'utf8'));
     assert.equal(saved.hash, conditionHash(saved.condition));
+    assert.match(saved.scopeHash, /^[0-9a-f]{16}$/u, 'the charter and scope lines are hashed at question time');
     assert.equal(readFileSync(join(cwd, '.grok', 'litgrok', '.gitignore'), 'utf8'), '*\n');
   });
 
@@ -256,7 +257,9 @@ describe('turn-end check, cancel and sweep', () => {
     assert.equal(stop.status, 0, stop.stderr);
     const decision = last(stop);
     assert.equal(decision.decision, 'block');
-    assert.match(decision.reason, /LitGrok goal \[lit:[0-9a-f]{8}\]/u);
+    // The yes also started the start-work run, whose own driver runs the Done-when check in place of the advisory one.
+    assert.match(decision.reason, /Every row of `plans\/cache\.md` is ticked, but its Done-when check `npm test` (?:exited|timed out)/u);
+    assert.doesNotMatch(decision.reason, /LitGrok goal \[lit:/u);
   });
 });
 

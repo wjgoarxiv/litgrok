@@ -179,7 +179,8 @@ export function answerGoalPrompt({ workspaceRoot, sessionId, prompt, ledgerFile 
     const at = new Date(now).toISOString();
     writeRecord(directory, 'owner.json', { version: 2, plan, condition: condition ?? null, reason: reason ?? null, hash, id, check: check ?? null, sessionId, armedAt: at, start: { at } });
     const line = typeof condition === 'string' ? GOAL_STATUS.started(plan, id, condition) : GOAL_STATUS.startedNoGoal(plan, reason);
-    return { did: typeof condition === 'string' ? 'started-armed' : 'started', id, status: answer(directory, id, 'started', line, now) };
+    // `plan` and `scopeHash` (the charter lines as asked) let the prompt hook start the start-work run itself.
+    return { did: typeof condition === 'string' ? 'started-armed' : 'started', id, plan, scopeHash: typeof consent.scopeHash === 'string' ? consent.scopeHash : null, status: answer(directory, id, 'started', line, now) };
   }
   if (/^\s*lit\s+cancel\s*$/iu.test(String(prompt ?? ''))) {
     const owner = readGoalOwner(workspaceRoot);
@@ -194,14 +195,24 @@ export function answerGoalPrompt({ workspaceRoot, sessionId, prompt, ledgerFile 
  * The Stop side. With every row of the owned plan ticked, hold the turn once and ask for the check.
  * The next stop after that closes the record: the check was asked for, and the model reported it.
  */
-export function goalTurnEnd({ workspaceRoot, sessionId, now = Date.now() }) {
-  const result = planTurnEnd({ workspaceRoot, sessionId, now });
+export function goalTurnEnd({ workspaceRoot, sessionId, runOwnsTurnEnd = false, now = Date.now() }) {
+  const result = planTurnEnd({ workspaceRoot, sessionId, runOwnsTurnEnd, now });
   if (result.block) return result;
   const notice = loopGoalNotice({ workspaceRoot, sessionId, now });
   return notice ? { block: true, notice: true, reason: notice.text } : result;
 }
 
-function planTurnEnd({ workspaceRoot, sessionId, now }) {
+/** Closes this session's open goal record, for a start-work run that closed itself. Returns the id or null. */
+export function closeGoalOwner({ workspaceRoot, sessionId, why, now = Date.now() }) {
+  const owner = readGoalOwner(workspaceRoot);
+  if (!owner || owner.closed || owner.sessionId !== sessionId) return null;
+  writeRecord(goalDirectory(workspaceRoot), 'owner.json', { ...owner, closed: { why, at: new Date(now).toISOString() } });
+  return owner.id;
+}
+
+// With `runOwnsTurnEnd` (a start-work run of this session is active) only the start hand-off is given here: the run's
+// own driver checks the rows and the Done-when check and closes the run, so the advisory check would only repeat it.
+function planTurnEnd({ workspaceRoot, sessionId, runOwnsTurnEnd, now }) {
   const owner = readGoalOwner(workspaceRoot);
   if (!owner || owner.closed || owner.sessionId !== sessionId) return { block: false };
   // The start: the turn in which the user said yes ends once with the order to run start-work.
@@ -215,7 +226,7 @@ function planTurnEnd({ workspaceRoot, sessionId, now }) {
     };
   }
   // A lit run's goal has no plan rows, so the turn end has nothing to check; its one line comes from loopGoalNotice.
-  if (owner.kind === 'loop' || typeof owner.condition !== 'string') return { block: false };
+  if (runOwnsTurnEnd || owner.kind === 'loop' || typeof owner.condition !== 'string') return { block: false };
   const root = resolve(workspaceRoot);
   const planPath = resolve(root, owner.plan);
   if (relative(root, planPath).startsWith('..')) return { block: false };

@@ -432,9 +432,14 @@ export function appendSessionRecord(ledgerFile, baseRecord, fields) {
   appendRecord(ledgerFile, { ...baseRecord, ...fields, recordedAt: new Date().toISOString() });
 }
 
+// The last event read from stdin, kept so the start-work guard in the same hook still sees it when recording fails.
+let lastEvent = null;
+export const lastReadEvent = () => lastEvent;
+
 export async function recordPassiveEvent(expectedEvent) {
   try {
     const event = await readEvent();
+    lastEvent = event;
     const environment = verifiedEnvironment(event, expectedEvent);
     if (environment.sessionId !== null && environment.sessionId.length > 512) throw new RecorderError('SESSION_ID_INVALID');
     const record = {

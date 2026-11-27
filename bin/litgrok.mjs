@@ -66,6 +66,8 @@ const PRE_MANIFEST_PAYLOAD_HASHES = Object.freeze({
   'hooks/record-passive-event.mjs': '9f5bd1d6c8b8e6c0be4cc61cf31f0e26f4f8a41fceb826e88567f22efa2b0090',
   'hooks/session-start.mjs': '5706ccce58340e78e435b9c1fd2224e101872ce1d0f51a9d187feb31b67c3b5d',
   'hooks/stop.mjs': 'c796f02ac3dc99716d0c2f478bf93ec35cd8a9c725de18d12895957ee261b9c3',
+  'hooks/stop.json': '0ca6ae63d5966a08237f17f5ae2c264ba08695e3f7a8022134fedc711dc41ec8',
+  'hooks/user-prompt-submit.json': '5ce94387d4638aaff41ee4f420bb7176380fbb9ebd86311065aadd6e2d7baba7',
   'rules/00-litgrok.md': 'd46d1672e80250c8748458afa9b0fc1a46c2a318d31c4d58ab1ebc3f8f2eb804',
   'skills/autoconference/SKILL.md': '025e9420ed9986b0466a8d660a4ed7f3e2d2243051ed3622be8ca87cbeba9458',
   'skills/autoconference/assets/report_template.md': '73a00032dc143f34f67a97a257f76e7a5acd9365d367e0b27d0c72e439a336ab',

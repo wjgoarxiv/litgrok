@@ -100,6 +100,25 @@ export function planRows(text) {
   return rows;
 }
 
+/**
+ * The hash of a plan's `Run charter:` and `Scope roots:` lines outside code fences. The approval question
+ * records it, and start-work compares it at the start: a plan edited in between gets project grants only.
+ */
+export function scopeLinesHash(text) {
+  const lines = [];
+  let fence = null;
+  for (const line of String(text ?? '').split(/\r?\n/u)) {
+    const marker = /^ {0,3}(`{3,}|~{3,})/u.exec(line)?.[1];
+    if (marker) {
+      if (!fence) fence = marker[0];
+      else if (marker[0] === fence) fence = null;
+      continue;
+    }
+    if (!fence && /^(?:Run charter:|Scope roots:)/iu.test(line.trim())) lines.push(line.trim());
+  }
+  return createHash('sha256').update(lines.join('\n')).digest('hex').slice(0, 16);
+}
+
 /** The `## Done when` block: one `check: \`<command>\`` line. */
 export function parseDoneWhen(planText) {
   const lines = String(planText ?? '').split(/\r?\n/u);
@@ -116,10 +135,13 @@ export function parseDoneWhen(planText) {
   return { ok: false, reason: 'the `## Done when` block names no `check:` command' };
 }
 
-/** `Every row in plans/<f>.md is ticked and \`<cmd>\` exits 0 [lit:<id>]`, or why it cannot be built. */
+// A pasted /goal must end itself even when the work waits on the user, so every condition carries this tail.
+export const GOAL_SELF_END = ', or the latest reply starts with WAITING-ON-USER:, or after 30 turns';
+
+/** `Every row in plans/<f>.md is ticked and \`<cmd>\` exits 0<GOAL_SELF_END> [lit:<id>]`, or why it cannot be built. */
 export function compileCondition({ plan, check }) {
   const id = goalId(plan, check);
-  const condition = `Every row in ${plan} is ticked and \`${check}\` exits 0 [lit:${id}]`;
+  const condition = `Every row in ${plan} is ticked and \`${check}\` exits 0${GOAL_SELF_END} [lit:${id}]`;
   if (condition.length > GOAL_MAX_CHARS) return { ok: false, reason: `the condition is over ${GOAL_MAX_CHARS} characters; point the check at one script` };
   return { ok: true, condition, id };
 }

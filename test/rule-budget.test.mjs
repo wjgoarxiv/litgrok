@@ -24,8 +24,11 @@ import { run } from '../bin/litgrok.mjs';
 // 19,021 says lit-adhd prints its KPI board as given and that `lit adhd detail` adds the session cards (67 bytes);
 // 20,948 adds the skill-plan section (several fitting skills, cap three, aliases, installed-only extensions), the
 // ultra-brainstorm and lit team routes, and the lit-adhd verdict, recap and lit-recap alias lines (1,927 bytes);
-// 20,951 says the old recap words call the collector with --moved, which prints the moved note first (3 bytes).
-const RULE_BUDGET_BYTES = 20_951;
+// 20,951 says the old recap words call the collector with --moved, which prints the moved note first (3 bytes);
+// 21,895 adds the start-work run section (the answer words the hook applies and where their outcome arrives, since
+// the prompt hook's stdout is dropped) and the one-line skill catalog for prompts without `lit` (944 bytes);
+// 21,911 says to tick a row whose parked step ran after an answer, since real Grok left it BLOCKED (16 bytes).
+const RULE_BUDGET_BYTES = 21_911;
 const ROUTES = {
   'lit, English': 'lit fix the failing date parser',
   'lit, Korean': 'lit 날짜 파서 버그 고쳐줘',

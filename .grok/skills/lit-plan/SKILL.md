@@ -54,7 +54,7 @@ Fill the plan's `## Done when` block with one command that exits 0 only when the
 node .grok/skills/lit-plan/scripts/goal-propose.mjs plans/<slug>.md
 ```
 
-It compiles the block into one condition of at most 500 characters, `Every row in plans/<slug>.md is ticked and \`<command>\` exits 0 [lit:<id>]`, refuses judgment words (works, looks good, 잘 동작), a push or publish as the only success and any command off its allowlist, and runs the command once, time-boxed, to prove the condition false now. Ask the question it prints unchanged, last in the reply, with the answer guide it prints under it, in the user's language (the answer words stay English):
+It compiles the block into one condition of at most 500 characters, `Every row in plans/<slug>.md is ticked and \`<command>\` exits 0, or the latest reply starts with WAITING-ON-USER:, or after 30 turns [lit:<id>]` (so a pasted goal ends itself), refuses judgment words (works, looks good, 잘 동작), a push or publish as the only success and any command off its allowlist, and runs the command once, time-boxed, to prove the condition false now. Ask the question it prints unchanged, last in the reply, with the answer guide it prints under it, in the user's language (the answer words stay English):
 
 - `Approve plan, start work and set goal: /goal <condition>? (yes / edit / no)`, or
 - `Approve plan and start work? (yes / no)` followed by `No goal set: <reason>` (no block, a placeholder, a lint failure, a check that hangs or cannot start, or a goal already true).

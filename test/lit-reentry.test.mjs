@@ -81,7 +81,8 @@ test('a named discipline switches the stage, and lit-plan arms the plan gate for
   assert.equal(prompt(box, 'start-work plans/shout.md').stage, 'work');
   assert.equal(prompt(box, 'review-work').stage, 'review');
   const records = readFileSync(ledgerFile(box.workspace), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
-  assert.deepEqual(records.map((record) => record.discipline ?? null), [null, 'lit-plan', 'lit-plan', null, null]);
+  assert.deepEqual(records.filter((record) => record.signal).map((record) => record.signal), ['start-work-run-refused'], 'start-work names a plan that does not exist');
+  assert.deepEqual(records.filter((record) => !record.signal).map((record) => record.discipline ?? null), [null, 'lit-plan', 'lit-plan', null, null]);
 });
 
 test('lit plan, with a space, switches to lit-plan exactly like lit-plan: the row, the HUD label and the plan gate', (t) => {

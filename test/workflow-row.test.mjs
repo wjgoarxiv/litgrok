@@ -406,7 +406,7 @@ test('hooks record the stage, the tool that started and a test verdict, never th
   assert.equal(prompt.status, 0, prompt.stderr);
   const fenced = runHook('user-prompt-submit', base(workspace, 'UserPromptSubmit', { promptId: 'p2', prompt: '```\nreview-work\n```\nwhat does this do?' }), hud);
   assert.equal(fenced.status, 0, fenced.stderr);
-  const pre = runHook('pre-tool-use', base(workspace, 'PreToolUse', { promptId: 'p2', toolName: 'run_terminal_command', toolUseId: 'call-1', toolInput: { command: `npm test -- ${secret}` } }));
+  const pre = runHook('pre-tool-use', base(workspace, 'PreToolUse', { promptId: 'p2', toolName: 'run_terminal_command', toolUseId: 'call-1', toolInput: { command: `cat ${secret}` } }));
   assert.equal(pre.status, 0, pre.stderr);
   assert.equal(pre.stdout, '', 'a PreToolUse recorder never answers, so the call proceeds');
   const post = runHook('post-tool-use', base(workspace, 'PostToolUse', { promptId: 'p2', toolName: 'run_terminal_command', toolInput: { command: `npm test -- ${secret}` }, toolResult: `${secret}\n# pass 214\n# fail 0\n` }));
@@ -416,7 +416,8 @@ test('hooks record the stage, the tool that started and a test verdict, never th
 
   const ledger = readFileSync(ledgerFile(workspace), 'utf8');
   assert.equal(ledger.includes(secret), false, 'no prompt text, command or output reaches the ledger');
-  const records = ledger.trim().split('\n').map((line) => JSON.parse(line));
+  // The start-work prompt also starts the run, which adds its own signal record.
+  const records = ledger.trim().split('\n').map((line) => JSON.parse(line)).filter((record) => !record.signal);
   assert.deepEqual(records.map((record) => record.event), ['UserPromptSubmit', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'PostToolUseFailure']);
   assert.equal(records[0].stage, 'work');
   assert.equal('stage' in records[1], false, 'a skill name inside a code fence sets no stage');

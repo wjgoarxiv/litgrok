@@ -158,6 +158,55 @@ hash the live file that could be affected. Use only the copy for mutation. After
 the probe, verify the live hash is unchanged, remove exactly the temporary root,
 and record that it no longer exists.
 
+## Unattended run
+
+A typed `start-work` (or `start-work plans/<slug>.md`, `lit start …`), or the
+user's exact `yes` to a lit-plan approval question, starts a run of that plan
+(the newest plan with rows when none is named) for this session. LitGrok's
+hooks keep it in `.grok/litgrok/start-work/run.json` and carry it so it can
+finish with nobody at the keyboard:
+
+- `PreToolUse` guards each `run_terminal_command` call. Plain readers,
+  `node` or `python3` on a script in the project, the project's own
+  `npm test` / `npm run test|check|lint|build|typecheck`, `cd` inside the
+  project and the plan's own Done-when check run; a reader in a form that
+  writes or runs (`sed`, `awk`, `sort -o`, `find -exec`, `rg --pre`, any
+  `git branch`) and an unknown verb park as `[X]`. Local, undoable steps (`touch`, `mkdir`, `cp` or `mv` to
+  a new path, `git add` of named files) are parked as `[B]`; everything else
+  (push, tag, publish, delete, network, package scripts, chained calls) is
+  parked as `[X]` with its exact command and folder. A command the guard
+  cannot read (expansions, globs, redirects, `time`, `env`, `eval` and other
+  prefixes) is held and never replayed. A call naming a protected home folder,
+  a secret file, `.git` internals or the run state is refused and not stored.
+  A denied call did not run: do not retry it; continue with the next open row.
+  A self-check refused only for its shape gets a hint: run each part alone.
+- `Stop` drives the turn end. While a row is open it continues the turn, at
+  most twice per unchanged plan state, then asks you to relay one wrap-up list
+  and stays quiet until something changes. When every row is ticked, no lane is
+  running and the `## Done when` line `check: \`<command>\`` exits 0, it
+  closes the run and asks you to relay one completion line. A parked step that
+  could reach outside the project keeps a finished run in wrap-up instead.
+- `UserPromptSubmit` applies the user's answers before you run: `lit approve`
+  runs the `[B]` steps the last list showed, `lit approve x` (the whole prompt,
+  typed exactly) runs its `[X]` steps, `lit deny` drops every parked step,
+  `lit skip-row [N]` skips a BLOCKED or IMPOSSIBLE row, `lit pause` and
+  `lit resume` stop and restart the driver. Grok Build drops what this hook
+  prints, so the outcome reaches you with the next tool call or turn end (and
+  stays in `.grok/litgrok/start-work/answer.md`): report it as given, then
+  remove the BLOCKED line of a row whose parked step has now run, tick that
+  row once its work is done, and go on with the run.
+
+Mark a row the user can unblock with an indented `BLOCKED: <reason>` line and a
+row nobody can with `IMPOSSIBLE: <reason>`, then move on instead of ending the
+turn to ask. A reply that must wait on the user starts with `WAITING-ON-USER:`
+and stops there. A plan line `Run charter: commit on <branch> in <repo>`
+outside code fences lets the run commit named files on that branch
+(`git add <files> && git commit -m …`; no amend, no hook skip, never push),
+while the charter and `Scope roots:` lines are unchanged since the approval.
+Grok Build takes `/goal` only from the user, so a `goal: native` line arms
+nothing; the `/goal` line LitGrok offers ends itself on `WAITING-ON-USER:` or
+after 30 turns.
+
 ## RED checkpoint
 
 For every behavior change, write the smallest failing test first. The RED test
