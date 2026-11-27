@@ -1,18 +1,18 @@
-<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 노을빛 터미널 화면입니다. LitGrok의 모서리가 둥근 상태 카드가 단계 지도, 작업 게이지, 스킬 줄, 컨텍스트 게이지와 함께 화면을 두르고, 가운데는 픽셀 글자 LITFAMILY와 줄무늬 해가 채우며 일곱 제품 이름 줄에서 LITGROK가 켜지고, 아래에서는 Grok Build 프롬프트에 요청이 입력됩니다." /></picture></p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/cover-motion-still.webp" /><source media="(prefers-reduced-motion: no-preference)" srcset="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/cover-motion.webp" /><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/cover-motion.webp" width="100%" alt="LitFamily 모션 커버: 노을빛 터미널 화면입니다. LitGrok의 모서리가 둥근 상태 카드가 단계 지도, 작업 게이지, 스킬 줄, 컨텍스트 게이지와 함께 화면을 두르고, 가운데는 픽셀 글자 LITFAMILY와 줄무늬 해가 채우며 일곱 제품 이름 줄에서 LITGROK가 켜지고, 아래에서는 Grok Build 프롬프트에 요청이 입력됩니다." /></picture></p>
 
 <h1 align="center">LitGrok</h1>
 <p align="center"><strong>Keep the work lit.</strong></p>
 
 LitGrok은 xAI Grok Build에 붙이는 추가 기능입니다. Grok이 "다 됐어요"라고 말하기 전에 자기 작업을 직접 확인하게 하고, 다음 세션이 이어서 시작할 수 있도록 기록을 남기게 합니다. npm 명령 한 줄이면 스킬과 프로젝트 규칙, 훅이 프로젝트에 들어갑니다.
 
-**[GitHub에서 README 전체 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [안내서](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide_ko-KR.md) · [전체 스킬](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md) · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/reference_ko-KR.md)
+**[GitHub에서 README 전체 보기](https://github.com/wjgoarxiv/litgrok/blob/main/README_ko-KR.md)** · [안내서](https://github.com/wjgoarxiv/litgrok/blob/main/docs/guide_ko-KR.md) · [전체 스킬](https://github.com/wjgoarxiv/litgrok/blob/main/docs/skills_ko-KR.md) · [English](https://github.com/wjgoarxiv/litgrok#readme) · [설치](#30초-설치) · [상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/reference_ko-KR.md)
 
 <p align="center">
-<a href="#30초-설치"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/readme/badge-version.svg" alt="1.0.46" /></a>
-<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/readme/badge-license.svg" alt="MIT 라이선스" /></a>
+<a href="#30초-설치"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/readme/badge-version.svg" alt="1.0.47" /></a>
+<a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/readme/badge-license.svg" alt="MIT 라이선스" /></a>
 </p>
 
-<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
+<p align="center"><a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/reference_ko-KR.md"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/readme/lucide-book-open.svg" width="16" alt="" /> 상세 안내</a> &nbsp; <a href="#30초-설치">설치</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/cover-motion.webp"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/readme/lucide-play.svg" width="16" alt="" /> 커버 모션</a> &nbsp; <a href="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/LICENSE"><img src="https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/assets/readme/lucide-shield-check.svg" width="16" alt="" /> MIT</a></p>
 
 Grok Build에게 기능을 하나 부탁하면 코드를 쓰고 끝났다고 말합니다. 그런데 다음 날 보니 테스트는 한 번도 돌지 않았습니다. 새 세션을 열면 프로젝트 설명을 처음부터 다시 해야 합니다.
 
@@ -59,7 +59,7 @@ Node.js와 Grok Build가 있으면 됩니다. 써 보고 싶은 프로젝트에�
 npm exec --yes --package @litfamily/litgrok@latest -- litgrok install
 ```
 
-파일은 `<project>/.grok/`에 들어갑니다. `~/.grok/`에 설치하려면 `--user`를, 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.46`을 쓰세요. `--dry-run`을 붙이면 파일을 쓰기 전에 들어갈 경로를 모두 보여 줍니다.
+파일은 `<project>/.grok/`에 들어갑니다. `~/.grok/`에 설치하려면 `--user`를, 이 릴리스로 고정하려면 `--package @litfamily/litgrok@1.0.47`을 쓰세요. `--dry-run`을 붙이면 파일을 쓰기 전에 들어갈 경로를 모두 보여 줍니다.
 
 로컬 패키지로 써 보려면 실제 절대 경로를 변수에 넣고 두 줄을 따로 실행하세요.
 
@@ -108,7 +108,7 @@ npm exec --yes --package "$LITGROK_PACK" -- litgrok install
 
 ## 설치하면 달라지는 것
 
-설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/hooks/hooks.json)에 있는 훅 등록 열두 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
+설치 프로그램이 스킬, 에이전트, 프로젝트 규칙, 훅을 `.grok/`에 복사합니다. [`hooks/hooks.json`](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/hooks/hooks.json)에 있는 훅 등록 열두 개는 신뢰한 Git 루트에서만 동작하고, `.grok/litgrok/session-ledger/`에 이벤트 순서를 남깁니다. 모든 작업은 Grok 세션 안에서 돌고 백그라운드 작업은 없습니다. 세션이 끝나면 다음 세션이 이어받을 때까지 그 자리에 멈춰 있습니다.
 
 지금 어떤 LitGrok 스킬이 동작 중인지, 어떤 모델을 쓰는지, 컨텍스트를 얼마나 썼는지 보고 싶으면 `install --user --status-line`으로 상태 행을 켜세요. `~/.grok/config.toml`에 `[ui.status_line]`을 넣고, 파일이 이미 있으면 먼저 백업합니다. 프롬프트가 작업 흐름 스킬을 시작하면 지금 단계, 돌고 있는 도구, 마지막 테스트 결과도 함께 보입니다. 턴이 끝날 때 Grok의 터미널 알림을 받으려면 `--notify`를 붙이세요. 어두운 배경의 truecolor 터미널에서는 상태 행이 테두리 하나로 묶인 카드가 되어 불꽃 알약, 단계 지도, 작업 게이지를 담고 아랫변에 컨텍스트 게이지를 둡니다. 글자가 쓰지 않는 자리에는 노을이 그려지며, 턴이 도는 동안 화면을 다시 그릴 때마다 한 단계씩 움직이고 턴 사이에는 멈춰 있습니다. 터미널이나 Nerd Font가 그릴 수 있으면 끝이 둥글고, `install --glyphs round`나 `square`로 선택을 저장할 수 있으며, `install --round`는 아이콘 글꼴이 없을 때 작은 글꼴을 추가합니다. `LITGROK_HUD_MOTION=off`는 움직임을 멈추고 `LITGROK_HUD_COLOR=256`은 테두리 없는 줄을 씁니다.
 
@@ -149,6 +149,6 @@ npm exec --yes --package @litfamily/litgrok@latest -- litgrok uninstall --user
 
 LitGrok 덕분에 같은 설명을 덜 반복하게 됐다면, [GitHub 스타](https://github.com/wjgoarxiv/litgrok) 하나가 다른 Grok Build 사용자에게 이 프로젝트를 알리는 데 도움이 됩니다.
 
-[상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/LICENSE) · [상표 정책](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.46/TRADEMARK.md)
+[상세 안내](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/reference_ko-KR.md) · [변경 이력](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/CHANGELOG.md) · [개인정보](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/docs/privacy.md) · [MIT 라이선스](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/LICENSE) · [상표 정책](https://cdn.jsdelivr.net/npm/@litfamily/litgrok@1.0.47/TRADEMARK.md)
 
 커버의 모션은 LitFamily 모션 스킬로 만든 브랜드 연출입니다. 그려서 움직인 그림이라 실제 Grok 세션을 녹화한 장면은 들어 있지 않습니다.

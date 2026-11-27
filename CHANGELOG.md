@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.47 — 2026-11-27
+
 - `start-work` can finish a run with nobody at the keyboard. A typed `start-work` or the approval `yes` starts a run. The `Stop` hook keeps the turn going while a plan row is open (at most twice per unchanged plan state, then one wrap-up list) and closes the run once every row is ticked and the plan's `## Done when` check passes. The `PreToolUse` hook, now also the run's shell guard, parks a call it will not run now with its exact command and folder instead of stopping the run; Grok Build 1.0.13 was probed to honour that deny. The `UserPromptSubmit` hook applies `lit approve`, `lit approve x` (only as the exact whole prompt), `lit deny`, `lit skip-row [N]`, `lit pause` and `lit resume`, and the next tool call or turn end tells the model what happened. A `Run charter: commit on <branch> in <repo>` plan line lets the run commit named files on that branch. No hook registration was added; the `Stop` and `UserPromptSubmit` timeouts rise to 120 s to cover the check and the replay.
 - The `/goal` line the approval question offers now ends itself: its condition adds ", or the latest reply starts with WAITING-ON-USER:, or after 30 turns". Grok Build takes `/goal` only from the user, so LitGrok still never sets it.
 - The rule file gains a short start-work section and one line listing skills that often fit a prompt without `lit`. Grok Build drops the stdout of an allowing `UserPromptSubmit` hook, so a per-prompt suggestion cannot reach the model; this static line is the Grok Build form.
