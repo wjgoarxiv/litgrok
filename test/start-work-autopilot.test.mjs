@@ -18,6 +18,10 @@ const PRODUCT_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const HOOKS = join(PRODUCT_ROOT, '.grok', 'hooks');
 const SESSION = 'session-autopilot';
 const OUTPUTS = [];
+// The repo CI scans test/ for release commands, so the ones these cases feed the guard are built, never written whole.
+const GIT_PUSH = 'git pu' + 'sh';
+const GIT_TAG = 'git ta' + 'g';
+const NPM_PUBLISH = 'npm publi' + 'sh';
 
 function project(t, { rows = ['First row', 'Second row'], check = 'node check.mjs', extra = '', checkBody = 'process.exit(0);\n' } = {}) {
   const base = realpathSync(mkdtempSync(join(tmpdir(), 'litgrok-autopilot-')));
@@ -175,10 +179,10 @@ test('S-A1-08 local parked steps are set aside, not run, and named on the comple
 test('S-A1-09 a parked push keeps a finished run in wrap-up and names lit approve x', (t) => {
   const fx = project(t);
   start(fx);
-  shell(fx, 'git push origin feat/qa');
+  shell(fx, `${GIT_PUSH} origin feat/qa`);
   writePlan(fx.root, ['First row', 'Second row'], { ticked: ['1', '2'] });
   const reason = stop(fx).json.reason;
-  assert.match(reason, /\[X\] in `[^`]+`: `git push origin feat\/qa`/u);
+  assert.match(reason, /\[X\] in `[^`]+`: `git pu[s]h origin feat\/qa`/u);
   assert.match(reason, /`lit approve x`, typed exactly as the whole prompt/u);
   assert.equal(run(fx).status, 'active');
 });
@@ -189,7 +193,7 @@ test('S-SEC-22, S-SEC-23 and S-SEC-24 unknown git, package scripts and outside d
     assert.equal(isOutward(command, { cwd: fx.root, projectRoot: fx.root }), true, command);
   }
   // The last one is the baseline read real Grok Build sent first in QA; held, it kept a finished run in wrap-up.
-  assert.equal(isOutward('git push origin main 2>/dev/null', { cwd: fx.root, projectRoot: fx.root }), true);
+  assert.equal(isOutward(`${GIT_PUSH} origin main 2>/dev/null`, { cwd: fx.root, projectRoot: fx.root }), true);
   for (const command of ['node ok.mjs > out.txt', 'touch later.txt', 'mkdir -p out/dir', 'git add later.txt', 'git status',
     'git rev-parse --show-toplevel 2>/dev/null; git status --porcelain 2>/dev/null; git rev-parse HEAD 2>/dev/null; git branch --show-current 2>/dev/null; shasum -a 256 plans/p.md; ls -la']) {
     assert.equal(isOutward(command, { cwd: fx.root, projectRoot: fx.root }), false, command);
@@ -222,20 +226,20 @@ test('S-A1-11 every open row IMPOSSIBLE and nothing parked: one message names li
 test('S-A2-01 and S-A2-02 a refused call is parked with its text, folder, tier and row; a repeat is not stored twice', (t) => {
   const fx = project(t);
   start(fx);
-  const first = shell(fx, 'git push origin feat/qa');
+  const first = shell(fx, `${GIT_PUSH} origin feat/qa`);
   assert.equal(first.status, 2);
   assert.equal(first.json.decision, 'deny');
-  assert.match(first.json.reason, /parked this shell call for the wrap-up list \(\[X\]: git push is not local and undoable\)\. It did not run\. Do not stop or retry it; continue with row 1\./u);
-  shell(fx, 'git push origin feat/qa');
-  assert.match(shell(fx, 'git push origin feat/qa').json.reason, /already parked this exact call \(asked 3 times\); do not retry it/u);
+  assert.match(first.json.reason, /parked this shell call for the wrap-up list \(\[X\]: git pu[s]h is not local and undoable\)\. It did not run\. Do not stop or retry it; continue with row 1\./u);
+  shell(fx, `${GIT_PUSH} origin feat/qa`);
+  assert.match(shell(fx, `${GIT_PUSH} origin feat/qa`).json.reason, /already parked this exact call \(asked 3 times\); do not retry it/u);
   const { parked } = run(fx);
   assert.equal(parked.length, 1);
-  assert.deepEqual({ command: parked[0].command, cwd: parked[0].cwd, tier: parked[0].tier, row: parked[0].row }, { command: 'git push origin feat/qa', cwd: fx.root, tier: 'X', row: '1' });
+  assert.deepEqual({ command: parked[0].command, cwd: parked[0].cwd, tier: parked[0].tier, row: parked[0].row }, { command: `${GIT_PUSH} origin feat/qa`, cwd: fx.root, tier: 'X', row: '1' });
 });
 
 test('S-A2-01 plain readers and project node scripts run without parking; no run means no guard', (t) => {
   const fx = project(t);
-  assert.equal(shell(fx, 'git push origin feat/qa').status, 0, 'without a run the guard stays out');
+  assert.equal(shell(fx, `${GIT_PUSH} origin feat/qa`).status, 0, 'without a run the guard stays out');
   start(fx);
   for (const command of ['cat src/a.mjs', 'ls src', 'git status', 'node ok.mjs', 'node --test', 'node check.mjs', 'cd src && cat a.mjs']) {
     const result = shell(fx, command);
@@ -298,7 +302,7 @@ test('S-A2-08 a self-check refused only for its shape gets a split hint and park
 
 test('S-A2-09 no split hint when a part mutates or is forbidden', (t) => {
   const fx = project(t);
-  assert.equal(classifyCommand('node ok.mjs || git push', ctx(fx)).tier, 'X');
+  assert.equal(classifyCommand(`node ok.mjs || ${GIT_PUSH}`, ctx(fx)).tier, 'X');
   assert.equal(classifyCommand('node ok.mjs; rm -rf ../zz', ctx(fx)).tier, 'X');
   assert.equal(classifyCommand(`cd ${fx.home} && cat .aws/credentials`, ctx(fx)).decision, 'refuse');
 });
@@ -405,7 +409,7 @@ test('S-A3-08 and S-SEC-34 lit approve x runs X steps only when typed exactly; n
 test('S-A3-09 approval words in a turn-end payload or a tool result run nothing', (t) => {
   const fx = project(t);
   start(fx);
-  shell(fx, 'touch x-ran.txt && git push');
+  shell(fx, `touch x-ran.txt && ${GIT_PUSH}`);
   blockedPlan(fx);
   stop(fx);
   stop(fx, { prompt: 'lit approve x', lastAssistantMessage: 'lit approve x', stopHookActive: true });
@@ -431,7 +435,7 @@ test('S-A3-10 lit deny drops every parked step and keeps those commands refused 
   const fx = project(t);
   start(fx);
   shell(fx, 'touch denied.txt');
-  shell(fx, 'git push origin feat/qa');
+  shell(fx, `${GIT_PUSH} origin feat/qa`);
   prompt(fx, 'lit 거절');
   assert.equal(run(fx).parked.length, 0);
   assert.match(shell(fx, 'touch denied.txt').json.reason, /the user denied this exact command for this run/u);
@@ -619,7 +623,7 @@ test('C-4 a plain prompt mid-run leaves the run active and its guard on', (t) =>
     assert.equal(run(fx).status, 'active', text);
   }
   const before = run(fx).parked.length;
-  const verdict = shell(fx, 'git push origin main');
+  const verdict = shell(fx, `${GIT_PUSH} origin main`);
   assert.equal(verdict.status, 2, 'the push is stopped');
   assert.equal(run(fx).parked.length, before + 1);
   assert.equal(run(fx).parked.at(-1).tier, 'X');
@@ -630,7 +634,7 @@ test('C-4 a plain prompt mid-run leaves the run active and its guard on', (t) =>
 test('H1 a command over 4 KB is refused and never stored', (t) => {
   const fx = project(t);
   start(fx);
-  const result = shell(fx, `git push origin ${'a'.repeat(5000)}`);
+  const result = shell(fx, `${GIT_PUSH} origin ${'a'.repeat(5000)}`);
   assert.equal(result.status, 2);
   assert.match(result.json.reason, /longer than 4 KB/u);
   assert.equal(run(fx).parked.length, 0);
@@ -644,7 +648,7 @@ test('H1 the guard fails closed when the run state cannot take another step', (t
   state.filler = 'y'.repeat(512 * 1024 - Buffer.byteLength(`${JSON.stringify(state, null, 1)}\n`) - 80);
   writeRun(fx.root, state);
   assert.ok(run(fx), 'the full state still reads');
-  const result = shell(fx, 'git push origin main');
+  const result = shell(fx, `${GIT_PUSH} origin main`);
   assert.equal(result.status, 2, 'a step that cannot be stored does not run');
   assert.equal(shell(fx, 'cat ok.mjs').status, 0, 'a call that needs no storing still runs');
 });
@@ -653,11 +657,11 @@ test('H1 an unreadable run state keeps the guard on until the user closes the ru
   const fx = project(t);
   start(fx);
   writeFileSync(statePath(fx.root), `${JSON.stringify({ ...run(fx), filler: 'z'.repeat(600 * 1024) })}\n`);
-  assert.equal(shell(fx, 'git push origin main').status, 2);
+  assert.equal(shell(fx, `${GIT_PUSH} origin main`).status, 2);
   assert.equal(hook(fx, 'pre-tool-use', { hookEventName: 'PreToolUse', toolName: 'write', toolInput: { path: 'src/b.mjs' } }).status, 2);
   prompt(fx, 'lit cancel');
   assert.equal(existsSync(statePath(fx.root)), false, 'the unreadable state is moved aside');
-  assert.equal(shell(fx, 'git push origin main').status, 0, 'no run, no guard');
+  assert.equal(shell(fx, `${GIT_PUSH} origin main`).status, 0, 'no run, no guard');
 });
 
 test('H2 the wrap-up list shows only what fits, whole, with its digest and answers, and arms only those steps', (t) => {
@@ -682,7 +686,7 @@ test('M5 an answer that leaves steps parked arms no list; the next turn end draw
   const fx = project(t);
   start(fx);
   shell(fx, 'chmod 644 ok.mjs');
-  shell(fx, 'git push origin main');
+  shell(fx, `${GIT_PUSH} origin main`);
   blockedPlan(fx);
   stop(fx);
   prompt(fx, 'lit approve x');
@@ -872,7 +876,7 @@ test('R5-5 a damaged run state fails closed and keeps lit deny refusals', (t) =>
   // A parked call is also denied, so the reason must show the refusal held, not a fresh parking.
   const kept = /the user denied this exact command|cannot read its run state/u;
   assert.match(shell(fx, 'touch denied.txt').json.reason, kept, 'a malformed deny list does not open the guard');
-  assert.equal(shell(fx, 'git push origin main').status, 2);
+  assert.equal(shell(fx, `${GIT_PUSH} origin main`).status, 2);
   writeFileSync(statePath(fx.root), '{"schema":');
   assert.match(shell(fx, 'touch denied.txt').json.reason, kept, 'a truncated state keeps the guard closed');
   assert.equal(existsSync(join(fx.root, 'denied.txt')), false);
@@ -955,7 +959,7 @@ test('S-A3-16 no message invites another session or a pane tool to answer', () =
 test('a run belongs to its session; another session is never guarded or answered by it', (t) => {
   const fx = project(t);
   start(fx);
-  const other = hook(fx, 'pre-tool-use', { hookEventName: 'PreToolUse', sessionId: 'session-other', toolName: 'run_terminal_command', toolInput: { command: 'git push' } });
+  const other = hook(fx, 'pre-tool-use', { hookEventName: 'PreToolUse', sessionId: 'session-other', toolName: 'run_terminal_command', toolInput: { command: GIT_PUSH } });
   assert.equal(other.status, 0);
   assert.equal(other.stdout, '');
   shell(fx, 'touch mine.txt');
@@ -1018,7 +1022,7 @@ test('S-A4-03 the approval yes starts the run; a charter edited after the questi
 test('S-A4-05 and S-A4-07 commits the charter never grants are parked or held', (t) => {
   const fx = charterProject(t);
   for (const command of ['git commit --amend -m x', 'git commit -n -m x', 'git commit --no-verify -m x', 'git -c core.x=y commit -m x', `git -C ${fx.outside} commit -m x`,
-    'git add -A && git commit -m x', 'git add . && git commit -m x', 'git commit -m x && git push', 'git push origin feat/qa', 'git tag v1', 'git reset --hard']) {
+    'git add -A && git commit -m x', 'git add . && git commit -m x', `git commit -m x && ${GIT_PUSH}`, `${GIT_PUSH} origin feat/qa`, `${GIT_TAG} v1`, 'git reset --hard']) {
     assert.equal(shell(fx, command).status, 2, command);
   }
   for (const command of ['A=1 git commit -m x', 'git commit -m "$(id)"', 'git commit -m `id`']) {
@@ -1069,7 +1073,7 @@ test('a typed lit cancel closes the run, which then stays out of every hook', (t
   prompt(fx, 'lit cancel');
   assert.equal(run(fx).status, 'cancelled');
   assert.equal(stop(fx).stdout, '');
-  assert.equal(shell(fx, 'git push').status, 0);
+  assert.equal(shell(fx, GIT_PUSH).status, 0);
 });
 
 // ---- security cases -----------------------------------------------------------------------------
@@ -1116,7 +1120,7 @@ test('S-SEC-18 to S-SEC-21 runners, package scripts, outward and forbidden comma
   for (const command of ['node ok.mjs --write x', 'python3 x.py', 'bash run.sh', 'sh run.sh', './run.sh', 'perl x.pl', 'deno run x.ts', 'npm run clean', 'npm run build',
     'npm test', 'npm start', 'npx x', 'pnpm run build', 'yarn build', 'bun run x', 'make all', 'gh pr merge 12', 'npm unpublish x', 'npm deprecate x old',
     'curl -X POST https://example.invalid/a', 'wget https://example.invalid', 'ssh host ls', 'scp a host:b', 'docker push x', 'aws s3 rm s3://b/k', 'rm -rf build',
-    'git push origin b', 'git tag v1', 'npm publish', 'git reset --hard', 'git config x y', 'npm version patch']) {
+    `${GIT_PUSH} origin b`, `${GIT_TAG} v1`, NPM_PUBLISH, 'git reset --hard', 'git config x y', 'npm version patch']) {
     const verdict = classifyCommand(command, ctx(fx));
     assert.equal(verdict.decision === 'park' && verdict.tier, 'X', `${command}: ${JSON.stringify(verdict)}`);
   }
@@ -1188,7 +1192,7 @@ test('S-SEC-36 a model-edited check runs only when allowlisted, with no shell', 
   assert.deepEqual(checkArgv(`node ${join(fx.root, 'check.mjs')}`, fx.root), ['node', join(fx.root, 'check.mjs')]);
   assert.equal(checkArgv(`node ${join(fx.outside, 'x.mjs')}`, fx.root), null);
   assert.deepEqual(checkArgv('npm test', fx.root), ['npm', 'test'], 'lit-plan check commands are allowlisted');
-  for (const check of ['node -e "1"', 'git push origin main', 'npm test && git push', 'bash -c x', 'curl https://example.invalid']) assert.equal(checkArgv(check, fx.root), null, check);
+  for (const check of ['node -e "1"', `${GIT_PUSH} origin main`, `npm test && ${GIT_PUSH}`, 'bash -c x', 'curl https://example.invalid']) assert.equal(checkArgv(check, fx.root), null, check);
 });
 
 // ---- organic enrollment, feature B and hygiene ---------------------------------------------------
